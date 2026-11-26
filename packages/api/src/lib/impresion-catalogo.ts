@@ -16,6 +16,8 @@ import {
   destacadoHasta,
   ErrorImpresion,
   gramosPieza,
+  gruposColor,
+  leerMaterial,
   MATERIALES_IMPRESION,
   ordenarOfertas,
   precioRecomendado,
@@ -58,7 +60,11 @@ export async function productosImpresion(container: MedusaContainer, filtro: { i
     handle: p.handle,
     thumbnail: p.thumbnail ?? null,
     metadata: p.metadata ?? null,
-    variants: ((p.variants || []) as Variante[]).filter((v) => MATERIALES_IMPRESION.some((m) => m.valor === v.title)),
+    // las variantes "· 2 colores" sólo cuentan si el producto dice cuáles son sus dos partes
+    variants: ((p.variants || []) as Variante[]).filter((v) => {
+      const { base, dosColores } = leerMaterial(v.title)
+      return MATERIALES_IMPRESION.some((m) => m.valor === base) && (!dosColores || !!gruposColor(p))
+    }),
   }))
 }
 
@@ -98,6 +104,7 @@ export async function panelTaller(container: MedusaContainer, sellerId: string) 
         return {
           variant_id: v.id,
           material: v.title,
+          dos_colores: leerMaterial(v.title).dosColores,
           recomendado: pieza ? precioRecomendado(pieza, v.title) : null,
           gramos: pieza ? gramosPieza(pieza.volumen_cm3, v.title, pieza.relleno) : null,
           oferta: o ? { id: o.id, precio: precioDeOferta(o), dias: d?.dias ?? null, colores: d?.colores ?? [] } : null,
@@ -115,6 +122,10 @@ export async function guardarOfertasTaller(container: MedusaContainer, sellerId:
   const varianteA = new Map<string, { producto: ProductoImpresion; material: string }>()
   for (const p of productos) for (const v of p.variants) varianteA.set(v.id, { producto: p, material: v.title })
   for (const c of cambios) if (!varianteA.has(c.variant_id)) throw new ErrorImpresion("Ese diseño ya no está disponible para imprimir.")
+  // a dos colores, el cliente escoge el color de cada parte entre los que tiene el taller
+  for (const c of cambios)
+    if (c.activa && leerMaterial(varianteA.get(c.variant_id)!.material).dosColores && c.colores.length < 2)
+      throw new ErrorImpresion(`En "${varianteA.get(c.variant_id)!.material}" pon al menos dos colores (los que tiene tu impresora multicolor).`)
 
   const { data: existentes } = await query.graph({
     entity: "offer",
@@ -235,12 +246,16 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
         precio,
         dias: d.dias,
         colores: d.colores,
+        // a dos colores: el cliente elige el color de cada parte (producto.grupos_color) entre `colores`
+        dos_colores: leerMaterial(material.get(o.variant_id)!).dosColores,
         destacado: !!destacadoHasta(o.seller),
         envio_gratis: gratisDesde != null && precio != null && precio >= gratisDesde,
         envio_gratis_desde: gratisDesde,
       }
     })
     .filter((o) => o.precio != null)
+    // a dos colores hacen falta al menos dos (una oferta hecha fuera de este panel podría no tenerlos)
+    .filter((o) => !o.dos_colores || o.colores.length >= 2)
 
   return {
     // llaveros y letras: el cliente escribe su texto al agregarlo (va en metadata.texto del renglón;
@@ -251,6 +266,7 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
       titulo: producto.title,
       personalizable: producto.metadata?.personalizable === true,
       max_texto: Number(producto.metadata?.max_texto) > 0 ? Number(producto.metadata?.max_texto) : null,
+      grupos_color: gruposColor(producto),
     },
     materiales: producto.variants.map((v) => ({
       variant_id: v.id,

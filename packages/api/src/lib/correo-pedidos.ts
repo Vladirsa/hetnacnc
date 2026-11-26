@@ -19,6 +19,7 @@ import { sendEmail } from "./resend"
 import { T_GUIAS } from "./guias"
 import { CAMPOS_PAGO, pedidoPagado } from "./pago-pedido"
 import { esPedidoDigital } from "./whatsapp-pedidos"
+import { detalleRenglon } from "./detalle-renglon"
 
 export const T_CORREO_PEDIDO = "hetna_correo_pedido"
 export type EtapaCorreo = "recibido" | "en_camino" | "cancelado" | "taller_nuevo"
@@ -108,12 +109,10 @@ export async function datosCorreoPedido(container: any, orderId: string): Promis
     taller,
     renglones: (o.items || []).map((i: any) => ({
       titulo: String(i.product_title || i.title || ""),
-      // + el color (y en llaveros y letras, el texto) que eligió en una pieza de Impresión 3D bajo pedido (metadata del renglón)
+      // + el color, los colores de cada parte y el texto de una pieza de Impresión 3D bajo pedido
       presentacion: [
         i.variant_title && !/^(única|default)/i.test(i.variant_title) ? String(i.variant_title) : "",
-        typeof i.metadata?.color === "string" && i.metadata.color ? `Color: ${String(i.metadata.color).slice(0, 24)}` : "",
-        // + el texto que pidió en un llavero o unas letras (ya revisado al agregarlo: api/store/carts/texto-personalizado.ts)
-        typeof i.metadata?.texto === "string" && i.metadata.texto.trim() ? `Texto: «${String(i.metadata.texto).trim()}»` : "",
+        ...detalleRenglon(i.metadata).map(([k, v]) => `${k}: ${v}`),
       ]
         .filter(Boolean)
         .join(" · "),

@@ -166,7 +166,7 @@ export async function addToCart({
   quantity: number;
   countryCode: string;
   /** Datos extra del renglón (p. ej. el color de una pieza impresa); Mercur les agrega offer_id */
-  metadata?: Record<string, string>;
+  metadata?: Record<string, unknown>;
 }) {
   if (!offerId) {
     throw new Error('Missing offer ID when adding to cart');

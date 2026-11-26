@@ -35,6 +35,28 @@ export const MATERIALES_IMPRESION: { valor: string; precio: string; nota: string
 ]
 export const OPCION_MATERIAL = "Material"
 
+// ── Dos colores ──────────────────────────────────────────────────────────
+// Las piezas que salen en dos partes (llaveros, letras, texturizadores…:
+// metadata.grupos_color del producto) tienen además variantes "PLA · 2 colores"
+// en los materiales de impresora FDM. Así el taller con impresora multicolor
+// pone su precio aparte, y el cliente elige el color de cada parte al comprarla.
+export const SUFIJO_DOS_COLORES = " · 2 colores"
+export const MATERIALES_DOS_COLORES = ["PLA", "PETG", "ABS"]
+/** El precio recomendado a dos colores: +30 % (cambio de filamento, purga y más tiempo). */
+export const RECARGO_DOS_COLORES = 1.3
+
+/** Material base y si es a dos colores, a partir del nombre de la variante ("PLA · 2 colores"). */
+export function leerMaterial(titulo: string): { base: string; dosColores: boolean } {
+  const t = String(titulo || "")
+  return t.endsWith(SUFIJO_DOS_COLORES) ? { base: t.slice(0, -SUFIJO_DOS_COLORES.length), dosColores: true } : { base: t, dosColores: false }
+}
+
+/** Nombres de las dos partes que se pueden pedir de distinto color (["Placa", "Letras"]), o null. */
+export function gruposColor(producto: any): [string, string] | null {
+  const g = meta(producto).grupos_color
+  return Array.isArray(g) && g.length === 2 && g.every((x) => typeof x === "string" && x.trim() && x.length <= 30) ? [g[0], g[1]] : null
+}
+
 export const MAX_DIAS = 30
 export const MAX_COLORES = 12
 
@@ -78,13 +100,14 @@ export function gramosPieza(volumenCm3: number, material: string, relleno = 20):
   const densidad: Record<string, number> = { PLA: 1.24, PETG: 1.27, ABS: 1.04, "PLA-CF": 1.3, TPU: 1.21, Resina: 1.1 }
   // mismo criterio que el estimador: paredes + relleno ≈ volumen × (relleno + 25 %)
   const fraccion = Math.min(1, relleno / 100 + 0.25)
-  return Math.round(volumenCm3 * fraccion * (densidad[material] ?? 1.24))
+  return Math.round(volumenCm3 * fraccion * (densidad[leerMaterial(material).base] ?? 1.24))
 }
 
 /** Precio recomendado al cliente para una pieza en un material: precio FINAL (con IVA,
  *  como se cobra en la tienda), redondeado a $10. */
 export function precioRecomendado(p: DatosPieza, material: string): number | null {
-  const m = MATERIALES_IMPRESION.find((x) => x.valor === material)
+  const { base, dosColores } = leerMaterial(material)
+  const m = MATERIALES_IMPRESION.find((x) => x.valor === base)
   if (!m) return null
   const [x, y, z] = p.medidas_mm
   const r = precioInstantaneo({
@@ -98,7 +121,7 @@ export function precioRecomendado(p: DatosPieza, material: string): number | nul
     volumen_cm3: p.volumen_cm3,
   })
   if (!r.ok) return null
-  return Math.max(10, Math.ceil(r.resultado.total / 10) * 10)
+  return Math.max(10, Math.ceil((r.resultado.total * (dosColores ? RECARGO_DOS_COLORES : 1)) / 10) * 10)
 }
 
 // ── Lo que el taller manda para su oferta ────────────────────────────────

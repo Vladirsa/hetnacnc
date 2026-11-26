@@ -8,13 +8,15 @@ export type OfertaImpresion = {
   precio: number
   dias: number | null
   colores: string[]
+  /** "PLA · 2 colores": el cliente elige un color de `colores` para cada parte (producto.grupos_color) */
+  dos_colores?: boolean
   destacado: boolean
   envio_gratis: boolean
   envio_gratis_desde: number | null
 }
 export type MaterialImpresion = { variant_id: string; material: string; gramos: number | null; recomendado: number | null }
 export type DatosImpresion = {
-  producto: { id: string; handle: string; titulo: string; personalizable: boolean; max_texto: number | null }
+  producto: { id: string; handle: string; titulo: string; personalizable: boolean; max_texto: number | null; grupos_color?: [string, string] | null }
   materiales: MaterialImpresion[]
   ofertas: OfertaImpresion[]
 }

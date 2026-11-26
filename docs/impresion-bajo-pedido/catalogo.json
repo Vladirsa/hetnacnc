@@ -47,6 +47,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -98,6 +102,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -148,6 +156,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -198,6 +210,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -247,6 +263,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -298,6 +318,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -349,6 +373,10 @@
       42.4,
       42.4,
       120
+    ],
+    "grupos_color": [
+      "Rodillo",
+      "Relieve"
     ]
   },
   {
@@ -402,6 +430,10 @@
       120,
       120,
       4.2
+    ],
+    "grupos_color": [
+      "Base",
+      "Relieve"
     ]
   },
   {
@@ -455,6 +487,10 @@
       150,
       100,
       4.2
+    ],
+    "grupos_color": [
+      "Base",
+      "Relieve"
     ]
   },
   {
@@ -504,7 +540,11 @@
       14
     ],
     "relleno": 100,
-    "con_sello": true
+    "con_sello": true,
+    "grupos_color": [
+      "Cortador y placa del sello",
+      "Dibujo del sello"
+    ]
   },
   {
     "handle": "cortador-galletas-estrella-impreso-3d",
@@ -804,7 +844,11 @@
       14
     ],
     "relleno": 100,
-    "con_sello": true
+    "con_sello": true,
+    "grupos_color": [
+      "Cortador y placa del sello",
+      "Dibujo del sello"
+    ]
   },
   {
     "handle": "soporte-rodillo-texturizador-impreso-3d",
@@ -884,7 +928,11 @@
       100,
       90
     ],
-    "piezas": 2
+    "piezas": 2,
+    "grupos_color": [
+      "Pieza grande",
+      "Pieza chica"
+    ]
   },
   {
     "handle": "maceta-grande-con-drenaje-impresa-3d",
@@ -923,7 +971,11 @@
       160,
       140
     ],
-    "piezas": 2
+    "piezas": 2,
+    "grupos_color": [
+      "Pieza grande",
+      "Pieza chica"
+    ]
   },
   {
     "handle": "lapicero-hexagonal-impreso-3d",
@@ -1162,7 +1214,11 @@
       150,
       70
     ],
-    "piezas": 2
+    "piezas": 2,
+    "grupos_color": [
+      "Pieza grande",
+      "Pieza chica"
+    ]
   },
   {
     "handle": "caja-tapa-presion-impresa-3d",
@@ -1195,7 +1251,11 @@
       44,
       32
     ],
-    "piezas": 2
+    "piezas": 2,
+    "grupos_color": [
+      "Pieza grande",
+      "Pieza chica"
+    ]
   },
   {
     "handle": "clip-para-bolsas-impreso-3d",
@@ -1263,7 +1323,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 12
+    "max_texto": 12,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "llavero-corazon-con-nombre-impreso-3d",
@@ -1302,7 +1366,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 10
+    "max_texto": 10,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "placa-mascota-con-nombre-impresa-3d",
@@ -1348,7 +1416,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 30
+    "max_texto": 30,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "etiqueta-maleta-con-nombre-impresa-3d",
@@ -1387,7 +1459,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 12
+    "max_texto": 12,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "llavero-inicial-estrella-impreso-3d",
@@ -1431,7 +1507,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 2
+    "max_texto": 2,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "llavero-negocio-impreso-3d",
@@ -1471,7 +1551,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 16
+    "max_texto": 16,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "placa-puerta-con-nombre-impresa-3d",
@@ -1511,7 +1595,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 14
+    "max_texto": 14,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "adorno-con-fecha-impreso-3d",
@@ -1551,7 +1639,11 @@
       4.5
     ],
     "personalizable": true,
-    "max_texto": 12
+    "max_texto": 12,
+    "grupos_color": [
+      "Placa",
+      "Letras"
+    ]
   },
   {
     "handle": "letras-love-de-pie-impresas-3d",
@@ -1592,7 +1684,11 @@
       65.4
     ],
     "personalizable": true,
-    "max_texto": 5
+    "max_texto": 5,
+    "grupos_color": [
+      "Letras",
+      "Base"
+    ]
   },
   {
     "handle": "letras-home-de-pie-impresas-3d",
@@ -1633,7 +1729,11 @@
       55.2
     ],
     "personalizable": true,
-    "max_texto": 5
+    "max_texto": 5,
+    "grupos_color": [
+      "Letras",
+      "Base"
+    ]
   },
   {
     "handle": "letras-xv-anos-de-pie-impresas-3d",
@@ -1674,7 +1774,11 @@
       106.1
     ],
     "personalizable": true,
-    "max_texto": 3
+    "max_texto": 3,
+    "grupos_color": [
+      "Letras",
+      "Base"
+    ]
   },
   {
     "handle": "letras-familia-pared-impresas-3d",
@@ -1715,7 +1819,11 @@
       80
     ],
     "personalizable": true,
-    "max_texto": 8
+    "max_texto": 8,
+    "grupos_color": [
+      "Frente",
+      "Cuerpo"
+    ]
   },
   {
     "handle": "letras-nombre-pared-impresas-3d",
@@ -1756,7 +1864,11 @@
       103.6
     ],
     "personalizable": true,
-    "max_texto": 8
+    "max_texto": 8,
+    "grupos_color": [
+      "Frente",
+      "Cuerpo"
+    ]
   },
   {
     "handle": "letras-huecas-led-impresas-3d",
@@ -1797,6 +1909,10 @@
       103.6
     ],
     "personalizable": true,
-    "max_texto": 6
+    "max_texto": 6,
+    "grupos_color": [
+      "Frente",
+      "Paredes"
+    ]
   }
 ]

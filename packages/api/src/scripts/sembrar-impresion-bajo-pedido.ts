@@ -23,15 +23,18 @@ import { existsSync, readFileSync } from "fs"
 import { join, resolve } from "path"
 import type { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
-import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
+import { createProductsWorkflow, createProductVariantsWorkflow, setProductProductOptionsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 
 import { camSellerHandle } from "../modules/cam/catalog"
 import {
   COLECCION_IMPRESION,
   gramosPieza,
+  MATERIALES_DOS_COLORES,
   MATERIALES_IMPRESION,
   OPCION_MATERIAL,
+  leerMaterial,
   precioRecomendado,
+  SUFIJO_DOS_COLORES,
   TITULO_COLECCION_IMPRESION,
 } from "../lib/impresion-bajo-pedido"
 import { updateOffersWorkflow } from "@mercurjs/core/workflows"
@@ -79,6 +82,8 @@ type Diseno = {
   vista_colores?: { triangulos: number; hex: string }[]
   volumen_cm3: number
   medidas_mm: [number, number, number]
+  /** las dos partes que se pueden pedir de distinto color: lleva variantes "PLA · 2 colores" */
+  grupos_color?: [string, string]
   /** sólo "modelo": cuántos cuerpos sueltos salen (maceta + plato = 2) */
   piezas?: number
   relleno?: number // 100 en piezas de pura pared (cortadores)
@@ -143,6 +148,49 @@ function descripcion(d: Diseno): string {
   ].join("")
 }
 
+/** Caja de envío (cm) a partir de las medidas de la pieza (mm). */
+const cajaDe = ([x, y, z]: [number, number, number]) => ({ length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 })
+const skuVariante = (corto: string, material: string) => `HETNA-3D-${corto}-${material.replace(/[^A-Za-z0-9]/g, "")}`
+const cortoDe = (handle: string) => handle.replace(/-impres[oa]-3d$/, "").replace(/[^a-z0-9]+/g, "-").slice(0, 28).toUpperCase()
+
+/** Agrega a la opción Material los valores "PLA · 2 colores"… y sus variantes, si faltan. Regresa los que agregó. */
+async function asegurarDosColores(container: any, productId: string, d: Diseno): Promise<string[]> {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const { data } = await query.graph({
+    entity: "product",
+    fields: ["id", "options.id", "options.title", "options.values.id", "options.values.value", "variants.id", "variants.title"],
+    filters: { id: productId },
+  })
+  const p = (data as any[])[0]
+  const opcion = (p?.options || []).find((o: any) => o.title === OPCION_MATERIAL)
+  if (!opcion) return []
+  const deseados = MATERIALES_DOS_COLORES.map((m) => m + SUFIJO_DOS_COLORES)
+  const tieneVariante = new Set((p.variants || []).map((v: any) => v.title))
+  const faltan = deseados.filter((m) => !tieneVariante.has(m))
+  if (!faltan.length) return []
+  // la opción se comparte en Medusa 2.x: el valor se crea (o se toma si ya está) y se liga al producto
+  const idDe = new Map<string, string>((opcion.values || []).map((v: any) => [v.value, v.id]))
+  await setProductProductOptionsWorkflow(container).run({
+    input: { product_id: productId, update: [{ product_option_id: opcion.id, add: faltan.map((m) => idDe.get(m) || { value: m }) }] } as any,
+  })
+  const caja = cajaDe(d.medidas_mm)
+  await createProductVariantsWorkflow(container).run({
+    input: {
+      product_variants: faltan.map((m) => ({
+        product_id: productId,
+        title: m,
+        sku: skuVariante(cortoDe(d.handle), m),
+        manage_inventory: false,
+        options: { [OPCION_MATERIAL]: m },
+        prices: [],
+        weight: (gramosPieza(d.volumen_cm3, m, d.relleno) + EMPAQUE_G) / 1000,
+        ...caja,
+      })),
+    } as any,
+  })
+  return faltan
+}
+
 export default async function sembrarImpresion({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
@@ -184,7 +232,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
   const subir = async (filename: string, mimeType: string, bytes: Buffer) =>
     (await archivos.createFiles([{ filename, mimeType, content: bytes.toString("base64"), access: "public" }]))[0]
 
-  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0, fotosCambiadas = 0
+  let nuevos = 0, actualizados = 0, ofertas = 0, colores = 0, fotosCambiadas = 0, dosColores = 0
   for (const d of catalogo) {
     const metadata: Record<string, any> = {
       impresion_bajo_pedido: true,
@@ -194,6 +242,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       palabras_clave: d.etiquetas.join(", "),
       seller_id: hetna.id,
       ...(d.personalizable ? { personalizable: true, ...(d.max_texto ? { max_texto: d.max_texto } : {}) } : {}),
+      grupos_color: Array.isArray(d.grupos_color) && d.grupos_color.length === 2 ? d.grupos_color : null,
     }
     const { data: existe } = await query.graph({ entity: "product", fields: ["id", "thumbnail", "images.url", "metadata", "variants.id", "variants.title"], filters: { handle: d.handle } })
     let producto = (existe as any[])[0]
@@ -250,10 +299,10 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     } else {
       const archivo = await subir(`${d.handle}.png`, "image/png", bytesFoto as Buffer)
       Object.assign(metadata, { foto_url: archivo.url, foto_sha: shaFoto })
-      const [x, y, z] = d.medidas_mm
-      const caja = { length: Math.ceil(Math.max(x, y, z) / 10) + 2, width: Math.ceil([x, y, z].sort((a, b) => b - a)[1] / 10) + 2, height: Math.ceil(Math.min(x, y, z) / 10) + 2 }
+      const caja = cajaDe(d.medidas_mm)
+      // (las variantes "· 2 colores" se agregan abajo, con asegurarDosColores, igual que a los que ya existen)
       const valores = MATERIALES_IMPRESION.map((m) => m.valor)
-      const corto = d.handle.replace(/-impres[oa]-3d$/, "").replace(/[^a-z0-9]+/g, "-").slice(0, 28).toUpperCase()
+      const corto = cortoDe(d.handle)
       const { result } = await createProductsWorkflow(container).run({
         input: {
           products: [
@@ -274,7 +323,7 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
               options: [{ title: OPCION_MATERIAL, values: valores }],
               variants: valores.map((m) => ({
                 title: m,
-                sku: `HETNA-3D-${corto}-${m.replace(/[^A-Za-z0-9]/g, "")}`,
+                sku: skuVariante(corto, m),
                 manage_inventory: false, // las existencias viven en cada oferta (Mercur)
                 options: { [OPCION_MATERIAL]: m },
                 prices: [],
@@ -293,6 +342,22 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       logger.info(`[impresion] publicado ${d.handle}`)
     }
 
+    // Piezas de dos partes: agrega las variantes "PLA · 2 colores" que falten
+    // (sólo agrega: las variantes y ofertas que ya existen no se tocan)
+    if (metadata.grupos_color) {
+      const agregadas = await asegurarDosColores(container, producto.id, d).catch((e) => {
+        // un producto que falla no frena a los demás; al volver a correr se completa
+        logger.error(`[impresion] ${d.handle}: no se pudieron agregar las variantes a 2 colores: ${(e as Error).message}`)
+        return [] as string[]
+      })
+      if (agregadas.length) {
+        dosColores += agregadas.length
+        logger.info(`[impresion] ${d.handle}: ${agregadas.join(", ")}`)
+        const { data: otra } = await query.graph({ entity: "product", fields: ["id", "variants.id", "variants.title"], filters: { id: producto.id } })
+        producto = { ...producto, variants: (otra as any[])[0]?.variants || producto.variants }
+      }
+    }
+
     // 3. Ofertas de HETNA (sólo las que faltan)
     if (!COLORES_HETNA.length) continue
     const { data: mias } = await query.graph({ entity: "offer", fields: ["id", "variant_id", "metadata"], filters: { seller_id: hetna.id, product_id: producto.id } as any })
@@ -302,6 +367,8 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     if (ACTUALIZAR_COLORES) {
       const material = new Map(((producto.variants || []) as { id: string; title: string }[]).map((v) => [v.id, v.title]))
       const cambiar = (mias as any[])
+        // las ofertas a dos colores se arreglan en el panel (necesitan al menos dos colores)
+        .filter((o) => !leerMaterial(material.get(o.variant_id) || "").dosColores)
         .map((o) => ({ o, colores: coloresHetna(material.get(o.variant_id) || "") }))
         .filter(({ o, colores }) => colores.length && JSON.stringify(o.metadata?.colores || []) !== JSON.stringify(colores))
       if (cambiar.length) {
@@ -322,5 +389,5 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     }
   }
   if (!COLORES_HETNA.length) logger.warn('[impresion] sin COLORES: no se pusieron ofertas de HETNA (corre con COLORES="ABS=Amarillo dorado;PLA-CF=Negro" o ponlas en /seller/imprimir)')
-  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}, ${fotosCambiadas} fotos nuevas`)
+  logger.info(`[impresion] listo: ${nuevos} nuevos, ${actualizados} actualizados, ${ofertas} ofertas de HETNA${ACTUALIZAR_COLORES ? `, ${colores} con color corregido` : ""}, ${fotosCambiadas} fotos nuevas, ${dosColores} variantes a 2 colores nuevas`)
 }

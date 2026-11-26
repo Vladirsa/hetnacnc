@@ -156,7 +156,7 @@ export function CartProvider({ cart, children }: CartProviderProps) {
     offerId: string;
     quantity: number;
     countryCode: string;
-    metadata?: Record<string, string>;
+    metadata?: Record<string, unknown>;
   }) => {
     setIsAddingItem(true);
     setIsUpdating(true);

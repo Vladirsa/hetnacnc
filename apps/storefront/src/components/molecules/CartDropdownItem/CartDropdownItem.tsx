@@ -7,6 +7,7 @@ import { DeleteCartItemButton } from "../DeleteCartItemButton/DeleteCartItemButt
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { convertToLocale } from "@/lib/helpers/money"
 import { HttpTypes } from "@medusajs/types"
+import { detalleRenglon } from "@/lib/impresion/detalle-renglon"
 
 // Un renglón del carrito flotante. Compacto a propósito: aquí sólo se confirma
 // "sí, se agregó lo que querías". Cambiar cantidades y revisar se hace en la
@@ -22,10 +23,8 @@ export const CartDropdownItem = ({
   const lista = (item.compare_at_unit_price || 0) * item.quantity
   const hayDescuento = lista > subtotal
 
-  const color = typeof item.metadata?.color === "string" ? item.metadata.color : ""
-  // + el texto de un llavero o unas letras personalizables (metadata.texto)
-  const textoPedido = typeof item.metadata?.texto === "string" ? item.metadata.texto : ""
-  const opciones = [...Object.entries(item.variant_option_values ?? {}), ...(color ? [["Color", color] as [string, string]] : []), ...(textoPedido ? [["Texto", `«${textoPedido}»`] as [string, string]] : [])]
+  // + color, colores por parte y texto de una pieza de Impresión 3D bajo pedido
+  const opciones = [...Object.entries(item.variant_option_values ?? {}), ...detalleRenglon(item.metadata)]
 
   return (
     <div className="flex gap-3 border-b border-[#EDEAE2] py-3 last:border-b-0">

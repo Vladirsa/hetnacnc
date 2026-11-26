@@ -130,6 +130,11 @@ function tramosDe(handle: string, partes: { triangulos: number }[]): Tramo[] {
 }
 const unaParte = (tris: number[]) => [{ triangulos: tris.length / 9 }]
 
+// Las dos partes que el cliente puede pedir de distinto color (venta "2 colores",
+// metadata.grupos_color del producto); van en el orden de los colores de la foto.
+// El ícono del llavero va con las letras.
+const GRUPOS_LETRAS: Record<string, [string, string]> = { pie: ["Letras", "Base"], pared: ["Frente", "Cuerpo"], luz: ["Frente", "Paredes"] }
+
 // El STL de la vista 3D va simplificado (máx. TRIS_VISTA triángulos, ~1 MB)
 // para que cargue rápido en celular; la foto usa la malla completa. Simplifica
 // con meshoptimizer de npm: MESHOPT_JS=/ruta/node_modules/meshoptimizer.
@@ -231,13 +236,17 @@ for (const d of CATALOGO_IMPRESION) {
     // volumen de todo lo que se imprime; medidas de la pieza más grande (la
     // maceta sin su plato, la caja sin su tapa), no de todo acomodado en la cama
     const m = medir(tris)
+    // de la más grande a la más chica (la maceta y luego su plato)
     const partes = separarPiezas(tris)
-    const mayor = partes.map(medir).sort((a, b) => b.volumen_cm3 - a.volumen_cm3)[0]
+      .map((t) => ({ t, v: medir(t).volumen_cm3 }))
+      .sort((a, b) => b.v - a.v)
+      .map((x) => x.t)
+    const mayor = medir(partes[0])
     // cada cuerpo suelto (la maceta y su plato) de un color; hasta 8
     const cuerpos = partes.length >= 2 && partes.length <= 8 ? partes : [tris]
     const vista = await guardarVista(d.handle, ([] as number[]).concat(...cuerpos), tramosDe(d.handle, cuerpos.map((c) => ({ triangulos: c.length / 9 }))))
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${partes.length} pieza(s), la mayor ${mayor.medidas_mm.join(" × ")} mm (foto lista)`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length, ...(partes.length === 2 ? { grupos_color: ["Pieza grande", "Pieza chica"] } : {}) })
     continue
   }
   if (SOLO_MODELOS) {
@@ -260,7 +269,7 @@ for (const d of CATALOGO_IMPRESION) {
     const t = l.estilo === "pie" ? r.trisVista : pararMalla(r.trisVista) // (conservan el orden de las partes)
     const m = medir(t)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto, grupos_color: GRUPOS_LETRAS[l.estilo] })
     continue
   }
   if (d.pieza === "llavero" && d.llavero) {
@@ -269,7 +278,7 @@ for (const d of CATALOGO_IMPRESION) {
     if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
     const m = medir(r.malla.tris)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto, grupos_color: ["Placa", "Letras"] })
     continue
   }
   if (d.pieza === "cortador" && d.cortador) {
@@ -290,7 +299,7 @@ for (const d of CATALOGO_IMPRESION) {
     const [color] = tramosDe(d.handle, unaParte(r.cortador.tris))
     const tramosSello = (r.sello?.partes || []).map((p) => ({ triangulos: p.triangulos, rgb: p.nombre === "Placa del sello" ? BLANCO : color.rgb }))
     const vista = await guardarVista(d.handle, [...r.cortador.tris, ...(r.sello ? aLaDerecha(r.sello.tris, r.cortador.tris) : [])], [color, ...tramosSello])
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello, ...(r.sello ? { grupos_color: ["Cortador y placa del sello", "Dibujo del sello"] } : {}) })
     continue
   }
   if (d.pieza === "soporte") {
@@ -322,6 +331,7 @@ for (const d of CATALOGO_IMPRESION) {
     ...(await guardarVista(d.handle, tris, tramosDe(d.handle, partesTex || unaParte(tris)))),
     diseno: d.diseno,
     ...m,
+    ...(partesTex && partesTex.length >= 2 ? { grupos_color: [o.forma === "rodillo" ? "Rodillo" : "Base", "Relieve"] } : {}),
   })
 }
 writeFileSync(SALIDA, JSON.stringify(salida, null, 2) + "\n")
