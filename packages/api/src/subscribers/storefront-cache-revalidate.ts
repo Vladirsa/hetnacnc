@@ -103,6 +103,9 @@ export const config: SubscriberConfig = {
     OfferWorkflowEvents.DELETED,
     ProductWorkflowEvents.PUBLISHED,
     ProductWorkflowEvents.REJECTED,
+    // un producto que nace publicado (p. ej. los de planos) no pasa por PUBLISHED:
+    // sin esto la tienda se quedaba con el «no existe» guardado en caché
+    "product.created",
     "product.updated",
   ],
   context: {

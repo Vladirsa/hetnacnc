@@ -47,6 +47,21 @@ export const handlePlano = (slug: string) => `plano-${slug}`
 export const skuPlano = (slug: string, codigo: string) => `HETNA-PL-${slug.toUpperCase().slice(0, 40)}-${codigo}`
 
 /** solo: lee sólo esos planos (sin la caché de la página: sirve justo al aprobar uno nuevo). */
+/** Limpia etiquetas de la caché de la tienda (mismo aviso que subscribers/storefront-cache-revalidate.ts). */
+export async function limpiarCacheTienda(tags: string[]) {
+  const url = process.env.STOREFRONT_REVALIDATE_URL
+  const secret = process.env.STOREFRONT_REVALIDATE_SECRET
+  if (!url || !secret || !tags.length) return
+  for (let i = 0; i < tags.length; i += 50) {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-revalidate-secret": secret },
+      body: JSON.stringify({ tags: tags.slice(i, i + 50) }),
+      signal: AbortSignal.timeout(15_000),
+    })
+  }
+}
+
 export async function leerCatalogoPlanos(solo?: string[]): Promise<PlanoCatalogo[]> {
   const q = solo?.length ? `?solo=${encodeURIComponent(solo.join(","))}&t=${Date.now()}` : ""
   const r = await fetch(`${STORE_URL}/mx/planos/datos${q}`, { headers: { accept: "application/json" } })
@@ -177,5 +192,9 @@ export async function sincronizarProductosPlanos(container: MedusaContainer, o: 
     creados++
     logger.info(`[planos-tienda] producto creado: ${handle}`)
   }
+  // La tienda guarda los productos en caché sin vencimiento; si alguien abrió la
+  // liga antes de que existiera, se quedó el «no existe». Se limpia aquí mismo
+  // (el script corre fuera del servidor y sus eventos pueden no llegar).
+  await limpiarCacheTienda(["products", ...planos.map((p) => `product-${handlePlano(p.slug)}`)]).catch(() => undefined)
   return { creados, actualizados, total: planos.length }
 }
