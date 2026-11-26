@@ -211,10 +211,21 @@ NO_TALLER_RE = re.compile(
     r"ecommerce|e-commerce|tienda en l[ií]nea de|miles de referencias|publica tus productos)\b", re.I)
 
 
+# Giros que no son de CNC y que a veces salen en búsquedas como «grabado láser
+# regalos» (26 nov 2026: INSA, uniformes y calzado; Promonova, artículos
+# promocionales). Sólo descartan si la descripción no menciona nada de CNC.
+OTRO_GIRO_RE = re.compile(
+    r"\b(uniformes?|calzado|textil(es)?|ropa|art[ií]culos? promocionales|productos promocionales|"
+    r"promocionales para empresas|seguros|inmobiliari[ao]|restaurante|abarrotes|farmacia)\b", re.I)
+
+
 def no_es_empresa_cnc(c: dict) -> bool:
-    """True si el sitio se describe como portal, directorio o tienda en línea."""
+    """True si el sitio se describe como portal, directorio o tienda en línea, o es de otro giro."""
     texto = f"{c.get('empresa', '')} {c.get('productos_servicios', '')}"
-    return bool(NO_TALLER_RE.search(texto))
+    if NO_TALLER_RE.search(texto):
+        return True
+    bajo = texto.lower()
+    return bool(OTRO_GIRO_RE.search(texto)) and not any(p in bajo for p in CNC_PALABRAS)
 
 
 def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", dominio: str = "", solo_mx: bool = False) -> str:
@@ -241,6 +252,10 @@ def pais_por_contacto(telefono: str = "", whatsapp: str = "", email: str = "", d
         # 10 dígitos sin lada que empiezan con 809/829/849: República Dominicana
         if len(t) == 10 and t[:3] in ("809", "829", "849"):
             return "República Dominicana"
+        # 10 dígitos que empiezan con 11: Buenos Aires (ningún número de México ni de
+        # EE. UU. empieza con 1). 26 nov 2026: Regalaser salió como México.
+        if len(t) == 10 and t.startswith("11"):
+            return "Argentina"
     for d in (str(email or "").split("@")[-1].lower(), str(dominio or "").lower()):
         if not d or d.startswith(("ig-", "fb-")):
             continue
@@ -275,6 +290,18 @@ CNC_PALABRAS = ("cnc", "maquinad", "mecanizad", "usinagem", "router", "láser", 
                 "fresad", "fresas", "insertos", "machining", "machine shop", "troquel", "moldes", "mastercam", "g-code")
 BASURA_MAIL = ("@empresa.com", "@dominio.com", "tudominio", "ejemplo", "@correo.com", "@email.com", "@mail.com", "yourdomain",
                "example.", "sentry", "wixpress", "domain.com", "email.com", ".png", ".jpg", ".webp", "@2x", "u003e")
+
+
+# Títulos de página que no son el nombre de la empresa
+NOMBRE_GENERICO_RE = re.compile(
+    r"^(inicio|home|homepage|p[aá]gina (de )?inicio|p[aá]gina principal|bienvenid[oa]s?|welcome|index|"
+    r"contacto|cont[aá]ctanos|nosotros|untitled|sin t[ií]tulo|default)\.?$", re.I)
+
+
+def nombre_de_dominio(dom: str) -> str:
+    """«riverastools.com» -> «Riverastools»."""
+    base = str(dom or "").split(".")[0].replace("-", " ").strip()
+    return base[:1].upper() + base[1:] if base else ""
 
 
 def html_de(url: str) -> str:
@@ -314,12 +341,20 @@ def extraer_rapido(url: str) -> dict:
     if tel:
         out["telefono"] = tel.group(1).strip()
     for red, marca in REDES.items():
-        m = re.search(r'https?://(?:www\.|[a-z]{2}\.)?' + re.escape(marca) + r'[^"\'\s<>?#]+', todo, re.I)
-        if m and not any(x in m.group(0) for x in ("sharer", "share?", "/plugins", "intent/")):
+        # Sin $ { } ` : en sitios hechos con JavaScript se colaba código ("facebook.com/${id}`,")
+        m = re.search(r'https?://(?:www\.|[a-z]{2}\.)?' + re.escape(marca) + r'[^"\'\s<>?#`${},]+', todo, re.I)
+        if (m and not any(x in m.group(0) for x in ("sharer", "share?", "/plugins", "intent/"))
+                and not m.group(0).endswith(marca) and not re.search(r"/tr/?$", m.group(0))):  # /tr = píxel de Facebook
             out[red] = m.group(0)
     t = re.search(r"<title[^>]*>(.*?)</title>", todo, re.I | re.S)
     if t:
-        out["empresa"] = html_mod.unescape(re.split(r"\s[|\-–—]\s", re.sub(r"\s+", " ", t.group(1)).strip())[0][:80])
+        partes = [html_mod.unescape(x.strip()) for x in re.split(r"\s[|\-–—]\s", re.sub(r"\s+", " ", t.group(1)).strip()) if x.strip()]
+        # «Inicio | Rivera's Tools»: el nombre es la otra parte del título, o el og:site_name,
+        # o el dominio (26 nov 2026: riverastools.com quedó como «Inicio»)
+        buenas = [x for x in partes if not NOMBRE_GENERICO_RE.match(x)]
+        sitio = re.search(r'<meta[^>]+property="og:site_name"[^>]+content="([^"]{2,80})"', todo, re.I)
+        nombre = buenas[0] if buenas else (html_mod.unescape(sitio.group(1).strip()) if sitio else nombre_de_dominio(dom))
+        out["empresa"] = nombre[:80]
     d = re.search(r'<meta[^>]+name="description"[^>]+content="([^"]{10,300})"', todo, re.I)
     if d:
         out["productos_servicios"] = html_mod.unescape(d.group(1).strip()[:160])
