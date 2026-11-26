@@ -18,7 +18,7 @@ import { extruir } from "@/lib/generador/extruir"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import { aplanar } from "@/lib/generador/llaveros"
 import { figura, type IconoTextura } from "@/lib/generador/texturizador"
-import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
+import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
 const ESC = 1000
 type CP = { X: number; Y: number }
@@ -272,7 +272,7 @@ export function hacerCortador(forma: FormaCortador, fuente: Fuente | null, o: Op
         // el sello se dibuja al lado del cortador en la vista y en el STL
         const dx = o.tamano + o.pared * 2 + o.ceja * 2 + 10
         const mover = (cs: P[][]) => cs.map((p) => p.map(([x, y]) => [x + dx, y] as P))
-        sello = { tris: [...extruirContornos(mover(placa), GROSOR), ...extruirContornos(mover(det), o.relieveSello, GROSOR)], avisos: [] }
+        sello = conPartes(["Placa del sello", extruirContornos(mover(placa), GROSOR)], ["Dibujo del sello", extruirContornos(mover(det), o.relieveSello, GROSOR)])
         trazos.push(...det.map((pts) => ({ pts, cerrado: true, capa: "GRABADO" })))
         if (o.sello.tipo === "texto" && kd * 10 < 5) avisos.push("El texto del sello queda de menos de 5 mm: usa menos letras o una galleta más grande.")
       }

@@ -14,7 +14,7 @@ import ClipperLib from "clipper-lib"
 import { extruir } from "@/lib/generador/extruir"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import { aplanar } from "@/lib/generador/llaveros"
-import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
+import { type Dibujo, type Malla, type P, type Trazo, conPartes, separarPartes } from "@/lib/generador/vectores"
 
 export type IconoTextura = "estrella" | "luna" | "corazon" | "flor" | "huella" | "circulo" | "rombo" | "copo"
 
@@ -239,16 +239,17 @@ export function hacerTexturizador(fuente: Fuente | null, o: OpcionesTexturizador
     if (z0) for (let i = 2; i < t.length; i += 3) t[i] += z0
     return t
   }
-  let tris: number[]
+  // base y relieve por separado: en una impresora de varios colores cada uno va de su color
+  let malla: Malla
   if (o.modo === "alto") {
-    tris = [...ext([placa], o.grosor, 0), ...ext(patron, o.relieve, o.grosor)]
+    malla = conPartes(["Base", ext([placa], o.grosor, 0)], ["Relieve", ext(patron, o.relieve, o.grosor)])
   } else {
     const base = o.grosor - o.relieve
-    tris = [...ext([placa], base, 0), ...ext(restar([placa], patron), o.relieve, base)]
+    malla = conPartes(["Base", ext([placa], base, 0)], ["Capa grabada", ext(restar([placa], patron), o.relieve, base)])
   }
   if (o.tamano < 6) avisos.push("Letras de menos de 6 mm pueden salir borrosas en una impresora FDM; en resina salen bien.")
   if (o.relieve < 0.6) avisos.push("Un relieve de menos de 0.6 mm casi no marca la masa: usa 0.8 a 1.5 mm.")
-  return { dibujo, malla: { tris, avisos: [] }, piezas: colocadas, avisos, errores: [] }
+  return { dibujo, malla, piezas: colocadas, avisos, errores: [] }
 }
 
 // ── Rodillo ────────────────────────────────────────────────────────────────
@@ -323,26 +324,31 @@ export function hacerRodillo(fuente: Fuente | null, entrada: OpcionesRodillo): R
   const r = hacerTexturizador(fuente, { ...o, ancho: vuelta, alto: o.largo, radio: 0, grosor: pared, periodico: true })
   if (r.errores.length) return { ...r, vuelta, diametroTotal: 0 }
 
-  // fuera las paredes de la costura (x = 0 y x = vuelta): ahí la pieza sigue
-  const t = r.malla.tris
-  const sinCostura: number[] = []
-  for (let i = 0; i < t.length; i += 9) {
-    const xs = [t[i], t[i + 3], t[i + 6]]
-    if (xs.every((x) => Math.abs(x) < 1e-6) || xs.every((x) => Math.abs(x - vuelta) < 1e-6)) continue
-    for (let j = 0; j < 9; j++) sinCostura.push(t[i + j])
+  // Cada pieza (tubo y relieve) se enrolla por separado para que siga siendo su
+  // propio tramo (impresoras de varios colores)
+  const enrollar = (t: number[]) => {
+    // fuera las paredes de la costura (x = 0 y x = vuelta): ahí la pieza sigue
+    const sinCostura: number[] = []
+    for (let i = 0; i < t.length; i += 9) {
+      const xs = [t[i], t[i + 3], t[i + 6]]
+      if (xs.every((x) => Math.abs(x) < 1e-6) || xs.every((x) => Math.abs(x - vuelta) < 1e-6)) continue
+      for (let j = 0; j < 9; j++) sinCostura.push(t[i + j])
+    }
+    const tiras = partirEnTiras(sinCostura, PASO_CURVA)
+    const rIn = o.eje / 2
+    const tris = new Array<number>(tiras.length)
+    for (let i = 0; i < tiras.length; i += 3) {
+      const a = tiras[i] >= vuelta - 1e-9 ? 0 : (2 * Math.PI * tiras[i]) / vuelta // la costura cierra exacta
+      const rad = rIn + tiras[i + 2]
+      tris[i] = rad * Math.cos(a)
+      tris[i + 1] = rad * Math.sin(a)
+      tris[i + 2] = tiras[i + 1]
+    }
+    return tris
   }
-  const tiras = partirEnTiras(sinCostura, PASO_CURVA)
-  const rIn = o.eje / 2
-  const tris = new Array<number>(tiras.length)
-  for (let i = 0; i < tiras.length; i += 3) {
-    const a = tiras[i] >= vuelta - 1e-9 ? 0 : (2 * Math.PI * tiras[i]) / vuelta // la costura cierra exacta
-    const rad = rIn + tiras[i + 2]
-    tris[i] = rad * Math.cos(a)
-    tris[i + 1] = rad * Math.sin(a)
-    tris[i + 2] = tiras[i + 1]
-  }
+  const malla = conPartes(...separarPartes(r.malla).map((p) => [p.nombre === "Base" ? "Rodillo" : p.nombre, enrollar(p.tris)] as [string, number[]]))
   const diametroTotal = o.diametro + 2 * o.relieve
-  return { ...r, malla: { tris, avisos: [] }, vuelta, diametroTotal }
+  return { ...r, malla, vuelta, diametroTotal }
 }
 
 // ── Accesorios ─────────────────────────────────────────────────────────────

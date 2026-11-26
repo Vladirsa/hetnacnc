@@ -691,7 +691,31 @@ export function dibujoDXF(d: Dibujo) {
 // ======================================================================
 // STL <-> OBJ (sin vista previa, solo conversión)
 // ======================================================================
-export type Malla = { tris: number[]; avisos: string[] } // 9 números por triángulo
+export type Malla = { tris: number[]; avisos: string[]; partes?: Parte[] } // 9 números por triángulo
+
+/**
+ * Para impresoras de varios colores: cada pieza que puede ir de su color
+ * (la placa y las letras de un llavero, el cortador y el sello…) es un tramo
+ * seguido de `tris`, en orden. La malla de un solo color no cambia.
+ */
+export type Parte = { nombre: string; triangulos: number }
+
+/** Junta piezas con nombre en una sola malla que recuerda sus tramos (las vacías se omiten). */
+export function conPartes(...piezas: [nombre: string, tris: number[]][]): Malla {
+  const llenas = piezas.filter(([, t]) => t.length >= 9)
+  return { tris: llenas.flatMap(([, t]) => t), avisos: [], partes: llenas.map(([nombre, t]) => ({ nombre, triangulos: t.length / 9 })) }
+}
+
+/** Las piezas de una malla, cada una con sus triángulos (sin partes: una sola pieza). */
+export function separarPartes(m: Malla, nombre = "Pieza"): { nombre: string; tris: number[] }[] {
+  if (!m.partes?.length) return [{ nombre, tris: m.tris }]
+  let i = 0
+  return m.partes.map((p) => {
+    const tris = m.tris.slice(i * 9, (i + p.triangulos) * 9)
+    i += p.triangulos
+    return { nombre: p.nombre, tris }
+  })
+}
 
 export function leerSTL(buf: ArrayBuffer): Malla {
   const dv = new DataView(buf)

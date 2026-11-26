@@ -37,6 +37,8 @@ import {
 import { deUrl } from "@/lib/generador/texturizador-url"
 import { type Dibujo, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
+import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
+
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
 type Modelo = {
@@ -220,13 +222,18 @@ export function GeneradorTexturizador() {
   const vuelta = r && "vuelta" in r ? (r.vuelta as number) : 0
   const diametroSoporte = Math.ceil(total + 10)
   // vista armada: el rodillo puesto en su soporte
-  const tris3d = useMemo(() => {
-    if (!listo) return undefined
-    if (!rodillo || !verSoporte) return r!.malla.tris
+  const vista3d = useMemo(() => {
+    if (!listo) return { tris: undefined, soporte: 0 }
+    if (!rodillo || !verSoporte) return { tris: r!.malla.tris, soporte: 0 }
     const rod = r!.malla.tris.slice()
     for (let i = 2; i < rod.length; i += 3) rod[i] += APOYO_RODILLO
-    return [...hacerSoporte(numero(eje), numero(largo), diametroSoporte).tris, ...rod]
+    const soporte = hacerSoporte(numero(eje), numero(largo), diametroSoporte).tris
+    return { tris: soporte.concat(rod), soporte: soporte.length / 9 }
   }, [r, listo, rodillo, verSoporte, eje, largo, diametroSoporte])
+  const tris3d = vista3d.tris
+  const mc = useMulticolor(listo ? r!.malla.partes : undefined)
+  // con el soporte puesto, va primero en la vista (gris)
+  const coloresVista = mc.vista && vista3d.soporte ? [{ triangulos: vista3d.soporte, hex: "#8a8f98" }, ...mc.vista] : mc.vista
   const archivo = `texturizador-hetna-${
     (listaPalabras[0] || iconos[0] || "patron")
       .normalize("NFD")
@@ -382,6 +389,7 @@ export function GeneradorTexturizador() {
           Espejo (para sellar o texturizar)
         </label>
       </Seccion>
+      <PanelColores mc={mc} />
 
       {conTexto && error && <Aviso tipo="error">{error}</Aviso>}
       {r?.errores.map((e) => (
@@ -457,6 +465,7 @@ export function GeneradorTexturizador() {
           </div>
         </TarjetaExport>
       </div>
+      <TarjetaColores mc={mc} malla={listo ? r!.malla : null} archivo={nombreArchivo} titulo={listaPalabras[0] || "Texturizador"} nota={modo === "alto" ? "El patrón en relieve de un color y la base de otro." : "La capa grabada de un color y la base de otro."} />
 
       {rodillo && (
         <div className="flex flex-col gap-3">
@@ -544,6 +553,7 @@ export function GeneradorTexturizador() {
       subtitulo={rodillo ? "Rodillo texturizador" : "Texturizador para impresión 3D"}
       materialInicial="naranja"
       tris={tris3d}
+      colores={coloresVista}
       panel={panel}
       diseno2d={diseno2d}
       exportacion={exportacion}

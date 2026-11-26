@@ -9,6 +9,7 @@
 // (?texto=…&forma=…&fuente=…&icono=…&alto=…), que usan los llaveros del
 // catálogo de Impresión 3D bajo pedido para "modificar".
 import { BotonesCam } from "./BotonesCam"
+import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -200,6 +201,7 @@ export function GeneradorLlaveros() {
   const primerRenglon = texto.split("\n")[0] || "nombre"
   const archivo = `llavero-hetna-${slugArchivo(primerRenglon, "nombre")}`
   const formaNombre = FORMAS_LLAVERO.find((f) => f.id === forma)?.nombre
+  const mc = useMulticolor(listo ? r!.malla.partes : undefined)
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -347,6 +349,7 @@ export function GeneradorLlaveros() {
           <CampoNum etiqueta="Relieve de letras" valor={relieve} cambiar={setRelieve} />
         </div>
       </Seccion>
+      <PanelColores mc={mc} />
 
       <CampoNum etiqueta="Cuántos quieres (para cotizar)" valor={cantidad} cambiar={setCantidad} sufijo="pzas" />
 
@@ -459,6 +462,7 @@ export function GeneradorLlaveros() {
           </div>
         </TarjetaExport>
       </div>
+      <TarjetaColores mc={mc} malla={listo ? r!.malla : null} archivo={archivo} titulo={`Llavero ${primerRenglon}`} />
       <TarjetaExport titulo="Muchos nombres de una vez" nota={`Para eventos, escuelas o empresas: un nombre por renglón (hasta ${MAX_NOMBRES}). Cada llavero sale con la forma, la letra, el ícono y el logo de arriba.`}>
         <textarea
           value={nombres}
@@ -517,6 +521,7 @@ export function GeneradorLlaveros() {
       subtitulo="Llaveros, placas y adornos"
       materialInicial="naranja"
       tris={listo ? r!.malla.tris : undefined}
+      colores={mc.vista}
       panel={panel}
       diseno2d={diseno2d}
       exportacion={exportacion}

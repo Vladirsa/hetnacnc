@@ -11,7 +11,10 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Visor3D } from "@/components/hetna/generador/Visor3D"
 import { mandarArchivosAFabricar } from "@/lib/generador/aCotizador"
 import { CATEGORIAS, MODELOS, construirMalla, limpiarValores, modeloPorId, valoresIniciales, type MallaModelo, type Modelo3D } from "@/lib/generador/modelos3d"
-import { mallaSTL } from "@/lib/generador/vectores"
+import { separarPiezas } from "@/lib/generador/multicolor"
+import { conPartes, mallaSTL } from "@/lib/generador/vectores"
+
+import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
 
 const Malla3D = dynamic(() => import("./Malla3D"), { ssr: false, loading: () => <div className="h-full w-full bg-[#F7F3EE]" /> })
 
@@ -119,6 +122,15 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
   const stl = () => (malla ? mallaSTL({ tris: malla.tris } as never) : null)
 
+  // Varios colores: cada cuerpo suelto (la maceta y su plato, la caja y su
+  // tapa) es una parte; con más de 8 no tiene caso (p. ej. un juego de separadores)
+  const enPiezas = useMemo(() => {
+    if (!malla) return null
+    const piezas = separarPiezas(malla.tris)
+    return piezas.length >= 2 && piezas.length <= 8 ? conPartes(...piezas.map((t, i) => [`Pieza ${i + 1}`, t] as [string, number[]])) : null
+  }, [malla])
+  const mc = useMulticolor(enPiezas?.partes)
+
   const fabricar = () => {
     const datos = stl()
     if (!datos || !malla) return
@@ -162,7 +174,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="overflow-hidden rounded-[14px] border border-[#E7E4DC]">
-            <Visor3D>{malla ? <Malla3D tris={malla.tris} color={0x0ea5e9} /> : <div className="grid h-full place-items-center text-[#6B675C]">{error || "Armando el modelo…"}</div>}</Visor3D>
+            <Visor3D>{malla ? <Malla3D tris={mc.vista && enPiezas ? enPiezas.tris : malla.tris} color={0x0ea5e9} colores={mc.vista} /> : <div className="grid h-full place-items-center text-[#6B675C]">{error || "Armando el modelo…"}</div>}</Visor3D>
           </div>
 
           <div className="flex flex-col gap-4 rounded-[14px] border border-[#E7E4DC] bg-white p-4">
@@ -218,6 +230,12 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
             <button type="button" disabled={!malla} onClick={fabricar} className="rounded-[10px] bg-[#FF6A1A] py-3 text-[15px] font-extrabold text-white hover:bg-[#E65C12] disabled:opacity-50">
               Fabrícamelo: que un taller lo imprima
             </button>
+            {mc.disponible && (
+              <div className="tema-estudio flex flex-col gap-3 rounded-[10px] bg-[#121925] p-3 text-white">
+                <PanelColores mc={mc} />
+                {mc.activo && <TarjetaColores mc={mc} malla={enPiezas} archivo={nombreArchivo.replace(/\.stl$/, "")} titulo={modelo.nombre} />}
+              </div>
+            )}
             {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
             <button type="button" onClick={() => setValores(valoresIniciales(modelo))} className="text-[13px] font-semibold text-[#0284C7] underline">
               Volver a las medidas de fábrica

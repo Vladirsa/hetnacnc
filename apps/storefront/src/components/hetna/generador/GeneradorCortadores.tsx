@@ -16,6 +16,8 @@ import type { Fuente } from "@/lib/generador/letreros"
 import { ICONOS_TEXTURA, type IconoTextura } from "@/lib/generador/texturizador"
 import { type Dibujo, leerSVG, mallaSTL } from "@/lib/generador/vectores"
 
+import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
+
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
 type TipoForma = "icono" | "clasica" | "nombre" | "svg"
@@ -153,6 +155,9 @@ export function GeneradorCortadores() {
   const listo = !!r && !r.errores.length
   const tris = useMemo(() => (listo ? [...r!.cortador.tris, ...(r!.sello?.tris || [])] : undefined), [r, listo])
   const vista2d = useMemo(() => (listo ? vistaGalleta(r!.dibujo) : ""), [r, listo])
+  // el sello puede ir en dos colores; el cortador, de uno (en la vista, naranja)
+  const mc = useMulticolor(listo ? r!.sello?.partes : undefined)
+  const coloresVista = mc.vista && listo ? [{ triangulos: r!.cortador.tris.length / 9, hex: "#ff6a1a" }, ...mc.vista] : undefined
   const nombreForma =
     tipo === "icono" ? ICONOS_TEXTURA.find((i) => i.id === icono)?.nombre : tipo === "clasica" ? FORMAS_CLASICAS.find((c) => c.id === clasica)?.nombre : tipo === "nombre" ? nombre : svg?.nombre.replace(/\.svg$/i, "")
   const archivo = `cortador-galleta-${String(nombreForma || "forma")
@@ -296,6 +301,7 @@ export function GeneradorCortadores() {
           </div>
         )}
       </Seccion>
+      <PanelColores mc={mc} />
 
       {error && <Aviso tipo="error">{error}</Aviso>}
       {r?.errores.map((e) => (
@@ -357,6 +363,7 @@ export function GeneradorCortadores() {
           </TarjetaExport>
         )}
       </div>
+      <TarjetaColores mc={mc} malla={listo ? r!.sello : null} archivo={`${archivo}-sello`} titulo={`Sello ${nombreForma || ""}`.trim()} nota="El sello: la placa de un color y el dibujo de otro." />
       <Aviso>
         Para masa de galleta o fondant usa un filamento que el fabricante indique como apto para contacto con alimentos, y lávalo a mano. Las capas de una
         pieza impresa guardan restos: si es para vender, imprime uno nuevo cada temporada.
@@ -391,6 +398,7 @@ export function GeneradorCortadores() {
       subtitulo="Cortadores de galletas"
       materialInicial="naranja"
       tris={tris}
+      colores={coloresVista}
       panel={panel}
       diseno2d={diseno2d}
       exportacion={exportacion}

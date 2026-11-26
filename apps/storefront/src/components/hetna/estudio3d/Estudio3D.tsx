@@ -117,6 +117,7 @@ export function Estudio3D({
   lineas = false,
   dePie = false,
   segunda,
+  colores,
   panel,
   diseno2d,
   exportacion,
@@ -146,6 +147,8 @@ export function Estudio3D({
   dePie?: boolean
   // otra malla encima, translúcida (p. ej. el frente de acrílico)
   segunda?: { tris: number[]; color: number; opacidad: number }
+  // piezas de varios colores: tramos de `tris` en orden (triángulos y color #rrggbb)
+  colores?: { triangulos: number; hex: string }[]
   // controles propios de la herramienta, arriba del panel
   panel?: React.ReactNode
   // pestaña "Diseño 2D" (la hoja de corte); sin esto no aparece
@@ -511,16 +514,42 @@ export function Estudio3D({
   }, [urlStl, urlGlb, tris, segunda, lineas, dePie, verVista])
 
   // ---- Ajustes que no rearman la escena --------------------------------
+  // Colores por parte: se pintan los vértices (la malla no es indexada: el
+  // vértice i es del triángulo i / 3) sin rearmar la escena ni mover la cámara
+  const pintar = !!colores?.length && !!tris && colores.reduce((s, c) => s + c.triangulos, 0) * 9 === tris.length
+  const claveColores = pintar ? colores!.map((c) => `${c.triangulos}${c.hex}`).join(",") : ""
   useEffect(() => {
     const m = MATERIALES.find((x) => x.id === material) || MATERIALES[0]
     const mat = estado.current.material
+    const geo = estado.current.malla?.geometry
     if (!mat) return
-    mat.color.setHex(m.color)
-    mat.roughness = m.rugosidad
-    mat.metalness = m.metal
-    mat.map = m.fibra ? mdf() : null
+    if (pintar && geo) {
+      const n = geo.getAttribute("position").count
+      const col = new Float32Array(n * 3)
+      const c = new THREE.Color()
+      let v = 0
+      for (const tramo of colores!) {
+        c.set(tramo.hex)
+        for (let k = 0; k < tramo.triangulos * 3 && v < n; k++, v++) col.set([c.r, c.g, c.b], v * 3)
+      }
+      geo.setAttribute("color", new THREE.BufferAttribute(col, 3))
+      mat.vertexColors = true
+      mat.color.setHex(0xffffff)
+      mat.roughness = 0.55
+      mat.metalness = 0
+      mat.map = null
+    } else {
+      if (geo?.getAttribute("color")) geo.deleteAttribute("color")
+      mat.vertexColors = false
+      mat.color.setHex(m.color)
+      mat.roughness = m.rugosidad
+      mat.metalness = m.metal
+      mat.map = m.fibra ? mdf() : null
+    }
     mat.needsUpdate = true
-  }, [material, version])
+    sucio.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [material, version, claveColores])
 
   // Modos de vista: color (material o textura del modelo), blanco, gris
   // (arcilla), normales (revisar la superficie) y malla (ver los triángulos)
