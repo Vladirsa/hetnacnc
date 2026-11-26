@@ -30,6 +30,18 @@ export function vistaPreviaDe(metadata?: Record<string, unknown> | null): { url:
   return m ? { url: u, formato: m[1].toLowerCase() as FormatoVista } : null
 }
 
+/**
+ * Colores de la vista 3D (Impresión 3D bajo pedido, los pone el script del
+ * catálogo junto con su STL): tramos de triángulos y su color. Si no cuadran
+ * con el STL, el visor la deja de un color.
+ */
+export function coloresVistaDe(metadata?: Record<string, unknown> | null): { triangulos: number; hex: string }[] | null {
+  const v = metadata?.vista_colores
+  if (!Array.isArray(v) || !v.length || v.length > 16) return null
+  const ok = v.every((t) => t && Number.isInteger(t.triangulos) && t.triangulos >= 0 && typeof t.hex === "string" && /^#[0-9a-f]{6}$/i.test(t.hex))
+  return ok ? v.map((t) => ({ triangulos: t.triangulos as number, hex: t.hex as string })) : null
+}
+
 export function fotosFabricadaDe(metadata?: Record<string, unknown> | null): string[] {
   const v = metadata?.fotos_fabricada
   const lista = Array.isArray(v) ? v : typeof v === "string" ? v.split(/[\s,;]+/) : []

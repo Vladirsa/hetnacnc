@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import type { GeoCad } from "@/lib/cotizador/archivo-cad"
+import { type TramoColor, coloresPorVertice } from "@/lib/generador/colores-vista"
 
 const mm = (n: number) => (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("es-MX")
 
@@ -17,13 +18,14 @@ export function resumenGeo(g: GeoCad) {
         (g.perforaciones ? ` · ${g.perforaciones} perforaciones` : "")
 }
 
-export function VisorCad({ geo, alto = 260, oscuro = false }: { geo: GeoCad; alto?: number; oscuro?: boolean }) {
+// `colores`: tramos de la malla y su color (piezas a varios colores); si no cuadran, va de un color
+export function VisorCad({ geo, alto = 260, oscuro = false, colores }: { geo: GeoCad; alto?: number; oscuro?: boolean; colores?: TramoColor[] | null }) {
   return (
     <div
       className="relative w-full overflow-hidden rounded-xl border"
       style={{ height: alto, background: oscuro ? "#0B0F15" : "#FFFFFF", borderColor: oscuro ? "#2B3648" : "#E7E4DC" }}
     >
-      {geo.tipo === "3d" && geo.malla ? <Vista3D malla={geo.malla} oscuro={oscuro} /> : <Vista2D trazos={geo.trazos} oscuro={oscuro} />}
+      {geo.tipo === "3d" && geo.malla ? <Vista3D malla={geo.malla} oscuro={oscuro} colores={colores} /> : <Vista2D trazos={geo.trazos} oscuro={oscuro} />}
       <span
         className="pointer-events-none absolute bottom-2 left-2 rounded-md px-2 py-0.5 text-[11px] font-semibold"
         style={{ background: oscuro ? "rgba(17,23,34,.9)" : "rgba(255,255,255,.9)", color: oscuro ? "#C9D2E0" : "#142033" }}
@@ -95,8 +97,9 @@ function Vista2D({ trazos, oscuro }: { trazos: GeoCad["trazos"]; oscuro: boolean
 }
 
 // ── 3D ─────────────────────────────────────────────────────────────────
-function Vista3D({ malla, oscuro }: { malla: Float32Array; oscuro: boolean }) {
+function Vista3D({ malla, oscuro, colores }: { malla: Float32Array; oscuro: boolean; colores?: TramoColor[] | null }) {
   const ref = useRef<HTMLDivElement>(null)
+  const claveColores = colores?.map((c) => `${c.triangulos}${c.hex}`).join(",") || ""
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -121,7 +124,9 @@ function Vista3D({ malla, oscuro }: { malla: Float32Array; oscuro: boolean }) {
       const tam = new THREE.Vector3()
       caja.getSize(tam)
       const radio = Math.max(tam.x, tam.y, tam.z, 1)
-      const pieza = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xd9a066, metalness: 0.1, roughness: 0.7, side: THREE.DoubleSide }))
+      const col = coloresPorVertice(colores || undefined, malla.length / 9)
+      if (col) geo.setAttribute("color", new THREE.BufferAttribute(col, 3))
+      const pieza = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col ? 0xffffff : 0xd9a066, vertexColors: !!col, metalness: col ? 0 : 0.1, roughness: col ? 0.55 : 0.7, side: THREE.DoubleSide }))
       pieza.position.sub(centro)
       const grupo = new THREE.Group()
       grupo.add(pieza)
@@ -185,6 +190,7 @@ function Vista3D({ malla, oscuro }: { malla: Float32Array; oscuro: boolean }) {
       vivo = false
       limpiar()
     }
-  }, [malla, oscuro])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [malla, oscuro, claveColores])
   return <div ref={ref} className="h-full w-full" />
 }

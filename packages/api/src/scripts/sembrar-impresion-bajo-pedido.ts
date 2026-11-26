@@ -74,6 +74,8 @@ type Diseno = {
   foto: string
   /** STL (simplificado) para girar la pieza en la ficha */
   modelo_3d?: string
+  /** colores de la vista 3D: tramos de triángulos del STL y su color (#rrggbb) */
+  vista_colores?: { triangulos: number; hex: string }[]
   volumen_cm3: number
   medidas_mm: [number, number, number]
   /** sólo "modelo": cuántos cuerpos sueltos salen (maceta + plato = 2) */
@@ -214,6 +216,8 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       const stl = await subir(`${d.handle}.stl`, "model/stl", bytesStl)
       Object.assign(metadata, { vista_previa: stl.url, vista_previa_sha: shaStl })
     }
+    // los colores van con el STL del script (si HETNA puso otro a mano, no se tocan)
+    if (bytesStl && stlDelScript) metadata.vista_colores = Array.isArray(d.vista_colores) ? d.vista_colores.slice(0, 16) : null
 
     if (producto) {
       const cambios: Record<string, any> = {}

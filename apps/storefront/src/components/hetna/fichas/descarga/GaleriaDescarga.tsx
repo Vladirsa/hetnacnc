@@ -18,10 +18,10 @@ const VistaModelo = dynamic(() => import("./VistaModelo"), { ssr: false })
 export type VistaGaleria =
   | { clave: string; tipo: "foto"; url: string; titulo: string }
   | { clave: string; tipo: "esquema"; svg: string; titulo: string }
-  | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string }
+  | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string; colores?: { triangulos: number; hex: string }[] | null }
 
 /** digital=false: producto físico con vista 3D (p. ej. Impresión 3D bajo pedido): sin "Descarga inmediata". */
-export function GaleriaDescarga({ vistas, titulo, digital = true }: { vistas: VistaGaleria[]; titulo: string; digital?: boolean }) {
+export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vistas: VistaGaleria[]; titulo: string; digital?: boolean; nota?: string }) {
   const [i, setI] = useState(0)
   if (!vistas.length) return null
   const v = vistas[Math.min(i, vistas.length - 1)]
@@ -40,7 +40,7 @@ export function GaleriaDescarga({ vistas, titulo, digital = true }: { vistas: Vi
             className="object-contain"
           />
         ) : v.tipo === "modelo" ? (
-          <VistaModelo url={v.url} formato={v.formato} />
+          <VistaModelo url={v.url} formato={v.formato} colores={v.colores} />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-2 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: v.svg }} />
         )}
@@ -79,6 +79,7 @@ export function GaleriaDescarga({ vistas, titulo, digital = true }: { vistas: Vi
           </>
         )}
       </div>
+      {nota && <p className="m-0 -mt-1 text-[12.5px] text-[#6B6A63]">{nota}</p>}
 
       {vistas.length > 1 && (
         <ul className="grid grid-cols-4 gap-2 sm:grid-cols-5" aria-label="Vistas">

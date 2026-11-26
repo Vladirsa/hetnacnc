@@ -351,7 +351,13 @@ export const ProductDetailsPage = async ({
       >
         <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1" data-testid="product-gallery-container">
           {galeriaConVistas ? (
-            <GaleriaDescarga vistas={vistasGaleria(prod as never)} titulo={prod.title} digital={!!descarga} />
+            <GaleriaDescarga
+              vistas={vistasGaleria(prod as never)}
+              titulo={prod.title}
+              digital={!!descarga}
+              // las fotos de Impresión 3D salen a colores: el color real lo da el taller que elijas
+              nota={impresion ? "Colores de ejemplo: el material y el color los eliges con el taller." : undefined}
+            />
           ) : (
             <ProductGallery images={prod?.images || []} title={prod.title} />
           )}

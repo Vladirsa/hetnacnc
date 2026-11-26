@@ -8,7 +8,7 @@ import { VisorCad } from "@/components/hetna/visor/VisorCad"
 import { type GeoCad, leerDxf, leerObj, leerStl, leerSvg } from "@/lib/cotizador/archivo-cad"
 import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
 
-export default function VistaModelo({ url, formato }: { url: string; formato: FormatoVista }) {
+export default function VistaModelo({ url, formato, colores }: { url: string; formato: FormatoVista; colores?: { triangulos: number; hex: string }[] | null }) {
   const caja = useRef<HTMLDivElement>(null)
   const [alto, setAlto] = useState(320)
   const [geo, setGeo] = useState<GeoCad | null>(null)
@@ -37,7 +37,7 @@ export default function VistaModelo({ url, formato }: { url: string; formato: Fo
   return (
     <div ref={caja} className="absolute inset-0">
       {geo ? (
-        <VisorCad geo={geo} alto={alto} />
+        <VisorCad geo={geo} alto={alto} colores={colores} />
       ) : (
         <div className="flex h-full items-center justify-center text-[14px] text-[#5B6370]">
           {error ? "No se pudo cargar la vista 3D." : "Cargando vista 3D…"}
