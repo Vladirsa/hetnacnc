@@ -93,7 +93,12 @@ async function validar(req: MedusaRequest, res: MedusaResponse, next: MedusaNext
     if (error) return res.status(400).json({ type: "invalid_data", message: error })
     copiarLimpio(req, body.metadata)
   } catch {
-    // si no se pudo revisar, sigue: nunca se frena una venta por un fallo técnico
+    // si no se pudo revisar, sigue (nunca se frena una venta por un fallo técnico),
+    // salvo con colores por parte: no se pueden dar por buenos sin revisarlos
+    const m = ((req.body || {}) as { metadata?: Record<string, unknown> }).metadata
+    if (m && typeof m === "object" && "colores" in m) {
+      return res.status(503).json({ type: "unexpected_state", message: "No pudimos revisar los colores. Intenta de nuevo en un momento." })
+    }
   }
   next()
 }

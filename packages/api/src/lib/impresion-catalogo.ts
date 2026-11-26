@@ -254,6 +254,8 @@ export async function ofertasPublicas(container: MedusaContainer, productId: str
       }
     })
     .filter((o) => o.precio != null)
+    // a dos colores hacen falta al menos dos (una oferta hecha fuera de este panel podría no tenerlos)
+    .filter((o) => !o.dos_colores || o.colores.length >= 2)
 
   return {
     // llaveros y letras: el cliente escribe su texto al agregarlo (va en metadata.texto del renglón;

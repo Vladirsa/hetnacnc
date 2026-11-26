@@ -32,6 +32,7 @@ import {
   MATERIALES_DOS_COLORES,
   MATERIALES_IMPRESION,
   OPCION_MATERIAL,
+  leerMaterial,
   precioRecomendado,
   SUFIJO_DOS_COLORES,
   TITULO_COLECCION_IMPRESION,
@@ -344,7 +345,11 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     // Piezas de dos partes: agrega las variantes "PLA · 2 colores" que falten
     // (sólo agrega: las variantes y ofertas que ya existen no se tocan)
     if (metadata.grupos_color) {
-      const agregadas = await asegurarDosColores(container, producto.id, d)
+      const agregadas = await asegurarDosColores(container, producto.id, d).catch((e) => {
+        // un producto que falla no frena a los demás; al volver a correr se completa
+        logger.error(`[impresion] ${d.handle}: no se pudieron agregar las variantes a 2 colores: ${(e as Error).message}`)
+        return [] as string[]
+      })
       if (agregadas.length) {
         dosColores += agregadas.length
         logger.info(`[impresion] ${d.handle}: ${agregadas.join(", ")}`)
@@ -362,6 +367,8 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
     if (ACTUALIZAR_COLORES) {
       const material = new Map(((producto.variants || []) as { id: string; title: string }[]).map((v) => [v.id, v.title]))
       const cambiar = (mias as any[])
+        // las ofertas a dos colores se arreglan en el panel (necesitan al menos dos colores)
+        .filter((o) => !leerMaterial(material.get(o.variant_id) || "").dosColores)
         .map((o) => ({ o, colores: coloresHetna(material.get(o.variant_id) || "") }))
         .filter(({ o, colores }) => colores.length && JSON.stringify(o.metadata?.colores || []) !== JSON.stringify(colores))
       if (cambiar.length) {
