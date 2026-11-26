@@ -198,15 +198,21 @@ function Tarjeta({ p, alTerminar }: { p: Plano; alTerminar: (m: string) => void 
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState("")
   const [editando, setEditando] = useState(false)
+  // Confirmación dentro de la tarjeta (la ventana confirm() del navegador puede
+  // quedar bloqueada y entonces el botón no hacía nada)
+  const [confirmar, setConfirmar] = useState<"" | "publicar" | "rechazar">("")
   const accion = async (a: "publicar" | "rechazar") => {
-    if (a === "publicar" && !confirm(`¿Publicar «${p.nombre}»? Saldrá en /planos, en la tienda y en redes.`)) return
+    setConfirmar("")
     setOcupado(true)
     setError("")
     try {
       const r = await pedir({ slug: p.slug, accion: a })
-      alTerminar(a === "publicar" ? `Publicado: ${r?.url || p.slug}${r?.producto === "pendiente" ? " (el producto de la tienda no se pudo crear; corre crear-productos-planos.ts)" : ""}` : "Rechazado")
+      if (!r?.ok) throw new Error(r?.message || "No se pudo completar.")
+      alTerminar(a === "publicar" ? `Publicado «${p.nombre}»: ${r?.url || p.slug}${r?.producto === "pendiente" ? " (el producto de la tienda no se pudo crear; corre crear-productos-planos.ts)" : ""}` : `Rechazado «${p.nombre}»`)
     } catch (e) {
-      setError((e as Error).message)
+      const m = `No se pudo ${a === "publicar" ? "publicar" : "rechazar"} «${p.nombre}»: ${(e as Error).message}`
+      setError(m)
+      alTerminar(m)
       setOcupado(false)
     }
   }
@@ -232,12 +238,28 @@ function Tarjeta({ p, alTerminar }: { p: Plano; alTerminar: (m: string) => void 
         </a>
         {p.estado === "borrador" && (
           <>
-            <button type="button" style={boton} disabled={ocupado} onClick={() => void accion("publicar")}>
-              Publicar
-            </button>
-            <button type="button" style={botonClaro} disabled={ocupado} onClick={() => void accion("rechazar")}>
-              Rechazar
-            </button>
+            {confirmar ? (
+              <>
+                <span style={{ alignSelf: "center", fontSize: 13, fontWeight: 700 }}>
+                  {confirmar === "publicar" ? "¿Publicar? Sale en /planos, en la tienda y en redes." : "¿Rechazar este plano?"}
+                </span>
+                <button type="button" style={boton} onClick={() => void accion(confirmar)}>
+                  Sí, {confirmar}
+                </button>
+                <button type="button" style={botonClaro} onClick={() => setConfirmar("")}>
+                  No
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" style={boton} disabled={ocupado} onClick={() => setConfirmar("publicar")}>
+                  {ocupado ? "Publicando… (tarda unos segundos)" : "Publicar"}
+                </button>
+                <button type="button" style={botonClaro} disabled={ocupado} onClick={() => setConfirmar("rechazar")}>
+                  Rechazar
+                </button>
+              </>
+            )}
             {p.datos && !editando && (
               <button type="button" style={botonClaro} onClick={() => setEditando(true)}>
                 Editar
