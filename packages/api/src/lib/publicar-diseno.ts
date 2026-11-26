@@ -1,11 +1,13 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { PIEZAS_POR_OMISION, validarLicencia } from "./licencias"
-import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError, Modules } from "@medusajs/framework/utils"
 import { createProductsWorkflow, updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { createOffersWorkflow } from "@mercurjs/core/workflows"
 import { MercurModules, type CreateOfferDTO } from "@mercurjs/types"
 
 import { camSellerHandle } from "../modules/cam/catalog"
+import { getSignedDownloadUrl } from "./backblaze"
+import { problemaArchivoDiseno } from "./revisar-archivo-diseno"
 import { aprovisionarEnvios, obtenerPerfilDigital } from "./envios-automaticos"
 
 // Publica en la tienda una ficha de HETNA Digital Factory (un diseño CNC que
@@ -106,6 +108,27 @@ export function descripcionHtml(f: FichaDiseno): string {
   return partes.join("")
 }
 
+/**
+ * Baja el archivo del bucket privado y lo revisa (lib/revisar-archivo-diseno.ts).
+ * Lanza error si está dañado. Si no se puede bajar, no bloquea (sólo avisa).
+ */
+export async function revisarArchivoPublicado(llave: string, logger?: { warn: (m: string) => void }) {
+  if (!/\.(zip|stl)$/i.test(llave)) return
+  let buf: Buffer
+  try {
+    const liga = await getSignedDownloadUrl(llave, 900)
+    if (!liga.ok) throw new Error(liga.reason)
+    const r = await fetch(liga.url, { signal: AbortSignal.timeout(120_000) })
+    if (!r.ok) throw new Error(`descarga ${r.status}`)
+    buf = Buffer.from(await r.arrayBuffer())
+  } catch (e) {
+    logger?.warn(`[publicar-diseno] no se pudo revisar ${llave}: ${(e as Error).message}`)
+    return
+  }
+  const problema = problemaArchivoDiseno(llave, buf)
+  if (problema) throw new MedusaError(MedusaError.Types.INVALID_DATA, `No se publicó: ${problema}`)
+}
+
 export async function publicarDiseno(
   container: MedusaContainer,
   ficha: FichaDiseno
@@ -113,6 +136,9 @@ export async function publicarDiseno(
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const productService = container.resolve(Modules.PRODUCT)
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
+
+  // ---- El archivo que se va a entregar debe abrir ----------------------------
+  await revisarArchivoPublicado(ficha.archivo_storage_key, logger)
 
   // ---- La tienda que vende (la misma de los servicios CAM) -----------------
   const handleTienda = camSellerHandle()
