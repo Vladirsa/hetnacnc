@@ -17,7 +17,7 @@ import { extruir } from "@/lib/generador/extruir"
 import { caja, dentro } from "@/lib/generador/geo2d"
 import { circulo, contornosDe, figurasDeTexto, puntoInterior } from "@/lib/generador/letras3d"
 import type { Fuente } from "@/lib/generador/letreros"
-import { type Malla, type P, type Parte, conPartes } from "@/lib/generador/vectores"
+import { type Malla, type P, conPartes } from "@/lib/generador/vectores"
 
 const { geom2 } = jscad.geometries
 const { subtract, intersect } = jscad.booleans
@@ -55,8 +55,9 @@ export type ResultadoImpresion = {
   tris: number[]
   /** de frente, para verla (Y arriba = alto de la letra; Z = grosor hacia el que mira) */
   trisVista: number[]
-  /** piezas para impresoras de varios colores (tramos de `tris` y de `trisVista`, en orden) */
-  partes: Parte[]
+  /** la misma malla que `tris`, con sus partes para impresoras de varios colores
+   * (sus tramos también sirven para `trisVista`, que conserva el orden) */
+  malla: Malla
   /** contornos de cada letra (plantilla de montaje y vista 2D) */
   letras: { letra: string; contornos: P[][] }[]
   barrenos: MarcaMontaje[]
@@ -212,7 +213,7 @@ function armarLuz(letras: Letra[], o: OpcionesImpresion): Armado {
 const ARMAR: Record<EstiloImpresion, (letras: Letra[], o: OpcionesImpresion) => Armado> = { pie: armarPie, pared: armarPared, luz: armarLuz }
 
 export function hacerLetrasImpresion(fuente: Fuente, o: OpcionesImpresion): ResultadoImpresion {
-  const vacio = (e: string): ResultadoImpresion => ({ tris: [], trisVista: [], partes: [], letras: [], barrenos: [], ancho: 0, alto: 0, profundidadTotal: 0, piezas: 0, avisos: [], errores: [e] })
+  const vacio = (e: string): ResultadoImpresion => ({ tris: [], trisVista: [], malla: { tris: [], avisos: [] }, letras: [], barrenos: [], ancho: 0, alto: 0, profundidadTotal: 0, piezas: 0, avisos: [], errores: [e] })
   const texto = o.texto.replace(/\s+/g, " ").trim()
   if (!texto) return vacio("Escribe el texto de las letras.")
   if (!(o.alto >= 15)) return vacio("Las letras deben medir al menos 15 mm de alto.")
@@ -227,7 +228,7 @@ export function hacerLetrasImpresion(fuente: Fuente, o: OpcionesImpresion): Resu
   return {
     tris: a.malla.tris,
     trisVista: o.estilo === "pie" ? a.malla.tris : deFrente(a.malla.tris, o.profundidad),
-    partes: a.malla.partes || [],
+    malla: a.malla,
     letras: letras.map(({ letra, contornos }) => ({ letra, contornos })),
     barrenos: a.barrenos,
     ancho: todo.x1 - todo.x0,

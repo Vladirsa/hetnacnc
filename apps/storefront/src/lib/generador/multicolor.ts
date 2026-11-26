@@ -8,7 +8,7 @@
 //    todos juntos y se les dice que son una sola pieza.
 import { strToU8, zipSync } from "fflate"
 
-import { type Malla, mallaSTL, separarPartes } from "@/lib/generador/vectores"
+import { type Malla, indexar, mallaSTL, separarPartes } from "@/lib/generador/vectores"
 
 /** Colores de filamento comunes (PLA) para elegir rápido. */
 export const PALETA: { id: string; nombre: string; hex: string }[] = [
@@ -36,66 +36,53 @@ export function coloresIniciales(n: number): string[] {
 
 export type ParteColor = { nombre: string; tris: number[]; color: string }
 
-/** Las partes de la malla con su color (id de PALETA), en orden. */
+/** Las partes de la malla con su color (id de PALETA), en orden; sin las vacías. */
 export function partesConColor(m: Malla, colores: string[], nombre = "Pieza"): ParteColor[] {
-  return separarPartes(m, nombre).map((p, i) => ({ ...p, color: colores[i] || coloresIniciales(i + 1)[i] }))
+  const partes = separarPartes(m, nombre)
+  const iniciales = coloresIniciales(partes.length)
+  return partes.map((p, i) => ({ ...p, color: colores[i] || iniciales[i] })).filter((p) => p.tris.length >= 9)
 }
 
-/** Malla indexada: un vértice por posición (redondeada a 0.0001 mm). */
-export function indexar(t: number[]): { pos: number[]; ind: Uint32Array } {
-  const idx = new Map<string, number>(), pos: number[] = [], ind = new Uint32Array(t.length / 3)
-  for (let i = 0; i < t.length; i += 3) {
-    const k = `${t[i].toFixed(4)},${t[i + 1].toFixed(4)},${t[i + 2].toFixed(4)}`
-    let j = idx.get(k)
-    if (j === undefined) idx.set(k, (j = pos.length / 3)), pos.push(t[i], t[i + 1], t[i + 2])
-    ind[i / 3] = j
+/** Tramo de la malla (triángulos seguidos) y su color #rrggbb, para pintar la vista. */
+export type TramoColor = { triangulos: number; hex: string }
+
+/** Color por vértice (RGB lineal, como lo usa three) de una malla no indexada:
+ * el vértice i es del triángulo i / 3. null si los tramos no cuadran con la malla. */
+export function coloresPorVertice(tramos: TramoColor[] | undefined, nTris: number): Float32Array | null {
+  if (!tramos?.length || tramos.reduce((s, t) => s + t.triangulos, 0) !== nTris) return null
+  const col = new Float32Array(nTris * 9)
+  const lineal = (c: number) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4)
+  let v = 0
+  for (const t of tramos) {
+    const h = parseInt(t.hex.slice(1), 16)
+    const r = lineal((h >> 16) & 255), g = lineal((h >> 8) & 255), b = lineal(h & 255)
+    for (let k = 0; k < t.triangulos * 3; k++, v++) (col[v * 3] = r), (col[v * 3 + 1] = g), (col[v * 3 + 2] = b)
   }
-  return { pos, ind }
+  return col
 }
 
-/** Separa una malla en sus cuerpos sueltos (triángulos unidos por vértices compartidos). */
-export function separarPiezas(t: number[]): number[][] {
-  const n = t.length / 9
-  const { ind } = indexar(t)
-  const padre = Array.from({ length: n }, (_, i) => i)
-  const raiz = (i: number): number => (padre[i] === i ? i : (padre[i] = raiz(padre[i])))
-  const primero = new Map<number, number>()
-  for (let i = 0; i < n; i++)
-    for (let v = 0; v < 3; v++) {
-      const j = primero.get(ind[i * 3 + v])
-      if (j === undefined) primero.set(ind[i * 3 + v], i)
-      else padre[raiz(i)] = raiz(j)
-    }
-  const grupos = new Map<number, number[]>()
-  for (let i = 0; i < n; i++) {
-    const r = raiz(i)
-    let g = grupos.get(r)
-    if (!g) grupos.set(r, (g = []))
-    for (let k = 0; k < 9; k++) g.push(t[i * 9 + k])
-  }
-  return [...grupos.values()]
-}
-
-const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+// sin caracteres de control (no caben en XML) y con & < > " escapados
+const xml = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 const num = (n: number) => String(Math.round(n * 10000) / 10000)
 
 /** 3MF (especificación base) con un objeto por parte dentro de un ensamble. */
 export function archivo3MF(partes: ParteColor[], titulo = "HETNA"): Uint8Array {
-  const vivas = partes.filter((p) => p.tris.length >= 9)
-  const usados = [...new Set(vivas.map((p) => p.color))]
+  const usados = [...new Set(partes.map((p) => p.color))]
   const materiales = usados.map((id) => `<base name="${xml(colorPorId(id).nombre)}" displaycolor="${colorPorId(id).hex.toUpperCase()}FF"/>`).join("")
-  const objetos = vivas
+  const objetos = partes
     .map((p, i) => {
       const { pos, ind } = indexar(p.tris)
       const v: string[] = []
       for (let k = 0; k < pos.length; k += 3) v.push(`<vertex x="${num(pos[k])}" y="${num(pos[k + 1])}" z="${num(pos[k + 2])}"/>`)
       const t: string[] = []
-      for (let k = 0; k < ind.length; k += 3) t.push(`<triangle v1="${ind[k]}" v2="${ind[k + 1]}" v3="${ind[k + 2]}"/>`)
+      // al juntar vértices a 0.0001 mm un triángulo muy delgado puede quedar con
+      // dos vértices iguales: la especificación los prohíbe y se omiten (no tienen área)
+      for (let k = 0; k < ind.length; k += 3) if (ind[k] !== ind[k + 1] && ind[k + 1] !== ind[k + 2] && ind[k] !== ind[k + 2]) t.push(`<triangle v1="${ind[k]}" v2="${ind[k + 1]}" v3="${ind[k + 2]}"/>`)
       return `<object id="${i + 2}" type="model" name="${xml(p.nombre)}" pid="1" pindex="${usados.indexOf(p.color)}"><mesh><vertices>${v.join("")}</vertices><triangles>${t.join("")}</triangles></mesh></object>`
     })
     .join("\n")
-  const ensamble = vivas.length + 2
-  const componentes = vivas.map((_, i) => `<component objectid="${i + 2}"/>`).join("")
+  const ensamble = partes.length + 2
+  const componentes = partes.map((_, i) => `<component objectid="${i + 2}"/>`).join("")
   const modelo = `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="es-MX" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
 <metadata name="Title">${xml(titulo)}</metadata>
@@ -122,14 +109,14 @@ ${objetos}
 export function zipPorColor(partes: ParteColor[], base: string): Uint8Array {
   // (concat y no push(...): una malla grande pasa del límite de argumentos)
   const porColor = new Map<string, number[]>()
-  for (const p of partes) if (p.tris.length >= 9) porColor.set(p.color, (porColor.get(p.color) || []).concat(p.tris))
+  for (const p of partes) porColor.set(p.color, (porColor.get(p.color) || []).concat(p.tris))
   const archivos: Record<string, Uint8Array> = {}
   const lista: string[] = []
   let i = 1
   for (const [color, tris] of porColor) {
     const nombre = `${base}-${i++}-${color}.stl`
     archivos[nombre] = new Uint8Array(mallaSTL({ tris, avisos: [] }))
-    const de = partes.filter((p) => p.color === color && p.tris.length >= 9).map((p) => p.nombre)
+    const de = partes.filter((p) => p.color === color).map((p) => p.nombre)
     lista.push(`${nombre}: ${colorPorId(color).nombre} (${de.join(", ")})`)
   }
   archivos["LEEME.txt"] = strToU8(

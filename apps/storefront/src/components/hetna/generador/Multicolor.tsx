@@ -7,16 +7,16 @@
 import { useState } from "react"
 
 import { Boton, Interruptor, Seccion, TarjetaExport, descargar } from "@/components/hetna/estudio3d/Controles"
-import { PALETA, archivo3MF, colorPorId, coloresIniciales, partesConColor, zipPorColor } from "@/lib/generador/multicolor"
-import type { Malla, Parte } from "@/lib/generador/vectores"
+import { PALETA, type TramoColor, archivo3MF, colorPorId, coloresIniciales, partesConColor, zipPorColor } from "@/lib/generador/multicolor"
+import type { Malla } from "@/lib/generador/vectores"
 
 export type EstadoMulticolor = ReturnType<typeof useMulticolor>
 
 /** Colores elegidos por nombre de parte: si cambia el texto, la placa sigue del mismo color. */
-export function useMulticolor(partes: Parte[] | undefined) {
+export function useMulticolor(malla: Malla | null | undefined) {
   const [activo, setActivo] = useState(false)
   const [elegidos, setElegidos] = useState<Record<string, string>>({})
-  const lista = partes || []
+  const lista = malla?.partes || []
   const iniciales = coloresIniciales(lista.length)
   const colores = lista.map((p, i) => elegidos[p.nombre] || iniciales[i])
   const disponible = lista.length > 1
@@ -24,11 +24,12 @@ export function useMulticolor(partes: Parte[] | undefined) {
     activo: activo && disponible,
     setActivo,
     disponible,
+    malla: malla || null,
     partes: lista,
     colores,
     cambiar: (nombre: string, id: string) => setElegidos((e) => ({ ...e, [nombre]: id })),
     /** para Estudio3D (prop `colores`): sólo con el interruptor prendido */
-    vista: activo && disponible ? lista.map((p, i) => ({ triangulos: p.triangulos, hex: colorPorId(colores[i]).hex })) : undefined,
+    vista: activo && disponible ? lista.map((p, i): TramoColor => ({ triangulos: p.triangulos, hex: colorPorId(colores[i]).hex })) : undefined,
   }
 }
 
@@ -66,7 +67,8 @@ export function PanelColores({ mc }: { mc: EstadoMulticolor }) {
 }
 
 /** Tarjeta de descarga para impresoras de varios colores (va en la pestaña Exportación). */
-export function TarjetaColores({ mc, malla, archivo, titulo, nota }: { mc: EstadoMulticolor; malla: Malla | null; archivo: string; titulo: string; nota?: string }) {
+export function TarjetaColores({ mc, archivo, titulo, nota }: { mc: EstadoMulticolor; archivo: string; titulo: string; nota?: string }) {
+  const malla = mc.malla
   if (!mc.disponible || !malla) return null
   const partes = () => partesConColor(malla, mc.colores)
   const resumen = mc.partes.map((p, i) => `${p.nombre} (${colorPorId(mc.colores[i]).nombre.toLowerCase()})`).join(", ")

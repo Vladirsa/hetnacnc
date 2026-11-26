@@ -10,9 +10,9 @@ import { strFromU8, unzipSync } from "fflate"
 import { hacerCortador } from "./cortadores"
 import { OPCIONES_IMPRESION_FABRICA, hacerLetrasImpresion } from "./letras3dImpresion"
 import { OPCIONES_LLAVERO_FABRICA, hacerLlavero } from "./llaveros"
-import { archivo3MF, coloresIniciales, partesConColor, separarPiezas, zipPorColor } from "./multicolor"
+import { archivo3MF, coloresIniciales, coloresPorVertice, partesConColor, zipPorColor } from "./multicolor"
 import { hacerRodillo, hacerTexturizador, type OpcionesTexturizador } from "./texturizador"
-import { type Malla, conPartes, volumenMalla } from "./vectores"
+import { type Malla, conPartes, separarPiezas, volumenMalla } from "./vectores"
 
 const DIR = process.env.FUENTES_DIR || ""
 const ruta = join(DIR, "montserrat", "files", "montserrat-latin-800-normal.woff")
@@ -103,6 +103,15 @@ test("conPartes: tramos en orden y sin partes vacías", () => {
   assert.equal(separarPiezas(m.tris).length, 2)
 })
 
+test("coloresPorVertice: un color por triángulo y null si no cuadra", () => {
+  const c = coloresPorVertice([{ triangulos: 1, hex: "#ffffff" }, { triangulos: 2, hex: "#000000" }], 3)!
+  assert.equal(c.length, 27)
+  assert.deepEqual([...c.slice(0, 9)], Array(9).fill(1))
+  assert.deepEqual([...c.slice(9)], Array(18).fill(0))
+  assert.equal(coloresPorVertice([{ triangulos: 2, hex: "#ffffff" }], 3), null)
+  assert.equal(coloresPorVertice(undefined, 3), null)
+})
+
 test("llavero: placa, letras e ícono", { skip: sinFuente }, () => {
   const r = hacerLlavero(fuente(), { ...OPCIONES_LLAVERO_FABRICA, texto: "Max", alto: 12, forma: "rect", icono: "corazon" } as any)
   assert.deepEqual(r.errores, [])
@@ -117,7 +126,7 @@ test("letras 3D: de pie, para colgar y para LED", { skip: sinFuente }, () => {
   for (const estilo of ["pie", "pared", "luz"] as const) {
     const r = hacerLetrasImpresion(f, { ...base, estilo, alto: estilo === "luz" ? 80 : 50 })
     assert.deepEqual(r.errores, [])
-    revisar({ tris: r.tris, avisos: [], partes: r.partes }, [...nombres[estilo]])
+    revisar(r.malla, [...nombres[estilo]])
     // la vista de frente conserva el orden: los mismos tramos sirven para pintar
     assert.equal(r.trisVista.length, r.tris.length)
   }
@@ -137,6 +146,16 @@ test("texturizador: placa y rodillo con su relieve aparte", () => {
   const r = hacerRodillo(null, { ...textura, diametro: 40, largo: 50, eje: 8 })
   assert.deepEqual(r.errores, [])
   revisar(r.malla, ["Rodillo", "Relieve"])
+  // con este diámetro el círculo deja triángulos que al juntar vértices quedan sin área
+  const c = hacerRodillo(null, { ...textura, iconos: ["circulo"] as any, diametro: 37.3, largo: 50, eje: 8 })
+  revisar(c.malla, ["Rodillo", "Relieve"])
+})
+
+test("3MF: el título con caracteres de control sigue siendo XML válido", () => {
+  const m = conPartes(["A", [0, 0, 0, 1, 0, 0, 0, 1, 0]], ["B", [0, 0, 1, 1, 0, 1, 0, 1, 1]])
+  const x = strFromU8(unzipSync(archivo3MF(partesConColor(m, ["negro", "rojo"]), "Hola\u0001 <&> \"x\""))["3D/3dmodel.model"])
+  assert.ok(!/[\u0000-\u0008]/.test(x))
+  assert.match(x, /Hola &lt;&amp;&gt; &quot;x&quot;/)
 })
 
 test("cortador: el sello sale en placa y dibujo", () => {

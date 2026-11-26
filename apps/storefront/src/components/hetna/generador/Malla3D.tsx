@@ -4,12 +4,14 @@ import { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
+import { type TramoColor, coloresPorVertice } from "@/lib/generador/multicolor"
+
 // Vista 3D de una malla de triángulos (9 números por triángulo, en mm, Z hacia
 // arriba). La usan las herramientas que producen STL: extruir, litofanías…
 
 // Sin `alto` llena el contenedor (Visor3D); con `alto` mide eso en px.
 // `colores`: piezas de varios colores, tramos de `tris` en orden (triángulos y #rrggbb)
-export default function Malla3D({ tris, alto, oscuro = false, color = 0xff6a1a, colores }: { tris: number[]; alto?: number; oscuro?: boolean; color?: number; colores?: { triangulos: number; hex: string }[] }) {
+export default function Malla3D({ tris, alto, oscuro = false, color = 0xff6a1a, colores }: { tris: number[]; alto?: number; oscuro?: boolean; color?: number; colores?: TramoColor[] }) {
   const ref = useRef<HTMLDivElement>(null)
   const claveColores = colores?.map((c) => `${c.triangulos}${c.hex}`).join(",") || ""
 
@@ -23,16 +25,9 @@ export default function Malla3D({ tris, alto, oscuro = false, color = 0xff6a1a, 
     const geo = new THREE.BufferGeometry()
     geo.setAttribute("position", new THREE.Float32BufferAttribute(tris, 3))
     geo.computeVertexNormals()
-    const pintar = !!colores?.length && colores.reduce((s, c) => s + c.triangulos, 0) * 9 === tris.length
-    if (pintar) {
-      const n = tris.length / 3, col = new Float32Array(n * 3), c = new THREE.Color()
-      let v = 0
-      for (const tramo of colores!) {
-        c.set(tramo.hex)
-        for (let k = 0; k < tramo.triangulos * 3; k++, v++) col.set([c.r, c.g, c.b], v * 3)
-      }
-      geo.setAttribute("color", new THREE.BufferAttribute(col, 3))
-    }
+    const col = coloresPorVertice(colores, tris.length / 9)
+    const pintar = !!col
+    if (col) geo.setAttribute("color", new THREE.BufferAttribute(col, 3))
     const mat = new THREE.MeshStandardMaterial({ color: pintar ? 0xffffff : color, vertexColors: pintar, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide })
     const malla = new THREE.Mesh(geo, mat)
     // el dibujo está en XY con Z arriba; three mira con Y arriba

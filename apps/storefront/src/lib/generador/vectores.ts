@@ -814,3 +814,38 @@ export function medidasMalla(m: Malla) {
 export function escalarMalla(m: Malla, k: number): Malla {
   return { ...m, tris: m.tris.map((x) => x * k) }
 }
+
+/** Malla indexada: un vértice por posición (redondeada a 0.0001 mm). */
+export function indexar(t: number[]): { pos: number[]; ind: Uint32Array } {
+  const idx = new Map<string, number>(), pos: number[] = [], ind = new Uint32Array(t.length / 3)
+  for (let i = 0; i < t.length; i += 3) {
+    const k = `${t[i].toFixed(4)},${t[i + 1].toFixed(4)},${t[i + 2].toFixed(4)}`
+    let j = idx.get(k)
+    if (j === undefined) idx.set(k, (j = pos.length / 3)), pos.push(t[i], t[i + 1], t[i + 2])
+    ind[i / 3] = j
+  }
+  return { pos, ind }
+}
+
+/** Separa una malla en sus cuerpos sueltos (triángulos unidos por vértices compartidos). */
+export function separarPiezas(t: number[]): number[][] {
+  const n = t.length / 9
+  const { ind } = indexar(t)
+  const padre = Array.from({ length: n }, (_, i) => i)
+  const raiz = (i: number): number => (padre[i] === i ? i : (padre[i] = raiz(padre[i])))
+  const primero = new Map<number, number>()
+  for (let i = 0; i < n; i++)
+    for (let v = 0; v < 3; v++) {
+      const j = primero.get(ind[i * 3 + v])
+      if (j === undefined) primero.set(ind[i * 3 + v], i)
+      else padre[raiz(i)] = raiz(j)
+    }
+  const grupos = new Map<number, number[]>()
+  for (let i = 0; i < n; i++) {
+    const r = raiz(i)
+    let g = grupos.get(r)
+    if (!g) grupos.set(r, (g = []))
+    for (let k = 0; k < 9; k++) g.push(t[i * 9 + k])
+  }
+  return [...grupos.values()]
+}

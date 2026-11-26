@@ -17,6 +17,8 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
 
+import { type TramoColor, coloresPorVertice } from "@/lib/generador/multicolor"
+
 type Unidad = "mm" | "in"
 type Modo = "color" | "blanco" | "gris" | "normales" | "malla"
 type Vista = "iso" | "frente" | "lado" | "arriba"
@@ -148,7 +150,7 @@ export function Estudio3D({
   // otra malla encima, translúcida (p. ej. el frente de acrílico)
   segunda?: { tris: number[]; color: number; opacidad: number }
   // piezas de varios colores: tramos de `tris` en orden (triángulos y color #rrggbb)
-  colores?: { triangulos: number; hex: string }[]
+  colores?: TramoColor[]
   // controles propios de la herramienta, arriba del panel
   panel?: React.ReactNode
   // pestaña "Diseño 2D" (la hoja de corte); sin esto no aparece
@@ -516,22 +518,14 @@ export function Estudio3D({
   // ---- Ajustes que no rearman la escena --------------------------------
   // Colores por parte: se pintan los vértices (la malla no es indexada: el
   // vértice i es del triángulo i / 3) sin rearmar la escena ni mover la cámara
-  const pintar = !!colores?.length && !!tris && colores.reduce((s, c) => s + c.triangulos, 0) * 9 === tris.length
-  const claveColores = pintar ? colores!.map((c) => `${c.triangulos}${c.hex}`).join(",") : ""
+  const claveColores = colores?.map((c) => `${c.triangulos}${c.hex}`).join(",") || ""
   useEffect(() => {
     const m = MATERIALES.find((x) => x.id === material) || MATERIALES[0]
     const mat = estado.current.material
     const geo = estado.current.malla?.geometry
     if (!mat) return
-    if (pintar && geo) {
-      const n = geo.getAttribute("position").count
-      const col = new Float32Array(n * 3)
-      const c = new THREE.Color()
-      let v = 0
-      for (const tramo of colores!) {
-        c.set(tramo.hex)
-        for (let k = 0; k < tramo.triangulos * 3 && v < n; k++, v++) col.set([c.r, c.g, c.b], v * 3)
-      }
+    const col = geo ? coloresPorVertice(colores, geo.getAttribute("position").count / 3) : null
+    if (col && geo) {
       geo.setAttribute("color", new THREE.BufferAttribute(col, 3))
       mat.vertexColors = true
       mat.color.setHex(0xffffff)
