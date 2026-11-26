@@ -3,6 +3,11 @@
 // Llaveros, placas y adornos con nombre dentro del 3D Studio: el llavero en
 // 3D (placa con letras en relieve, para imprimir), el dibujo para láser en
 // Diseño 2D (capa CORTE y capa GRABADO) y los archivos en Exportación.
+//
+// 25 nov 2026: renglones de abajo más chicos (teléfono), ícono y logo del
+// cliente a la izquierda, muchos nombres de una vez (ZIP) y liga con el diseño
+// (?texto=…&forma=…&fuente=…&icono=…&alto=…), que usan los llaveros del
+// catálogo de Impresión 3D bajo pedido para "modificar".
 import { BotonesCam } from "./BotonesCam"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
@@ -21,14 +26,22 @@ import {
   numero,
   r1,
 } from "@/components/hetna/estudio3d/Controles"
-import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor } from "@/lib/generador/aCotizador"
+import { mandarACotizador, mandarAFabricar, materialLaserPorEspesor, nombresDeArchivo, slugArchivo } from "@/lib/generador/aCotizador"
 import { FUENTES, cargarFuente, instalarFuentesVista } from "@/lib/generador/fuentes"
 import type { Fuente } from "@/lib/generador/letreros"
-import { FORMAS_LLAVERO, type FormaLlavero, hacerLlavero } from "@/lib/generador/llaveros"
+import { FORMAS_LLAVERO, type FormaLlavero, OPCIONES_LLAVERO_FABRICA as FABRICA, type OpcionesLlavero, hacerLlavero } from "@/lib/generador/llaveros"
+import { TIPOS_LOGO, logoDeArchivo } from "@/lib/generador/logoContornos"
+import { ICONOS_TEXTURA, type IconoTextura } from "@/lib/generador/texturizador"
+import type { P } from "@/lib/generador/vectores"
 import { type Dibujo, dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
+
+const MAX_NOMBRES = 200
+const MAX_TEXTO = 60
+/** Topes de lo que llega por la liga (lo mismo que dejan los controles) */
+const TOPES: Record<string, [number, number]> = { alto: [5, 60], escala: [40, 100], grosor: [0.6, 20], relieve: [0, 10] }
 
 // Modelos con nombre: mismas opciones, distinto punto de partida
 const MODELOS: { id: string; nombre: string; forma: FormaLlavero; texto: string; alto: string; fuente: string }[] = [
@@ -73,14 +86,54 @@ export function GeneradorLlaveros() {
   const [error, setError] = useState("")
   const [forma, setForma] = useState<FormaLlavero>("rect")
   const [alto, setAlto] = useState("12")
-  const [espaciado, setEspaciado] = useState("0")
-  const [margen, setMargen] = useState("4")
-  const [radio, setRadio] = useState("5")
-  const [argolla, setArgolla] = useState("4.5")
-  const [grosor, setGrosor] = useState("3")
-  const [relieve, setRelieve] = useState("1.5")
+  const [espaciado, setEspaciado] = useState(String(FABRICA.espaciado))
+  const [margen, setMargen] = useState(String(FABRICA.margen))
+  const [radio, setRadio] = useState(String(FABRICA.radio))
+  const [argolla, setArgolla] = useState(String(FABRICA.argolla))
+  const [grosor, setGrosor] = useState(String(FABRICA.grosor))
+  const [relieve, setRelieve] = useState(String(FABRICA.relieve))
   const [cantidad, setCantidad] = useState("1")
   const [aviso, setAviso] = useState("")
+  const [escala2, setEscala2] = useState("60")
+  const [icono, setIcono] = useState<IconoTextura | "">("")
+  const [logo, setLogo] = useState<P[][] | null>(null)
+  const [logoNombre, setLogoNombre] = useState("")
+  const [logoAviso, setLogoAviso] = useState("")
+  const [leyendoLogo, setLeyendoLogo] = useState(false)
+  const [nombres, setNombres] = useState("")
+  const [armandoZip, setArmandoZip] = useState(false)
+
+  // Liga con el diseño (catálogo de impresión: "modificar")
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const t = q.get("texto")
+    if (t) setTexto(t.slice(0, MAX_TEXTO))
+    const f = q.get("forma")
+    if (f && FORMAS_LLAVERO.some((x) => x.id === f)) setForma(f as FormaLlavero)
+    const fu = q.get("fuente")
+    if (fu && FUENTES.some((x) => x.id === fu)) setFuenteId(fu)
+    const ic = q.get("icono")
+    if (ic && ICONOS_TEXTURA.some((x) => x.id === ic)) setIcono(ic as IconoTextura)
+    for (const [k, poner] of [["alto", setAlto], ["escala", setEscala2], ["grosor", setGrosor], ["relieve", setRelieve]] as const) {
+      const v = Number(q.get(k))
+      const [min, max] = TOPES[k]
+      if (q.get(k)?.trim() && Number.isFinite(v) && v > 0) poner(String(Math.min(max, Math.max(min, v))))
+    }
+  }, [])
+
+  const subirLogo = async (f: File | undefined) => {
+    if (!f) return
+    setLogoAviso("")
+    setLeyendoLogo(true)
+    try {
+      setLogo(await logoDeArchivo(f))
+      setLogoNombre(f.name)
+    } catch (e) {
+      setLogoAviso(e instanceof Error ? e.message : "No se pudo leer el logo.")
+    } finally {
+      setLeyendoLogo(false)
+    }
+  }
 
   useEffect(() => {
     instalarFuentesVista()
@@ -114,38 +167,38 @@ export function GeneradorLlaveros() {
     setFuenteId(m.fuente)
   }
 
+  // Todo menos el texto (lo mismo sirve para "muchos nombres")
+  const opciones = useMemo<Omit<OpcionesLlavero, "texto">>(
+    () => ({
+      alto: numero(alto),
+      espaciado: numero(espaciado) || 0,
+      forma,
+      margen: numero(margen) || 0,
+      radio: numero(radio) || 0,
+      argolla: numero(argolla) || 0,
+      grosor: numero(grosor) || 0,
+      relieve: numero(relieve) || 0,
+      escalaRenglones: numero(escala2) || 100,
+      icono,
+      logo,
+    }),
+    [alto, espaciado, forma, margen, radio, argolla, grosor, relieve, escala2, icono, logo]
+  )
+
   const r = useMemo(() => {
     if (!fuente) return null
     try {
-      return hacerLlavero(fuente, {
-        texto,
-        alto: numero(alto),
-        espaciado: numero(espaciado) || 0,
-        forma,
-        margen: numero(margen) || 0,
-        radio: numero(radio) || 0,
-        argolla: numero(argolla) || 0,
-        grosor: numero(grosor) || 0,
-        relieve: numero(relieve) || 0,
-      })
+      return hacerLlavero(fuente, { ...opciones, texto })
     } catch {
       return null
     }
-  }, [fuente, texto, alto, espaciado, forma, margen, radio, argolla, grosor, relieve])
+  }, [fuente, texto, opciones])
 
   const listo = !!r && !r.errores.length
   const vista2d = useMemo(() => (listo ? vistaLlavero(r!.dibujo) : ""), [r, listo])
   const piezas = Math.max(1, Math.round(numero(cantidad) || 1))
   const primerRenglon = texto.split("\n")[0] || "nombre"
-  const archivo = `llavero-hetna-${
-    primerRenglon
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-zA-Z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 30)
-      .toLowerCase() || "nombre"
-  }`
+  const archivo = `llavero-hetna-${slugArchivo(primerRenglon, "nombre")}`
   const formaNombre = FORMAS_LLAVERO.find((f) => f.id === forma)?.nombre
 
   const panel = (
@@ -171,11 +224,18 @@ export function GeneradorLlaveros() {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           rows={2}
-          maxLength={60}
+          maxLength={MAX_TEXTO}
           className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
         />
-        <span className="text-[11.5px] text-[#8A97AB]">Enter para un segundo renglón.</span>
+        <span className="text-[11.5px] text-[#8A97AB]">Enter para un segundo renglón (por ejemplo, el teléfono en la placa de mascota).</span>
       </label>
+      {texto.includes("\n") && (
+        <div className="flex items-center gap-3">
+          <Etiqueta>Renglones de abajo</Etiqueta>
+          <input type="range" min={40} max={100} step={5} value={numero(escala2) || 100} onChange={(e) => setEscala2(e.target.value)} className="flex-1 accent-[#C2560A]" />
+          <span className="w-[44px] text-right text-[12.5px] text-[#C9D2E0]">{numero(escala2) || 100}%</span>
+        </div>
+      )}
 
       <Seccion titulo={`Tipografía${cargando ? " (cargando…)" : ""}`}>
         <div className="max-h-[188px] shrink-0 overflow-y-auto pr-1">
@@ -214,6 +274,42 @@ export function GeneradorLlaveros() {
             </button>
           ))}
         </div>
+      </Seccion>
+
+      <Seccion titulo="Ícono" nota="Va a la izquierda del texto.">
+        <div className="grid grid-cols-5 gap-1.5">
+          {[{ id: "" as const, nombre: "Ninguno", simbolo: "—" }, ...ICONOS_TEXTURA].map((i) => (
+            <button
+              key={i.id || "ninguno"}
+              type="button"
+              title={i.nombre}
+              aria-label={i.nombre}
+              aria-pressed={icono === i.id}
+              onClick={() => setIcono(i.id)}
+              className={`h-10 rounded-[8px] text-[17px] ${icono === i.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
+            >
+              {i.simbolo}
+            </button>
+          ))}
+        </div>
+      </Seccion>
+
+      <Seccion titulo="Tu logo" nota="PNG, JPG o SVG, de preferencia oscuro sobre fondo claro. Queda en relieve (3D) o grabado (láser), a la izquierda del texto.">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="cursor-pointer rounded-[8px] bg-[#1C2431] px-3 py-2 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+            {leyendoLogo ? "Leyendo…" : logo ? "Cambiar logo" : "Subir logo"}
+            <input type="file" accept={TIPOS_LOGO} className="hidden" onChange={(e) => subirLogo(e.target.files?.[0])} data-testid="logo-llavero" />
+          </label>
+          {logo && (
+            <>
+              <span className="max-w-[150px] truncate text-[12px] text-[#8A97AB]">{logoNombre}</span>
+              <button type="button" onClick={() => { setLogo(null); setLogoNombre("") }} className="text-[12px] font-semibold text-[#F2A36B] underline">
+                Quitar
+              </button>
+            </>
+          )}
+        </div>
+        {logoAviso && <Aviso tipo="error">{logoAviso}</Aviso>}
       </Seccion>
 
       <Destacado titulo="Tamaño">
@@ -301,6 +397,43 @@ export function GeneradorLlaveros() {
     if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
   }
 
+  // Muchos nombres: uno por renglón; cada llavero lleva el nombre arriba y,
+  // debajo, los demás renglones del texto actual (p. ej. el teléfono)
+  const listaNombres = nombres
+    .split(/\r?\n/)
+    .map((n) => n.trim().slice(0, MAX_TEXTO))
+    .filter(Boolean)
+    .slice(0, MAX_NOMBRES)
+  const zipNombres = async (tipo: "stl" | "dxf") => {
+    if (!fuente || !listaNombres.length) return
+    setArmandoZip(true)
+    setAviso("")
+    try {
+      const { zipSync, strToU8 } = await import("fflate")
+      const resto = texto.split("\n").slice(1).join("\n")
+      const z: Record<string, Uint8Array> = {}
+      const fallaron: string[] = []
+      const listos: { nombre: string; x: ReturnType<typeof hacerLlavero> }[] = []
+      for (const n of listaNombres) {
+        const x = hacerLlavero(fuente, { ...opciones, texto: resto ? `${n}\n${resto}` : n })
+        if (x.errores.length) fallaron.push(n)
+        else listos.push({ nombre: n, x })
+      }
+      // nombres de archivo limpios y sin repetir ("ana", "ana-2"…)
+      nombresDeArchivo(listos.map((l) => `llavero-${l.nombre}`), tipo).forEach((nombre, i) => {
+        const { x } = listos[i]
+        z[nombre] = tipo === "stl" ? new Uint8Array(mallaSTL(x.malla)) : strToU8(dibujoDXF(x.dibujo))
+      })
+      if (!Object.keys(z).length) throw new Error("Ningún nombre se pudo armar con esta tipografía.")
+      descargar(`llaveros-hetna-${listaNombres.length}.zip`, new Blob([zipSync(z, { level: 6 }) as unknown as BlobPart], { type: "application/zip" }), "application/zip")
+      if (fallaron.length) setAviso(`No se pudieron armar: ${fallaron.slice(0, 5).join(", ")}${fallaron.length > 5 ? "…" : ""} (la tipografía no tiene esas letras).`)
+    } catch (e) {
+      setAviso(e instanceof Error ? e.message : "No se pudo armar el ZIP.")
+    } finally {
+      setArmandoZip(false)
+    }
+  }
+
   const exportacion = !listo ? (
     <p className="m-0 text-[14px] text-[#8A97AB]">Escribe un texto para generar los archivos.</p>
   ) : (
@@ -326,6 +459,23 @@ export function GeneradorLlaveros() {
           </div>
         </TarjetaExport>
       </div>
+      <TarjetaExport titulo="Muchos nombres de una vez" nota={`Para eventos, escuelas o empresas: un nombre por renglón (hasta ${MAX_NOMBRES}). Cada llavero sale con la forma, la letra, el ícono y el logo de arriba.`}>
+        <textarea
+          value={nombres}
+          onChange={(e) => setNombres(e.target.value)}
+          rows={5}
+          placeholder={"Ana\nLuis\nSofía"}
+          className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2 text-[14px] text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
+          data-testid="nombres-llaveros"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Boton tipo="primario" disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("stl")}>
+            {armandoZip ? "Armando…" : `ZIP con ${listaNombres.length || 0} STL`}
+          </Boton>
+          <Boton disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("dxf")}>{`ZIP con ${listaNombres.length || 0} DXF`}</Boton>
+        </div>
+      </TarjetaExport>
+
       <TarjetaExport titulo="Maquinar en tu láser o router" nota="Se abre en el CAM de HETNA: eliges máquina y herramienta y bajas el G-code.">
         <BotonesCam nombre={archivo} dxf={() => dibujoDXF(r!.dibujo)} stl={() => mallaSTL(r!.malla)} />
       </TarjetaExport>

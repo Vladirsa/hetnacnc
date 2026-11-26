@@ -18,17 +18,28 @@ import { useUbicacion } from "@/lib/ubicacion/useUbicacion"
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: n < 100 ? 2 : 0 })
 
-function Oferta({ o, locale, producto, nivel }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string }; nivel: Nivel }) {
+/** Largo máximo del texto si el producto no trae el suyo (el API revisa lo mismo) */
+const MAX_TEXTO = 40
+
+function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; locale: string; producto: { id: string; titulo: string; personalizable: boolean; max: number }; nivel: Nivel; texto: string }) {
   const { addToCart, isAddingItem } = useCartContext()
   const [color, setColor] = useState(o.colores[0] || "")
   const [listo, setListo] = useState(false)
 
   const agregar = async () => {
     try {
-      await addToCart({ offerId: o.offer_id, quantity: 1, countryCode: locale, metadata: color ? { color } : undefined })
+      // llaveros y letras: el texto del cliente viaja en el renglón (el taller lo ve en el pedido)
+      const t = texto.trim().slice(0, producto.max)
+      if (producto.personalizable && !t) {
+        toast.error({ title: "Falta el texto", description: "Escribe arriba el nombre o el texto que quieres en la pieza." })
+        document.getElementById("texto-personalizado")?.focus()
+        return
+      }
+      const metadata = { ...(color ? { color } : {}), ...(producto.personalizable ? { texto: t } : {}) }
+      await addToCart({ offerId: o.offer_id, quantity: 1, countryCode: locale, metadata: Object.keys(metadata).length ? metadata : undefined })
       trackAddToCart({ item_id: producto.id, item_name: producto.titulo, price: o.precio, quantity: 1 }, "mxn")
       setListo(true)
-      toast.success({ title: "Agregado al carrito", description: `${o.material}${color ? ` · ${color}` : ""} · ${o.taller.nombre}` })
+      toast.success({ title: "Agregado al carrito", description: `${o.material}${color ? ` · ${color}` : ""}${producto.personalizable ? ` · «${texto.trim().slice(0, producto.max)}»` : ""} · ${o.taller.nombre}` })
     } catch (e) {
       toast.error({ title: "No se pudo agregar", description: e instanceof Error ? e.message : "Intenta de nuevo." })
     }
@@ -147,6 +158,8 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
   const conOferta = useMemo(() => new Set(datos.ofertas.map((o) => o.material)), [datos.ofertas])
   const [material, setMaterial] = useState<string>("")
   const { ubicacion, ponerCp, aviso } = useUbicacion()
+  const [texto, setTexto] = useState("")
+  const maxTexto = datos.producto.max_texto || MAX_TEXTO
   // Los destacados (pagan por salir primero) van arriba; luego, del más cercano
   // al más lejano; a igual cercanía, el orden del API (precio y días).
   const lista = useMemo(() => {
@@ -164,6 +177,24 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
         <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo imprimen</h2>
         <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">Compara material, precio final, días y envío. Pagas dentro de HETNA.</p>
       </div>
+
+      {datos.producto.personalizable && (
+        <label className="flex flex-col gap-1" htmlFor="texto-personalizado">
+          <span className="text-[13.5px] font-bold text-[#142033]">Nombre o texto para tu pieza</span>
+          <input
+            id="texto-personalizado"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value.slice(0, maxTexto))}
+            maxLength={maxTexto}
+            placeholder="Escribe el nombre como lo quieres"
+            className="min-h-[44px] rounded-[10px] border border-[#D9D5C9] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]"
+            data-testid="texto-personalizado"
+          />
+          <span className="text-[12px] text-[#6B6A63]">
+            Hasta {maxTexto} {maxTexto === 1 ? "letra" : "letras"} ({texto.trim().length}/{maxTexto}). Sale con la forma y la letra de la foto; revisa mayúsculas y acentos: se imprime tal cual.
+          </span>
+        </label>
+      )}
 
       {hayUbicaciones && <TuUbicacion ubicacion={ubicacion} ponerCp={ponerCp} aviso={aviso} />}
 
@@ -195,7 +226,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
       {lista.length ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {lista.map(({ o, nivel }) => (
-            <Oferta key={o.offer_id} o={o} nivel={nivel} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo }} />
+            <Oferta key={o.offer_id} o={o} nivel={nivel} texto={texto} locale={locale} producto={{ id: datos.producto.id, titulo: datos.producto.titulo, personalizable: datos.producto.personalizable, max: maxTexto }} />
           ))}
         </ul>
       ) : (

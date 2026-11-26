@@ -166,7 +166,7 @@ function aFigura(lazos: P[][]) {
 // exacto con el siguiente; después de un offset o una resta a veces quedan a
 // micras y truena. En ese caso se arman a mano, uniendo lados con tolerancia,
 // y se descarta el lazo que no cierre en vez de tirar toda la herramienta.
-function contornosDe(g: ReturnType<typeof geom2.create>): P[][] {
+export function contornosDe(g: ReturnType<typeof geom2.create>): P[][] {
   try {
     return geom2
       .toOutlines(g)
@@ -216,7 +216,7 @@ function distSeg(p: P, a: P, b: P) {
 
 // Un punto dentro de la figura y lejos de sus orillas, para el barreno del
 // cable. Prefiere la parte baja de la letra, por donde sale mejor el cable.
-function puntoInterior(g: ReturnType<typeof geom2.create>, radio: number): P | null {
+export function puntoInterior(g: ReturnType<typeof geom2.create>, radio: number): P | null {
   const lazos = contornosDe(g)
   if (!lazos.length) return null
   const todos = lazos.flat()
@@ -243,7 +243,7 @@ function puntoInterior(g: ReturnType<typeof geom2.create>, radio: number): P | n
   return mejor
 }
 
-const circulo = (cx: number, cy: number, r: number, m = 32): P[] =>
+export const circulo = (cx: number, cy: number, r: number, m = 32): P[] =>
   Array.from({ length: m }, (_, j) => [cx + r * Math.cos((2 * Math.PI * j) / m), cy + r * Math.sin((2 * Math.PI * j) / m)] as P)
 
 // ---------------------------------------------------------------------
@@ -257,6 +257,27 @@ function altoMayuscula(fuente: Fuente): number {
   return h > 0 ? h : fuente.unitsPerEm * 0.7
 }
 
+export type FiguraLetra = { letra: string; i: number; figura: ReturnType<typeof geom2.create> }
+
+/** Cada letra del texto como figura jscad (con sus huecos) en su lugar, en mm; sin los espacios. */
+export function figurasDeTexto(fuente: Fuente, texto: string, alto: number, espaciado: number): FiguraLetra[] {
+  const tam = (alto * fuente.unitsPerEm) / altoMayuscula(fuente)
+  const k = tam / fuente.unitsPerEm
+  const glifos = fuente.stringToGlyphs(texto)
+  const chars = Array.from(texto)
+  const r: FiguraLetra[] = []
+  let x = 0
+  glifos.forEach((g, i) => {
+    const lazos = aplanarComandos(g.getPath(x, 0, tam).commands as Cmd[])
+    x += (g.advanceWidth ?? 0) * k + espaciado
+    if (i < glifos.length - 1) x += fuente.getKerningValue(g, glifos[i + 1]) * k
+    if (!lazos.length) return // espacio
+    const figura = aFigura(lazos)
+    if (figura) r.push({ letra: chars[i] ?? "?", i, figura })
+  })
+  return r
+}
+
 export function hacerLetras3D(fuente: Fuente, o: OpcionesLetras3D): ResultadoLetras3D {
   const avisos: string[] = []
   const vacio = (e: string): ResultadoLetras3D => ({ piezas: [], ancho: 0, alto: 0, capasPared: 0, profundidadReal: 0, avisos, errores: [e] })
@@ -265,11 +286,6 @@ export function hacerLetras3D(fuente: Fuente, o: OpcionesLetras3D): ResultadoLet
   if (!(o.alto >= 20)) return vacio("Las letras deben medir al menos 20 mm de alto.")
   if (!(o.espesor > 0) || !(o.espesorFrente > 0)) return vacio("Escribe el espesor del material.")
   if (!(o.pared >= 2)) return vacio("La pared debe medir al menos 2 mm.")
-
-  const tam = (o.alto * fuente.unitsPerEm) / altoMayuscula(fuente)
-  const k = tam / fuente.unitsPerEm
-  const glifos = fuente.stringToGlyphs(texto)
-  const chars = Array.from(texto)
 
   const frenteAcrilico = o.construccion !== "mdf"
   const todoAcrilico = o.construccion === "acrilico"
@@ -283,17 +299,8 @@ export function hacerLetras3D(fuente: Fuente, o: OpcionesLetras3D): ResultadoLet
   }
 
   const piezas: PiezaLetra[] = []
-  let x = 0
   let sinPared = 0
-  glifos.forEach((g, i) => {
-    const letra = chars[i] ?? "?"
-    const lazos = aplanarComandos(g.getPath(x, 0, tam).commands as Cmd[])
-    x += (g.advanceWidth ?? 0) * k + o.espaciado
-    if (i < glifos.length - 1) x += fuente.getKerningValue(g, glifos[i + 1]) * k
-    if (!lazos.length) return // espacio
-    const figura = aFigura(lazos)
-    if (!figura) return
-
+  figurasDeTexto(fuente, texto, o.alto, o.espaciado).forEach(({ letra, figura, i }) => {
     // hueco interior: la letra encogida el ancho de la pared
     const interior = offset({ delta: -o.pared, corners: "round", segments: 16 }, figura)
     const contInterior = contornosDe(interior)

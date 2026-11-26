@@ -971,5 +971,430 @@
       10
     ],
     "piezas": 1
+  },
+  {
+    "handle": "llavero-con-nombre-impreso-3d",
+    "titulo": "Llavero con nombre",
+    "resumen": "Llavero con el nombre que quieras en letra cursiva y en relieve. Escribe el nombre al agregarlo al carrito.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero con nombre",
+      "regalo",
+      "personalizado"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Sof%C3%ADa&forma=rect&fuente=pacifico&alto=12",
+    "foto": "fotos/llavero-con-nombre-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-con-nombre-impreso-3d.stl",
+    "diseno": {
+      "texto": "Sofía",
+      "forma": "rect",
+      "fuente": "pacifico",
+      "alto": 12,
+      "maxTexto": 12
+    },
+    "volumen_cm3": 3.8,
+    "medidas_mm": [
+      48.2,
+      25.1,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 12
+  },
+  {
+    "handle": "llavero-corazon-con-nombre-impreso-3d",
+    "titulo": "Llavero de corazón con nombre",
+    "resumen": "Corazón con el nombre o la palabra que quieras en relieve. Para mamá, para tu pareja o para recuerdos.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero corazón",
+      "día de las madres",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Mam%C3%A1&forma=corazon&fuente=lobster&alto=11",
+    "foto": "fotos/llavero-corazon-con-nombre-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-corazon-con-nombre-impreso-3d.stl",
+    "diseno": {
+      "texto": "Mamá",
+      "forma": "corazon",
+      "fuente": "lobster",
+      "alto": 11,
+      "maxTexto": 10
+    },
+    "volumen_cm3": 5.8,
+    "medidas_mm": [
+      55,
+      54.9,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 10
+  },
+  {
+    "handle": "placa-mascota-con-nombre-impresa-3d",
+    "titulo": "Placa para mascota con nombre y teléfono",
+    "resumen": "Placa redonda con huellita, el nombre de tu mascota y tu teléfono abajo, con argolla para el collar.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "placa mascota",
+      "perro",
+      "gato",
+      "collar"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Max%0A55+1234+5678&forma=circulo&fuente=montserrat&alto=9&icono=huella&escala=45",
+    "foto": "fotos/placa-mascota-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/placa-mascota-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "Max\n55 1234 5678",
+      "forma": "circulo",
+      "fuente": "montserrat",
+      "alto": 9,
+      "icono": "huella",
+      "escala": 45,
+      "maxTexto": 30
+    },
+    "volumen_cm3": 11,
+    "medidas_mm": [
+      66.6,
+      70.5,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 30
+  },
+  {
+    "handle": "etiqueta-maleta-con-nombre-impresa-3d",
+    "titulo": "Etiqueta para maleta con nombre",
+    "resumen": "Etiqueta con punta y argolla para la maleta o la mochila, con el nombre grande para encontrarla rápido.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "etiqueta maleta",
+      "viaje",
+      "mochila"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=VIAJE&forma=etiqueta&fuente=bebas-neue&alto=14",
+    "foto": "fotos/etiqueta-maleta-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/etiqueta-maleta-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "VIAJE",
+      "forma": "etiqueta",
+      "fuente": "bebas-neue",
+      "alto": 14,
+      "maxTexto": 12
+    },
+    "volumen_cm3": 3.1,
+    "medidas_mm": [
+      48.3,
+      22.1,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 12
+  },
+  {
+    "handle": "llavero-inicial-estrella-impreso-3d",
+    "titulo": "Llavero con inicial y estrella",
+    "resumen": "Llavero redondo con una estrella y tu inicial. Escribe la letra al agregarlo al carrito.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llavero inicial",
+      "letra",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=A&forma=circulo&fuente=cinzel&alto=16&icono=estrella",
+    "foto": "fotos/llavero-inicial-estrella-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-inicial-estrella-impreso-3d.stl",
+    "diseno": {
+      "texto": "A",
+      "forma": "circulo",
+      "fuente": "cinzel",
+      "alto": 16,
+      "icono": "estrella",
+      "maxTexto": 2
+    },
+    "volumen_cm3": 6.3,
+    "medidas_mm": [
+      50.4,
+      54.4,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 2
+  },
+  {
+    "handle": "llavero-negocio-impreso-3d",
+    "titulo": "Llavero para tu negocio o evento",
+    "resumen": "Llavero rectangular con el nombre de tu marca o evento. Ideal para regalar a clientes: pide varios y súbele tu logo en la herramienta.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "llaveros personalizados",
+      "promocionales",
+      "negocio",
+      "evento"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=TU+MARCA&forma=rect&fuente=oswald&alto=11",
+    "foto": "fotos/llavero-negocio-impreso-3d.png",
+    "modelo_3d": "modelos/llavero-negocio-impreso-3d.stl",
+    "diseno": {
+      "texto": "TU MARCA",
+      "forma": "rect",
+      "fuente": "oswald",
+      "alto": 11,
+      "maxTexto": 16
+    },
+    "volumen_cm3": 4.7,
+    "medidas_mm": [
+      74.2,
+      19.3,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 16
+  },
+  {
+    "handle": "placa-puerta-con-nombre-impresa-3d",
+    "titulo": "Placa para puerta con nombre",
+    "resumen": "Placa rectangular para la puerta del cuarto, la oficina o el taller, con letras en relieve.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "placa puerta",
+      "letrero",
+      "cuarto",
+      "oficina"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=Taller&forma=rect&fuente=oswald&alto=22",
+    "foto": "fotos/placa-puerta-con-nombre-impresa-3d.png",
+    "modelo_3d": "modelos/placa-puerta-con-nombre-impresa-3d.stl",
+    "diseno": {
+      "texto": "Taller",
+      "forma": "rect",
+      "fuente": "oswald",
+      "alto": 22,
+      "maxTexto": 14
+    },
+    "volumen_cm3": 7.9,
+    "medidas_mm": [
+      76.8,
+      30.3,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 14
+  },
+  {
+    "handle": "adorno-con-fecha-impreso-3d",
+    "titulo": "Adorno ovalado con fecha o nombre",
+    "resumen": "Adorno ovalado con la fecha o el nombre que quieras, para recuerdos de boda, XV años o bautizo.",
+    "pieza": "llavero",
+    "etiquetas": [
+      "recuerdos",
+      "boda",
+      "xv años",
+      "bautizo"
+    ],
+    "herramienta_url": "/disenar/llaveros?texto=2026&forma=ovalo&fuente=cinzel&alto=16",
+    "foto": "fotos/adorno-con-fecha-impreso-3d.png",
+    "modelo_3d": "modelos/adorno-con-fecha-impreso-3d.stl",
+    "diseno": {
+      "texto": "2026",
+      "forma": "ovalo",
+      "fuente": "cinzel",
+      "alto": 16,
+      "maxTexto": 12
+    },
+    "volumen_cm3": 6.4,
+    "medidas_mm": [
+      79.5,
+      31.4,
+      4.5
+    ],
+    "personalizable": true,
+    "max_texto": 12
+  },
+  {
+    "handle": "letras-love-de-pie-impresas-3d",
+    "titulo": "Letras LOVE de pie",
+    "resumen": "Letras de 6 cm unidas en una base, para la repisa, el escritorio o la mesa de dulces. Puedes pedirlas con otra palabra.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras decorativas",
+      "love",
+      "regalo",
+      "decoración"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=LOVE&estilo=pie&fuente=alfa-slab-one&alto=60&profundidad=12",
+    "foto": "fotos/letras-love-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-love-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "LOVE",
+      "estilo": "pie",
+      "fuente": "alfa-slab-one",
+      "alto": 60,
+      "profundidad": 12,
+      "maxTexto": 5
+    },
+    "volumen_cm3": 148.9,
+    "medidas_mm": [
+      243.6,
+      36,
+      65.4
+    ],
+    "personalizable": true,
+    "max_texto": 5
+  },
+  {
+    "handle": "letras-home-de-pie-impresas-3d",
+    "titulo": "Letras HOME de pie",
+    "resumen": "Letras de 5 cm con base para la sala o la entrada. Escribe otra palabra si la quieres distinta.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras decorativas",
+      "home",
+      "casa",
+      "decoración"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=HOME&estilo=pie&fuente=montserrat&alto=50&profundidad=12",
+    "foto": "fotos/letras-home-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-home-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "HOME",
+      "estilo": "pie",
+      "fuente": "montserrat",
+      "alto": 50,
+      "profundidad": 12,
+      "maxTexto": 5
+    },
+    "volumen_cm3": 117.1,
+    "medidas_mm": [
+      247.3,
+      36,
+      55.2
+    ],
+    "personalizable": true,
+    "max_texto": 5
+  },
+  {
+    "handle": "letras-xv-anos-de-pie-impresas-3d",
+    "titulo": "Letras XV para mesa de XV años",
+    "resumen": "Letras XV de 10 cm con base, para la mesa principal o de pastel. También con tu nombre o con iniciales.",
+    "pieza": "letras",
+    "etiquetas": [
+      "xv años",
+      "fiesta",
+      "mesa de pastel",
+      "decoración de eventos"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=XV&estilo=pie&fuente=cinzel&alto=100&profundidad=15",
+    "foto": "fotos/letras-xv-anos-de-pie-impresas-3d.png",
+    "modelo_3d": "modelos/letras-xv-anos-de-pie-impresas-3d.stl",
+    "diseno": {
+      "texto": "XV",
+      "estilo": "pie",
+      "fuente": "cinzel",
+      "alto": 100,
+      "profundidad": 15,
+      "maxTexto": 3
+    },
+    "volumen_cm3": 137.4,
+    "medidas_mm": [
+      231.4,
+      39,
+      106.1
+    ],
+    "personalizable": true,
+    "max_texto": 3
+  },
+  {
+    "handle": "letras-familia-pared-impresas-3d",
+    "titulo": "Letras FAMILIA para pared",
+    "resumen": "Letras sueltas de 8 cm para colgar, con barreno oculto atrás. Incluye la plantilla de montaje para que queden derechas.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras para pared",
+      "familia",
+      "decoración",
+      "sala"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=FAMILIA&estilo=pared&fuente=montserrat&alto=80&profundidad=12",
+    "foto": "fotos/letras-familia-pared-impresas-3d.png",
+    "modelo_3d": "modelos/letras-familia-pared-impresas-3d.stl",
+    "diseno": {
+      "texto": "FAMILIA",
+      "estilo": "pared",
+      "fuente": "montserrat",
+      "alto": 80,
+      "profundidad": 12,
+      "maxTexto": 8
+    },
+    "volumen_cm3": 257.3,
+    "medidas_mm": [
+      520.9,
+      12,
+      80
+    ],
+    "personalizable": true,
+    "max_texto": 8
+  },
+  {
+    "handle": "letras-nombre-pared-impresas-3d",
+    "titulo": "Letras con tu nombre para pared",
+    "resumen": "Tu nombre o el de tu negocio en letras de 10 cm para colgar, con barreno oculto atrás y plantilla de montaje.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras con nombre",
+      "cuarto de niños",
+      "negocio",
+      "pared"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=SOFIA&estilo=pared&fuente=alfa-slab-one&alto=100&profundidad=14",
+    "foto": "fotos/letras-nombre-pared-impresas-3d.png",
+    "modelo_3d": "modelos/letras-nombre-pared-impresas-3d.stl",
+    "diseno": {
+      "texto": "SOFIA",
+      "estilo": "pared",
+      "fuente": "alfa-slab-one",
+      "alto": 100,
+      "profundidad": 14,
+      "maxTexto": 8
+    },
+    "volumen_cm3": 430.6,
+    "medidas_mm": [
+      436.7,
+      14,
+      103.6
+    ],
+    "personalizable": true,
+    "max_texto": 8
+  },
+  {
+    "handle": "letras-huecas-led-impresas-3d",
+    "titulo": "Letras huecas para LED",
+    "resumen": "Letras de 10 cm huecas por atrás para meter tira LED; el frente delgado deja pasar la luz. Para negocios y fiestas.",
+    "pieza": "letras",
+    "etiquetas": [
+      "letras luminosas",
+      "led",
+      "anuncio",
+      "negocio"
+    ],
+    "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=OPEN&estilo=luz&fuente=alfa-slab-one&alto=100&profundidad=25",
+    "foto": "fotos/letras-huecas-led-impresas-3d.png",
+    "modelo_3d": "modelos/letras-huecas-led-impresas-3d.stl",
+    "diseno": {
+      "texto": "OPEN",
+      "estilo": "luz",
+      "fuente": "alfa-slab-one",
+      "alto": 100,
+      "profundidad": 25,
+      "maxTexto": 6
+    },
+    "volumen_cm3": 116.4,
+    "medidas_mm": [
+      414.3,
+      25,
+      103.6
+    ],
+    "personalizable": true,
+    "max_texto": 6
   }
 ]

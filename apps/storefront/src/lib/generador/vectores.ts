@@ -726,6 +726,16 @@ export function leerOBJ(texto: string): Malla {
   return { tris, avisos: tris.length ? [] : ["No encontré caras en el OBJ."] }
 }
 
+/** Volumen de una malla cerrada en cm³ (positivo si las caras miran hacia afuera). */
+export function volumenMalla(t: ArrayLike<number>): number {
+  let v = 0
+  for (let i = 0; i + 8 < t.length; i += 9) {
+    const ax = t[i], ay = t[i + 1], az = t[i + 2], bx = t[i + 3], by = t[i + 4], bz = t[i + 5], cx = t[i + 6], cy = t[i + 7], cz = t[i + 8]
+    v += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6
+  }
+  return v / 1000
+}
+
 export function mallaSTL(m: Malla): ArrayBuffer {
   const n = m.tris.length / 9
   const buf = new ArrayBuffer(84 + n * 50)
