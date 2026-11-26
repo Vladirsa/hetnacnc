@@ -37,6 +37,8 @@ import {
 import { deUrl } from "@/lib/generador/texturizador-url"
 import { type Dibujo, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
+import { colorPorId } from "@/lib/generador/multicolor"
+
 import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -231,9 +233,9 @@ export function GeneradorTexturizador() {
     return { tris: soporte.concat(rod), soporte: soporte.length / 9 }
   }, [r, listo, rodillo, verSoporte, eje, largo, diametroSoporte])
   const tris3d = vista3d.tris
-  const mc = useMulticolor(listo ? r!.malla.partes : undefined)
+  const mc = useMulticolor(listo ? r!.malla : null)
   // con el soporte puesto, va primero en la vista (gris)
-  const coloresVista = mc.vista && vista3d.soporte ? [{ triangulos: vista3d.soporte, hex: "#8a8f98" }, ...mc.vista] : mc.vista
+  const coloresVista = mc.vista && vista3d.soporte ? [{ triangulos: vista3d.soporte, hex: colorPorId("gris").hex }, ...mc.vista] : mc.vista
   const archivo = `texturizador-hetna-${
     (listaPalabras[0] || iconos[0] || "patron")
       .normalize("NFD")
@@ -465,7 +467,7 @@ export function GeneradorTexturizador() {
           </div>
         </TarjetaExport>
       </div>
-      <TarjetaColores mc={mc} malla={listo ? r!.malla : null} archivo={nombreArchivo} titulo={listaPalabras[0] || "Texturizador"} nota={modo === "alto" ? "El patrón en relieve de un color y la base de otro." : "La capa grabada de un color y la base de otro."} />
+      <TarjetaColores mc={mc} archivo={nombreArchivo} titulo={listaPalabras[0] || "Texturizador"} nota={modo === "alto" ? "El patrón en relieve de un color y la base de otro." : "La capa grabada de un color y la base de otro."} />
 
       {rodillo && (
         <div className="flex flex-col gap-3">

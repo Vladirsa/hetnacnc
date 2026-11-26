@@ -346,7 +346,8 @@ export function hacerRodillo(fuente: Fuente | null, entrada: OpcionesRodillo): R
     }
     return tris
   }
-  const malla = conPartes(...separarPartes(r.malla).map((p) => [p.nombre === "Base" ? "Rodillo" : p.nombre, enrollar(p.tris)] as [string, number[]]))
+  // la primera parte de la placa (su base) es el tubo del rodillo
+  const malla = conPartes(...separarPartes(r.malla).map((p, i) => [i === 0 ? "Rodillo" : p.nombre, enrollar(p.tris)] as [string, number[]]))
   const diametroTotal = o.diametro + 2 * o.relieve
   return { ...r, malla, vuelta, diametroTotal }
 }

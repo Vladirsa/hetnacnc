@@ -98,7 +98,7 @@ export function LetrasImpresion3D({ selector }: Props) {
   const listo = !!r && !r.errores.length
 
   const estiloActual = ESTILOS_IMPRESION.find((e) => e.id === estilo)
-  const mc = useMulticolor(listo ? r!.partes : undefined)
+  const mc = useMulticolor(listo ? r!.malla : null)
   const stl = () => mallaSTL({ tris: r!.tris, avisos: [] })
 
   const archivo = `letras-3d-impresion-${slugArchivo(texto, "hetna")}`
@@ -214,7 +214,6 @@ export function LetrasImpresion3D({ selector }: Props) {
 
       <TarjetaColores
         mc={mc}
-        malla={listo ? { tris: r!.tris, avisos: [], partes: r!.partes } : null}
         archivo={archivo}
         titulo={`Letras ${texto}`}
         nota={estilo === "pared" ? "El frente (la primera capa, en la cama) sale de un color y el cuerpo de otro." : estilo === "luz" ? "El frente déjalo blanco o natural para que pase la luz." : undefined}

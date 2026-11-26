@@ -11,8 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Visor3D } from "@/components/hetna/generador/Visor3D"
 import { mandarArchivosAFabricar } from "@/lib/generador/aCotizador"
 import { CATEGORIAS, MODELOS, construirMalla, limpiarValores, modeloPorId, valoresIniciales, type MallaModelo, type Modelo3D } from "@/lib/generador/modelos3d"
-import { separarPiezas } from "@/lib/generador/multicolor"
-import { conPartes, mallaSTL } from "@/lib/generador/vectores"
+import { conPartes, mallaSTL, separarPiezas } from "@/lib/generador/vectores"
 
 import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
 
@@ -129,7 +128,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     const piezas = separarPiezas(malla.tris)
     return piezas.length >= 2 && piezas.length <= 8 ? conPartes(...piezas.map((t, i) => [`Pieza ${i + 1}`, t] as [string, number[]])) : null
   }, [malla])
-  const mc = useMulticolor(enPiezas?.partes)
+  const mc = useMulticolor(enPiezas)
 
   const fabricar = () => {
     const datos = stl()
@@ -233,7 +232,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
             {mc.disponible && (
               <div className="tema-estudio flex flex-col gap-3 rounded-[10px] bg-[#121925] p-3 text-white">
                 <PanelColores mc={mc} />
-                {mc.activo && <TarjetaColores mc={mc} malla={enPiezas} archivo={nombreArchivo.replace(/\.stl$/, "")} titulo={modelo.nombre} />}
+                <TarjetaColores mc={mc} archivo={nombreArchivo.replace(/\.stl$/, "")} titulo={modelo.nombre} />
               </div>
             )}
             {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}

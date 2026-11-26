@@ -201,7 +201,7 @@ export function GeneradorLlaveros() {
   const primerRenglon = texto.split("\n")[0] || "nombre"
   const archivo = `llavero-hetna-${slugArchivo(primerRenglon, "nombre")}`
   const formaNombre = FORMAS_LLAVERO.find((f) => f.id === forma)?.nombre
-  const mc = useMulticolor(listo ? r!.malla.partes : undefined)
+  const mc = useMulticolor(listo ? r!.malla : null)
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -462,7 +462,7 @@ export function GeneradorLlaveros() {
           </div>
         </TarjetaExport>
       </div>
-      <TarjetaColores mc={mc} malla={listo ? r!.malla : null} archivo={archivo} titulo={`Llavero ${primerRenglon}`} />
+      <TarjetaColores mc={mc} archivo={archivo} titulo={`Llavero ${primerRenglon}`} />
       <TarjetaExport titulo="Muchos nombres de una vez" nota={`Para eventos, escuelas o empresas: un nombre por renglón (hasta ${MAX_NOMBRES}). Cada llavero sale con la forma, la letra, el ícono y el logo de arriba.`}>
         <textarea
           value={nombres}
