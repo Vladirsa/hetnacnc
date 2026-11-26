@@ -11,7 +11,7 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createHmac, timingSafeEqual } from "crypto"
 
-import { sincronizarProductosPlanos } from "./planos-catalogo"
+import { limpiarCacheTienda, sincronizarProductosPlanos } from "./planos-catalogo"
 import { PLANOS_NOMBRES, T_BIBLIOTECA, cargarNombresPlanos } from "./planos-correo"
 import { STORE_URL } from "./licitacion"
 import { secretoLigas } from "./secreto-ligas"
@@ -243,6 +243,8 @@ export async function resolverPlano(container: any, slug: string, accion: string
   if (accion !== "publicar") throw new ErrorPlano("Acción no válida.")
   await knex(T_BIBLIOTECA).where({ slug }).update({ estado: "publicado", publicado_en: knex.fn.now() })
   await cargarNombresPlanos(knex, true)
+  // la lista de /planos se refresca ya (sin esperar su caché de un minuto)
+  await limpiarCacheTienda(["planos-biblioteca"]).catch(() => undefined)
   let producto: string | null = null
   try {
     const r = await sincronizarProductosPlanos(container, { publicar: true, solo: [slug] })
