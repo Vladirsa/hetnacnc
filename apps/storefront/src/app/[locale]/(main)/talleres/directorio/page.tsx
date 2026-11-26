@@ -20,25 +20,33 @@ export const metadata: Metadata = {
 
 const TIPOS: TipoDirectorio[] = ["taller", "proveedor", "instructor"]
 const CHIP = "rounded-full px-3 py-1 text-sm"
+// 26 nov 2026: la lista completa (~880 empresas) pesaba 900 KB de HTML y tardaba en
+// responder al toque (Lighthouse 83). Por páginas de 60; todos los perfiles siguen
+// en el mapa del sitio (sitemaps/talleres.xml) y en las ligas de página.
+const POR_PAGINA = 60
 
 export default async function DirectorioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string; tipo?: string }>
+  searchParams: Promise<{ estado?: string; tipo?: string; pagina?: string }>
 }) {
-  const { estado = "", tipo = "" } = await searchParams
+  const { estado = "", tipo = "", pagina = "1" } = await searchParams
   const [todas, talleres, porEstado] = await Promise.all([directorioMexico(), listarTalleres().catch(() => []), estadosIndexables()])
   const estadoSel = ESTADOS_MX.includes(estado) ? estado : ""
   const tipoSel = (TIPOS as string[]).includes(tipo) ? (tipo as TipoDirectorio) : ""
   const lista = todas
     .filter((e) => (!estadoSel || e.zona === estadoSel) && (!tipoSel || e.tipo === tipoSel))
     .sort((a, b) => (a.zona || "zzz").localeCompare(b.zona || "zzz") || a.empresa.localeCompare(b.empresa))
+  const paginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA))
+  const paginaSel = Math.min(paginas, Math.max(1, Math.floor(Number(pagina)) || 1))
+  const visibles = lista.slice((paginaSel - 1) * POR_PAGINA, paginaSel * POR_PAGINA)
   const estados = ESTADOS_MX.filter((e) => todas.some((x) => x.zona === e))
   const enHetna = estadoSel ? talleres.filter((t) => t.perfil.estado === estadoSel).length : talleres.length
-  const liga = (q: { estado?: string; tipo?: string }) => {
+  const liga = (q: { estado?: string; tipo?: string; pagina?: number }) => {
     const p = new URLSearchParams()
     if (q.estado) p.set("estado", q.estado)
     if (q.tipo) p.set("tipo", q.tipo)
+    if (q.pagina && q.pagina > 1) p.set("pagina", String(q.pagina))
     const s = p.toString()
     return `/talleres/directorio${s ? `?${s}` : ""}`
   }
@@ -129,6 +137,7 @@ export default async function DirectorioPage({
 
       <p className="mt-6 text-sm text-[#6B675C]">
         {lista.length} {lista.length === 1 ? "empresa" : "empresas"}
+        {paginas > 1 ? ` · página ${paginaSel} de ${paginas}` : ""}
       </p>
       {lista.length === 0 ? (
         <p className="mt-3 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[#40403A]">
@@ -139,7 +148,7 @@ export default async function DirectorioPage({
         </p>
       ) : (
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-          {lista.map((e) => (
+          {visibles.map((e) => (
             <li key={e.slug} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <LocalizedClientLink href={`/talleres/directorio/${e.slug}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
                 {e.empresa}
@@ -155,6 +164,31 @@ export default async function DirectorioPage({
             </li>
           ))}
         </ul>
+      )}
+
+      {paginas > 1 && (
+        <nav aria-label="Páginas del directorio" className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+          {paginaSel > 1 && (
+            <LocalizedClientLink href={liga({ estado: estadoSel, tipo: tipoSel, pagina: paginaSel - 1 })} rel="prev" className={`${CHIP} border border-[#E7E4DC] bg-white text-[#40403A]`}>
+              ← Anterior
+            </LocalizedClientLink>
+          )}
+          {Array.from({ length: paginas }, (_, i) => i + 1).map((n) => (
+            <LocalizedClientLink
+              key={n}
+              href={liga({ estado: estadoSel, tipo: tipoSel, pagina: n })}
+              aria-current={n === paginaSel ? "page" : undefined}
+              className={`${CHIP} ${n === paginaSel ? "bg-[#142033] text-white" : "border border-[#E7E4DC] bg-white text-[#40403A]"}`}
+            >
+              {n}
+            </LocalizedClientLink>
+          ))}
+          {paginaSel < paginas && (
+            <LocalizedClientLink href={liga({ estado: estadoSel, tipo: tipoSel, pagina: paginaSel + 1 })} rel="next" className={`${CHIP} border border-[#E7E4DC] bg-white text-[#40403A]`}>
+              Siguiente →
+            </LocalizedClientLink>
+          )}
+        </nav>
       )}
     </main>
   )
