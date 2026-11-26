@@ -411,27 +411,48 @@ async function dibujarEscena(e: any, i: number, total: number, serie: string, di
 const FOTOS_IA = () => Number(process.env.EXPLICATIVO_FOTOS_IA ?? 3)
 const USD_FOTO = 0.05
 
-async function productoDeTienda(knex: any, palabra: string) {
-  const p = String(palabra || "").trim()
+// Palabras que casi cualquier producto trae: con ellas salía un producto al azar
+// ("Plantilla CNC para…" en un video sobre cómo cobrar)
+const GENERICAS = new Set("cnc pieza piezas taller talleres diseño diseños maquina máquina archivo archivos corte cortes router laser láser plantilla kit hetna herramienta herramientas producto productos".split(" "))
+export const palabraProducto = (palabra: string) => {
+  const p = String(palabra || "").trim().toLowerCase()
+  return p.length >= 3 && !GENERICAS.has(p) ? p : ""
+}
+
+async function productoDeTienda(knex: any, palabra: string, usados: Set<string>) {
+  const p = palabraProducto(palabra)
   if (!p) return null
-  return knex("product").whereNull("deleted_at").where({ status: "published" }).whereNotNull("thumbnail")
-    .where((q: any) => q.whereILike("title", `%${p}%`).orWhereILike("description", `%${p}%`))
-    .orderByRaw("random()").first("title", "thumbnail").catch(() => null)
+  // Sólo por el nombre (la descripción traía coincidencias que no tenían que ver) y sin repetir en el mismo video
+  const filas = await knex("product").whereNull("deleted_at").where({ status: "published" }).whereNotNull("thumbnail")
+    .whereILike("title", `%${p}%`).orderByRaw("random()").limit(5).select("id", "title", "thumbnail").catch(() => [])
+  return filas.find((f: any) => !usados.has(f.id)) || null
+}
+
+/** Pie de foto del producto: el nombre completo si cabe; si no, cortado en una palabra que no deje la frase colgando. Pura. */
+export function pieProducto(titulo: string, max = 52) {
+  const limpio = String(titulo || "").replace(/\s+/g, " ").trim()
+  const t = `En la tienda: ${limpio}`
+  if (t.length <= max) return t
+  let corto = t.slice(0, max).replace(/\s+\S*$/, "")
+  corto = corto.replace(/(\s+(para|de|del|con|y|en|a|la|el|los|las|por|sin|tu))+$/i, "")
+  return `${corto}…`
 }
 
 /** Pone foto_archivo / foto_pie / foto_ia a cada escena foto (o la vuelve lista si no hubo foto). Regresa el costo. */
 export async function resolverFotos(knex: any, g: any, dir: string, logger?: any) {
   let costo = 0
   let ia = 0
+  const usados = new Set<string>()
   for (const [i, e] of g.escenas.entries()) {
     if (e.tipo !== "foto") continue
     const archivo = path.join(dir, `foto${i}.jpg`)
     try {
-      const prod = await productoDeTienda(knex, e.producto)
+      const prod = await productoDeTienda(knex, e.producto, usados)
       if (prod?.thumbnail) {
         await bajarImagen(prod.thumbnail, archivo)
+        usados.add(prod.id)
         e.foto_archivo = archivo
-        e.foto_pie = corta(`En la tienda HETNA: ${prod.title}`, 46)
+        e.foto_pie = pieProducto(prod.title)
         continue
       }
       if (e.foto && ia < FOTOS_IA()) {

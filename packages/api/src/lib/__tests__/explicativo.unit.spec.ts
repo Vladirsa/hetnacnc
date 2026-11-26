@@ -142,3 +142,20 @@ describe("YouTube: video largo sin #Shorts", () => {
     expect(youtubeDe("Mi título\ndesc", "", "v.mp4", { largo: true }).titulo).toBe("Mi título")
   })
 })
+
+describe("fotos de productos de la tienda", () => {
+  const { palabraProducto, pieProducto } = require("../fabrica/explicativo")
+  it("no busca con palabras genéricas", () => {
+    expect(palabraProducto("CNC")).toBe("")
+    expect(palabraProducto("diseño")).toBe("")
+    expect(palabraProducto("fresa")).toBe("fresa")
+    expect(palabraProducto("MDF")).toBe("mdf")
+  })
+  it("el pie no queda cortado en «para»", () => {
+    expect(pieProducto("Fresa recta 1/4")).toBe("En la tienda: Fresa recta 1/4")
+    const p = pieProducto("Plantilla CNC para bisagra europea de 35 mm, archivo DXF listo para cortar")
+    expect(p.length).toBeLessThanOrEqual(53)
+    expect(p).not.toMatch(/\s(para|de)…$/)
+    expect(p.endsWith("…")).toBe(true)
+  })
+})
