@@ -11,6 +11,8 @@
 import { randomBytes } from "crypto"
 
 import { revisarMensaje } from "./chat-filtro"
+import { subir } from "./fabrica"
+import { leerSTL, simplificar, stlBinario, stlDe } from "./vista-3d-auto"
 
 export const CATEGORIAS_PAQUETE = {
   "diseno-2d-3d": "Diseño 2D / 3D",
@@ -27,7 +29,13 @@ export type Paquete = {
   entrega_dias: number | null
   descripcion: string
   categoria: CategoriaPaquete
+  // Muestra 3D simplificada que sube el diseñador (POST /vendor/hetna-paquetes/modelo):
+  // el cliente la gira antes de pedir cotización. Nunca es el archivo original.
+  modelo_3d: string | null
 }
+
+// Sólo las muestras que generó HETNA (modelo3d-….stl en el almacenamiento público)
+export const MODELO_VALIDO = /^https:\/\/[^\s"'<>]+\/[^\/\s"'<>]*modelo3d-[A-Za-z0-9_-]+\.stl(\?[^\s"'<>]*)?$/
 
 export class ErrorPaquete extends Error {}
 
@@ -59,7 +67,8 @@ export function normalizarPaquetes(entrada: unknown): Paquete[] {
       if (t && /(\d[\s.-]?){10}/.test(t)) throw new ErrorPaquete(`${n}: quita los números de teléfono.`)
     }
     const id = typeof x?.id === "string" && /^paq_[a-f0-9]{12}$/.test(x.id) ? x.id : `paq_${randomBytes(6).toString("hex")}`
-    return { id, titulo, desde, entrega_dias: dias, descripcion, categoria }
+    const modelo_3d = typeof x?.modelo_3d === "string" && MODELO_VALIDO.test(x.modelo_3d) ? x.modelo_3d : null
+    return { id, titulo, desde, entrega_dias: dias, descripcion, categoria, modelo_3d }
   })
 }
 
@@ -70,4 +79,31 @@ export function paquetesDe(metadata: any): Paquete[] {
   } catch {
     return []
   }
+}
+
+// ── Muestra 3D de un servicio ──────────────────────────────────────────────
+
+export const MAX_MB_MODELO = 25
+
+/** Del STL (o ZIP con STL) que sube el diseñador saca una muestra simplificada
+ *  (~8,000 triángulos) y la sube al almacenamiento público. El original no se
+ *  guarda: así nadie se lleva su modelo completo. */
+export async function generarModeloPaquete(scope: any, sellerId: string, contenido: Buffer): Promise<string> {
+  const esZip = contenido.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))
+  let stl: Buffer | null
+  try {
+    stl = stlDe(esZip ? "modelo.zip" : "modelo.stl", contenido)
+  } catch {
+    throw new ErrorPaquete("No pudimos abrir el ZIP.")
+  }
+  if (!stl) throw new ErrorPaquete("El ZIP no trae ningún archivo STL.")
+  let tris: Float32Array
+  try {
+    tris = simplificar(leerSTL(stl))
+  } catch {
+    throw new ErrorPaquete("No pudimos leer el STL. Exporta de nuevo el modelo en STL.")
+  }
+  if (tris.length < 9 * 4) throw new ErrorPaquete("El STL viene vacío o no se pudo leer.")
+  const limpio = String(sellerId).replace(/[^A-Za-z0-9_]/g, "").slice(-20)
+  return subir(scope, `modelo3d-${limpio}-${randomBytes(5).toString("hex")}.stl`, "model/stl", stlBinario(tris))
 }
