@@ -13,6 +13,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-corazones-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-corazones-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 800,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 19198,
+        "hex": "#3a3e48"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -53,6 +63,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=luna%2Cestrella%2Ccirculo&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-lunas-estrellas-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-lunas-estrellas-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1254,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 18744,
+        "hex": "#d42a2a"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -94,6 +114,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=huella%2Ccorazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-huellitas-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-huellitas-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 514,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 19486,
+        "hex": "#d42a2a"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -134,6 +164,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=copo%2Cestrella&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-copos-navidad-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-copos-navidad-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1866,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 18134,
+        "hex": "#3a3e48"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -174,6 +214,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=rombo&fuente=montserrat&acomodo=cuadricula&espejo=1&tamano=8&espacioX=4&espacioY=4&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-rombos-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-rombos-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 2008,
+        "hex": "#7a3fc4"
+      },
+      {
+        "triangulos": 13520,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -213,6 +263,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=9&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-hecho-a-mano-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-hecho-a-mano-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 440,
+        "hex": "#ec6ea5"
+      },
+      {
+        "triangulos": 19560,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -254,6 +314,16 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=TE+AMO&iconos=corazon&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/rodillo-texturizador-te-amo-impreso-3d.png",
     "modelo_3d": "modelos/rodillo-texturizador-te-amo-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 550,
+        "hex": "#1f5fd1"
+      },
+      {
+        "triangulos": 19450,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -295,6 +365,16 @@
     "herramienta_url": "/disenar/texturizador?forma=placa&palabras=&iconos=corazon%2Cflor%2Cestrella&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=12&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=120&alto=120&radio=4&grosor=3",
     "foto": "fotos/placa-texturizadora-galletas-impresa-3d.png",
     "modelo_3d": "modelos/placa-texturizadora-galletas-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 140,
+        "hex": "#3a3e48"
+      },
+      {
+        "triangulos": 11892,
+        "hex": "#eb6414"
+      }
+    ],
     "diseno": {
       "forma": "placa",
       "ancho": 120,
@@ -338,6 +418,16 @@
     "herramienta_url": "/disenar/texturizador?forma=placa&palabras=HECHO+A+MANO&iconos=flor&fuente=montserrat&acomodo=intercalado&modo=alto&espejo=1&tamano=8&espacioX=5&espacioY=6&orilla=0&relieve=1.2&ancho=150&alto=100&radio=4&grosor=3",
     "foto": "fotos/placa-texturizadora-hecho-a-mano-impresa-3d.png",
     "modelo_3d": "modelos/placa-texturizadora-hecho-a-mano-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 140,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 19932,
+        "hex": "#3a3e48"
+      }
+    ],
     "diseno": {
       "forma": "placa",
       "ancho": 150,
@@ -381,6 +471,20 @@
     "herramienta_url": "/disenar/cortadores-galletas?icono=corazon&tamano=70&sello=Te+amo&fuente=pacifico",
     "foto": "fotos/cortador-galletas-corazon-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-corazon-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1872,
+        "hex": "#d42a2a"
+      },
+      {
+        "triangulos": 256,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 1460,
+        "hex": "#d42a2a"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -416,6 +520,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?icono=estrella&tamano=70",
     "foto": "fotos/cortador-galletas-estrella-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-estrella-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 760,
+        "hex": "#eb6414"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -446,6 +556,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?forma=nube&tamano=75",
     "foto": "fotos/cortador-galletas-nube-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-nube-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1600,
+        "hex": "#f5be00"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -476,6 +592,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?forma=arbol&tamano=80",
     "foto": "fotos/cortador-galletas-pino-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-pino-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1624,
+        "hex": "#f5be00"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -506,6 +628,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?forma=casa&tamano=70",
     "foto": "fotos/cortador-galletas-casita-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-casita-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 916,
+        "hex": "#ec6ea5"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -536,6 +664,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?icono=flor&tamano=65",
     "foto": "fotos/cortador-galletas-flor-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-flor-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 2996,
+        "hex": "#ec6ea5"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -566,6 +700,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?icono=huella&tamano=60",
     "foto": "fotos/cortador-galletas-huellita-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-huellita-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 6168,
+        "hex": "#d42a2a"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -596,6 +736,12 @@
     "herramienta_url": "/disenar/cortadores-galletas?icono=copo&tamano=70",
     "foto": "fotos/cortador-galletas-copo-nieve-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-copo-nieve-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1200,
+        "hex": "#1f5fd1"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "icono",
@@ -626,6 +772,20 @@
     "herramienta_url": "/disenar/cortadores-galletas?forma=redondo&tamano=65&selloIcono=estrella",
     "foto": "fotos/cortador-galletas-redondo-estrella-impreso-3d.png",
     "modelo_3d": "modelos/cortador-galletas-redondo-estrella-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1364,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 188,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 36,
+        "hex": "#f5be00"
+      }
+    ],
     "diseno": {
       "forma": {
         "tipo": "clasica",
@@ -660,6 +820,12 @@
     "herramienta_url": "/disenar/texturizador?forma=rodillo&palabras=&iconos=corazon%2Cflor&fuente=montserrat&acomodo=intercalado&espejo=1&tamano=10&espacioX=5&espacioY=6&orilla=0&relieve=1.2&diametro=40&largo=120&eje=12",
     "foto": "fotos/soporte-rodillo-texturizador-impreso-3d.png",
     "modelo_3d": "modelos/soporte-rodillo-texturizador-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1768,
+        "hex": "#1f964c"
+      }
+    ],
     "diseno": {
       "forma": "rodillo",
       "diametro": 40,
@@ -700,6 +866,16 @@
     "herramienta_url": "/disenar/modelos-3d/maceta",
     "foto": "fotos/maceta-con-drenaje-impresa-3d.png",
     "modelo_3d": "modelos/maceta-con-drenaje-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 960,
+        "hex": "#d42a2a"
+      },
+      {
+        "triangulos": 380,
+        "hex": "#e4e1d8"
+      }
+    ],
     "modelo": "maceta",
     "valores": {},
     "volumen_cm3": 82.5,
@@ -723,6 +899,16 @@
     "herramienta_url": "/disenar/modelos-3d/maceta?arriba=160&abajo=120&alto=140&pared=2.4&drenaje=14",
     "foto": "fotos/maceta-grande-con-drenaje-impresa-3d.png",
     "modelo_3d": "modelos/maceta-grande-con-drenaje-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 960,
+        "hex": "#7a3fc4"
+      },
+      {
+        "triangulos": 380,
+        "hex": "#e4e1d8"
+      }
+    ],
     "modelo": "maceta",
     "valores": {
       "arriba": 160,
@@ -752,6 +938,12 @@
     "herramienta_url": "/disenar/modelos-3d/porta-lapices",
     "foto": "fotos/lapicero-hexagonal-impreso-3d.png",
     "modelo_3d": "modelos/lapicero-hexagonal-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 44,
+        "hex": "#f5be00"
+      }
+    ],
     "modelo": "porta-lapices",
     "valores": {},
     "volumen_cm3": 54,
@@ -775,6 +967,12 @@
     "herramienta_url": "/disenar/modelos-3d/soporte-celular",
     "foto": "fotos/soporte-celular-impreso-3d.png",
     "modelo_3d": "modelos/soporte-celular-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 184,
+        "hex": "#d42a2a"
+      }
+    ],
     "modelo": "soporte-celular",
     "valores": {},
     "volumen_cm3": 89.5,
@@ -798,6 +996,12 @@
     "herramienta_url": "/disenar/modelos-3d/soporte-celular?ancho=180&grosor=14",
     "foto": "fotos/soporte-tableta-impreso-3d.png",
     "modelo_3d": "modelos/soporte-tableta-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 184,
+        "hex": "#1f5fd1"
+      }
+    ],
     "modelo": "soporte-celular",
     "valores": {
       "ancho": 180,
@@ -824,6 +1028,12 @@
     "herramienta_url": "/disenar/modelos-3d/posavasos",
     "foto": "fotos/posavasos-impreso-3d.png",
     "modelo_3d": "modelos/posavasos-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 44,
+        "hex": "#eb6414"
+      }
+    ],
     "modelo": "posavasos",
     "valores": {},
     "volumen_cm3": 11.8,
@@ -847,6 +1057,12 @@
     "herramienta_url": "/disenar/modelos-3d/gancho-pared",
     "foto": "fotos/gancho-de-pared-impreso-3d.png",
     "modelo_3d": "modelos/gancho-de-pared-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1010,
+        "hex": "#7a3fc4"
+      }
+    ],
     "modelo": "gancho-pared",
     "valores": {},
     "volumen_cm3": 10.3,
@@ -870,6 +1086,12 @@
     "herramienta_url": "/disenar/modelos-3d/organizador-fresas",
     "foto": "fotos/organizador-fresas-brocas-impreso-3d.png",
     "modelo_3d": "modelos/organizador-fresas-brocas-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 3564,
+        "hex": "#1096a0"
+      }
+    ],
     "modelo": "organizador-fresas",
     "valores": {},
     "volumen_cm3": 102.5,
@@ -893,6 +1115,12 @@
     "herramienta_url": "/disenar/modelos-3d/llaves-allen",
     "foto": "fotos/organizador-llaves-allen-impreso-3d.png",
     "modelo_3d": "modelos/organizador-llaves-allen-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 324,
+        "hex": "#7a3fc4"
+      }
+    ],
     "modelo": "llaves-allen",
     "valores": {},
     "volumen_cm3": 36.7,
@@ -916,6 +1144,16 @@
     "herramienta_url": "/disenar/modelos-3d/contenedor-apilable",
     "foto": "fotos/contenedor-apilable-impreso-3d.png",
     "modelo_3d": "modelos/contenedor-apilable-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 236,
+        "hex": "#3a3e48"
+      },
+      {
+        "triangulos": 28,
+        "hex": "#eb6414"
+      }
+    ],
     "modelo": "contenedor-apilable",
     "valores": {},
     "volumen_cm3": 91.3,
@@ -939,6 +1177,16 @@
     "herramienta_url": "/disenar/modelos-3d/caja-tapa",
     "foto": "fotos/caja-tapa-presion-impresa-3d.png",
     "modelo_3d": "modelos/caja-tapa-presion-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 220,
+        "hex": "#ec6ea5"
+      },
+      {
+        "triangulos": 140,
+        "hex": "#e4e1d8"
+      }
+    ],
     "modelo": "caja-tapa",
     "valores": {},
     "volumen_cm3": 25.3,
@@ -962,6 +1210,12 @@
     "herramienta_url": "/disenar/modelos-3d/clip-bolsa",
     "foto": "fotos/clip-para-bolsas-impreso-3d.png",
     "modelo_3d": "modelos/clip-para-bolsas-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 228,
+        "hex": "#1f964c"
+      }
+    ],
     "modelo": "clip-bolsa",
     "valores": {},
     "volumen_cm3": 5,
@@ -985,6 +1239,16 @@
     "herramienta_url": "/disenar/llaveros?texto=Sof%C3%ADa&forma=rect&fuente=pacifico&alto=12",
     "foto": "fotos/llavero-con-nombre-impreso-3d.png",
     "modelo_3d": "modelos/llavero-con-nombre-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 336,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 3184,
+        "hex": "#3a3e48"
+      }
+    ],
     "diseno": {
       "texto": "Sofía",
       "forma": "rect",
@@ -1014,6 +1278,16 @@
     "herramienta_url": "/disenar/llaveros?texto=Mam%C3%A1&forma=corazon&fuente=lobster&alto=11",
     "foto": "fotos/llavero-corazon-con-nombre-impreso-3d.png",
     "modelo_3d": "modelos/llavero-corazon-con-nombre-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 480,
+        "hex": "#1f964c"
+      },
+      {
+        "triangulos": 1776,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "Mamá",
       "forma": "corazon",
@@ -1044,6 +1318,20 @@
     "herramienta_url": "/disenar/llaveros?texto=Max%0A55+1234+5678&forma=circulo&fuente=montserrat&alto=9&icono=huella&escala=45",
     "foto": "fotos/placa-mascota-con-nombre-impresa-3d.png",
     "modelo_3d": "modelos/placa-mascota-con-nombre-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 392,
+        "hex": "#ec6ea5"
+      },
+      {
+        "triangulos": 2276,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 780,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "Max\n55 1234 5678",
       "forma": "circulo",
@@ -1075,6 +1363,16 @@
     "herramienta_url": "/disenar/llaveros?texto=VIAJE&forma=etiqueta&fuente=bebas-neue&alto=14",
     "foto": "fotos/etiqueta-maleta-con-nombre-impresa-3d.png",
     "modelo_3d": "modelos/etiqueta-maleta-con-nombre-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 276,
+        "hex": "#d42a2a"
+      },
+      {
+        "triangulos": 284,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "VIAJE",
       "forma": "etiqueta",
@@ -1104,6 +1402,20 @@
     "herramienta_url": "/disenar/llaveros?texto=A&forma=circulo&fuente=cinzel&alto=16&icono=estrella",
     "foto": "fotos/llavero-inicial-estrella-impreso-3d.png",
     "modelo_3d": "modelos/llavero-inicial-estrella-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 392,
+        "hex": "#7a3fc4"
+      },
+      {
+        "triangulos": 256,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 36,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "A",
       "forma": "circulo",
@@ -1135,6 +1447,16 @@
     "herramienta_url": "/disenar/llaveros?texto=TU+MARCA&forma=rect&fuente=oswald&alto=11",
     "foto": "fotos/llavero-negocio-impreso-3d.png",
     "modelo_3d": "modelos/llavero-negocio-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 336,
+        "hex": "#1096a0"
+      },
+      {
+        "triangulos": 1124,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "TU MARCA",
       "forma": "rect",
@@ -1165,6 +1487,16 @@
     "herramienta_url": "/disenar/llaveros?texto=Taller&forma=rect&fuente=oswald&alto=22",
     "foto": "fotos/placa-puerta-con-nombre-impresa-3d.png",
     "modelo_3d": "modelos/placa-puerta-con-nombre-impresa-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 336,
+        "hex": "#1096a0"
+      },
+      {
+        "triangulos": 1720,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "Taller",
       "forma": "rect",
@@ -1195,6 +1527,16 @@
     "herramienta_url": "/disenar/llaveros?texto=2026&forma=ovalo&fuente=cinzel&alto=16",
     "foto": "fotos/adorno-con-fecha-impreso-3d.png",
     "modelo_3d": "modelos/adorno-con-fecha-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 448,
+        "hex": "#d42a2a"
+      },
+      {
+        "triangulos": 3876,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "2026",
       "forma": "ovalo",
@@ -1225,6 +1567,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=LOVE&estilo=pie&fuente=alfa-slab-one&alto=60&profundidad=12",
     "foto": "fotos/letras-love-de-pie-impresas-3d.png",
     "modelo_3d": "modelos/letras-love-de-pie-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1748,
+        "hex": "#d42a2a"
+      },
+      {
+        "triangulos": 12,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "LOVE",
       "estilo": "pie",
@@ -1256,6 +1608,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=HOME&estilo=pie&fuente=montserrat&alto=50&profundidad=12",
     "foto": "fotos/letras-home-de-pie-impresas-3d.png",
     "modelo_3d": "modelos/letras-home-de-pie-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1968,
+        "hex": "#ec6ea5"
+      },
+      {
+        "triangulos": 12,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "HOME",
       "estilo": "pie",
@@ -1287,6 +1649,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=XV&estilo=pie&fuente=cinzel&alto=100&profundidad=15",
     "foto": "fotos/letras-xv-anos-de-pie-impresas-3d.png",
     "modelo_3d": "modelos/letras-xv-anos-de-pie-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 1568,
+        "hex": "#7a3fc4"
+      },
+      {
+        "triangulos": 12,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "XV",
       "estilo": "pie",
@@ -1318,6 +1690,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=FAMILIA&estilo=pared&fuente=montserrat&alto=80&profundidad=12",
     "foto": "fotos/letras-familia-pared-impresas-3d.png",
     "modelo_3d": "modelos/letras-familia-pared-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 216,
+        "hex": "#1f5fd1"
+      },
+      {
+        "triangulos": 1592,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "FAMILIA",
       "estilo": "pared",
@@ -1349,6 +1731,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=SOFIA&estilo=pared&fuente=alfa-slab-one&alto=100&profundidad=14",
     "foto": "fotos/letras-nombre-pared-impresas-3d.png",
     "modelo_3d": "modelos/letras-nombre-pared-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 4228,
+        "hex": "#1f5fd1"
+      },
+      {
+        "triangulos": 9268,
+        "hex": "#e4e1d8"
+      }
+    ],
     "diseno": {
       "texto": "SOFIA",
       "estilo": "pared",
@@ -1380,6 +1772,16 @@
     "herramienta_url": "/disenar/letras-3d?modo=impresion&texto=OPEN&estilo=luz&fuente=alfa-slab-one&alto=100&profundidad=25",
     "foto": "fotos/letras-huecas-led-impresas-3d.png",
     "modelo_3d": "modelos/letras-huecas-led-impresas-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 2772,
+        "hex": "#f5be00"
+      },
+      {
+        "triangulos": 6544,
+        "hex": "#3a3e48"
+      }
+    ],
     "diseno": {
       "texto": "OPEN",
       "estilo": "luz",

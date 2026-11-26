@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
-import { type TramoColor, coloresPorVertice } from "@/lib/generador/multicolor"
+import { type TramoColor, coloresPorVertice } from "@/lib/generador/colores-vista"
 
 // Vista 3D de una malla de triángulos (9 números por triángulo, en mm, Z hacia
 // arriba). La usan las herramientas que producen STL: extruir, litofanías…

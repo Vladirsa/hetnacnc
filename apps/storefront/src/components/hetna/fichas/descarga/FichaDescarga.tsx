@@ -16,7 +16,7 @@ import { esquemaDe, svgEsquema } from "@/lib/hetna/plano-diseno"
 import { REGLAS_COMUNES, licenciaDe } from "@/lib/hetna/licencias"
 import { datosDigital } from "@/lib/hetna/tipo-ficha"
 import { formatosDe, programasPara } from "@/lib/hetna/formatos"
-import { fotosFabricadaDe, vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
+import { fotosFabricadaDe, coloresVistaDe, vistaPreviaDe } from "@/lib/hetna/ficha-tecnica"
 import { htmlSeguro } from "@/lib/seguridad/html-seguro"
 import type { VistaGaleria } from "./GaleriaDescarga"
 import { Pestanas } from "./Pestanas"
@@ -37,7 +37,7 @@ export function vistasGaleria(p: Producto): VistaGaleria[] {
     .map((i, n) => ({ clave: i.id || `foto-${n}`, tipo: "foto", url: i.url, titulo: `Foto ${n + 1}` }))
   // La vista 3D va segunda: la primera foto sigue siendo la portada
   const vp = vistaPreviaDe(p.metadata)
-  if (vp) fotos.splice(Math.min(1, fotos.length), 0, { clave: "modelo", tipo: "modelo", url: vp.url, formato: vp.formato, titulo: "Vista 3D" })
+  if (vp) fotos.splice(Math.min(1, fotos.length), 0, { clave: "modelo", tipo: "modelo", url: vp.url, formato: vp.formato, titulo: "Vista 3D", colores: coloresVistaDe(p.metadata) })
   const e = esquemaDe(p)
   return e ? [...fotos, { clave: "esquema", tipo: "esquema", svg: svgEsquema(e), titulo: "Detalle del patrón" }] : fotos
 }

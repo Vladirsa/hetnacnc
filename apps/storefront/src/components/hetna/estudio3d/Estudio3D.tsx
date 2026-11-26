@@ -17,7 +17,7 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js"
 
-import { type TramoColor, coloresPorVertice } from "@/lib/generador/multicolor"
+import { type TramoColor, coloresPorVertice } from "@/lib/generador/colores-vista"
 
 type Unidad = "mm" | "in"
 type Modo = "color" | "blanco" | "gris" | "normales" | "malla"
