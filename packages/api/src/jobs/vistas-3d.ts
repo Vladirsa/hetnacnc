@@ -22,7 +22,9 @@ export default async function vistas3d(container: MedusaContainer) {
         "(coalesce(metadata->>'vista_previa', '') = '' or (metadata->>'vista3d_auto' = 'true' and coalesce(metadata->>'vista3d_v', '1') <> ?))",
         [String(VERSION_VISTA)]
       )
-      .whereRaw("coalesce(metadata->>'vista3d_error', '') = ''")
+      // Un error de una versión anterior se reintenta (26 nov 2026: la brida escalonada falló
+      // con «invalid distance» antes de que hubiera respaldo para ZIP con Deflate64)
+      .whereRaw("(coalesce(metadata->>'vista3d_error', '') = '' or coalesce(metadata->>'vista3d_v', '1') <> ?)", [String(VERSION_VISTA)])
       .select("id", "handle", "metadata")
       .limit(POR_VUELTA)
     const productos = container.resolve(Modules.PRODUCT) as any
@@ -30,7 +32,7 @@ export default async function vistas3d(container: MedusaContainer) {
       const meta = typeof f.metadata === "string" ? JSON.parse(f.metadata) : f.metadata || {}
       try {
         const url = await generarVista3D(container, { handle: f.handle, llave: String(meta.archivo_storage_key) })
-        await productos.updateProducts(f.id, { metadata: { ...meta, vista_previa: url, vista3d_auto: true, vista3d_v: String(VERSION_VISTA) } })
+        await productos.updateProducts(f.id, { metadata: { ...meta, vista_previa: url, vista3d_auto: true, vista3d_v: String(VERSION_VISTA), vista3d_error: "" } })
         // La muestra automática anterior se borra del almacenamiento (la v1 podía ser el modelo completo)
         const vieja = meta.vista3d_auto === true && typeof meta.vista_previa === "string" ? meta.vista_previa : ""
         if (vieja && vieja !== url) {
@@ -40,7 +42,7 @@ export default async function vistas3d(container: MedusaContainer) {
         logger.info(`[vistas-3d] lista: ${f.handle}`)
       } catch (e) {
         const motivo = (e as Error).message.slice(0, 200)
-        await productos.updateProducts(f.id, { metadata: { ...meta, vista3d_error: motivo } }).catch(() => null)
+        await productos.updateProducts(f.id, { metadata: { ...meta, vista3d_error: motivo, vista3d_v: String(VERSION_VISTA) } }).catch(() => null)
         logger.warn(`[vistas-3d] ${f.handle}: ${motivo}`)
       }
     }
