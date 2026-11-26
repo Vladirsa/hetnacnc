@@ -52,6 +52,8 @@ function paisPorContacto(r, soloMx) {
     }
     if (t.startsWith('+')) for (const [l, p] of LADAS) if (t.startsWith(l)) return p;
     if (t.length === 10 && ['809', '829', '849'].includes(t.slice(0, 3))) return 'República Dominicana';
+    // 10 dígitos que empiezan con 11: Buenos Aires (ningún número de México ni de EE. UU. empieza con 1)
+    if (t.length === 10 && t.startsWith('11')) return 'Argentina';
   }
   for (const d of [String(r.email || '').split('@').pop().toLowerCase(), String(r.dominio || '').toLowerCase()]) {
     if (!d || d.startsWith('ig-') || d.startsWith('fb-')) continue;
@@ -59,6 +61,19 @@ function paisPorContacto(r, soloMx) {
     for (const [fin, p] of DOMINIOS_PAIS) if (d.endsWith(fin) && (!soloMx || p === 'México')) return p;
   }
   return '';
+}
+// Giros que no son de CNC (uniformes, promocionales...): fuera si no mencionan nada de CNC
+const OTRO_GIRO = ['uniforme', 'calzado', 'textil', 'ropa ', 'articulos promocionales', 'artículos promocionales', 'productos promocionales', 'promocionales para empresas', 'seguros', 'inmobiliaria', 'restaurante', 'abarrotes', 'farmacia'];
+const PALABRAS_CNC = ['cnc', 'maquinad', 'mecanizad', 'usinagem', 'router', 'láser', 'laser', 'plasma', 'torno', 'fresad', 'troquel', 'molde', 'machining', 'grabad', 'corte', '3d'];
+// Títulos de página que no son el nombre de la empresa («Inicio | Rivera's Tools»)
+const GENERICOS = ['inicio', 'home', 'homepage', 'pagina de inicio', 'página de inicio', 'pagina principal', 'página principal', 'bienvenido', 'bienvenidos', 'welcome', 'index', 'contacto', 'nosotros', 'untitled', 'sin titulo', 'sin título'];
+function nombreReal(r) {
+  const n = limpiar(r.empresa, 90);
+  if (GENERICOS.indexOf(n.toLowerCase()) < 0) return n;
+  const d = String(r.dominio || '').toLowerCase();
+  if (!d || d.startsWith('ig-') || d.startsWith('fb-')) return '';
+  const base = d.split('.')[0].split('-').join(' ');
+  return base ? base.charAt(0).toUpperCase() + base.slice(1) : '';
 }
 const empresas = [];
 const vistos = {};
@@ -74,6 +89,10 @@ for (const it of $input.all()) {
   // Portales, directorios y tiendas en línea que el buscador confundió con talleres
   const texto = (String(r.empresa || '') + ' ' + String(r.productos_servicios || '') + ' ' + String(r.dominio || '')).toLowerCase();
   if (['marketplace', ' b2b', 'directorio de', 'encuentra los mejores', 'proveedores para la industria', 'ecommerce', 'e-commerce', 'miles de referencias', 'publica tus productos', 'tallerium', 'constru-mexico', 'marketb2b', 'tradekey', 'exporthub', 'tradeindia', 'tradewheel'].some((p) => texto.indexOf(p) >= 0)) continue;
+  const bajo = texto;
+  if (OTRO_GIRO.some((p) => bajo.indexOf(p) >= 0) && !PALABRAS_CNC.some((p) => bajo.indexOf(p) >= 0)) continue;
+  const nombre = nombreReal(r);
+  if (!nombre) continue;
   vistos[slug] = true;
   // Si el teléfono o el dominio dicen otro país, manda eso (también en proveedores extranjeros:
   // un «.mx» que salió en una búsqueda de China es mexicano)
@@ -82,7 +101,7 @@ for (const it of $input.all()) {
   const otroPais = real && real !== r.pais;
   empresas.push({
     slug,
-    empresa: limpiar(r.empresa, 90),
+    empresa: nombre,
     tipo,
     tamano: limpiar(r.tamano, 20),
     pais: limpiar(pais, 40),
