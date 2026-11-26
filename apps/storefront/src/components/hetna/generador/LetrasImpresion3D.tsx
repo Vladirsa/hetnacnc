@@ -14,6 +14,8 @@ import { ESTILOS_IMPRESION, type EstiloImpresion, OPCIONES_IMPRESION_FABRICA as 
 import type { Fuente } from "@/lib/generador/letreros"
 import { mallaSTL, volumenMalla } from "@/lib/generador/vectores"
 
+import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
+
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
 
 type Props = { selector: React.ReactNode }
@@ -96,6 +98,7 @@ export function LetrasImpresion3D({ selector }: Props) {
   const listo = !!r && !r.errores.length
 
   const estiloActual = ESTILOS_IMPRESION.find((e) => e.id === estilo)
+  const mc = useMulticolor(listo ? r!.partes : undefined)
   const stl = () => mallaSTL({ tris: r!.tris, avisos: [] })
 
   const archivo = `letras-3d-impresion-${slugArchivo(texto, "hetna")}`
@@ -174,6 +177,7 @@ export function LetrasImpresion3D({ selector }: Props) {
           </>
         )}
       </div>
+      <PanelColores mc={mc} />
       {listo && (
         <span className="text-[12px] text-[#F2D29B]">
           {r1(r!.ancho)} × {r1(r!.alto)} mm · {r!.piezas} {r!.piezas === 1 ? "pieza" : "piezas"} · unos {gramos} g de PLA
@@ -207,6 +211,14 @@ export function LetrasImpresion3D({ selector }: Props) {
           STL
         </Boton>
       </TarjetaExport>
+
+      <TarjetaColores
+        mc={mc}
+        malla={listo ? { tris: r!.tris, avisos: [], partes: r!.partes } : null}
+        archivo={archivo}
+        titulo={`Letras ${texto}`}
+        nota={estilo === "pared" ? "El frente (la primera capa, en la cama) sale de un color y el cuerpo de otro." : estilo === "luz" ? "El frente déjalo blanco o natural para que pase la luz." : undefined}
+      />
 
       {estilo === "pared" && (
         <TarjetaExport titulo="Plantilla de montaje (PDF)" nota="A tamaño real en hojas carta: pégala en la pared, clava donde está la cruz naranja y cuelga cada letra en su lugar.">
@@ -245,6 +257,7 @@ export function LetrasImpresion3D({ selector }: Props) {
       materialInicial="naranja"
       dePie={estilo !== "pie"}
       tris={listo ? r!.trisVista : undefined}
+      colores={mc.vista}
       panel={panel}
       exportacion={exportacion}
       avisos={listo ? r!.avisos : []}

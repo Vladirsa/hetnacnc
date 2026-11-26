@@ -17,7 +17,7 @@ import { extruir } from "@/lib/generador/extruir"
 import { caja, dentro } from "@/lib/generador/geo2d"
 import { circulo, contornosDe, figurasDeTexto, puntoInterior } from "@/lib/generador/letras3d"
 import type { Fuente } from "@/lib/generador/letreros"
-import type { P } from "@/lib/generador/vectores"
+import { type Malla, type P, type Parte, conPartes } from "@/lib/generador/vectores"
 
 const { geom2 } = jscad.geometries
 const { subtract, intersect } = jscad.booleans
@@ -55,6 +55,8 @@ export type ResultadoImpresion = {
   tris: number[]
   /** de frente, para verla (Y arriba = alto de la letra; Z = grosor hacia el que mira) */
   trisVista: number[]
+  /** piezas para impresoras de varios colores (tramos de `tris` y de `trisVista`, en orden) */
+  partes: Parte[]
   /** contornos de cada letra (plantilla de montaje y vista 2D) */
   letras: { letra: string; contornos: P[][] }[]
   barrenos: MarcaMontaje[]
@@ -131,7 +133,10 @@ export function pararMalla(t: number[]): number[] {
 }
 
 type Letra = { letra: string; figura: Geom; contornos: P[][] }
-type Armado = { tris: number[]; barrenos: MarcaMontaje[]; avisos: string[]; profundidadTotal: number; piezas: number }
+type Armado = { malla: Malla; barrenos: MarcaMontaje[]; avisos: string[]; profundidadTotal: number; piezas: number }
+
+/** Capa del frente que puede ir de otro color en las letras para colgar (mm) */
+const CAPA_FRENTE = 1.2
 
 // Letras paradas sobre una base que las une (una sola pieza). El dibujo (x, y)
 // pasa a (x, z) y el grosor va en Y. Cada letra se baja hasta meterse
@@ -141,7 +146,7 @@ const TRASLAPE = 0.8
 
 function armarPie(letras: Letra[], o: OpcionesImpresion): Armado {
   const todo = caja(letras.flatMap((l) => l.contornos.flat()))
-  const tris: number[] = []
+  const tris: number[] = [] // las letras
   const sueltas: string[] = []
   for (const l of letras) {
     // contornos exteriores (el hueco de la O o la A no cuenta)
@@ -158,10 +163,10 @@ function armarPie(letras: Letra[], o: OpcionesImpresion): Armado {
   }
   const m = 6
   const fondo = o.profundidad + 2 * BASE_FONDO
-  tris.push(...prisma([[[todo.x0 - m, -fondo / 2], [todo.x1 + m, -fondo / 2], [todo.x1 + m, fondo / 2], [todo.x0 - m, fondo / 2]]], BASE_ALTO))
+  const base = prisma([[[todo.x0 - m, -fondo / 2], [todo.x1 + m, -fondo / 2], [todo.x1 + m, fondo / 2], [todo.x0 - m, fondo / 2]]], BASE_ALTO)
   const avisos = sueltas.length ? [`Los puntos y acentos (${[...new Set(sueltas)].join(" ")}) no tocan la base: se imprimen sueltos y se pegan, o escribe sin acentos.`] : []
   if (todo.x1 - todo.x0 + 2 * m > MAX_CAMA) avisos.push(`La base mide ${Math.round(todo.x1 - todo.x0 + 2 * m)} mm: no cabe en muchas impresoras (camas de 220 a 256 mm). Baja el alto o usa menos letras.`)
-  return { tris, barrenos: [], avisos, profundidadTotal: fondo, piezas: 1 }
+  return { malla: conPartes(["Letras", tris], ["Base", base]), barrenos: [], avisos, profundidadTotal: fondo, piezas: 1 }
 }
 
 // Boca abajo: el frente en la cama (z = 0). Atrás (arriba) los barrenos
@@ -170,26 +175,29 @@ function armarPared(letras: Letra[], o: OpcionesImpresion): Armado {
   const r = Math.max(2, o.barreno / 2)
   const hondo = Math.min(o.profundidad - 1.6, Math.max(4, o.profundidad * 0.6))
   const solido = o.profundidad - hondo
-  const tris: number[] = [], barrenos: MarcaMontaje[] = [], avisos: string[] = []
+  // el frente (los primeros 1.2 mm, en la cama) puede ir de otro color
+  const capa = Math.min(CAPA_FRENTE, solido / 2)
+  const frente: number[] = [], tris: number[] = [], barrenos: MarcaMontaje[] = [], avisos: string[] = []
   for (const l of letras) {
     const hoyos = barrenosDe(l.figura, r)
-    tris.push(...prisma(espejo(l.contornos), solido))
+    frente.push(...prisma(espejo(l.contornos), capa))
+    tris.push(...prisma(espejo(l.contornos), solido - capa, capa))
     const atras = hoyos.length ? contornosDe(subtract(l.figura, ...hoyos.map(([x, y]) => geom2.fromPoints(circulo(x, y, r, 28))))) : l.contornos
     tris.push(...prisma(espejo(atras), hondo, solido))
     for (const [x, y] of hoyos) barrenos.push({ letra: l.letra, x, y })
     if (!hoyos.length) avisos.push(`La «${l.letra}» es muy delgada para el barreno: cuélgala con cinta doble cara.`)
   }
-  return { tris, barrenos, avisos, profundidadTotal: o.profundidad, piezas: letras.length }
+  return { malla: conPartes(["Frente", frente], ["Cuerpo", tris]), barrenos, avisos, profundidadTotal: o.profundidad, piezas: letras.length }
 }
 
 // Hueca para LED: frente sólido delgado (en la cama) y paredes; atrás abierta
 function armarLuz(letras: Letra[], o: OpcionesImpresion): Armado {
   const pared = Math.max(1.2, o.pared)
   const frente = Math.max(0.8, Math.min(o.frente, o.profundidad - 1))
-  const tris: number[] = [], avisos: string[] = []
+  const caras: number[] = [], tris: number[] = [], avisos: string[] = []
   let sinHueco = 0
   for (const l of letras) {
-    tris.push(...prisma(espejo(l.contornos), frente))
+    caras.push(...prisma(espejo(l.contornos), frente))
     const interior = offset({ delta: -pared, corners: "round", segments: 16 }, l.figura)
     const hueco = contornosDe(interior).length > 0
     if (!hueco) sinHueco++
@@ -198,13 +206,13 @@ function armarLuz(letras: Letra[], o: OpcionesImpresion): Armado {
   }
   if (sinHueco) avisos.push(`${sinHueco === 1 ? "Una letra es" : `${sinHueco} letras son`} tan delgada${sinHueco === 1 ? "" : "s"} que no le cabe el LED: sale sólida. Sube el alto o baja la pared.`)
   if (o.alto < 60) avisos.push("Para que quepa la tira LED, las letras huecas funcionan mejor desde 60 mm de alto.")
-  return { tris, barrenos: [], avisos, profundidadTotal: o.profundidad, piezas: letras.length }
+  return { malla: conPartes(["Frente", caras], ["Paredes", tris]), barrenos: [], avisos, profundidadTotal: o.profundidad, piezas: letras.length }
 }
 
 const ARMAR: Record<EstiloImpresion, (letras: Letra[], o: OpcionesImpresion) => Armado> = { pie: armarPie, pared: armarPared, luz: armarLuz }
 
 export function hacerLetrasImpresion(fuente: Fuente, o: OpcionesImpresion): ResultadoImpresion {
-  const vacio = (e: string): ResultadoImpresion => ({ tris: [], trisVista: [], letras: [], barrenos: [], ancho: 0, alto: 0, profundidadTotal: 0, piezas: 0, avisos: [], errores: [e] })
+  const vacio = (e: string): ResultadoImpresion => ({ tris: [], trisVista: [], partes: [], letras: [], barrenos: [], ancho: 0, alto: 0, profundidadTotal: 0, piezas: 0, avisos: [], errores: [e] })
   const texto = o.texto.replace(/\s+/g, " ").trim()
   if (!texto) return vacio("Escribe el texto de las letras.")
   if (!(o.alto >= 15)) return vacio("Las letras deben medir al menos 15 mm de alto.")
@@ -217,8 +225,9 @@ export function hacerLetrasImpresion(fuente: Fuente, o: OpcionesImpresion): Resu
   const todo = caja(letras.flatMap((l) => l.contornos.flat()))
   const a = ARMAR[o.estilo](letras, o)
   return {
-    tris: a.tris,
-    trisVista: o.estilo === "pie" ? a.tris : deFrente(a.tris, o.profundidad),
+    tris: a.malla.tris,
+    trisVista: o.estilo === "pie" ? a.malla.tris : deFrente(a.malla.tris, o.profundidad),
+    partes: a.malla.partes || [],
     letras: letras.map(({ letra, contornos }) => ({ letra, contornos })),
     barrenos: a.barrenos,
     ancho: todo.x1 - todo.x0,

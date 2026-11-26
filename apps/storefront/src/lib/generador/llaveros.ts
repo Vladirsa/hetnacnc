@@ -13,7 +13,7 @@ import { caja } from "@/lib/generador/geo2d"
 import { unirContornos } from "@/lib/generador/unirContornos"
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import type { Curva, Pt } from "@/lib/generador/trazado"
-import type { Dibujo, Malla, P, Trazo } from "@/lib/generador/vectores"
+import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 import { figura, type IconoTextura } from "@/lib/generador/texturizador"
 
 export type FormaLlavero = "rect" | "ovalo" | "circulo" | "etiqueta" | "corazon"
@@ -126,9 +126,14 @@ function etiqueta(x0: number, y0: number, x1: number, y1: number, r: number, pun
 const cajaDe = (c: P[][]) => caja(c.flat())
 const mover = (c: P[][], dx: number, dy: number, k = 1): P[][] => c.map((p) => p.map(([x, y]) => [x * k + dx, y * k + dy] as P))
 
-/** Texto (renglones 2+ con su escala), y a la izquierda el logo y el ícono, unidos y en mm. */
-function contenido(fuente: Fuente, o: OpcionesLlavero): P[][] {
+/**
+ * Texto (renglones 2+ con su escala), y a la izquierda el logo y el ícono, en
+ * mm. `figura[i]` dice si el contorno i es del ícono o el logo (para que en una
+ * impresora de varios colores vayan de su propio color).
+ */
+function contenido(fuente: Fuente, o: OpcionesLlavero): { contornos: P[][]; figura: boolean[] } {
   const partes: P[][][] = []
+  const deFigura: boolean[] = []
   // Texto: el primer renglón al alto pedido y los demás a escalaRenglones %
   const renglones = o.texto.replace(/\r/g, "").split("\n")
   const escala = Math.max(0.3, Math.min(1, (o.escalaRenglones ?? 100) / 100))
@@ -147,7 +152,10 @@ function contenido(fuente: Fuente, o: OpcionesLlavero): P[][] {
     y -= b.y1 - b.y0
   })
   // unidas: en letra cursiva las letras se enciman y, sin unir, se "borran" pedazos
-  if (bloque.length) partes.push(unirContornos(bloque))
+  if (bloque.length) {
+    partes.push(unirContornos(bloque))
+    deFigura.push(false)
+  }
   const altoBloque = partes.length ? (() => { const b = cajaDe(partes[0]); return b.y1 - b.y0 })() : o.alto
   const altoFig = o.altoLogo && o.altoLogo > 0 ? o.altoLogo : Math.max(o.alto, altoBloque)
   const aIzquierda = (c: P[][]) => {
@@ -155,15 +163,20 @@ function contenido(fuente: Fuente, o: OpcionesLlavero): P[][] {
     const b = cajaDe(c)
     const k = altoFig / Math.max(1e-6, b.y1 - b.y0)
     const fig = mover(c, -b.x0 * k, -((b.y0 + b.y1) / 2) * k, k)
-    if (!partes.length) return void partes.push(fig)
+    if (!partes.length) {
+      partes.push(fig)
+      deFigura.push(true)
+      return
+    }
     // pegado a la izquierda de lo que ya hay, con un hueco de 25 % del alto
     const actual = cajaDe(partes.flat())
     const fb = cajaDe(fig)
     partes.unshift(mover(fig, actual.x0 - altoFig * 0.25 - fb.x1, (actual.y0 + actual.y1) / 2))
+    deFigura.unshift(true)
   }
   if (o.icono) aIzquierda(unirContornos(figura(o.icono)))
   if (o.logo?.length) aIzquierda(o.logo)
-  return partes.flat()
+  return { contornos: partes.flat(), figura: partes.flatMap((g, i) => g.map(() => deFigura[i])) }
 }
 
 export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlavero {
@@ -174,7 +187,7 @@ export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlave
   if (!o.texto.trim() && !hayLogo && !o.icono) return vacio("Escribe el nombre o texto del llavero.")
   if (!(o.alto > 0)) return vacio("Escribe el alto de las letras.")
 
-  const letras = contenido(fuente, o)
+  const { contornos: letras, figura: esFigura } = contenido(fuente, o)
   if (!letras.length) return vacio(o.texto.trim() ? "La tipografía no tiene esas letras." : "El logo no tiene contornos: prueba con una imagen de más contraste.")
   const { x0: tx0, x1: tx1, y0: ty0, y1: ty1 } = cajaDe(letras)
   const tw = tx1 - tx0, th = ty1 - ty0
@@ -230,18 +243,24 @@ export function hacerLlavero(fuente: Fuente, o: OpcionesLlavero): ResultadoLlave
   for (const p of texto) trazos.push({ pts: p, cerrado: true, capa: "GRABADO" })
   const dibujo: Dibujo = { trazos, avisos: [], unidades: "mm" }
 
-  // STL: placa con agujero + letras encima
-  let tris: number[] = []
-  if (o.grosor > 0) {
-    const base = extruir({ trazos: trazos.filter((x) => x.capa === "CORTE"), avisos: [], unidades: "mm" }, { alto: o.grosor, base: 0, margenBase: 0, redondearBase: 0, espejo: false })
-    tris = base.malla.tris
-    if (o.relieve > 0) {
-      const top = extruir({ trazos: trazos.filter((x) => x.capa === "GRABADO"), avisos: [], unidades: "mm" }, { alto: o.relieve, base: 0, margenBase: 0, redondearBase: 0, espejo: false })
-      for (let i = 0; i < top.malla.tris.length; i += 3) tris.push(top.malla.tris[i], top.malla.tris[i + 1], top.malla.tris[i + 2] + o.grosor)
-    }
+  // STL: placa con agujero + letras encima. Cada pieza por separado (placa,
+  // letras, ícono/logo) para las impresoras de varios colores.
+  const extruirEn = (pts: P[][], alto: number, z0: number) => {
+    if (!pts.length || !(alto > 0)) return []
+    const t = extruir({ trazos: pts.map((q) => ({ pts: q, cerrado: true, capa: "X" })), avisos: [], unidades: "mm" }, { alto, base: 0, margenBase: 0, redondearBase: 0, espejo: false }).malla.tris
+    if (z0) for (let i = 2; i < t.length; i += 3) t[i] += z0
+    return t
   }
+  const malla =
+    o.grosor > 0
+      ? conPartes(
+          ["Placa", extruirEn(hoyo ? [placa, hoyo] : [placa], o.grosor, 0)],
+          ["Letras", extruirEn(texto.filter((_, i) => !esFigura[i]), o.relieve, o.grosor)],
+          ["Ícono y logo", extruirEn(texto.filter((_, i) => esFigura[i]), o.relieve, o.grosor)]
+        )
+      : { tris: [], avisos: [] }
   if (!arriba && d > 0 && th + 2 * m < d + 4.4) avisos.push("La placa es muy delgada para la argolla: sube el margen o baja el diámetro.")
-  return { dibujo, malla: { tris, avisos: [] }, ancho, alto, avisos, errores }
+  return { dibujo, malla, ancho, alto, avisos, errores }
 }
 
 // Envolvente convexa (círculo + orejita) — sencillo y suficiente aquí
