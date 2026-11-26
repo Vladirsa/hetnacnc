@@ -6,9 +6,10 @@ import { useEffect, useRef, useState } from "react"
 
 import { VisorCad } from "@/components/hetna/visor/VisorCad"
 import { type GeoCad, leerDxf, leerObj, leerStl, leerSvg } from "@/lib/cotizador/archivo-cad"
+import type { TramoColor } from "@/lib/generador/colores-vista"
 import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
 
-export default function VistaModelo({ url, formato, colores }: { url: string; formato: FormatoVista; colores?: { triangulos: number; hex: string }[] | null }) {
+export default function VistaModelo({ url, formato, colores }: { url: string; formato: FormatoVista; colores?: TramoColor[] | null }) {
   const caja = useRef<HTMLDivElement>(null)
   const [alto, setAlto] = useState(320)
   const [geo, setGeo] = useState<GeoCad | null>(null)

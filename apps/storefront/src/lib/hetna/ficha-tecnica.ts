@@ -3,6 +3,7 @@
 //   vista_previa     modelo de MUESTRA, público, para el visor 3D (STL, OBJ, DXF o SVG)
 //   fotos_fabricada  fotos reales de la pieza ya fabricada
 // Sólo se aceptan archivos del almacenamiento del propio sitio.
+import type { TramoColor } from "@/lib/generador/colores-vista"
 import { DOMINIOS_IMAGENES } from "@/lib/imagenes/dominios"
 
 export const EXT_VISTA = /\.(stl|obj|dxf|svg)$/i
@@ -35,8 +36,10 @@ export function vistaPreviaDe(metadata?: Record<string, unknown> | null): { url:
  * catálogo junto con su STL): tramos de triángulos y su color. Si no cuadran
  * con el STL, el visor la deja de un color.
  */
-export function coloresVistaDe(metadata?: Record<string, unknown> | null): { triangulos: number; hex: string }[] | null {
+export function coloresVistaDe(metadata?: Record<string, unknown> | null): TramoColor[] | null {
   const v = metadata?.vista_colores
+  // sólo si son del STL que se muestra (el script guarda en vista_colores_de la URL de su STL)
+  if (!metadata?.vista_colores_de || metadata.vista_colores_de !== metadata.vista_previa) return null
   if (!Array.isArray(v) || !v.length || v.length > 16) return null
   const ok = v.every((t) => t && Number.isInteger(t.triangulos) && t.triangulos >= 0 && typeof t.hex === "string" && /^#[0-9a-f]{6}$/i.test(t.hex))
   return ok ? v.map((t) => ({ triangulos: t.triangulos as number, hex: t.hex as string })) : null

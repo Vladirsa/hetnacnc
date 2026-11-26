@@ -43,7 +43,7 @@ export function partesConColor(m: Malla, colores: string[], nombre = "Pieza"): P
   return partes.map((p, i) => ({ ...p, color: colores[i] || iniciales[i] })).filter((p) => p.tris.length >= 9)
 }
 
-export { type TramoColor, coloresPorVertice } from "@/lib/generador/colores-vista"
+
 
 // sin caracteres de control (no caben en XML) y con & < > " escapados
 const xml = (s: string) => s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")

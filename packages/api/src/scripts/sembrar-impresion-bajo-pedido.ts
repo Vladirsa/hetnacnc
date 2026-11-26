@@ -74,7 +74,8 @@ type Diseno = {
   foto: string
   /** STL (simplificado) para girar la pieza en la ficha */
   modelo_3d?: string
-  /** colores de la vista 3D: tramos de triángulos del STL y su color (#rrggbb) */
+  /** colores de la vista 3D: tramos de triángulos del STL y su color (#rrggbb);
+   *  mismo contrato que TramoColor en apps/storefront/src/lib/generador/colores-vista.ts */
   vista_colores?: { triangulos: number; hex: string }[]
   volumen_cm3: number
   medidas_mm: [number, number, number]
@@ -217,7 +218,14 @@ export default async function sembrarImpresion({ container }: ExecArgs) {
       Object.assign(metadata, { vista_previa: stl.url, vista_previa_sha: shaStl })
     }
     // los colores van con el STL del script (si HETNA puso otro a mano, no se tocan)
-    if (bytesStl && stlDelScript) metadata.vista_colores = Array.isArray(d.vista_colores) ? d.vista_colores.slice(0, 16) : null
+    // (la tienda acepta hasta 16 tramos; con más, la vista va de un color)
+    if (bytesStl && stlDelScript) {
+      const tramos = Array.isArray(d.vista_colores) ? d.vista_colores : []
+      if (tramos.length > 16) logger.warn(`[impresion] ${d.handle}: ${tramos.length} colores en la vista 3D (máx. 16); va de un color`)
+      metadata.vista_colores = tramos.length && tramos.length <= 16 ? tramos : null
+      // de qué STL son: si alguien cambia la vista 3D a mano, la tienda ya no los usa
+      metadata.vista_colores_de = metadata.vista_previa || previa.vista_previa || null
+    }
 
     if (producto) {
       const cambios: Record<string, any> = {}

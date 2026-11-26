@@ -7,7 +7,8 @@
 import { useState } from "react"
 
 import { Boton, Interruptor, Seccion, TarjetaExport, descargar } from "@/components/hetna/estudio3d/Controles"
-import { PALETA, type TramoColor, archivo3MF, colorPorId, coloresIniciales, partesConColor, zipPorColor } from "@/lib/generador/multicolor"
+import { type TramoColor } from "@/lib/generador/colores-vista"
+import { PALETA, archivo3MF, colorPorId, coloresIniciales, partesConColor, zipPorColor } from "@/lib/generador/multicolor"
 import type { Malla } from "@/lib/generador/vectores"
 
 export type EstadoMulticolor = ReturnType<typeof useMulticolor>

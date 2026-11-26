@@ -48,11 +48,9 @@ const SOLO_MODELOS = process.env.SOLO_MODELOS === "1"
  * búfer de profundidad, dibujada al doble y reducida (bordes suaves).
  */
 async function fotoPieza(t: number[], tramos: Tramo[], lado = 1000) {
-  // color de cada triángulo según su tramo
-  const colorTri = new Array<number[]>(t.length / 9)
-  let k0 = 0
-  for (const tr of tramos) for (let j = 0; j < tr.triangulos && k0 < colorTri.length; j++) colorTri[k0++] = tr.rgb
-  while (k0 < colorTri.length) colorTri[k0++] = tramos[tramos.length - 1]?.rgb || NARANJA
+  // color de cada triángulo según su tramo (guardarVista ya revisó que cuadren)
+  const colorTri: number[][] = []
+  for (const tr of tramos) for (let j = 0; j < tr.triangulos; j++) colorTri.push(tr.rgb)
   const S = lado * 2
   const a = Math.PI / 4, b = Math.atan(1 / Math.SQRT2)
   const giro = (x: number, y: number, z: number): [number, number, number] => {
@@ -120,11 +118,12 @@ const PAREJAS: [number[], number[]][] = [
   [NEGRO, NARANJA], [ROSA, BLANCO], [TURQUESA, BLANCO], [BLANCO, ROJO], [AMARILLO, NEGRO],
 ]
 const SOLOS = [NARANJA, AZUL, ROJO, VERDE, MORADO, TURQUESA, AMARILLO, ROSA]
-let turno = 0 // cambia de pieza a pieza (orden del catálogo: siempre el mismo resultado)
+/** Número fijo de cada pieza, sacado de su handle: agregar o mover diseños no le cambia el color a las demás. */
+const numeroDe = (handle: string) => [...handle].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
 const hex = (rgb: number[]) => `#${rgb.map((v) => v.toString(16).padStart(2, "0")).join("")}`
 /** Tramos de color: la primera parte de un color y las demás de otro (o una sola parte, de un color). */
-function tramosDe(partes: { triangulos: number }[]): Tramo[] {
-  const n = turno++
+function tramosDe(handle: string, partes: { triangulos: number }[]): Tramo[] {
+  const n = numeroDe(handle)
   if (partes.length < 2) return [{ triangulos: partes[0]?.triangulos || 0, rgb: SOLOS[n % SOLOS.length] }]
   const [base, detalle] = PAREJAS[n % PAREJAS.length]
   return partes.map((p, i) => ({ triangulos: p.triangulos, rgb: i === 0 ? base : detalle }))
@@ -157,6 +156,9 @@ async function simplificar(t: number[], meta = TRIS_VISTA): Promise<number[]> {
  * se simplifica por su lado para que los colores sigan cuadrando con el STL.
  */
 async function guardarVista(handle: string, tris: number[], tramos: Tramo[]) {
+  // los tramos tienen que cubrir la malla exacta: si no, la foto y la vista 3D no coincidirían
+  const suma = tramos.reduce((s, tr) => s + tr.triangulos, 0)
+  if (suma * 9 !== tris.length) throw new Error(`${handle}: los colores cubren ${suma} triángulos y la pieza tiene ${tris.length / 9}`)
   writeFileSync(join(FOTOS, `${handle}.png`), await fotoPieza(tris, tramos))
   const total = tris.length / 9
   const vista: number[][] = []
@@ -232,8 +234,8 @@ for (const d of CATALOGO_IMPRESION) {
     const partes = separarPiezas(tris)
     const mayor = partes.map(medir).sort((a, b) => b.volumen_cm3 - a.volumen_cm3)[0]
     // cada cuerpo suelto (la maceta y su plato) de un color; hasta 8
-    const ordenados = partes.length >= 2 && partes.length <= 8 ? ([] as number[]).concat(...partes) : tris
-    const vista = await guardarVista(d.handle, ordenados, tramosDe(ordenados === tris ? unaParte(tris) : partes.map(unaParte).flat()))
+    const cuerpos = partes.length >= 2 && partes.length <= 8 ? partes : [tris]
+    const vista = await guardarVista(d.handle, ([] as number[]).concat(...cuerpos), tramosDe(d.handle, cuerpos.map((c) => ({ triangulos: c.length / 9 }))))
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${partes.length} pieza(s), la mayor ${mayor.medidas_mm.join(" × ")} mm (foto lista)`)
     salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length })
     continue
@@ -258,7 +260,7 @@ for (const d of CATALOGO_IMPRESION) {
     const t = l.estilo === "pie" ? r.trisVista : pararMalla(r.trisVista) // (conservan el orden de las partes)
     const m = medir(t)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t, tramosDe(r.malla.partes || unaParte(t)))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, t, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
     continue
   }
   if (d.pieza === "llavero" && d.llavero) {
@@ -267,7 +269,7 @@ for (const d of CATALOGO_IMPRESION) {
     if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
     const m = medir(r.malla.tris)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramosDe(r.malla.partes || unaParte(r.malla.tris)))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramosDe(d.handle, r.malla.partes!))), diseno: l, ...m, personalizable: true, max_texto: l.maxTexto })
     continue
   }
   if (d.pieza === "cortador" && d.cortador) {
@@ -285,8 +287,8 @@ for (const d of CATALOGO_IMPRESION) {
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, cortador ${mc.medidas_mm.join(" × ")} mm${r.sello ? " + sello" : ""}${r.avisos.length ? ` — ${r.avisos.join(" ")}` : ""}`)
     // cortador y sello lado a lado (en el archivo el sello va dentro del cortador)
     // el cortador de un color; el sello con su placa clara y el dibujo del color del cortador
-    const [color] = tramosDe(unaParte(r.cortador.tris))
-    const tramosSello = (r.sello?.partes || []).map((p, i) => ({ triangulos: p.triangulos, rgb: i === 0 ? BLANCO : color.rgb }))
+    const [color] = tramosDe(d.handle, unaParte(r.cortador.tris))
+    const tramosSello = (r.sello?.partes || []).map((p) => ({ triangulos: p.triangulos, rgb: p.nombre === "Placa del sello" ? BLANCO : color.rgb }))
     const vista = await guardarVista(d.handle, [...r.cortador.tris, ...(r.sello ? aLaDerecha(r.sello.tris, r.cortador.tris) : [])], [color, ...tramosSello])
     salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, diseno: d.cortador, volumen_cm3: m.volumen_cm3, medidas_mm: mc.medidas_mm, relleno: 100, con_sello: !!r.sello })
     continue
@@ -317,7 +319,7 @@ for (const d of CATALOGO_IMPRESION) {
     etiquetas: d.etiquetas,
     herramienta_url: urlHerramienta(d),
     foto: `fotos/${d.handle}.png`,
-    ...(await guardarVista(d.handle, tris, tramosDe(partesTex || unaParte(tris)))),
+    ...(await guardarVista(d.handle, tris, tramosDe(d.handle, partesTex || unaParte(tris)))),
     diseno: d.diseno,
     ...m,
   })

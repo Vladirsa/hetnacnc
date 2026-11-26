@@ -10,6 +10,7 @@ import Image from "@/lib/imagenes/Imagen"
 import dynamic from "next/dynamic"
 import { useState } from "react"
 
+import type { TramoColor } from "@/lib/generador/colores-vista"
 import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
 
 // three.js sólo se baja si el cliente abre la vista 3D
@@ -18,7 +19,7 @@ const VistaModelo = dynamic(() => import("./VistaModelo"), { ssr: false })
 export type VistaGaleria =
   | { clave: string; tipo: "foto"; url: string; titulo: string }
   | { clave: string; tipo: "esquema"; svg: string; titulo: string }
-  | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string; colores?: { triangulos: number; hex: string }[] | null }
+  | { clave: string; tipo: "modelo"; url: string; formato: FormatoVista; titulo: string; colores?: TramoColor[] | null }
 
 /** digital=false: producto físico con vista 3D (p. ej. Impresión 3D bajo pedido): sin "Descarga inmediata". */
 export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vistas: VistaGaleria[]; titulo: string; digital?: boolean; nota?: string }) {

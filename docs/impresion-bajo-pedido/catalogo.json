@@ -16,11 +16,11 @@
     "vista_colores": [
       {
         "triangulos": 800,
-        "hex": "#1f5fd1"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 19198,
-        "hex": "#e4e1d8"
+        "hex": "#3a3e48"
       }
     ],
     "diseno": {
@@ -66,11 +66,11 @@
     "vista_colores": [
       {
         "triangulos": 1254,
-        "hex": "#d42a2a"
+        "hex": "#e4e1d8"
       },
       {
         "triangulos": 18744,
-        "hex": "#e4e1d8"
+        "hex": "#d42a2a"
       }
     ],
     "diseno": {
@@ -117,11 +117,11 @@
     "vista_colores": [
       {
         "triangulos": 514,
-        "hex": "#3a3e48"
+        "hex": "#e4e1d8"
       },
       {
         "triangulos": 19486,
-        "hex": "#f5be00"
+        "hex": "#d42a2a"
       }
     ],
     "diseno": {
@@ -167,11 +167,11 @@
     "vista_colores": [
       {
         "triangulos": 1866,
-        "hex": "#7a3fc4"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 18134,
-        "hex": "#e4e1d8"
+        "hex": "#3a3e48"
       }
     ],
     "diseno": {
@@ -217,7 +217,7 @@
     "vista_colores": [
       {
         "triangulos": 2008,
-        "hex": "#1f964c"
+        "hex": "#7a3fc4"
       },
       {
         "triangulos": 13520,
@@ -266,11 +266,11 @@
     "vista_colores": [
       {
         "triangulos": 440,
-        "hex": "#3a3e48"
+        "hex": "#ec6ea5"
       },
       {
         "triangulos": 19560,
-        "hex": "#eb6414"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -317,7 +317,7 @@
     "vista_colores": [
       {
         "triangulos": 550,
-        "hex": "#ec6ea5"
+        "hex": "#1f5fd1"
       },
       {
         "triangulos": 19450,
@@ -368,11 +368,11 @@
     "vista_colores": [
       {
         "triangulos": 140,
-        "hex": "#1096a0"
+        "hex": "#3a3e48"
       },
       {
         "triangulos": 11892,
-        "hex": "#e4e1d8"
+        "hex": "#eb6414"
       }
     ],
     "diseno": {
@@ -421,11 +421,11 @@
     "vista_colores": [
       {
         "triangulos": 140,
-        "hex": "#e4e1d8"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 19932,
-        "hex": "#d42a2a"
+        "hex": "#3a3e48"
       }
     ],
     "diseno": {
@@ -474,7 +474,7 @@
     "vista_colores": [
       {
         "triangulos": 1872,
-        "hex": "#1f5fd1"
+        "hex": "#d42a2a"
       },
       {
         "triangulos": 256,
@@ -482,7 +482,7 @@
       },
       {
         "triangulos": 1460,
-        "hex": "#1f5fd1"
+        "hex": "#d42a2a"
       }
     ],
     "diseno": {
@@ -523,7 +523,7 @@
     "vista_colores": [
       {
         "triangulos": 760,
-        "hex": "#d42a2a"
+        "hex": "#eb6414"
       }
     ],
     "diseno": {
@@ -559,7 +559,7 @@
     "vista_colores": [
       {
         "triangulos": 1600,
-        "hex": "#1f964c"
+        "hex": "#f5be00"
       }
     ],
     "diseno": {
@@ -595,7 +595,7 @@
     "vista_colores": [
       {
         "triangulos": 1624,
-        "hex": "#7a3fc4"
+        "hex": "#f5be00"
       }
     ],
     "diseno": {
@@ -631,7 +631,7 @@
     "vista_colores": [
       {
         "triangulos": 916,
-        "hex": "#1096a0"
+        "hex": "#ec6ea5"
       }
     ],
     "diseno": {
@@ -667,7 +667,7 @@
     "vista_colores": [
       {
         "triangulos": 2996,
-        "hex": "#f5be00"
+        "hex": "#ec6ea5"
       }
     ],
     "diseno": {
@@ -703,7 +703,7 @@
     "vista_colores": [
       {
         "triangulos": 6168,
-        "hex": "#ec6ea5"
+        "hex": "#d42a2a"
       }
     ],
     "diseno": {
@@ -739,7 +739,7 @@
     "vista_colores": [
       {
         "triangulos": 1200,
-        "hex": "#eb6414"
+        "hex": "#1f5fd1"
       }
     ],
     "diseno": {
@@ -775,7 +775,7 @@
     "vista_colores": [
       {
         "triangulos": 1364,
-        "hex": "#1f5fd1"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 188,
@@ -783,7 +783,7 @@
       },
       {
         "triangulos": 36,
-        "hex": "#1f5fd1"
+        "hex": "#f5be00"
       }
     ],
     "diseno": {
@@ -823,7 +823,7 @@
     "vista_colores": [
       {
         "triangulos": 1768,
-        "hex": "#d42a2a"
+        "hex": "#1f964c"
       }
     ],
     "diseno": {
@@ -869,11 +869,11 @@
     "vista_colores": [
       {
         "triangulos": 960,
-        "hex": "#f5be00"
+        "hex": "#d42a2a"
       },
       {
         "triangulos": 380,
-        "hex": "#3a3e48"
+        "hex": "#e4e1d8"
       }
     ],
     "modelo": "maceta",
@@ -902,7 +902,7 @@
     "vista_colores": [
       {
         "triangulos": 960,
-        "hex": "#1f5fd1"
+        "hex": "#7a3fc4"
       },
       {
         "triangulos": 380,
@@ -941,7 +941,7 @@
     "vista_colores": [
       {
         "triangulos": 44,
-        "hex": "#1096a0"
+        "hex": "#f5be00"
       }
     ],
     "modelo": "porta-lapices",
@@ -970,7 +970,7 @@
     "vista_colores": [
       {
         "triangulos": 184,
-        "hex": "#f5be00"
+        "hex": "#d42a2a"
       }
     ],
     "modelo": "soporte-celular",
@@ -999,7 +999,7 @@
     "vista_colores": [
       {
         "triangulos": 184,
-        "hex": "#ec6ea5"
+        "hex": "#1f5fd1"
       }
     ],
     "modelo": "soporte-celular",
@@ -1060,7 +1060,7 @@
     "vista_colores": [
       {
         "triangulos": 1010,
-        "hex": "#1f5fd1"
+        "hex": "#7a3fc4"
       }
     ],
     "modelo": "gancho-pared",
@@ -1089,7 +1089,7 @@
     "vista_colores": [
       {
         "triangulos": 3564,
-        "hex": "#d42a2a"
+        "hex": "#1096a0"
       }
     ],
     "modelo": "organizador-fresas",
@@ -1118,7 +1118,7 @@
     "vista_colores": [
       {
         "triangulos": 324,
-        "hex": "#1f964c"
+        "hex": "#7a3fc4"
       }
     ],
     "modelo": "llaves-allen",
@@ -1147,11 +1147,11 @@
     "vista_colores": [
       {
         "triangulos": 236,
-        "hex": "#e4e1d8"
+        "hex": "#3a3e48"
       },
       {
         "triangulos": 28,
-        "hex": "#d42a2a"
+        "hex": "#eb6414"
       }
     ],
     "modelo": "contenedor-apilable",
@@ -1180,11 +1180,11 @@
     "vista_colores": [
       {
         "triangulos": 220,
-        "hex": "#f5be00"
+        "hex": "#ec6ea5"
       },
       {
         "triangulos": 140,
-        "hex": "#3a3e48"
+        "hex": "#e4e1d8"
       }
     ],
     "modelo": "caja-tapa",
@@ -1213,7 +1213,7 @@
     "vista_colores": [
       {
         "triangulos": 228,
-        "hex": "#f5be00"
+        "hex": "#1f964c"
       }
     ],
     "modelo": "clip-bolsa",
@@ -1242,11 +1242,11 @@
     "vista_colores": [
       {
         "triangulos": 336,
-        "hex": "#d42a2a"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 3184,
-        "hex": "#e4e1d8"
+        "hex": "#3a3e48"
       }
     ],
     "diseno": {
@@ -1281,11 +1281,11 @@
     "vista_colores": [
       {
         "triangulos": 480,
-        "hex": "#3a3e48"
+        "hex": "#1f964c"
       },
       {
         "triangulos": 1776,
-        "hex": "#f5be00"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -1321,7 +1321,7 @@
     "vista_colores": [
       {
         "triangulos": 392,
-        "hex": "#7a3fc4"
+        "hex": "#ec6ea5"
       },
       {
         "triangulos": 2276,
@@ -1366,7 +1366,7 @@
     "vista_colores": [
       {
         "triangulos": 276,
-        "hex": "#1f964c"
+        "hex": "#d42a2a"
       },
       {
         "triangulos": 284,
@@ -1405,15 +1405,15 @@
     "vista_colores": [
       {
         "triangulos": 392,
-        "hex": "#3a3e48"
+        "hex": "#7a3fc4"
       },
       {
         "triangulos": 256,
-        "hex": "#eb6414"
+        "hex": "#e4e1d8"
       },
       {
         "triangulos": 36,
-        "hex": "#eb6414"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -1450,7 +1450,7 @@
     "vista_colores": [
       {
         "triangulos": 336,
-        "hex": "#ec6ea5"
+        "hex": "#1096a0"
       },
       {
         "triangulos": 1124,
@@ -1530,11 +1530,11 @@
     "vista_colores": [
       {
         "triangulos": 448,
-        "hex": "#e4e1d8"
+        "hex": "#d42a2a"
       },
       {
         "triangulos": 3876,
-        "hex": "#d42a2a"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -1570,11 +1570,11 @@
     "vista_colores": [
       {
         "triangulos": 1748,
-        "hex": "#f5be00"
+        "hex": "#d42a2a"
       },
       {
         "triangulos": 12,
-        "hex": "#3a3e48"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -1611,7 +1611,7 @@
     "vista_colores": [
       {
         "triangulos": 1968,
-        "hex": "#1f5fd1"
+        "hex": "#ec6ea5"
       },
       {
         "triangulos": 12,
@@ -1652,7 +1652,7 @@
     "vista_colores": [
       {
         "triangulos": 1568,
-        "hex": "#d42a2a"
+        "hex": "#7a3fc4"
       },
       {
         "triangulos": 12,
@@ -1693,11 +1693,11 @@
     "vista_colores": [
       {
         "triangulos": 216,
-        "hex": "#3a3e48"
+        "hex": "#1f5fd1"
       },
       {
         "triangulos": 1592,
-        "hex": "#f5be00"
+        "hex": "#e4e1d8"
       }
     ],
     "diseno": {
@@ -1734,7 +1734,7 @@
     "vista_colores": [
       {
         "triangulos": 4228,
-        "hex": "#7a3fc4"
+        "hex": "#1f5fd1"
       },
       {
         "triangulos": 9268,
@@ -1775,11 +1775,11 @@
     "vista_colores": [
       {
         "triangulos": 2772,
-        "hex": "#1f964c"
+        "hex": "#f5be00"
       },
       {
         "triangulos": 6544,
-        "hex": "#e4e1d8"
+        "hex": "#3a3e48"
       }
     ],
     "diseno": {
