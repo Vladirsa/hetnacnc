@@ -12,6 +12,7 @@ import { Suspense } from "react"
 
 import BotonPreguntarTaller from "@/components/hetna/chat/BotonPreguntarTaller"
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
+import { ListaPaquetes } from "@/components/hetna/taller/PaquetesServicio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { SellerOffersListing } from "@/components/sections/SellerOffersListing/SellerOffersListing"
@@ -26,7 +27,7 @@ import { type TemaResumen, objetivoTaller } from "@/lib/foro/tipos"
 
 type Props = {
   params: Promise<{ handle: string; locale: string }>
-  searchParams: Promise<{ tab?: string; page?: string }>
+  searchParams: Promise<{ tab?: string; page?: string; paquete?: string }>
 }
 
 const PESTANAS = [
@@ -78,6 +79,8 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
     cotizadorDeTaller(t.handle),
   ])
   const esDueno = Boolean(sesion?.perfil?.vendedor && sesion.perfil.vendedor === t.id)
+  // «Pedir cotización» de un servicio con precio "desde": llega con el servicio escrito
+  const paquete = sp.paquete ? t.paquetes.find((x) => x.id === sp.paquete) : undefined
 
   const p = t.perfil
   const donde = ubicacion(p)
@@ -182,6 +185,15 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
       </nav>
 
       <div className="mx-auto mt-6 grid max-w-[1100px] gap-5 px-4 lg:px-6">
+        {tab === "inicio" && t.paquetes.length > 0 && (
+          <div className="mb-8">
+            <ListaPaquetes
+              items={t.paquetes.map((p) => ({ p, handle: t.handle }))}
+              titulo="Servicios"
+              texto={`Precios de referencia. Pide tu cotización y ${t.nombre} te manda el precio final por HETNA.`}
+            />
+          </div>
+        )}
         {tab === "inicio" && <Inicio t={t} datos={datos} publicaciones={publicaciones?.temas || []} resenas={opiniones?.resenas || []} />}
 
         {tab === "productos" && (
@@ -203,7 +215,19 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
             <p className="mb-4 text-sm text-[#6B675C]">
               Describe tu trabajo y {t.nombre} te manda su propuesta por HETNA. Tú comparas, eliges y pagas dentro de la plataforma.
             </p>
-            <FormSolicitudTaller taller={t.handle} nombreTaller={t.nombre} />
+            {paquete && (
+              <p className="mb-4 rounded-xl bg-[#FFF1E6] px-4 py-3 text-sm text-[#142033]">
+                Servicio: <strong>{paquete.titulo}</strong> · desde ${paquete.desde.toLocaleString("es-MX")} MXN
+                {paquete.entrega_dias ? ` · ${paquete.entrega_dias} días hábiles` : ""}
+              </p>
+            )}
+            <FormSolicitudTaller
+              taller={t.handle}
+              nombreTaller={t.nombre}
+              servicioInicial={paquete && paquete.categoria !== "otro" ? "Diseño CAD/CAM" : undefined}
+              necesidadInicial={paquete && paquete.categoria !== "otro" ? "Diseño" : undefined}
+              descripcionInicial={paquete ? `el servicio «${paquete.titulo}» (desde $${paquete.desde.toLocaleString("es-MX")} MXN)` : undefined}
+            />
           </section>
         )}
       </div>

@@ -16,6 +16,7 @@ import { vendorFondoBlancoMiddlewares } from "./vendor/fondo-blanco/middlewares"
 import { camMiddlewares } from "./cam-middlewares";
 import { vendorVerificacionMiddlewares } from "./vendor/hetna-verificacion/middlewares";
 import { vendorReclamosMiddlewares } from "./vendor/hetna-reclamos/middlewares";
+import { vendorPaquetesMiddlewares } from "./vendor/hetna-paquetes/middlewares";
 import { vendorProductoProtegidoMiddlewares } from "./vendor/hetna-producto-protegido/middlewares";
 import { storeSolicitudArchivosMiddlewares } from "./store/solicitud-archivos/middlewares";
 import { leerMultipart } from "./cam-multipart";
@@ -143,6 +144,7 @@ export default defineMiddlewares({
         ...camMiddlewares,
         ...vendorVerificacionMiddlewares,
         ...vendorReclamosMiddlewares,
+        ...vendorPaquetesMiddlewares,
         ...vendorProductoProtegidoMiddlewares,
         ...vendorAltaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,

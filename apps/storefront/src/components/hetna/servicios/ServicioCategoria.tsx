@@ -16,6 +16,7 @@ import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import { listarTalleres, ubicacion } from "@/lib/hetna/talleres"
+import { TarjetaPaquete } from "@/components/hetna/taller/PaquetesServicio"
 import { trabajosAbiertos } from "@/lib/trabajos/datos"
 import { GUIAS } from "@/lib/seo/guias"
 
@@ -212,6 +213,13 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
     .filter((t) => !info.coincide.length || t.perfil.servicios.some((s) => info.coincide.includes(s)))
     .sort((a, b) => Number(b.verificado) - Number(a.verificado))
     .slice(0, 6)
+  // Servicios con precio "desde" que publican diseñadores y talleres en esta
+  // categoría (panel > Mis servicios). Primero los verificados.
+  const paquetes = todosTalleres
+    .flatMap((t) => t.paquetes.filter((p) => p.categoria === handle).map((p) => ({ p, t })))
+    .sort((a, b) => Number(b.t.verificado) - Number(a.t.verificado))
+    .slice(0, 9)
+  const conPaquetes = handle === "diseno-2d-3d" || handle === "programacion-cam"
   // Guías CNC que tratan este servicio; en la página general, todas.
   const guias = GUIAS.filter((g) => raiz || g.coincide.some((c) => info.coincide.includes(c))).slice(0, 4)
   const cotizar = `/cotizar${info.servicio ? `?servicio=${encodeURIComponent(info.servicio)}` : ""}`
@@ -273,6 +281,32 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
           ))}
         </div>
       </div>
+
+      {/* 1b. Servicios con precio de diseñadores y talleres */}
+      {conPaquetes && (
+        <div>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-lg font-extrabold text-[#142033]">Servicios de {info.titulo.toLowerCase()} con precio</h3>
+            <a href="/mx/talleres/unete" className="text-sm font-semibold text-[#C2560A]">
+              ¿Eres diseñador o programador CAM? Publica tus servicios →
+            </a>
+          </div>
+          {paquetes.length > 0 ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {paquetes.map(({ p, t }) => (
+                  <TarjetaPaquete key={`${t.handle}-${p.id}`} p={p} handle={t.handle} taller={t.nombre} />
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-[#6B675C]">Precios de referencia: el precio final te lo manda el diseñador en su propuesta y pagas dentro de HETNA.</p>
+            </>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-[#E7E4DC] bg-white p-4 text-sm text-[#6B675C]">
+              Pronto verás aquí servicios con precio de diseñadores de la red. Mientras, publica tu trabajo y te mandan su propuesta.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 2. Movimiento real */}
       {trabajos.trabajos.length > 0 && (

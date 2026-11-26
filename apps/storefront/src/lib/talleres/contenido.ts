@@ -44,7 +44,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   {
     p: "¿Puedo unirme si sólo hago diseño CAD o programación CAM, sin máquinas?",
     corta: true,
-    r: "Sí. Ingenieros, diseñadores y programadores CAM son parte de la red. Al registrarte elige sólo \"Diseño CAD/CAM\" y te llegan las solicitudes de clientes que no tienen archivo y necesitan que les dibujen la pieza o preparen el archivo para la máquina. Cotizas el diseño por proyecto y cobras dentro de HETNA. También puedes vender tus diseños en Diseños digitales y tener tu perfil profesional en el Foro CNC.",
+    r: "Sí. Ingenieros, diseñadores y programadores CAM son parte de la red. Al registrarte elige sólo \"Diseño CAD/CAM\" y te llegan las solicitudes de clientes que no tienen archivo y necesitan que les dibujen la pieza o preparen el archivo para la máquina. Cotizas el diseño por proyecto y cobras dentro de HETNA. En tu panel, en Mis servicios, publicas lo que haces con un precio «desde» (por ejemplo «Vectorizar logo para corte · desde $350»): sale en tu perfil y en las páginas de Diseño 2D/3D y Programación CAM, con un botón para que te pidan cotización. También puedes vender tus diseños en Diseños digitales y tener tu perfil profesional en el Foro CNC.",
   },
   {
     p: "¿Puedo elegir qué cotizar?",

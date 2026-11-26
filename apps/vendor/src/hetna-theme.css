@@ -207,6 +207,7 @@ main .rounded-md[role='combobox'] {
 [data-testid='sidebar-nav-item-reviews']      { order: 22; }
 /* Mi taller */
 [data-testid='sidebar-nav-item-perfil-taller'] { order: 30; }
+[data-testid='sidebar-nav-item-servicios']    { order: 30; }
 [data-testid='sidebar-nav-item-verificacion'] { order: 31; }
 [data-testid='sidebar-nav-item-promocion']    { order: 32; }
 [data-testid='sidebar-nav-item-nube']         { order: 33; }
