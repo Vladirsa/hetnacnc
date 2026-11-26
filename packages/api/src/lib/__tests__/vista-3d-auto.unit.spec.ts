@@ -1,6 +1,8 @@
 import { zipSync } from "fflate"
 
-import { leerSTL, simplificar, stlBinario, stlDe } from "../vista-3d-auto"
+import { execFileSync } from "child_process"
+
+import { leerSTL, simplificar, stlBinario, stlConUnzip, stlDe } from "../vista-3d-auto"
 
 // Esfera de muchos triángulos (malla de prueba)
 function esfera(seg: number): Float32Array {
@@ -63,5 +65,24 @@ describe("vista previa 3D con modelos enormes", () => {
     const s = simplificar(esfera(790), 8000)
     expect(s.length / 9).toBeLessThanOrEqual(8000)
     expect(Date.now() - t0).toBeLessThan(20000)
+  })
+})
+
+describe("respaldo con el programa unzip (ZIP con Deflate64)", () => {
+  const hayUnzip = (() => {
+    try {
+      execFileSync("unzip", ["-v"], { stdio: "ignore" })
+      return true
+    } catch {
+      return false
+    }
+  })()
+  ;(hayUnzip ? it : it.skip)("saca el STL más grande, aunque tenga espacios en el nombre", () => {
+    const grande = stlBinario(esfera(20)), chico = stlBinario(esfera(4))
+    const zip = Buffer.from(zipSync({ "chico.stl": new Uint8Array(chico), "mi carpeta/pieza grande.STL": new Uint8Array(grande), "leeme.txt": new Uint8Array([65]) }))
+    expect(stlConUnzip(zip)?.length).toBe(grande.length)
+  })
+  ;(hayUnzip ? it : it.skip)("null si el ZIP no trae STL", () => {
+    expect(stlConUnzip(Buffer.from(zipSync({ "plano.dxf": new Uint8Array([65, 66]) })))).toBeNull()
   })
 })
