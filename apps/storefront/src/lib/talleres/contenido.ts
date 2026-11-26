@@ -42,6 +42,11 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
     r: "Corte, grabado, maquinado, torneado, impresión 3D, diseño, maquila y producción por volumen: piezas únicas, prototipos, lotes y pedidos recurrentes. Además puedes vender productos en tu tienda dentro de HETNA.",
   },
   {
+    p: "¿Puedo unirme si sólo hago diseño CAD o programación CAM, sin máquinas?",
+    corta: true,
+    r: "Sí. Ingenieros, diseñadores y programadores CAM son parte de la red. Al registrarte elige sólo \"Diseño CAD/CAM\" y te llegan las solicitudes de clientes que no tienen archivo y necesitan que les dibujen la pieza o preparen el archivo para la máquina. Cotizas el diseño por proyecto y cobras dentro de HETNA. También puedes vender tus diseños en Diseños digitales y tener tu perfil profesional en el Foro CNC.",
+  },
+  {
     p: "¿Puedo elegir qué cotizar?",
     corta: true,
     r: "Sí. Tú decides a cuáles mandar precio. Si uno no te conviene, lo marcas como \"no tengo capacidad\", \"no trabajo ese material\" o \"necesito más información\" y deja de aparecerte; con la última, HETNA le pregunta al cliente por ti.",
