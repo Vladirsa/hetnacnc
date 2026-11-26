@@ -14,6 +14,7 @@ import { randomBytes } from "crypto"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { uploadFile } from "./backblaze"
+import { problemaArchivoDiseno } from "./revisar-archivo-diseno"
 import { fal } from "./fabrica/estudio"
 import { subir } from "./fabrica/index"
 import { IA_MODELO_WHATSAPP, modeloIA } from "./ia-modelo"
@@ -83,6 +84,9 @@ export function slug(s: string) {
 export async function guardarArchivo(buffer: Buffer, nombre: string, sku?: string) {
   const ext = extension(nombre)
   if (!EXTENSIONES.includes(ext)) throw new Error(`Formato .${ext} no permitido. Usa ${EXTENSIONES.join(", ")}.`)
+  // Un ZIP o STL dañado no se vende: el comprador recibiría un archivo que no abre
+  const problema = problemaArchivoDiseno(nombre, buffer)
+  if (problema) throw new Error(problema)
   const s = sku && /^[A-Z0-9-]{4,40}$/.test(sku) ? sku : nuevoSku()
   const llave = `originales/${s}/${nombreSeguro(nombre)}`
   const r = await uploadFile(buffer, llave)
