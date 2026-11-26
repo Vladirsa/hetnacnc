@@ -70,9 +70,28 @@ export default async function EmpleosProyectos({ searchParams }: Props) {
             {vacantes.temas.length ? (
               vacantes.temas.map((t) => <Publicacion key={t.id} t={t} />)
             ) : (
-              <p className="m-0 rounded-[12px] border border-dashed border-[#D9D4C8] bg-white p-6 text-center text-[14.5px] text-[#6B6A63]">
-                Todavía no hay vacantes publicadas. ¿Tu taller busca operador o programador? Publica la primera: es gratis.
-              </p>
+              <>
+                <p className="m-0 rounded-[12px] border border-dashed border-[#D9D4C8] bg-white p-6 text-center text-[14.5px] text-[#6B6A63]">
+                  Todavía no hay vacantes publicadas. ¿Tu taller busca operador o programador? Publica la primera: es gratis.
+                </p>
+                {/* Mientras no hay vacantes: cómo funciona (para no dejar la columna vacía) */}
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    ["1", "Publica la vacante", "Gratis: puesto, máquinas y software que debe manejar, ciudad y si es por proyecto o de planta."],
+                    ["2", "Te escriben por HETNA", "Operadores, programadores CAM y diseñadores de la red te mandan mensaje dentro de la plataforma."],
+                    ["3", "Revisa su perfil", "Experiencia, máquinas, software y portafolio de trabajos antes de contratar."],
+                  ].map(([n, t, d]) => (
+                    <div key={n} className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-[#FFF1E6] text-[13px] font-bold text-[#B34D07]">{n}</span>
+                      <p className="m-0 mt-2 text-[14.5px] font-bold text-[#1B1B18]">{t}</p>
+                      <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">{d}</p>
+                    </div>
+                  ))}
+                </div>
+                <LocalizedClientLink href="/foro-cnc/profesionales" className="text-[14px] font-semibold text-[#B34D07]">
+                  Ver profesionales de la red →
+                </LocalizedClientLink>
+              </>
             )}
             <Paginacion pagina={pagina} total={vacantes.total} porPagina={POR_PAGINA} base={urlEmpleos} />
           </section>
