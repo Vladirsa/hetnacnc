@@ -2,6 +2,7 @@ import { sdk } from "@/lib/client"
 import { type Tarifas, leerTarifas } from "@/lib/hetna/estimado"
 import { type AcabadoTaller, leerAcabados } from "@/lib/hetna/acabados"
 import { capacidadVigente, type CapacidadLibre } from "@/lib/hetna/capacidad-libre"
+import { urlPropia } from "@/lib/hetna/ficha-tecnica"
 
 // Tipos de máquina (mismos valores que apps/vendor/src/routes/perfil-taller)
 export const TIPOS_MAQUINA: [string, string][] = [
@@ -136,6 +137,8 @@ export type Paquete = {
   entrega_dias: number | null
   descripcion: string
   categoria: "diseno-2d-3d" | "programacion-cam" | "otro"
+  // Muestra 3D simplificada (STL) para girar antes de cotizar
+  modelo_3d: string | null
 }
 
 // Lo valida la API al guardar; aquí sólo se filtra lo que no tenga forma
@@ -150,6 +153,7 @@ const leerPaquetes = (v: unknown): Paquete[] =>
       entrega_dias: Number(x.entrega_dias) > 0 ? Number(x.entrega_dias) : null,
       descripcion: String(x.descripcion || "").slice(0, 600),
       categoria: ["diseno-2d-3d", "programacion-cam"].includes(x.categoria) ? x.categoria : "otro",
+      modelo_3d: urlPropia(x.modelo_3d) && /\.stl$/i.test(String(x.modelo_3d).split(/[?#]/)[0]) ? x.modelo_3d : null,
     }))
 
 type SellerCrudo = {
