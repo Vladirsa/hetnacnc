@@ -193,6 +193,7 @@ export function PanelTaller() {
   const [recibe, setRecibe] = useState(true)
   // Estrategia 3.4: "Tengo máquina libre" (vence sola)
   const [capacidad, setCapacidad] = useState<CapacidadLibre | null>(null)
+  const [respuesta, setRespuesta] = useState<MiRespuesta | null>(null)
   const [etapas, setEtapas] = useState<Record<string, EtapaTaller>>({})
   const [aviso, setAviso] = useState("")
 
@@ -206,7 +207,7 @@ export function PanelTaller() {
       setSeller(me.datos.seller)
       const [sol, panel] = await Promise.all([
         vendor<{ solicitudes?: Solicitud[]; cupo?: Cupo }>("/vendor/hetna-solicitudes"),
-        vendor<{ recibe_solicitudes?: boolean; etapas?: Record<string, EtapaTaller>; capacidad_libre?: CapacidadLibre | null }>("/vendor/hetna-panel-taller"),
+        vendor<{ recibe_solicitudes?: boolean; etapas?: Record<string, EtapaTaller>; capacidad_libre?: CapacidadLibre | null; respuesta?: MiRespuesta | null }>("/vendor/hetna-panel-taller"),
       ])
       if (!sol.ok) throw new Error()
       setSolicitudes(sol.datos.solicitudes || [])
@@ -215,6 +216,7 @@ export function PanelTaller() {
         setRecibe(panel.datos.recibe_solicitudes !== false)
         setEtapas(panel.datos.etapas || {})
         setCapacidad(capacidadVigente(panel.datos.capacidad_libre))
+        setRespuesta(panel.datos.respuesta ?? null)
       }
       setEstado("listo")
     } catch {
@@ -294,6 +296,8 @@ export function PanelTaller() {
           </div>
           <Interruptor activo={recibe} alCambiar={cambiarRecibe} />
         </header>
+
+        <TarjetaRespuesta r={respuesta} />
 
         <TarjetaCapacidad
           capacidad={capacidad}
@@ -1257,5 +1261,39 @@ function SinSesion() {
       </LocalizedClientLink>
       <p className="text-[13px] text-[#8A877E]">Después de iniciar sesión, vuelve a esta página.</p>
     </Centro>
+  )
+}
+
+type MiRespuesta = { horas: number | null; cotizaciones: number; tasa_pct: number | null; avisos: number }
+
+/** Sus puntos por contestar rápido: quien cotiza pronto y contesta casi todo se entera antes de los trabajos nuevos. */
+function TarjetaRespuesta({ r }: { r: MiRespuesta | null }) {
+  if (!r) return null
+  const rapido = r.horas != null && r.horas <= 4
+  const contesta = r.tasa_pct != null && r.tasa_pct >= 80
+  const texto = (h: number) => (h < 1 ? `${Math.max(5, Math.round((h * 60) / 5) * 5)} min` : h < 48 ? `${Math.round(h)} h` : `${Math.round(h / 24)} días`)
+  return (
+    <section className="mt-5 rounded-2xl border border-[#E7E4DC] bg-white p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-[15px] font-bold text-[#142033]">Tus puntos por responder</h2>
+        {rapido && contesta && <span className="rounded-full bg-[#FFF6E0] px-2.5 py-0.5 text-xs font-bold text-[#8A5A00]">⚡ Responde rápido</span>}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-[#F7F6F2] px-3 py-2">
+          <p className="text-xs text-[#6B6A63]">Cotizas en</p>
+          <p className="text-lg font-bold text-[#142033]">{r.horas != null ? texto(r.horas) : "—"}</p>
+          {r.horas == null && <p className="text-[11px] text-[#6B6A63]">Se mide con 3 cotizaciones ({r.cotizaciones} hasta hoy)</p>}
+        </div>
+        <div className="rounded-xl bg-[#F7F6F2] px-3 py-2">
+          <p className="text-xs text-[#6B6A63]">Contestas</p>
+          <p className="text-lg font-bold text-[#142033]">{r.tasa_pct != null ? `${r.tasa_pct}%` : "—"}</p>
+          <p className="text-[11px] text-[#6B6A63]">{r.tasa_pct != null ? `de ${r.avisos} solicitudes` : `Se mide con 3 solicitudes (${r.avisos} hasta hoy)`}</p>
+        </div>
+      </div>
+      <p className="mt-3 text-[13px] leading-snug text-[#40403A]">
+        Cotizar en menos de 4 horas y contestar casi todas (aunque sea «no puedo») te da puntos: te avisamos antes que a otros de los trabajos nuevos,
+        y el cliente ve «⚡ Responde rápido» y «🥇 Primero en cotizar» junto a tu precio.
+      </p>
+    </section>
   )
 }

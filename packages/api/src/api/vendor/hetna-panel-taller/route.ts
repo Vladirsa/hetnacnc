@@ -1,5 +1,5 @@
 // GET  /vendor/hetna-panel-taller
-//   → { recibe_solicitudes, etapas: { [solicitud_id]: etapa } }
+//   → { recibe_solicitudes, etapas: { [solicitud_id]: etapa }, capacidad_libre, respuesta }
 // POST /vendor/hetna-panel-taller  { recibe_solicitudes: boolean }
 //
 // Lo que el panel del taller de la tienda (/mx/panel-taller) necesita además
@@ -14,6 +14,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { T_PROPUESTA, T_SOLICITUD } from "../../../lib/licitacion"
 import { etapasDe } from "../../../lib/etapa-taller"
 import { capacidadVigente, nuevaCapacidad } from "../../../lib/capacidad-libre"
+import { medirTaller } from "../../../lib/reputacion-medida"
 
 const recibeSolicitudes = (metadata: any) => metadata?.recibe_solicitudes !== false
 
@@ -29,7 +30,10 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     .select("s.id")
     .limit(500)) as { id: string }[]
   const etapas = await etapasDe(knex, ganadas.map((g) => g.id))
-  res.json({ recibe_solicitudes: recibeSolicitudes(v?.metadata), etapas, capacidad_libre: capacidadVigente(v?.metadata) })
+  // Sus puntos por contestar: el taller ve lo mismo que lo pone antes en los avisos
+  const m = await medirTaller(knex, sellerId).catch(() => null)
+  const respuesta = m ? { horas: m.respuesta_horas ?? null, cotizaciones: m.respuestas_medidas || 0, tasa_pct: m.tasa_respuesta_pct ?? null, avisos: m.avisos_medidos || 0 } : null
+  res.json({ recibe_solicitudes: recibeSolicitudes(v?.metadata), etapas, capacidad_libre: capacidadVigente(v?.metadata), respuesta })
 }
 
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
