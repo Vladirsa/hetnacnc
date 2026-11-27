@@ -58,9 +58,9 @@ export function RetornoMercadoPago() {
         <>
           <h1 className="heading-md text-primary"><T>El pago no se completó</T></h1>
           <p className="text-secondary">
-            {estadoMP === "rejected"
+            <T>{estadoMP === "rejected"
               ? "Mercado Pago rechazó el pago. Puedes intentar con otra tarjeta o método."
-              : "No recibimos la confirmación del pago. Tu carrito sigue guardado."}
+              : "No recibimos la confirmación del pago. Tu carrito sigue guardado."}</T>
           </p>
           <LocalizedClientLink
             href="/checkout?step=payment"
