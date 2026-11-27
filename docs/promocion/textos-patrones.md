@@ -1,13 +1,15 @@
 # Promoción de los Patrones paramétricos 3D: video y textos listos
 
-Enlace para todo: **hetnacnc.com/mx/disenar/patrones-3d**
+Enlaces:
+- **Patrones:** hetnacnc.com/mx/disenar/patrones-3d
+- **Moldes:** hetnacnc.com/mx/disenar/moldes-3d
 
-## El video (vertical 1080 × 1920, sin audio, 32 s)
+## El video (vertical 1080 × 1920, 24 s, con voz y música)
 
-`6-patrones-parametricos.mp4` (enviado por el chat, no se guarda en el repositorio). Muestra una maceta lisa que pasa a Voronoi, panal, estrías y torsión; después, una pantalla de lámpara con burbujas, un florero con ondas y los archivos STL.
+`6-patrones-y-moldes.mp4` (enviado por el chat, no se guarda en el repositorio). Una maceta lisa pasa a Voronoi, panal, estrías y torsión; luego aparecen una lámpara, un florero y los archivos STL. Al final: «¿No lo quieres imprimir? Sácale el molde de silicona y hazla de cemento», con las dos ligas.
 
-**Antes de subirlo** (TikTok, Instagram Reels, YouTube Shorts, Facebook Reels):
-- Agrega una música de la biblioteca de la propia red social, para no tener problemas de derechos.
+- **Voz:** sintetizada en español. **Música:** original, compuesta para el video (sin derechos de terceros). **Efectos:** Pixabay, de uso comercial libre.
+- Si la red social sugiere una canción de moda, puedes bajar el volumen del audio original y agregarla encima.
 - Pon el enlace en tu perfil (bio). En Facebook y YouTube, ponlo también en la descripción.
 - Lo que más se comparte: un segundo video con la maceta ya impresa y una planta adentro, o la lámpara encendida.
 
@@ -41,6 +43,15 @@ Enlace para todo: **hetnacnc.com/mx/disenar/patrones-3d**
 > 👉 https://hetnacnc.com/mx/disenar/patrones-3d
 > Guía paso a paso: https://hetnacnc.com/mx/foro-cnc/blog/diseno-parametrico-patrones-3d-maceta
 
+## Para hacer macetas de cemento, resina o yeso
+
+**TikTok / Reels / Facebook:**
+> ¿No tienes impresora 3D? Sácale el molde 🪴 Diseña tu maceta con patrón Voronoi o panal, conviértela en caja para silicona y haz copias de cemento, resina o yeso. Todo gratis 👉 hetnacnc.com/mx/disenar/patrones-3d y hetnacnc.com/mx/disenar/moldes-3d
+>
+> #macetasdecemento #moldesdesilicona #concreto #resina #manualidades #emprendedoras #mexico
+
+> Tip: la silicona suelta cualquier patrón. Para un molde rígido (abierto o de dos partes), usa macetas lisas o con patrones suaves; el generador de moldes avisa si la pieza se va a atorar.
+
 ---
 
 ## Publicación para grupos de Facebook (impresión 3D, plantas, carpintería CNC)
@@ -51,15 +62,16 @@ Enlace para todo: **hetnacnc.com/mx/disenar/patrones-3d**
 > ✅ 8 patrones: Voronoi, panal, ondas, espiral, estrías, rombos, burbujas y orgánico
 > ✅ Torsión, bordes lisos y el interior sin tocar
 > ✅ STL para impresión 3D o relieve plano para router CNC
-> ✅ Si no tienes impresora, un taller te lo imprime
+> ✅ Si no tienes impresora, un taller te lo imprime, o sácale el molde de silicona y hazla de cemento
 >
-> Aquí: hetnacnc.com/mx/disenar/patrones-3d
+> Patrones: hetnacnc.com/mx/disenar/patrones-3d
+> Moldes: hetnacnc.com/mx/disenar/moldes-3d
 >
 > Si lo prueban, compartan foto de su pieza 🙌
 
 ## Mensaje corto para WhatsApp
 
-> ¡Hola! Ya puedes darle un patrón de diseño (Voronoi, panal, ondas…) a tu maceta o florero y bajarla gratis para imprimir en 3D, o te la imprimimos. 👉 hetnacnc.com/mx/disenar/patrones-3d
+> ¡Hola! Ya puedes darle un patrón de diseño (Voronoi, panal, ondas…) a tu maceta o florero y bajarla gratis para imprimir en 3D, o sacarle el molde para hacerla de cemento. 👉 hetnacnc.com/mx/disenar/patrones-3d · Moldes: hetnacnc.com/mx/disenar/moldes-3d
 
 ## Temporadas para publicarlo
 
