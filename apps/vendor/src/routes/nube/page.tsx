@@ -6,6 +6,7 @@
 // Todo vive en el bucket privado (ligas firmadas de 1 hora). Las licitaciones
 // que gana el taller entran solas como proyecto con los archivos del cliente.
 // Rutas: /vendor/hetna-cloud/* (packages/api/src/api/vendor/hetna-cloud).
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import { Badge, Button, Container, Heading, Input, Label, Text, Textarea, toast } from "@medusajs/ui"
 import { CloudArrowUp } from "@medusajs/icons"
@@ -15,6 +16,8 @@ import { svgQR } from "../../lib/qr"
 
 export const config: RouteConfig = {
   label: "HetNa Cloud",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: CloudArrowUp,
   rank: 5,
 }
@@ -105,15 +108,15 @@ export default function NubePage() {
   if (error) {
     return (
       <Container className="p-6">
-        <Heading>HetNa Cloud</Heading>
-        <Text className="mt-2 text-ui-fg-error">{error}</Text>
+        <Heading><T>HetNa Cloud</T></Heading>
+        <Text className="mt-2 text-ui-fg-error"><T>{error}</T></Text>
       </Container>
     )
   }
   if (!datos) {
     return (
       <Container className="p-6">
-        <Text>Cargando tu nube…</Text>
+        <Text><T>Cargando tu nube…</T></Text>
       </Container>
     )
   }
@@ -138,10 +141,10 @@ export default function NubePage() {
       <Container className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <Heading>HetNa Cloud</Heading>
+            <Heading><T>HetNa Cloud</T></Heading>
             <Text className="mt-1 text-ui-fg-subtle">
-              Tus planos, modelos, proyectos CAM y G-code ordenados por cliente, proyecto y pieza, con revisiones y estado (borrador → probado → liberado).
-              Las licitaciones que ganas y tus trabajos del servicio CAM de HETNA se agregan solos.
+              <T>Tus planos, modelos, proyectos CAM y G-code ordenados por cliente, proyecto y pieza, con revisiones y estado (borrador → probado → liberado).
+              Las licitaciones que ganas y tus trabajos del servicio CAM de HETNA se agregan solos.</T>
             </Text>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -161,9 +164,9 @@ export default function NubePage() {
                 }
               }}
             >
-              Traer mis pedidos
+              <T>Traer mis pedidos</T>
             </Button>
-            <Button onClick={() => setNuevo(!nuevo)}>{nuevo ? "Cancelar" : "Nuevo proyecto"}</Button>
+            <Button onClick={() => setNuevo(!nuevo)}><T>{nuevo ? "Cancelar" : "Nuevo proyecto"}</T></Button>
           </div>
         </div>
         <Uso uso={datos.uso} />
@@ -180,8 +183,8 @@ export default function NubePage() {
 
       <Container className="p-6">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Input placeholder="Buscar proyecto o cliente" value={buscar} onChange={(e) => setBuscar(e.target.value)} className="max-w-xs" />
-          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={SELECT} aria-label="Estado">
+          <Input placeholder={traducir("Buscar proyecto o cliente")} value={buscar} onChange={(e) => setBuscar(e.target.value)} className="max-w-xs" />
+          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={SELECT} aria-label={traducir("Estado")}>
             <option value="vigentes">Vigentes</option>
             {Object.entries(ESTADOS_PROYECTO).map(([k, v]) => (
               <option key={k} value={k}>
@@ -201,18 +204,18 @@ export default function NubePage() {
               >
                 <div className="min-w-0">
                   <Text weight="plus" className="truncate">
-                    {p.nombre}
+                    <T>{p.nombre}</T>
                   </Text>
                   <Text size="small" className="text-ui-fg-subtle">
-                    {[nombreCliente(p.cliente_id), `${p.archivos} archivo${p.archivos === 1 ? "" : "s"}`, p.bytes ? tamano(p.bytes) : "", `actualizado ${fecha(p.updated_at)}`]
+                    <T>{[nombreCliente(p.cliente_id), `${p.archivos} archivo${p.archivos === 1 ? "" : "s"}`, p.bytes ? tamano(p.bytes) : "", `actualizado ${fecha(p.updated_at)}`]
                       .filter(Boolean)
-                      .join(" · ")}
+                      .join(" · ")}</T>
                   </Text>
                 </div>
                 <div className="flex gap-2">
-                  {p.origen_tipo === "licitacion" && <Badge size="2xsmall">Licitación</Badge>}
-                  {p.origen_tipo === "cam" && <Badge size="2xsmall" color="purple">CAM</Badge>}
-                  {p.origen_tipo === "pedido" && <Badge size="2xsmall" color="blue">Pedido</Badge>}
+                  {p.origen_tipo === "licitacion" && <Badge size="2xsmall"><T>Licitación</T></Badge>}
+                  {p.origen_tipo === "cam" && <Badge size="2xsmall" color="purple"><T>CAM</T></Badge>}
+                  {p.origen_tipo === "pedido" && <Badge size="2xsmall" color="blue"><T>Pedido</T></Badge>}
                   <Badge size="2xsmall" color={p.estado === "entregado" ? "green" : p.estado === "produccion" ? "orange" : "grey"}>
                     {ESTADOS_PROYECTO[p.estado] || p.estado}
                   </Badge>
@@ -222,7 +225,7 @@ export default function NubePage() {
           </div>
         ) : (
           <Text className="text-ui-fg-subtle">
-            {datos.proyectos.length ? "Ningún proyecto con ese filtro." : "Todavía no tienes proyectos. Crea el primero o gana una licitación y aparece aquí."}
+            <T>{datos.proyectos.length ? "Ningún proyecto con ese filtro." : "Todavía no tienes proyectos. Crea el primero o gana una licitación y aparece aquí."}</T>
           </Text>
         )}
       </Container>
@@ -238,10 +241,10 @@ function Uso({ uso }) {
     <div className="mt-4">
       <div className="flex justify-between">
         <Text size="small">
-          {tamano(uso.usado)} de {uso.cupo / GB} GB usados · plan {uso.plan}
+          {tamano(uso.usado)} <T>de</T> {uso.cupo / GB} <T>GB usados · plan</T> <T>{uso.plan}</T>
         </Text>
         <Text size="small" className="text-ui-fg-subtle">
-          Gratis 1 GB · Taller 10 GB · Pro 50 GB · Industrial 200 GB
+          <T>Gratis 1 GB · Taller 10 GB · Pro 50 GB · Industrial 200 GB</T>
         </Text>
       </div>
       <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-ui-bg-component">
@@ -275,11 +278,11 @@ function FormProyecto({ clientes, inicial = null, onListo }) {
   return (
     <div className="mt-4 grid gap-3 rounded-lg border border-ui-border-base p-4 sm:grid-cols-2">
       <div>
-        <Label>Nombre del proyecto</Label>
-        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Letreros Restaurante Sol" />
+        <Label><T>Nombre del proyecto</T></Label>
+        <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={traducir("Ej. Letreros Restaurante Sol")} />
       </div>
       <div>
-        <Label>Cliente</Label>
+        <Label><T>Cliente</T></Label>
         <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} style={{ ...SELECT, width: "100%" }}>
           <option value="">Sin cliente</option>
           {clientes.map((c) => (
@@ -292,7 +295,7 @@ function FormProyecto({ clientes, inicial = null, onListo }) {
       </div>
       {inicial && (
         <div>
-          <Label>Estado</Label>
+          <Label><T>Estado</T></Label>
           <select value={estado} onChange={(e) => setEstado(e.target.value)} style={{ ...SELECT, width: "100%" }}>
             {Object.entries(ESTADOS_PROYECTO).map(([k, v]) => (
               <option key={k} value={k}>
@@ -303,12 +306,12 @@ function FormProyecto({ clientes, inicial = null, onListo }) {
         </div>
       )}
       <div className="sm:col-span-2">
-        <Label>Notas (material, medidas, acuerdos con el cliente)</Label>
+        <Label><T>Notas (material, medidas, acuerdos con el cliente)</T></Label>
         <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={3} />
       </div>
       <div>
         <Button onClick={guardar} isLoading={ocupado} disabled={nombre.trim().length < 2}>
-          Guardar
+          <T>Guardar</T>
         </Button>
       </div>
     </div>
@@ -335,9 +338,9 @@ function Clientes({ clientes, onCambio }) {
   return (
     <Container className="p-6">
       <div className="flex items-center justify-between">
-        <Heading level="h2">Clientes</Heading>
+        <Heading level="h2"><T>Clientes</T></Heading>
         <Button variant="secondary" size="small" onClick={() => (editando ? setEditando(null) : abrir(null))}>
-          {editando ? "Cancelar" : "Agregar cliente"}
+          <T>{editando ? "Cancelar" : "Agregar cliente"}</T>
         </Button>
       </div>
       {editando && (
@@ -349,17 +352,17 @@ function Clientes({ clientes, onCambio }) {
             ["telefono", "Teléfono"],
           ].map(([k, l]) => (
             <div key={k}>
-              <Label>{l}</Label>
+              <Label><T>{l}</T></Label>
               <Input value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
             </div>
           ))}
           <div className="sm:col-span-2">
-            <Label>Notas</Label>
+            <Label><T>Notas</T></Label>
             <Textarea value={f.notas} onChange={(e) => setF({ ...f, notas: e.target.value })} rows={2} />
           </div>
           <div>
             <Button onClick={guardar} disabled={f.nombre.trim().length < 2}>
-              Guardar cliente
+              <T>Guardar cliente</T>
             </Button>
           </div>
         </div>
@@ -368,13 +371,13 @@ function Clientes({ clientes, onCambio }) {
         <div className="mt-3 flex flex-wrap gap-2">
           {clientes.map((c) => (
             <button key={c.id} onClick={() => abrir(c)} className="rounded-full border border-ui-border-base px-3 py-1 text-sm hover:bg-ui-bg-base-hover">
-              {c.nombre}
-              {c.empresa ? ` · ${c.empresa}` : ""}
+              <T>{c.nombre}</T>
+              <T>{c.empresa ? ` · ${c.empresa}` : ""}</T>
             </button>
           ))}
         </div>
       ) : (
-        !editando && <Text className="mt-2 text-ui-fg-subtle">Aún no tienes clientes guardados.</Text>
+        !editando && <Text className="mt-2 text-ui-fg-subtle"><T>Aún no tienes clientes guardados.</T></Text>
       )}
     </Container>
   )
@@ -405,7 +408,7 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
   useEffect(() => {
     cargar()
   }, [id])
-  if (!d) return <Container className="p-6"><Text>Cargando proyecto…</Text></Container>
+  if (!d) return <Container className="p-6"><Text><T>Cargando proyecto…</T></Text></Container>
   const p = d.proyecto
 
   const agregarPieza = async () => {
@@ -496,13 +499,13 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
     <div className="flex flex-col gap-3">
       <Container className="p-6">
         <button onClick={onVolver} className="text-sm text-ui-fg-interactive">
-          ← Todos los proyectos
+          <T>← Todos los proyectos</T>
         </button>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <Heading>{p.nombre}</Heading>
+            <Heading><T>{p.nombre}</T></Heading>
             <Text className="text-ui-fg-subtle">
-              {[d.cliente?.nombre, ESTADOS_PROYECTO[p.estado], `creado ${fecha(p.created_at)}`].filter(Boolean).join(" · ")}
+              <T>{[d.cliente?.nombre, ESTADOS_PROYECTO[p.estado], `creado ${fecha(p.created_at)}`].filter(Boolean).join(" · ")}</T>
             </Text>
           </div>
           <div className="flex gap-2">
@@ -528,14 +531,14 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
                 hojaDeTaller(d, w, liga)
               }}
             >
-              Hoja de taller
+              <T>Hoja de taller</T>
             </Button>
             <Button variant="secondary" size="small" onClick={() => setEditar(!editar)}>
-              {editar ? "Cancelar" : "Editar"}
+              <T>{editar ? "Cancelar" : "Editar"}</T>
             </Button>
           </div>
         </div>
-        {p.notas && !editar && <Text className="mt-3 whitespace-pre-line">{p.notas}</Text>}
+        {p.notas && !editar && <Text className="mt-3 whitespace-pre-line"><T>{p.notas}</T></Text>}
         {editar && (
           <FormProyecto
             clientes={clientes}
@@ -550,9 +553,9 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
       </Container>
 
       <Container className="p-6">
-        <Heading level="h2">Archivos</Heading>
+        <Heading level="h2"><T>Archivos</T></Heading>
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-ui-border-strong p-4">
-          <select value={destino} onChange={(e) => setDestino(e.target.value)} style={SELECT} aria-label="Pieza">
+          <select value={destino} onChange={(e) => setDestino(e.target.value)} style={SELECT} aria-label={traducir("Pieza")}>
             <option value="">Del proyecto (sin pieza)</option>
             {d.piezas.map((x) => (
               <option key={x.id} value={x.id}>
@@ -561,7 +564,7 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
             ))}
           </select>
           <label className="cursor-pointer rounded-md bg-ui-button-inverted px-3 py-1.5 text-sm font-medium text-ui-fg-on-inverted">
-            {subiendo ? "Subiendo…" : "Subir archivos"}
+            <T>{subiendo ? "Subiendo…" : "Subir archivos"}</T>
             <input
               type="file"
               multiple
@@ -576,22 +579,22 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
             />
           </label>
           <Text size="small" className="text-ui-fg-subtle">
-            {subiendo || `DXF, SVG, STEP, STL, CAM, G-code, PDF, fotos… hasta ${MAX_MB} MB. Mismo nombre = revisión nueva.`}
+            <T>{subiendo || `DXF, SVG, STEP, STL, CAM, G-code, PDF, fotos… hasta ${MAX_MB} MB. Mismo nombre = revisión nueva.`}</T>
           </Text>
         </div>
         <Text size="small" className="mt-1 text-ui-fg-subtle">
-          Tu nube: {tamano(uso.usado)} de {uso.cupo / GB} GB.
+          <T>Tu nube:</T> {tamano(uso.usado)} <T>de</T> {uso.cupo / GB} <T>GB.</T>
         </Text>
 
         {grupos.map((g) => (
           <div key={g.id || "sin"} className="mt-5">
             <Text weight="plus">
-              {g.pieza ? `Pieza: ${g.pieza.nombre}` : "Archivos del proyecto"}
+              <T>{g.pieza ? `Pieza: ${g.pieza.nombre}` : "Archivos del proyecto"}</T>
               {g.pieza && (g.pieza.material || g.pieza.cantidad) && (
-                <span className="font-normal text-ui-fg-subtle"> · {[g.pieza.material, g.pieza.cantidad && `${g.pieza.cantidad} pzas`].filter(Boolean).join(" · ")}</span>
+                <span className="font-normal text-ui-fg-subtle"> · <T>{[g.pieza.material, g.pieza.cantidad && `${g.pieza.cantidad} pzas`].filter(Boolean).join(" · ")}</T></span>
               )}
             </Text>
-            {g.archivos.length === 0 && <Text size="small" className="text-ui-fg-subtle">Sin archivos todavía.</Text>}
+            {g.archivos.length === 0 && <Text size="small" className="text-ui-fg-subtle"><T>Sin archivos todavía.</T></Text>}
             {g.archivos.map((revs) => {
               const a = revs[0]
               const k = `${g.id}|${a.nombre.toLowerCase()}`
@@ -601,7 +604,7 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
                   {revs.length > 1 && (
                     <>
                       <button className="mt-1 text-xs text-ui-fg-interactive" onClick={() => setVerViejas({ ...verViejas, [k]: !verViejas[k] })}>
-                        {verViejas[k] ? "Ocultar" : "Ver"} {revs.length - 1} revisión{revs.length > 2 ? "es" : ""} anterior{revs.length > 2 ? "es" : ""}
+                        <T>{verViejas[k] ? "Ocultar" : "Ver"}</T> {revs.length - 1} <T>revisión</T><T>{revs.length > 2 ? "es" : ""}</T> <T>anterior</T><T>{revs.length > 2 ? "es" : ""}</T>
                       </button>
                       {verViejas[k] &&
                         revs.slice(1).map((v) => (
@@ -619,27 +622,27 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
       </Container>
 
       <Container className="p-6">
-        <Heading level="h2">Piezas</Heading>
+        <Heading level="h2"><T>Piezas</T></Heading>
         <Text size="small" className="text-ui-fg-subtle">
-          Separa los archivos de cada pieza (número de parte, material y cantidad).
+          <T>Separa los archivos de cada pieza (número de parte, material y cantidad).</T>
         </Text>
         <div className="mt-3 grid gap-2 sm:grid-cols-[2fr_1.5fr_1fr_auto]">
-          <Input placeholder="Nombre o número de pieza" value={piezaNueva.nombre} onChange={(e) => setPiezaNueva({ ...piezaNueva, nombre: e.target.value })} />
-          <Input placeholder="Material" value={piezaNueva.material} onChange={(e) => setPiezaNueva({ ...piezaNueva, material: e.target.value })} />
-          <Input placeholder="Cantidad" inputMode="numeric" value={piezaNueva.cantidad} onChange={(e) => setPiezaNueva({ ...piezaNueva, cantidad: e.target.value })} />
+          <Input placeholder={traducir("Nombre o número de pieza")} value={piezaNueva.nombre} onChange={(e) => setPiezaNueva({ ...piezaNueva, nombre: e.target.value })} />
+          <Input placeholder={traducir("Material")} value={piezaNueva.material} onChange={(e) => setPiezaNueva({ ...piezaNueva, material: e.target.value })} />
+          <Input placeholder={traducir("Cantidad")} inputMode="numeric" value={piezaNueva.cantidad} onChange={(e) => setPiezaNueva({ ...piezaNueva, cantidad: e.target.value })} />
           <Button variant="secondary" onClick={agregarPieza} disabled={!piezaNueva.nombre.trim()}>
-            Agregar
+            <T>Agregar</T>
           </Button>
         </div>
       </Container>
 
       <Container className="p-6">
-        <Heading level="h2">Compartir</Heading>
+        <Heading level="h2"><T>Compartir</T></Heading>
         <Text size="small" className="text-ui-fg-subtle">
-          Una liga para tu cliente o tu operador: ve las piezas y descarga la última revisión de cada archivo. No necesita cuenta. Puedes revocarla cuando quieras.
+          <T>Una liga para tu cliente o tu operador: ve las piezas y descarga la última revisión de cada archivo. No necesita cuenta. Puedes revocarla cuando quieras.</T>
         </Text>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <select value={dias} onChange={(e) => setDias(Number(e.target.value))} style={SELECT} aria-label="Vigencia">
+          <select value={dias} onChange={(e) => setDias(Number(e.target.value))} style={SELECT} aria-label={traducir("Vigencia")}>
             {[1, 3, 7, 15, 30, 90].map((n) => (
               <option key={n} value={n}>
                 Vence en {n} día{n === 1 ? "" : "s"}
@@ -648,10 +651,10 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
           </select>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={soloLiberados} onChange={(e) => setSoloLiberados(e.target.checked)} />
-            Sólo archivos liberados
+            <T>Sólo archivos liberados</T>
           </label>
           <Button size="small" onClick={compartir}>
-            Crear liga
+            <T>Crear liga</T>
           </Button>
         </div>
         {d.ligas.length > 0 && (
@@ -662,13 +665,13 @@ function Proyecto({ id, clientes, uso, onVolver, onCambio }) {
                 <div key={l.token} className="flex flex-wrap items-center gap-2 text-sm">
                   <code className="rounded bg-ui-bg-component px-2 py-1 text-xs">{url}</code>
                   <Text size="small" className="text-ui-fg-subtle">
-                    vence {fecha(l.vence)} · {l.solo_liberados ? "liberados" : "todo"} · {l.vistas} vista{l.vistas === 1 ? "" : "s"}
+                    <T>vence</T> {fecha(l.vence)} · <T>{l.solo_liberados ? "liberados" : "todo"}</T> · <T>{l.vistas}</T> <T>vista</T><T>{l.vistas === 1 ? "" : "s"}</T>
                   </Text>
                   <button className="text-xs text-ui-fg-interactive" onClick={() => navigator.clipboard?.writeText(url).then(() => toast.success("Copiada"))}>
-                    Copiar
+                    <T>Copiar</T>
                   </button>
                   <button className="text-xs text-ui-fg-error" onClick={() => revocar(l.token)}>
-                    Revocar
+                    <T>Revocar</T>
                   </button>
                 </div>
               )
@@ -685,19 +688,19 @@ function Fila({ a, actual = false, onCambiar, onBorrar, onDescargar }) {
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
         <Text weight={actual ? "plus" : "regular"} className="truncate">
-          {a.nombre} <span className="text-ui-fg-subtle">· rev. {a.revision}</span>
+          <T>{a.nombre}</T> <span className="text-ui-fg-subtle"><T>· rev.</T> <T>{a.revision}</T></span>
         </Text>
         <Text size="small" className="text-ui-fg-subtle">
-          {[CATEGORIAS[a.categoria] || a.categoria, a.tamano ? tamano(Number(a.tamano)) : "", fecha(a.created_at), a.notas]
+          <T>{[CATEGORIAS[a.categoria] || a.categoria, a.tamano ? tamano(Number(a.tamano)) : "", fecha(a.created_at), a.notas]
             .filter(Boolean)
-            .join(" · ")}
+            .join(" · ")}</T>
         </Text>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Badge size="2xsmall" color={COLOR_ESTADO[a.estado] || "grey"}>
           {ESTADOS[a.estado] || a.estado}
         </Badge>
-        <select value={a.estado} onChange={(e) => onCambiar(a, { estado: e.target.value })} style={SELECT} aria-label="Estado del archivo">
+        <select value={a.estado} onChange={(e) => onCambiar(a, { estado: e.target.value })} style={SELECT} aria-label={traducir("Estado del archivo")}>
           {Object.entries(ESTADOS).map(([k, v]) => (
             <option key={k} value={k}>
               {v}
@@ -705,10 +708,10 @@ function Fila({ a, actual = false, onCambiar, onBorrar, onDescargar }) {
           ))}
         </select>
         <Button size="small" variant="secondary" onClick={() => onDescargar(a)}>
-          Descargar
+          <T>Descargar</T>
         </Button>
         <button className="text-xs text-ui-fg-error" onClick={() => onBorrar(a)}>
-          Borrar
+          <T>Borrar</T>
         </button>
       </div>
     </div>
