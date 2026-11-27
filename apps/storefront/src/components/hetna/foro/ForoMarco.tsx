@@ -48,7 +48,7 @@ export const Pestanas = ({ base, actual, opciones }: { base: string; actual: str
           actual === o.v ? "border-[#C2560A] text-[#1B1B18]" : "border-transparent text-[#6B6A63] hover:text-[#1B1B18]"
         }`}
       >
-        {o.nombre}
+        <TS>{o.nombre}</TS>
       </LocalizedClientLink>
     ))}
   </div>
@@ -82,9 +82,9 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
         <Avatar a={sesion.perfil} size={40} />
         <div className="min-w-0 flex-1">
           <LocalizedClientLink href={urlPerfil(sesion.perfil.usuario)} className="block font-semibold text-[14.5px] text-[#1B1B18] truncate hover:text-[#B34D07]">
-            {sesion.perfil.nombre}
+            <TS>{sesion.perfil.nombre}</TS>
           </LocalizedClientLink>
-          <span className="text-[12.5px] text-[#6B6A63]">{sesion.perfil.reputacion} <TS>pts</TS></span>
+          <span className="text-[12.5px] text-[#6B6A63]"><TS>{sesion.perfil.reputacion}</TS> <TS>pts</TS></span>
         </div>
         <LocalizedClientLink href="/foro-cnc/mi-perfil" className="text-[13px] font-semibold text-[#B34D07] hover:underline">
           <TS>Editar</TS>
@@ -131,8 +131,8 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
                 actual === s.slug ? "bg-[#FDEEE1] text-[#B34D07] font-semibold" : "text-[#1B1B18] hover:bg-[#F6F4EF]"
               }`}
             >
-              <span className="truncate">{s.nombre}</span>
-              <span className="text-[12px] text-[#9A978C]">{s.temas}</span>
+              <span className="truncate"><TS>{s.nombre}</TS></span>
+              <span className="text-[12px] text-[#9A978C]"><TS>{s.temas}</TS></span>
             </LocalizedClientLink>
           </li>
         ))}
