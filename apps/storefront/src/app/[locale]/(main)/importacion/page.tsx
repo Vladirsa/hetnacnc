@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { PAISES_LATAM } from "@/components/hetna/latam/paises"
@@ -12,7 +14,7 @@ import { proveedoresImportacion } from "@/lib/hetna/directorio"
 // vivo de la hoja de prospectos: lo que el buscador encuentra cada noche aparece solo.
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/importacion" },
   title: "Proveedores CNC de importación: China, Taiwán y más",
   description:
@@ -34,15 +36,15 @@ export default async function ImportacionPage() {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1100px] px-4 py-12 lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">🌏 Importación</p>
-          <h1 className="mt-2 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">Proveedores CNC de importación</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>🌏 Importación</TS></p>
+          <h1 className="mt-2 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl"><TS>Proveedores CNC de importación</TS></h1>
           <p className="mt-4 max-w-2xl text-white/75">
-            Fabricantes de máquinas, láser, plasma, herramientas y refacciones de otros países. Cuando venden en HETNA, sus productos llegan
-            puerta a puerta con los impuestos de importación ya incluidos, y pagas protegido dentro de la plataforma.
+            <TS>Fabricantes de máquinas, láser, plasma, herramientas y refacciones de otros países. Cuando venden en HETNA, sus productos llegan
+            puerta a puerta con los impuestos de importación ya incluidos, y pagas protegido dentro de la plataforma.</TS>
           </p>
           {total > 0 && (
             <p className="mt-3 text-sm text-[#F2C9A5]">
-              Ya ubicamos {total} {total === 1 ? "proveedor" : "proveedores"} en {grupos.length} {grupos.length === 1 ? "país" : "países"}.
+              <TS>Ya ubicamos</TS> {total} {total === 1 ? "proveedor" : "proveedores"} <TS>en</TS> {grupos.length} {grupos.length === 1 ? "país" : "países"}.
             </p>
           )}
           <div className="mt-5 flex flex-wrap gap-2">
@@ -58,18 +60,18 @@ export default async function ImportacionPage() {
       <section className="mx-auto max-w-[1100px] px-4 py-10 lg:px-6">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-4 text-sm text-[#40403A]">
-            <p className="font-bold text-[#142033]">¿Buscas una máquina o refacción?</p>
-            <p className="mt-1">Estos proveedores todavía no venden en HETNA. Mientras tanto, pide tu cotización y te conseguimos opciones con talleres y proveedores de la red.</p>
-            <LocalizedClientLink href="/cotizar" className="mt-2 inline-block font-semibold text-[#C2560A] underline">Pedir cotización →</LocalizedClientLink>
+            <p className="font-bold text-[#142033]"><TS>¿Buscas una máquina o refacción?</TS></p>
+            <p className="mt-1"><TS>Estos proveedores todavía no venden en HETNA. Mientras tanto, pide tu cotización y te conseguimos opciones con talleres y proveedores de la red.</TS></p>
+            <LocalizedClientLink href="/cotizar" className="mt-2 inline-block font-semibold text-[#C2560A] underline"><TS>Pedir cotización →</TS></LocalizedClientLink>
           </div>
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-4 text-sm text-[#40403A]">
-            <p className="font-bold text-[#142033]">Is this your company? · ¿Es tu empresa?</p>
-            <p className="mt-1">Sell to Mexican machine shops: ship DDP door to door and get paid via PayPal. Free to list, 6% per sale.</p>
-            <LocalizedClientLink href="/sell-in-mexico" className="mt-2 inline-block font-semibold text-[#C2560A] underline">Sell in Mexico →</LocalizedClientLink>
+            <p className="font-bold text-[#142033]"><TS>Is this your company? · ¿Es tu empresa?</TS></p>
+            <p className="mt-1"><TS>Sell to Mexican machine shops: ship DDP door to door and get paid via PayPal. Free to list, 6% per sale.</TS></p>
+            <LocalizedClientLink href="/sell-in-mexico" className="mt-2 inline-block font-semibold text-[#C2560A] underline"><TS>Sell in Mexico →</TS></LocalizedClientLink>
           </div>
         </div>
 
-        {!grupos.length && <p className="mt-8 text-[#6B675C]">Todavía no hay proveedores de importación en la lista. El buscador agrega más cada noche.</p>}
+        {!grupos.length && <p className="mt-8 text-[#6B675C]"><TS>Todavía no hay proveedores de importación en la lista. El buscador agrega más cada noche.</TS></p>}
 
         {grupos.map((g) => (
           <div key={g.pais} id={idPais(g.pais)} className="mt-10 scroll-mt-20">
@@ -82,7 +84,7 @@ export default async function ImportacionPage() {
                   <p className="font-bold text-[#142033]">{e.empresa}</p>
                   <p className="mt-0.5 text-xs text-[#6B675C]">
                     {e.ciudad ? `${e.ciudad} · ` : ""}
-                    <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5">Perfil no reclamado</span>
+                    <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5"><TS>Perfil no reclamado</TS></span>
                   </p>
                   {e.servicios && <p className="mt-2 line-clamp-3 text-sm text-[#40403A]">{e.servicios}</p>}
                   <div className="mt-1 text-[11px]">
@@ -96,4 +98,9 @@ export default async function ImportacionPage() {
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
