@@ -4,6 +4,7 @@
 // corrieron un programa de este control y cómo les fue, y el botón para que el
 // cliente reporte el suyo después de descargarlo. Es el mismo registro que usa
 // el laboratorio 3D (/api/cam/pruebas).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 type Resumen = { controlador: string; herramienta: string; bien: number; ajustes: number; mal: number; talleres: number }
@@ -71,7 +72,7 @@ export function ProbadoCam({ herramienta, controlador, nombreControl, maquina, m
 
   return (
     <div className={`flex flex-col gap-2 rounded-[10px] border p-3 ${c.caja}`}>
-      <b className="text-[13px]">Programas probados</b>
+      <b className="text-[13px]"><T>Programas probados</T></b>
       <span className={`text-[12.5px] leading-snug ${c.suave}`}>
         {lista === null
           ? "Consultando los reportes de otros talleres…"
@@ -88,13 +89,13 @@ export function ProbadoCam({ herramienta, controlador, nombreControl, maquina, m
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cómo te fue">
             {RESULTADOS.map(([id, texto]) => (
               <button key={id} type="button" role="radio" aria-checked={resultado === id} onClick={() => setResultado(id)} className={`rounded-full px-3 py-1.5 text-[12.5px] font-semibold ${resultado === id ? "bg-[#C2560A] text-white" : c.chip}`}>
-                {texto}
+                <T>{texto}</T>
               </button>
             ))}
           </div>
           <textarea value={notas} onChange={(e) => setNotas(e.target.value)} maxLength={500} rows={2} placeholder="Opcional: tu máquina y qué ajustaste" className={`rounded-[8px] px-2.5 py-2 text-[13px] outline-none ${c.campo}`} />
           <button type="button" disabled={enviando} onClick={enviar} className="self-start rounded-[8px] bg-[#C2560A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
-            Enviar reporte
+            <T>Enviar reporte</T>
           </button>
         </>
       )}
