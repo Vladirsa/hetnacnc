@@ -146,7 +146,7 @@ const Chip = ({ children }: { children: React.ReactNode }) => (
 
 const Titulo = ({ eyebrow, children, id }: { eyebrow: string; children: React.ReactNode; id?: string }) => (
   <div id={id} className="scroll-mt-36">
-    <p className="text-[12px] font-semibold uppercase tracking-wide text-[#B34D07]">{eyebrow}</p>
+    <p className="text-[12px] font-semibold uppercase tracking-wide text-[#B34D07]"><TS>{eyebrow}</TS></p>
     <h2 className="mt-1 text-[24px] lg:text-[30px] font-bold leading-tight text-[#1B1B18]">{children}</h2>
   </div>
 )
@@ -245,7 +245,7 @@ export default function LaboratorioCam() {
             pasar la fresa, cuánto va a tardar y si algo choca. Cuando te convence, descargas el G-code.</TS>
           </p>
           <p className="mt-4 text-[13.5px] text-white/70">
-            <TS>Genera programas para</TS> {CONTROLADORES.join(", ")}.
+            <TS>Genera programas para</TS> <TS>{CONTROLADORES.join(", ")}</TS>.
           </p>
         </div>
       </section>
@@ -258,9 +258,9 @@ export default function LaboratorioCam() {
             <li key={x.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
               <p className="m-0 flex items-start gap-2 text-[16px] font-bold text-[#1B1B18]">
                 <span className="mt-0.5 text-[#C2560A]">●</span>
-                {x.t}
+                <TS>{x.t}</TS>
               </p>
-              <p className="m-0 mt-1.5 text-[14px] leading-relaxed text-[#4A4943]">{x.d}</p>
+              <p className="m-0 mt-1.5 text-[14px] leading-relaxed text-[#4A4943]"><TS>{x.d}</TS></p>
             </li>
           ))}
         </ul>
@@ -272,8 +272,8 @@ export default function LaboratorioCam() {
         <ul className="m-0 mt-6 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
           {PARA_QUIEN.map((x) => (
             <li key={x.t} className="rounded-[12px] bg-white px-4 py-3.5 ring-1 ring-[#E7E4DC]">
-              <p className="m-0 text-[15px] font-bold text-[#142033]">{x.t}</p>
-              <p className="m-0 mt-0.5 text-[13.5px] text-[#4A4943]">{x.d}</p>
+              <p className="m-0 text-[15px] font-bold text-[#142033]"><TS>{x.t}</TS></p>
+              <p className="m-0 mt-0.5 text-[13.5px] text-[#4A4943]"><TS>{x.d}</TS></p>
             </li>
           ))}
         </ul>
@@ -286,8 +286,8 @@ export default function LaboratorioCam() {
           {PASOS.map((x, i) => (
             <li key={x.t} className="relative rounded-[14px] border border-[#E7E4DC] bg-white p-5">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C2560A] text-[16px] font-bold text-white">{i + 1}</span>
-              <p className="m-0 mt-3 text-[16px] font-bold text-[#1B1B18]">{x.t}</p>
-              <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#4A4943]">{x.d}</p>
+              <p className="m-0 mt-3 text-[16px] font-bold text-[#1B1B18]"><TS>{x.t}</TS></p>
+              <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#4A4943]"><TS>{x.d}</TS></p>
             </li>
           ))}
         </ol>
@@ -305,12 +305,12 @@ export default function LaboratorioCam() {
               <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#FDEEE1] text-[#B34D07]">
                 <ServicioIcono nombre={m.icono} size={24} />
               </span>
-              <h3 className="mt-3 text-[20px] font-bold text-[#1B1B18]">{m.t}</h3>
+              <h3 className="mt-3 text-[20px] font-bold text-[#1B1B18]"><TS>{m.t}</TS></h3>
               <ul className="m-0 mt-2 flex flex-1 list-none flex-col gap-1.5 p-0 text-[14px] text-[#4A4943]">
                 {m.puntos.map((pt) => (
                   <li key={pt} className="flex gap-2">
                     <span className="text-[#1E7B3A]">✓</span>
-                    {pt}
+                    <TS>{pt}</TS>
                   </li>
                 ))}
               </ul>
@@ -326,7 +326,7 @@ export default function LaboratorioCam() {
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {HERRAMIENTAS.map((h) => (
             <div key={h.t} className="flex flex-col rounded-[16px] border border-[#E7E4DC] bg-white p-6">
-              <h3 className="text-[19px] font-bold text-[#1B1B18]">{h.t}</h3>
+              <h3 className="text-[19px] font-bold text-[#1B1B18]"><TS>{h.t}</TS></h3>
               <dl className="m-0 mt-3 flex flex-1 flex-col gap-2 text-[14px]">
                 {[
                   ["Acepta", h.acepta],
@@ -334,8 +334,8 @@ export default function LaboratorioCam() {
                   ["Entrega", h.entrega],
                 ].map(([k, v]) => (
                   <div key={k}>
-                    <dt className="text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]">{k}</dt>
-                    <dd className="m-0 text-[#1B1B18]">{v}</dd>
+                    <dt className="text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]"><TS>{k}</TS></dt>
+                    <dd className="m-0 text-[#1B1B18]"><TS>{v}</TS></dd>
                   </div>
                 ))}
               </dl>
@@ -405,7 +405,7 @@ export default function LaboratorioCam() {
                 "Acomodar copias de una pieza en la hoja",
                 `G-code para ${CONTROLADORES.join(", ")}`,
               ].map((x) => (
-                <li key={x} className="flex gap-2"><span className="text-[#1E7B3A]">✓</span>{x}</li>
+                <li key={x} className="flex gap-2"><span className="text-[#1E7B3A]">✓</span><TS>{x}</TS></li>
               ))}
             </ul>
           </div>
@@ -413,7 +413,7 @@ export default function LaboratorioCam() {
             <p className="m-0 text-[16px] font-bold text-[#6B5A2E]"><TS>En desarrollo</TS></p>
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] text-[#4A4943]">
               {["Anidar piezas distintas en la misma hoja", "Simulación con remoción de material en el 2D"].map((x) => (
-                <li key={x} className="flex gap-2"><span className="text-[#B38A2E]">○</span>{x}</li>
+                <li key={x} className="flex gap-2"><span className="text-[#B38A2E]">○</span><TS>{x}</TS></li>
               ))}
             </ul>
             <p className="mt-3 text-[13px] text-[#6B6A63]">
@@ -430,8 +430,8 @@ export default function LaboratorioCam() {
         <div className="mt-5 flex flex-col gap-3">
           {PREGUNTAS.map((q) => (
             <details key={q.p} className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
-              <summary className="cursor-pointer text-[15px] font-semibold text-[#1B1B18]">{q.p}</summary>
-              <p className="mt-2 text-[14px] leading-relaxed text-[#4A4943]">{q.r}</p>
+              <summary className="cursor-pointer text-[15px] font-semibold text-[#1B1B18]"><TS>{q.p}</TS></summary>
+              <p className="mt-2 text-[14px] leading-relaxed text-[#4A4943]"><TS>{q.r}</TS></p>
             </details>
           ))}
         </div>
@@ -476,7 +476,7 @@ function Ejemplo({
       <div className="relative">
         {children}
         <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-[#6B6A63]">
-          {real ? "Captura real" : "Vista conceptual"}
+          <TS>{real ? "Captura real" : "Vista conceptual"}</TS>
         </span>
       </div>
       <h3 className="mt-3 text-[17px] font-bold text-[#1B1B18]"><TS>{titulo}</TS></h3>
