@@ -2,6 +2,8 @@
 // API key configurada, no hace nada y lo reporta por el logger del llamador
 // en vez de lanzar: el marketing por email es opcional, nunca debe tumbar un
 // flujo de negocio (registro, checkout, jobs).
+import { correoEnSuIdioma, type IdiomaCorreo } from "./idioma-correo"
+
 const RESEND_API_URL = "https://api.resend.com/emails"
 
 export type SendEmailInput = {
@@ -18,6 +20,9 @@ export type SendEmailInput = {
   // marketing del Cotizador: el correo sale "de" el taller.
   de?: string
   responderA?: string
+  // Idioma del correo. Si no se da, se usa el que tenga guardado el
+  // destinatario (lib/idioma-correo.ts); en inglés se traduce antes de mandar.
+  idioma?: IdiomaCorreo
 }
 
 export type SendEmailResult = {
@@ -52,6 +57,7 @@ export async function sendEmail({
   adjuntos,
   de,
   responderA,
+  idioma,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY
   const fromBase = process.env.RESEND_FROM_EMAIL
@@ -63,6 +69,12 @@ export async function sendEmail({
   if (!apiKey || !from) {
     return { sent: false, reason: "RESEND_API_KEY o RESEND_FROM_EMAIL no configurados" }
   }
+
+  // En el idioma del destinatario (si va en inglés y algo falla, sale en español)
+  const enSuIdioma = await correoEnSuIdioma(to, subject, html, idioma)
+  subject = enSuIdioma.asunto
+  html = enSuIdioma.html
+  const enIngles = enSuIdioma.idioma === "en"
 
   const res = await fetch(RESEND_API_URL, {
     method: "POST",
@@ -78,7 +90,9 @@ export async function sendEmail({
       html: bajaUrl
         ? html +
           `<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888;text-align:center;margin:12px 0 0;">` +
-          `¿No quieres recibir estos correos? <a href="${bajaUrl}" style="color:#888;">Darte de baja</a>.</p>`
+          (enIngles
+            ? `Don't want these emails? <a href="${bajaUrl}" style="color:#888;">Unsubscribe</a>.</p>`
+            : `¿No quieres recibir estos correos? <a href="${bajaUrl}" style="color:#888;">Darte de baja</a>.</p>`)
         : html,
       ...(adjuntos?.length
         ? { attachments: adjuntos.map((a) => ({ filename: a.nombre, content: Buffer.from(a.contenido).toString("base64") })) }
