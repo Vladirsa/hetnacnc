@@ -75,7 +75,7 @@ function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; loc
             {ETIQUETA_NIVEL[nivel] && <b className="ml-1 rounded-full bg-[#FFE9D6] px-1.5 py-px text-[11.5px] text-[#8A3B05]">{ETIQUETA_NIVEL[nivel]}</b>}
           </span>
         )}
-        {o.dias && <span><T>Listo para enviar en</T> {o.dias} {o.dias === 1 ? "día hábil" : "días hábiles"}</span>}
+        {o.dias && <span><T>Listo para enviar en</T> {o.dias} <T>{o.dias === 1 ? "día hábil" : "días hábiles"}</T></span>}
         {o.envio_gratis ? (
           <span className="font-semibold text-[#1E7B3A]"><T>Envío gratis</T></span>
         ) : o.envio_gratis_desde ? (
@@ -117,7 +117,7 @@ function Oferta({ o, locale, producto, nivel, texto }: { o: OfertaImpresion; loc
           disabled={isAddingItem}
           className="ml-auto rounded-[8px] bg-[#C2560A] px-3 py-1.5 text-[13px] font-bold text-white hover:bg-[#A84A08] disabled:opacity-60"
         >
-          {listo ? "Agregar otro" : "Agregar al carrito"}
+          <T>{listo ? "Agregar otro" : "Agregar al carrito"}</T>
         </button>
       </div>
     </li>
@@ -157,8 +157,8 @@ export function ResumenImpresion({ datos, herramienta }: { datos: DatosImpresion
           <p className="m-0 text-[13px] text-[#6B6A63]"><T>Impreso y enviado desde</T></p>
           <p className="m-0 text-[28px] font-extrabold leading-tight text-[#B34D07]">{pesos(desde)}</p>
           <p className="m-0 mt-1 text-[13px] text-[#40403A]">
-            {talleres} {talleres === 1 ? "taller lo imprime" : "talleres lo imprimen"}
-            {masRapido ? ` · listo desde ${masRapido} ${masRapido === 1 ? "día hábil" : "días hábiles"}` : ""}
+            {talleres} <T>{talleres === 1 ? "taller lo imprime" : "talleres lo imprimen"}</T>
+            <T>{masRapido ? ` · listo desde ${masRapido} ${masRapido === 1 ? "día hábil" : "días hábiles"}` : ""}</T>
           </p>
           <a
             href="#talleres-impresion"
@@ -214,7 +214,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
             data-testid="texto-personalizado"
           />
           <span className="text-[12px] text-[#6B6A63]">
-            <T>Hasta</T> {maxTexto} {maxTexto === 1 ? "letra" : "letras"} ({texto.trim().length}/{maxTexto}<T>). Sale con la forma y la letra de la foto; revisa mayúsculas y acentos: se imprime tal cual.</T>
+            <T>Hasta</T> {maxTexto} <T>{maxTexto === 1 ? "letra" : "letras"}</T> ({texto.trim().length}/{maxTexto}<T>). Sale con la forma y la letra de la foto; revisa mayúsculas y acentos: se imprime tal cual.</T>
           </span>
         </label>
       )}
@@ -257,7 +257,7 @@ export function TalleresImpresion({ datos, locale }: { datos: DatosImpresion; lo
       )}
 
       <p className="m-0 text-[12.5px] text-[#6B6A63]">
-        <T>¿Tienes impresora 3D y quieres venderlo?</T>{" "}
+        <T>¿Tienes impresora 3D y quieres venderlo?</T><T>{" "}</T>
         <a href={`${process.env.NEXT_PUBLIC_VENDOR_URL || "/seller"}/imprimir`} className="font-semibold text-[#B34D07] underline">
           <T>Ofrécelo desde tu panel de taller</T>
         </a>
