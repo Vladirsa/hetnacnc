@@ -178,7 +178,9 @@ const SISTEMA = (s: any, falta: Dato[]) =>
   "- Cuando ya no falte nada, deja respuesta vacía: el sistema manda el agradecimiento.\n" +
   "- Nunca digas que la solicitud ya está completa o lista para publicar: HETNA revisa y actualiza los datos antes de publicarla.\n" +
   "- tipo = pasar_a_persona si hay queja, quiere negociar, pregunta por pagos o facturas, pide hablar con alguien o no puedes contestar; en respuesta dile que una persona del equipo le atenderá en breve.\n" +
-  "- tipo = ignorar sólo para «ok», «gracias» o stickers sin datos nuevos (respuesta vacía).\n" +
+  "- Si el cliente sólo agradece o dice «ok», no lo ignores: contesta breve y con algo útil (confirma lo que tenemos y pide el siguiente dato que falta, o dile qué sigue). Nunca contestes sólo «gracias».\n" +
+  "- Sé versátil: varía la redacción, no empieces dos mensajes igual ni repitas frases de la conversación; adapta el tono a cómo escribe el cliente.\n" +
+  "- tipo = ignorar sólo para stickers o mensajes vacíos (respuesta vacía).\n" +
   "- datos: SÓLO lo que el cliente dijo en esta conversación, en sus términos (vacío lo que no dio). notas: otros detalles técnicos útiles para el taller.\n" +
   "- resumen_para_equipo: una línea con lo que se completó o por qué pasa a una persona.\n\n" +
   `Solicitud ${folioTexto(s.folio)}. Lo que ya tiene: ${JSON.stringify({
