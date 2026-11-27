@@ -1,4 +1,5 @@
 // HETNA Panel → Licitaciones: solicitudes de fabricación por etapa.
+import { TS } from "@/i18n/TS"
 import { Etiqueta, Pestanas, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace, pesos } from "@/lib/panel/sesion"
 import { puedeActuar } from "@/lib/panel/roles"
@@ -21,9 +22,9 @@ export default async function PanelLicitaciones({ params, searchParams }: { para
     <div>
       <Pestanas base={`/${locale}/panel/licitaciones`} actual={etapa} opciones={ETAPAS.map(([k, n]) => ({ clave: k, nombre: n, n: k === "todas" ? undefined : data.totales[k] }))} />
       <Tarjeta>
-        <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer">Dashboard →</a>}>Solicitudes de fabricación</Titulo>
-        {error && <Vacio>No pude leer las solicitudes: {error}</Vacio>}
-        {!error && data.solicitudes.length === 0 && <Vacio>Nada en esta etapa.</Vacio>}
+        <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer"><TS>Dashboard →</TS></a>}><TS>Solicitudes de fabricación</TS></Titulo>
+        {error && <Vacio><TS>No pude leer las solicitudes:</TS> {error}</Vacio>}
+        {!error && data.solicitudes.length === 0 && <Vacio><TS>Nada en esta etapa.</TS></Vacio>}
         <ul className="divide-y divide-[#EFEDE6]">
           {data.solicitudes.map((s) => (
             <li key={s.id} className="py-3">
@@ -32,13 +33,13 @@ export default async function PanelLicitaciones({ params, searchParams }: { para
                 <Etiqueta color={s.etapa === "en_revision" ? "ambar" : s.etapa === "entregada" ? "verde" : "azul"}>{s.etapa_nombre}</Etiqueta>
               </div>
               <p className="mt-0.5 text-[12.5px] text-[#40403A]">{[s.contacto?.empresa || s.contacto?.nombre, s.trabajo?.ciudad || s.contacto?.ciudad, s.trabajo?.material, s.trabajo?.cantidad].filter(Boolean).join(" · ")}</p>
-              {s.trabajo?.descripcion && <p className="mt-0.5 line-clamp-2 text-[12px] text-[#6B675C]">{s.trabajo.descripcion}</p>}
-              <p className="mt-1 text-[11px] text-[#9A968B]">{hace(s.creada)} · {s.propuestas} propuesta(s){s.pago_monto ? ` · pago ${pesos(s.pago_monto)} ${s.pago_estado || ""}` : ""}{s.trabajo?.archivos?.length ? ` · ${s.trabajo.archivos.length} archivo(s)` : ""}</p>
+              {s.trabajo?.descripcion && <p className="mt-0.5 line-clamp-2 text-[12px] text-[#6B675C]"><TS>{s.trabajo.descripcion}</TS></p>}
+              <p className="mt-1 text-[11px] text-[#9A968B]">{hace(s.creada)} · {s.propuestas} <TS>propuesta(s)</TS>{s.pago_monto ? ` · pago ${pesos(s.pago_monto)} ${s.pago_estado || ""}` : ""}{s.trabajo?.archivos?.length ? ` · ${s.trabajo.archivos.length} archivo(s)` : ""}</p>
               <div className="mt-1.5 flex gap-3 text-[12px] font-semibold">
-                {s.contacto?.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(s.contacto.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer">WhatsApp</a>}
-                {s.contacto?.correo && <a className="text-[#40403A]" href={`mailto:${s.contacto.correo}`}>Correo</a>}
-                {s.liga_cliente && <a className="text-[#1D4F8C]" href={s.liga_cliente} target="_blank" rel="noreferrer">Ver como cliente</a>}
-                <a className="text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer">Dashboard</a>
+                {s.contacto?.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(s.contacto.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer"><TS>WhatsApp</TS></a>}
+                {s.contacto?.correo && <a className="text-[#40403A]" href={`mailto:${s.contacto.correo}`}><TS>Correo</TS></a>}
+                {s.liga_cliente && <a className="text-[#1D4F8C]" href={s.liga_cliente} target="_blank" rel="noreferrer"><TS>Ver como cliente</TS></a>}
+                <a className="text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer"><TS>Dashboard</TS></a>
               </div>
               {puedeActuar(yo.rol, "licitaciones") && <AccionesLicitacion id={s.id} etapa={s.etapa} etapas={ETAPAS_MOVER} />}
             </li>
