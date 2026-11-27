@@ -203,7 +203,7 @@ const ESQUEMA = {
   },
 }
 
-const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = []) =>
+const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = [], cuenta = "") =>
   "Eres el asesor comercial del WhatsApp de HETNA CNC, marketplace mexicano de fabricación CNC: clientes que necesitan piezas o herramienta, talleres que fabrican, proveedores que surten y una tienda de productos y herramientas para talleres. " +
   "Tu meta en cada plática es UN resultado concreto: una venta en la tienda, una solicitud de cotización registrada, un taller o proveedor registrado, una prueba del Cotizador o un plan contratado. Una plática que termina sin siguiente paso es una venta perdida.\n\n" +
   "Método (asesor consultivo, no vendedor insistente):\n" +
@@ -247,7 +247,7 @@ const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }
     : "")
 
 let ia: Anthropic | null = null
-export async function redactar(historia: { rol: string; texto: string }[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = []) {
+export async function redactar(historia: { rol: string; texto: string }[], productos: { nombre: string; liga: string }[], perfil: any, pedidos: PedidoAnterior[] = [], cuenta = "") {
   ia ??= new Anthropic()
   // La conversación como turnos: cliente = user; agente y equipo = assistant
   const turnos: any[] = []
@@ -263,7 +263,7 @@ export async function redactar(historia: { rol: string; texto: string }[], produ
     ...modeloIA(IA_MODELO_WHATSAPP()),
     max_tokens: 1200,
     output_config: { effort: "medium", format: { type: "json_schema", schema: ESQUEMA } },
-    system: SISTEMA(catalogoVentas(), productos, perfil, pedidos),
+    system: SISTEMA(catalogoVentas(), productos, perfil, pedidos) + cuenta,
     messages: turnos,
   } as any)
   if (resp.stop_reason === "refusal") return { tipo: "pasar_a_persona", respuesta: "", perfil: null, temperatura: "tibio", avisar_equipo: true, resumen_para_equipo: "La IA no pudo contestar este mensaje." }
@@ -327,7 +327,10 @@ async function contestar(knex: any, numero: string, logger?: any) {
     const pedidos = await pedidosDelNumero(knex, numero).catch(() => [])
     let r: any
     try {
-      r = await redactar(historia, productos, f?.perfil || null, pedidos)
+      // Lo que sabemos de su cuenta: perfil del taller, carrito, solicitudes (lib/agente-cuenta)
+      const { leerCuenta, textoCuenta } = require("./agente-cuenta")
+      const cuenta = textoCuenta(await leerCuenta(knex, numero).catch(() => ({})))
+      r = await redactar(historia, productos, f?.perfil || null, pedidos, cuenta)
     } catch (e) {
       // Sin IA (sin saldo, caída): el cliente no se queda sin respuesta y el dueño se entera
       const msg = (e as Error).message || ""

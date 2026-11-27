@@ -194,6 +194,19 @@ export async function correrDatosFaltantes(container: MedusaContainer, o: { prob
     }
     await marcar({ n: avance.n + 1, ultimo: new Date().toISOString(), faltan: faltan.total })
     r.enviados++
+    // También por WhatsApp si el taller lo verificó (respeta BAJA): ahí sí lo lee
+    if (faltan.perfil.length) {
+      const { avisarWhatsapp } = require("./whatsapp")
+      await avisarWhatsapp(
+        knex,
+        { sellerIds: [taller.id] },
+        {
+          titulo: "Su perfil en HETNA está casi listo",
+          cuerpo: `Le falta: ${faltan.perfil.join(", ")}. Con el perfil al 100 % sale en los filtros y en las páginas de talleres de su estado, y le llegan más solicitudes que encajan con lo que hace.`,
+          url: "/seller/perfil-taller",
+        }
+      ).catch(() => 0)
+    }
   }
   return r
 }
