@@ -8,6 +8,7 @@
 // cliente a la izquierda, muchos nombres de una vez (ZIP) y liga con el diseño
 // (?texto=…&forma=…&fuente=…&icono=…&alto=…), que usan los llaveros del
 // catálogo de Impresión 3D bajo pedido para "modificar".
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { PanelColores, TarjetaColores, useMulticolor } from "./Multicolor"
 import { useEffect, useMemo, useState } from "react"
@@ -221,7 +222,7 @@ export function GeneradorLlaveros() {
       </Seccion>
 
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Texto</Etiqueta>
+        <Etiqueta><T>Texto</T></Etiqueta>
         <textarea
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
@@ -229,11 +230,11 @@ export function GeneradorLlaveros() {
           maxLength={MAX_TEXTO}
           className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
         />
-        <span className="text-[11.5px] text-[#8A97AB]">Enter para un segundo renglón (por ejemplo, el teléfono en la placa de mascota).</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Enter para un segundo renglón (por ejemplo, el teléfono en la placa de mascota).</T></span>
       </label>
       {texto.includes("\n") && (
         <div className="flex items-center gap-3">
-          <Etiqueta>Renglones de abajo</Etiqueta>
+          <Etiqueta><T>Renglones de abajo</T></Etiqueta>
           <input type="range" min={40} max={100} step={5} value={numero(escala2) || 100} onChange={(e) => setEscala2(e.target.value)} className="flex-1 accent-[#C2560A]" />
           <span className="w-[44px] text-right text-[12.5px] text-[#C9D2E0]">{numero(escala2) || 100}%</span>
         </div>
@@ -306,7 +307,7 @@ export function GeneradorLlaveros() {
             <>
               <span className="max-w-[150px] truncate text-[12px] text-[#8A97AB]">{logoNombre}</span>
               <button type="button" onClick={() => { setLogo(null); setLogoNombre("") }} className="text-[12px] font-semibold text-[#F2A36B] underline">
-                Quitar
+                <T>Quitar</T>
               </button>
             </>
           )}
@@ -331,7 +332,7 @@ export function GeneradorLlaveros() {
         </div>
         {listo && (
           <span className="text-[12px] text-[#F2D29B]">
-            El llavero mide {r1(r!.ancho)} × {r1(r!.alto)} mm
+            <T>El llavero mide</T> {r1(r!.ancho)} × {r1(r!.alto)} <T>mm</T>
           </span>
         )}
       </Destacado>
@@ -381,7 +382,7 @@ export function GeneradorLlaveros() {
             className="flex min-h-[300px] flex-1 items-center justify-center rounded-[10px] bg-[#0F151E] p-6 [&>svg]:max-h-[460px] [&>svg]:w-full [&>svg]:max-w-[720px]"
             dangerouslySetInnerHTML={{ __html: vista2d }}
           />
-          <p className="m-0 text-[12.5px] text-[#8A97AB]">Naranja: corte de la placa y agujero · Café oscuro: letras para grabar.</p>
+          <p className="m-0 text-[12.5px] text-[#8A97AB]"><T>Naranja: corte de la placa y agujero · Café oscuro: letras para grabar.</T></p>
         </>
       )}
     </div>
@@ -438,26 +439,26 @@ export function GeneradorLlaveros() {
   }
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Escribe un texto para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Escribe un texto para generar los archivos.</T></p>
   ) : (
     <div className="flex max-w-[760px] flex-col gap-4">
       <div>
-        <h3 className="m-0 text-[18px] font-bold">Archivos</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">En milímetros. DXF y SVG con capa CORTE y capa GRABADO; STL con las letras en relieve.</p>
+        <h3 className="m-0 text-[18px] font-bold"><T>Archivos</T></h3>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>En milímetros. DXF y SVG con capa CORTE y capa GRABADO; STL con las letras en relieve.</T></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <TarjetaExport titulo="Para láser" nota="Corta la placa y graba o marca las letras.">
           <div className="flex gap-2">
             <Boton tipo="primario" onClick={() => descargar(`${archivo}.dxf`, dibujoDXF(r!.dibujo), "application/dxf")}>
-              DXF
+              <T>DXF</T>
             </Boton>
-            <Boton onClick={() => descargar(`${archivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}>SVG</Boton>
+            <Boton onClick={() => descargar(`${archivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}><T>SVG</T></Boton>
           </div>
         </TarjetaExport>
         <TarjetaExport titulo="Para impresión 3D" nota="Placa con el agujero y las letras en relieve.">
           <div className="flex gap-2">
             <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, mallaSTL(r!.malla), "model/stl")}>
-              STL
+              <T>STL</T>
             </Boton>
           </div>
         </TarjetaExport>
@@ -493,20 +494,20 @@ export function GeneradorLlaveros() {
                 setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
             }}
           >
-            Cotizador
+            <T>Cotizador</T>
           </Boton>
         </div>
       </TarjetaExport>
 
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-        <span className="text-[15px] font-bold">¿No tienes máquina?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA los corta o los imprime y te los envía.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes máquina?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA los corta o los imprime y te los envía.</T></span>
         <div className="flex gap-2">
           <Boton tipo="primario" onClick={() => fabricar("Corte láser")}>
-            Cortar en láser
+            <T>Cortar en láser</T>
           </Boton>
           <Boton tipo="primario" onClick={() => fabricar("Impresión 3D")}>
-            Imprimir en 3D
+            <T>Imprimir en 3D</T>
           </Boton>
         </div>
       </div>
@@ -526,7 +527,7 @@ export function GeneradorLlaveros() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} mm · {formaNombre}</span> : null}
+      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} <T>mm ·</T> {formaNombre}</span> : null}
     />
   )
 }
