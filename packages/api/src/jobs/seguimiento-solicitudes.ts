@@ -11,10 +11,13 @@
 //      decirlo. Las que tienen una disputa abierta (lib/disputa) NO se
 //      cierran: HETNA media y decide. Al cerrar se avisa a HETNA para
 //      liquidarle al taller, igual que cuando el cliente confirma.
+//   3. WhatsApp al cliente («te estamos buscando el mejor taller») si no le
+//      llegó al mandar su solicitud (lib/solicitud-whatsapp).
 import { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { aprobarSolicitud } from "../lib/difusion"
+import { confirmarPendientes } from "../lib/solicitud-whatsapp"
 import { T_SOLICITUD, folioTexto } from "../lib/licitacion"
 import { avisarLiquidacion } from "../lib/liquidacion-aviso"
 import { DIAS_PARA_CERRAR, asegurarSeguimiento, cambiarEtapa, horasEsperaInfo, horasRevision, revisionesVencidas } from "../lib/seguimiento"
@@ -51,6 +54,10 @@ export default async function seguimientoSolicitudes(container: MedusaContainer)
         logger.error(`[seguimiento] ${folioTexto(s.folio)}: no se pudo avisar la liquidación: ${(e as Error).message}`)
       )
     }
+    // 3. WhatsApp al cliente que no lo recibió al mandar su solicitud (lib/solicitud-whatsapp)
+    const confirmadas = await confirmarPendientes(knex, logger).catch(() => 0)
+    if (confirmadas) logger.info(`[seguimiento] confirmaciones por WhatsApp enviadas: ${confirmadas}`)
+
     if (vencidas.length || entregadas.length) {
       logger.info(`[seguimiento] aprobadas solas: ${vencidas.length}, cerradas tras entrega: ${entregadas.length}`)
     }
