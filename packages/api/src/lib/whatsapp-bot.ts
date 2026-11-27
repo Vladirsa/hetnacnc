@@ -185,6 +185,21 @@ const ESQUEMA = {
     estimado: ESQUEMA_ESTIMADO,
     // Estrategia 3.5: folio del pedido anterior que el cliente quiere repetir (de la lista), o null
     repetir_folio: { anyOf: [{ type: "string" }, { type: "null" }] },
+    // Solicitud que el sistema registra por el cliente (lib/solicitud-desde-whatsapp), o null
+    solicitud: {
+      anyOf: [
+        { type: "null" },
+        {
+          type: "object", additionalProperties: false,
+          required: ["tipo", "descripcion", "servicio", "material", "medidas", "cantidad", "ciudad", "fecha", "nombre"],
+          properties: {
+            tipo: { type: "string", enum: ["fabricacion", "suministro"] },
+            descripcion: { type: "string" }, servicio: { type: "string" }, material: { type: "string" }, medidas: { type: "string" },
+            cantidad: { type: "string" }, ciudad: { type: "string" }, fecha: { type: "string" }, nombre: { type: "string" },
+          },
+        },
+      ],
+    },
   },
 }
 
@@ -206,6 +221,15 @@ const SISTEMA = (catalogo: string[], productos: { nombre: string; liga: string }
   "- temperatura: caliente = quiere comprar o cotizar ya, pidió precio de algo concreto con cantidad, es empresa o pedido grande, o quiere contratar un plan; tibio = interesado con dudas; frio = sólo curiosea.\n" +
   "- avisar_equipo = true cuando está caliente o pasas a persona. resumen_para_equipo: quién es, qué necesita, datos que dio y qué le ofreciste, en 2 a 3 líneas.\n" +
   "- perfil: llena lo que ya se sabe de la conversación (vacío si no se sabe).\n\n" +
+  "Registrar la solicitud por el cliente (más rápido que mandarlo al formulario):\n" +
+  "- Si necesita una pieza fabricada a la medida (fabricacion) o un producto que la tienda NO tiene en la lista de abajo, como insertos, portaherramientas, fresas especiales o material (suministro), regístrale la solicitud tú: llena «solicitud».\n" +
+  "- Antes de llenarla, asegúrate de tener qué es (con medidas o especificación técnica: por ejemplo «barra de mandrinar para insertos APMT 1604, zanco 25 mm, largo 250 mm») y la cantidad. Si falta, pregúntalo en UNA pregunta. La ciudad, la fecha y su nombre ayudan; pregúntalos sólo si no alarga la plática.\n" +
+  "- descripcion: lo que necesita en palabras técnicas claras (mínimo una oración completa). Lo que no sepas, vacío.\n" +
+  "- Al llenarla, en respuesta dile que ya registraste su solicitud y que HETNA le buscará el taller o proveedor indicado con los mejores precios; no escribas folio ni liga (los pone el sistema). Sólo una solicitud por necesidad: si ya se registró en esta plática, solicitud = null.\n\n" +
+  "Cuando el cliente ya quedó atendido y se despide o agradece: agradécele y, si están abajo, invítalo a dejar su opinión sincera y a seguirnos para enterarse de ofertas y planos gratis (con esas ligas). No ofrezcas nada a cambio de la opinión.\n" +
+  (process.env.SOLICITUD_RESENA_GOOGLE ? `Liga para opinar en Google: ${process.env.SOLICITUD_RESENA_GOOGLE}\n` : "") +
+  (process.env.SOLICITUD_SEGUIR ? `Dónde seguirnos: ${String(process.env.SOLICITUD_SEGUIR).split("|").join(" · ")}\n` : "") +
+  "\n" +
   REGLAS_ESTIMADO + catalogoEstimado() + "\n\n" +
   "Datos de HETNA (lo único que puedes afirmar):\n- " + catalogo.join("\n- ") +
   "\n\nProductos de la tienda que coinciden con la conversación:\n" + (productos.length ? productos.map((p) => `- ${p.nombre}: ${p.liga}`).join("\n") : "(ninguno)") +
@@ -332,6 +356,20 @@ async function contestar(knex: any, numero: string, logger?: any) {
       r.temperatura = "caliente"
       r.avisar_equipo = true
       r.resumen_para_equipo = `${r.resumen_para_equipo || ""} · Quiere repetir ${repetir.folio} (${repetir.resumen}); le mandamos la liga.`.replace(/^ · /, "")
+    }
+    // Solicitud registrada por el agente: folio y liga los pone el código
+    if (r.tipo === "responder" && r.solicitud) {
+      const { crearSolicitudWhatsapp, datosSuficientes } = require("./solicitud-desde-whatsapp")
+      if (datosSuficientes(r.solicitud)) {
+        const reg = await crearSolicitudWhatsapp(knex, logger, numero, { ...r.solicitud, nombre: r.solicitud.nombre || r.perfil?.nombre || "" }).catch((e: Error) => {
+          logger?.warn?.(`[whatsapp-agente] no se registró la solicitud: ${e.message}`)
+          return null
+        })
+        if (reg) {
+          respuesta = `${respuesta}\n\n${reg.nueva ? "Su solicitud quedó registrada con el folio" : "Ya tiene registrada su solicitud"} *${reg.folio}*. Aquí puede ver y comparar las propuestas que lleguen: ${reg.liga}`.trim()
+          r.temperatura = "caliente"
+        }
+      }
     }
     respuesta = conVistaPublicidad(respuesta)
     if (r.tipo === "ignorar" && !respuesta) return

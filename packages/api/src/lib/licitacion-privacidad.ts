@@ -292,7 +292,7 @@ export function resumenRedes(s: any): string {
   const lote = t.frecuencia && !/una vez|única|unica/i.test(t.frecuencia) ? "Producción recurrente." : t.cantidad ? `Cantidad: ${t.cantidad}.` : ""
   const donde = p.ubicacion === "confidencial" ? "" : p.ubicacion === "estado" ? t.estado_mx || "" : [t.ciudad, t.estado_mx].filter(Boolean).join(", ")
   return [
-    `${quien} busca talleres CNC${que ? ` para ${que.toLowerCase()}` : ""}.`,
+    s?.tipo === "suministro" ? `${quien} busca proveedor${que ? ` de ${que.replace(/^un trabajo en /, "").toLowerCase()}` : ""}.` : `${quien} busca talleres CNC${que ? ` para ${que.toLowerCase()}` : ""}.`,
     lote,
     donde ? `Ubicación: ${donde}.` : "",
     "Proyecto disponible para cotización en HETNA CNC.",
