@@ -39,7 +39,7 @@ export default async function EscanearPage({ params }: { params: Promise<{ local
         <p className="mt-2 max-w-[700px] text-[15.5px] leading-relaxed text-[#40403A]">
           <TS>Una pieza se rompió, se perdió o ya no tiene plano: se escanea en 3D, se rediseña completando lo que falta, apruebas el render y se fabrica en impresión 3D o CNC. También sirve para moldes.</TS>
         </p>
-        {datos.aviso && <p className="mt-3 rounded-[10px] border border-[#F2D9C4] bg-[#FFF8F1] px-4 py-3 text-[13.5px] leading-relaxed text-[#6B4A2B]">{datos.aviso}</p>}
+        {datos.aviso && <p className="mt-3 rounded-[10px] border border-[#F2D9C4] bg-[#FFF8F1] px-4 py-3 text-[13.5px] leading-relaxed text-[#6B4A2B]"><TS>{datos.aviso}</TS></p>}
         {!r.ok && <p className="mt-4 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[14px] text-[#9B1C1C]"><TS>{r.mensaje}</TS></p>}
 
         {datos.solicitudes.length > 0 && (
@@ -50,11 +50,11 @@ export default async function EscanearPage({ params }: { params: Promise<{ local
                 <li key={s.id} className="list-none">
                   <LocalizedClientLink href={`/user/escanear/${s.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3 hover:border-[#C2560A]">
                     <span>
-                      <span className="text-[12px] font-bold text-[#6B6A63]">{s.folio_texto}</span>
+                      <span className="text-[12px] font-bold text-[#6B6A63]"><TS>{s.folio_texto}</TS></span>
                       <span className="ml-2 text-[15.5px] font-semibold text-[#1B1B18]"><TS>{s.titulo}</TS></span>
                     </span>
                     <span className="flex items-center gap-3 text-[13px]">
-                      <span className={`rounded-full px-2.5 py-1 font-semibold ${s.estado === "render_listo" ? "bg-[#FFF1E5] text-[#B34D07]" : s.estado === "terminada" ? "bg-[#E7F6EE] text-[#0F7A4A]" : "bg-[#EEF1F6] text-[#0E2A5C]"}`}>{s.nombre_estado}</span>
+                      <span className={`rounded-full px-2.5 py-1 font-semibold ${s.estado === "render_listo" ? "bg-[#FFF1E5] text-[#B34D07]" : s.estado === "terminada" ? "bg-[#E7F6EE] text-[#0F7A4A]" : "bg-[#EEF1F6] text-[#0E2A5C]"}`}><TS>{s.nombre_estado}</TS></span>
                       <span className="text-[#6B6A63]">{fechaSegura(FECHA, s.creado)}</span>
                     </span>
                   </LocalizedClientLink>
