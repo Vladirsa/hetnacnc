@@ -63,7 +63,7 @@ export default async function MiRed({ searchParams }: Props) {
                 href={sesion ? "/foro-cnc/mi-perfil?siguiente=/foro-cnc/red" : "/register"}
                 className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110"
               >
-                {sesion ? "Crear mi perfil" : "Crear cuenta gratis"}
+                <TS>{sesion ? "Crear mi perfil" : "Crear cuenta gratis"}</TS>
               </LocalizedClientLink>
               {!sesion && (
                 <LocalizedClientLink href="/login" className="rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
@@ -79,8 +79,8 @@ export default async function MiRed({ searchParams }: Props) {
               ["Empleos y proyectos", "Vacantes de talleres y proyectos que buscan quién los fabrique."],
             ].map(([t, d]) => (
               <div key={t} className={CAJA_RED}>
-                <strong className="block text-[15px] text-[#1B1B18]">{t}</strong>
-                <span className="text-[14px] text-[#6B6A63]">{d}</span>
+                <strong className="block text-[15px] text-[#1B1B18]"><TS>{t}</TS></strong>
+                <span className="text-[14px] text-[#6B6A63]"><TS>{d}</TS></span>
               </div>
             ))}
           </div>
@@ -121,11 +121,11 @@ export default async function MiRed({ searchParams }: Props) {
               <h1 className="m-0 text-[22px] font-extrabold text-[#142033]"><TS>Mi red</TS></h1>
               <p className="m-0 text-[13.5px] text-[#6B6A63]">
                 <a href="?ver=seguidores" className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                  {cuentas.seguidores} <TS>seguidores</TS>
-                </a>{" "}
-                ·{" "}
+                  <TS>{cuentas.seguidores}</TS> <TS>seguidores</TS>
+                </a><TS>{" "}</TS>
+                ·<TS>{" "}</TS>
                 <a href="?ver=siguiendo" className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                  {cuentas.siguiendo} <TS>siguiendo</TS>
+                  <TS>{cuentas.siguiendo}</TS> <TS>siguiendo</TS>
                 </a>
               </p>
             </div>
@@ -146,14 +146,14 @@ export default async function MiRed({ searchParams }: Props) {
               {pendientes.recomendaciones > 0 && (
                 <LocalizedClientLink href={`${urlPerfil(p.usuario)}#recomendaciones`} className="text-[14px] text-[#5A3A12] hover:underline">
                   <strong>
-                    {pendientes.recomendaciones === 1 ? "1 recomendación espera" : `${pendientes.recomendaciones} recomendaciones esperan`}
-                  </strong>{" "}
+                    <TS>{pendientes.recomendaciones === 1 ? "1 recomendación espera" : `${pendientes.recomendaciones} recomendaciones esperan`}</TS>
+                  </strong><TS>{" "}</TS>
                   <TS>que decidas si salen en tu perfil →</TS>
                 </LocalizedClientLink>
               )}
               {pendientes.vacantes.map((v) => (
                 <LocalizedClientLink key={v.slug} href={`${urlTema({ seccion: v.seccion, slug: v.slug })}#postulaciones`} className="text-[14px] text-[#5A3A12] hover:underline">
-                  <strong>{v.n === 1 ? "1 postulación" : `${v.n} postulaciones`}</strong> <TS>a tu vacante “</TS><TS>{v.titulo}</TS>” →
+                  <strong><TS>{v.n === 1 ? "1 postulación" : `${v.n} postulaciones`}</TS></strong> <TS>a tu vacante “</TS><TS>{v.titulo}</TS>” →
                 </LocalizedClientLink>
               ))}
             </section>
@@ -186,12 +186,12 @@ export default async function MiRed({ searchParams }: Props) {
               ) : (
                 <div className="flex flex-col items-center gap-2 rounded-[12px] border border-dashed border-[#D9D4C8] bg-white p-8 text-center">
                   <strong className="text-[16px] text-[#1B1B18]">
-                    {nadaQueVer ? "Tu red está vacía" : "Todavía no hay publicaciones nuevas de tu red"}
+                    <TS>{nadaQueVer ? "Tu red está vacía" : "Todavía no hay publicaciones nuevas de tu red"}</TS>
                   </strong>
                   <p className="m-0 max-w-md text-[14.5px] text-[#6B6A63]">
-                    {nadaQueVer
+                    <TS>{nadaQueVer
                       ? "Publica arriba tu primer trabajo o pregunta, y sigue talleres, personas y comunidades (a la derecha) para ver aquí sus productos nuevos, sus trabajos y sus publicaciones."
-                      : "Cuando las personas y talleres que sigues publiquen, aparece aquí. Mientras, publica tú o sigue a más gente."}
+                      : "Cuando las personas y talleres que sigues publiquen, aparece aquí. Mientras, publica tú o sigue a más gente."}</TS>
                   </p>
                 </div>
               )}
@@ -222,7 +222,7 @@ export default async function MiRed({ searchParams }: Props) {
                   {siguiendo.secciones.map((s) => (
                     <div key={s.slug} className="flex items-center justify-between gap-3">
                       <LocalizedClientLink href={`/foro-cnc/${s.slug}`} className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                        {s.nombre}
+                        <TS>{s.nombre}</TS>
                       </LocalizedClientLink>
                       <BotonSeguir objetivo={objetivoSeccion(s.slug)} siguiendo seguidores={0} conCuenta={false} chico />
                     </div>
@@ -274,7 +274,7 @@ export default async function MiRed({ searchParams }: Props) {
               {comunidades.map((s) => (
                 <div key={s.slug} className="flex items-center justify-between gap-2">
                   <LocalizedClientLink href={`/foro-cnc/${s.slug}`} className="min-w-0 truncate text-[14px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                    {s.nombre}
+                    <TS>{s.nombre}</TS>
                   </LocalizedClientLink>
                   <BotonSeguir objetivo={objetivoSeccion(s.slug)} siguiendo={false} seguidores={0} etiqueta="Unirme" conCuenta={false} chico />
                 </div>
