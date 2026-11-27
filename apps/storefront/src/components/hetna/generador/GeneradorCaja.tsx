@@ -8,6 +8,7 @@
 // le pueden poner divisores, asas y (cerrada) ranura de alcancía. El ancho
 // de dedo va en automático (4 × espesor) para que al cambiar de material la
 // caja siga saliendo; a mano se puede fijar.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -247,7 +248,7 @@ const leerProporciones = (texto: string) => {
 // vuelve a montar en cada tecla y el campo pierde el foco.
 const Contador = ({ etiqueta, valor, cambiar }: { etiqueta: string; valor: number; cambiar: (n: number) => void }) => (
   <div className="flex min-w-0 flex-col gap-1">
-    <span className="text-[12.5px] text-[#C9D2E0]">{etiqueta}</span>
+    <span className="text-[12.5px] text-[#C9D2E0]"><T>{etiqueta}</T></span>
     <div className="flex items-center rounded-[8px] bg-[#1C2431]">
       <button type="button" aria-label={`Menos: ${etiqueta}`} onClick={() => cambiar(Math.max(1, valor - 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
         −
@@ -264,7 +265,7 @@ const Paso = ({ n, titulo, children }: { n: number; titulo: string; children: Re
   <section className="flex flex-col gap-2.5 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
     <h3 className="m-0 flex items-center gap-2 text-[13px] font-bold text-white">
       <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C2560A] text-[11px]">{n}</span>
-      {titulo}
+      <T>{titulo}</T>
     </h3>
     {children}
   </section>
@@ -592,8 +593,8 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             </button>
           ))}
         </div>
-        <span className="text-[11.5px] leading-snug text-[#8A97AB]">{TIPOS.find((t) => t.id === tipo)?.nota}</span>
-        <span className="mt-1 text-[11.5px] font-bold uppercase tracking-wide text-[#8A97AB]">Más tipos · abren en el catálogo</span>
+        <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>{TIPOS.find((t) => t.id === tipo)?.nota}</T></span>
+        <span className="mt-1 text-[11.5px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Más tipos · abren en el catálogo</T></span>
         <div className="grid grid-cols-4 gap-1.5">
           {MAS_TIPOS.map((t) => (
             <LocalizedClientLink
@@ -612,7 +613,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             className="flex flex-col items-center justify-center gap-0.5 rounded-[10px] border border-dashed border-[#C2560A]/60 px-1 py-1.5 text-center text-[10.5px] font-semibold leading-tight text-[#F28A3C] hover:border-[#F28A3C]"
           >
             <span className="text-[15px] font-extrabold">170+</span>
-            Ver todas
+            <T>Ver todas</T>
           </LocalizedClientLink>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -685,22 +686,22 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         {tipo === "bisagra" && (
           <div className="flex flex-col gap-1">
             <CampoNum etiqueta="Diámetro del perno" valor={perno} cambiar={setPerno} sufijo="mm" />
-            <span className="text-[11.5px] leading-snug text-[#8A97AB]">Clavo, tornillo M3 o filamento de 3 mm. El agujero sale del diámetro exacto (justo); para que gire suelto, súbele 0.2 mm.</span>
+            <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>Clavo, tornillo M3 o filamento de 3 mm. El agujero sale del diámetro exacto (justo); para que gire suelto, súbele 0.2 mm.</T></span>
           </div>
         )}
         {listo && (
           <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 rounded-[10px] bg-[#C2560A]/10 px-3 py-2 text-[12px]">
-            <dt className="text-[#8A97AB]">Volumen interior</dt>
+            <dt className="text-[#8A97AB]"><T>Volumen interior</T></dt>
             <dd className="m-0 text-right font-semibold text-[#F2D29B]">{volumen < 1 ? `${Math.round(volumen * 1000)} ml` : `${volumen.toFixed(2)} L`}</dd>
-            <dt className="text-[#8A97AB]">Exterior</dt>
+            <dt className="text-[#8A97AB]"><T>Exterior</T></dt>
             <dd className="m-0 text-right font-semibold text-white">
-              {r1(r.armado.ancho)} × {r1(r.armado.fondo)} × {r1(r.armado.alto)} mm
+              {r1(r.armado.ancho)} × {r1(r.armado.fondo)} × {r1(r.armado.alto)} <T>mm</T>
             </dd>
-            <dt className="text-[#8A97AB]">Interior</dt>
+            <dt className="text-[#8A97AB]"><T>Interior</T></dt>
             <dd className="m-0 text-right font-semibold text-white">
-              {r1(r.interior.ancho)} × {r1(r.interior.fondo)} × {r1(r.interior.alto)} mm
+              {r1(r.interior.ancho)} × {r1(r.interior.fondo)} × {r1(r.interior.alto)} <T>mm</T>
             </dd>
-            <dt className="text-[#8A97AB]">Hoja</dt>
+            <dt className="text-[#8A97AB]"><T>Hoja</T></dt>
             <dd className="m-0 text-right font-semibold text-white">{hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"}</dd>
           </dl>
         )}
@@ -723,18 +724,18 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
           <Contador etiqueta="Divisiones a lo fondo" valor={filas} cambiar={setFilas} />
         </div>
         <details className="rounded-[8px] bg-[#1C2431] px-2.5 py-2" open={Boolean(propAncho || propFondo)}>
-          <summary className="cursor-pointer text-[12.5px] font-semibold text-[#C9D2E0]">Divisiones a medida (proporciones)</summary>
+          <summary className="cursor-pointer text-[12.5px] font-semibold text-[#C9D2E0]"><T>Divisiones a medida (proporciones)</T></summary>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <label className="flex min-w-0 flex-col gap-1 text-[12px] text-[#C9D2E0]">
-              A lo ancho
+              <T>A lo ancho</T>
               <input value={propAncho} onChange={(e) => setPropAncho(e.target.value)} placeholder="1, 1, 2" className="w-full rounded-[8px] bg-[#121923] px-2 py-1.5 text-[13.5px] text-white outline-none placeholder:text-[#5B6880] focus:ring-1 focus:ring-[#C2560A]" />
             </label>
             <label className="flex min-w-0 flex-col gap-1 text-[12px] text-[#C9D2E0]">
-              A lo fondo
+              <T>A lo fondo</T>
               <input value={propFondo} onChange={(e) => setPropFondo(e.target.value)} placeholder="2, 1" className="w-full rounded-[8px] bg-[#121923] px-2 py-1.5 text-[13.5px] text-white outline-none placeholder:text-[#5B6880] focus:ring-1 focus:ring-[#C2560A]" />
             </label>
           </div>
-          <span className="mt-1 block text-[11px] leading-snug text-[#8A97AB]">&quot;1, 1, 2&quot; = tres compartimentos, el último del doble. Si lo llenas, manda sobre los contadores.</span>
+          <span className="mt-1 block text-[11px] leading-snug text-[#8A97AB]"><T>&quot;1, 1, 2&quot; = tres compartimentos, el último del doble. Si lo llenas, manda sobre los contadores.</T></span>
         </details>
         {tipo === "separadores" ? (
           <Interruptor etiqueta="Muescas para los dedos" activo={muescas} cambiar={setMuescas} />
@@ -746,7 +747,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
 
       <section className="flex flex-col gap-1.5 px-1">
         <div className="flex items-center justify-between">
-          <span className="text-[12.5px] font-semibold text-[#C9D2E0]">Ver cómo se arma</span>
+          <span className="text-[12.5px] font-semibold text-[#C9D2E0]"><T>Ver cómo se arma</T></span>
           <span className="text-[12px] font-semibold text-[#F28A3C]">{despiece === 0 ? "Armada" : `${despiece}%`}</span>
         </div>
         <input type="range" min={0} max={100} value={despiece} onChange={(e) => setDespiece(Number(e.target.value))} aria-label="Separar las piezas en la vista 3D" style={{ accentColor: "#F28A3C" }} />
@@ -754,7 +755,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
 
       <details className="group rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
         <summary className="cursor-pointer list-none text-[13px] font-bold text-white">
-          <span className="mr-1 inline-block transition group-open:rotate-90">▸</span> Avanzado: máquina, dedos y kerf
+          <span className="mr-1 inline-block transition group-open:rotate-90">▸</span> <T>Avanzado: máquina, dedos y kerf</T>
         </summary>
         <div className="mt-3 flex flex-col gap-3">
           <Opciones
@@ -782,7 +783,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             )}
           </div>
           <button type="button" onClick={descargarPrueba} className="rounded-[8px] border border-dashed border-[#3A4A63] px-3 py-2 text-left text-[12.5px] text-[#C9D2E0] hover:border-[#F28A3C] hover:text-white">
-            Descargar pieza de prueba (SVG): corta dos tiras chicas y revisa que encajen justas antes de cortar la caja.
+            <T>Descargar pieza de prueba (SVG): corta dos tiras chicas y revisa que encajen justas antes de cortar la caja.</T>
           </button>
         </div>
       </details>
@@ -796,7 +797,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         <Aviso key={a}>{a}</Aviso>
       ))}
       {maquina === "router" && numero(fresa) * k > 0 && listo && (
-        <Aviso tipo="ok">El archivo ya trae el alivio de esquina (&quot;dogbone&quot;) para tu fresa de {r1(numero(fresa) * k)} mm.</Aviso>
+        <Aviso tipo="ok"><T>El archivo ya trae el alivio de esquina (&quot;dogbone&quot;) para tu fresa de</T> {r1(numero(fresa) * k)} <T>mm.</T></Aviso>
       )}
 
     </div>
@@ -807,10 +808,10 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
     <>
       <div className="grid grid-cols-3 gap-2">
         <Boton tipo="primario" onClick={() => listo && descargar(`${nombreArchivo}.dxf`, aDXF(r.piezas), "application/dxf")}>
-          DXF
+          <T>DXF</T>
         </Boton>
-        <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
-        <Boton onClick={() => listo && imprimir()}>PDF</Boton>
+        <Boton onClick={() => listo && descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}><T>SVG</T></Boton>
+        <Boton onClick={() => listo && imprimir()}><T>PDF</T></Boton>
       </div>
       {/* En celular el precio va aquí; en computadora, en la barra debajo de la
           vista, para no tapar los controles del diseño (Vlado, 23 nov 2026) */}
@@ -847,7 +848,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             />
           </div>
           <p className="m-0 text-[12px] text-[#C9D2E0] sm:hidden">
-            Hoja {hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"} · {r.piezas.length} piezas · {areaMaterial(r.piezas).toFixed(3)} m²
+            <T>Hoja</T> {hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"} · {r.piezas.length} <T>piezas ·</T> {areaMaterial(r.piezas).toFixed(3)} m²
           </p>
           <div
             className="min-h-[200px] flex-1 rounded-[10px] bg-[#0F151E] p-3 [&>svg]:h-full [&>svg]:max-h-[560px] [&>svg]:w-full"
@@ -859,21 +860,21 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
   )
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Completa las medidas para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Completa las medidas para generar los archivos.</T></p>
   ) : (
     <div className="flex max-w-[760px] flex-col gap-4">
       <div>
-        <h3 className="m-0 text-[18px] font-bold">Archivos de corte</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">Revisa el archivo antes de cortar y haz una prueba en retazo para ajustar el kerf.</p>
+        <h3 className="m-0 text-[18px] font-bold"><T>Archivos de corte</T></h3>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>Revisa el archivo antes de cortar y haz una prueba en retazo para ajustar el kerf.</T></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <TarjetaExport titulo="Para tu máquina" nota="DXF para LightBurn, RDWorks, Aspire o Fusion; SVG para Inkscape o Illustrator.">
           <div className="flex gap-2">
             <Boton tipo="primario" onClick={() => descargar(`${nombreArchivo}.dxf`, aDXF(r.piezas), "application/dxf")}>
-              DXF
+              <T>DXF</T>
             </Boton>
-            <Boton onClick={() => descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}>SVG</Boton>
-            <Boton onClick={imprimir}>PDF</Boton>
+            <Boton onClick={() => descargar(`${nombreArchivo}.svg`, aSVG(r.piezas, "corte"), "image/svg+xml")}><T>SVG</T></Boton>
+            <Boton onClick={imprimir}><T>PDF</T></Boton>
           </div>
         </TarjetaExport>
         <TarjetaExport titulo="¿Cuánto cuesta cortarla?" nota="Ve el precio al instante en el Cotizador.">
@@ -903,21 +904,21 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
                   setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
               }}
             >
-              Cotizador
+              <T>Cotizador</T>
             </Boton>
           </div>
         </TarjetaExport>
       </div>
 
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-        <span className="text-[15px] font-bold">¿No tienes máquina?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA te la corta y te la envía.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes máquina?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA te la corta y te la envía.</T></span>
         <div>
           <Boton
             tipo="primario"
             onClick={fabricar}
           >
-            Fabrícamelo
+            <T>Fabrícamelo</T>
           </Boton>
         </div>
       </div>
@@ -962,7 +963,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       barra={
         listo ? (
           <span>
-            · {nombreTipo} · {r.piezas.length} piezas · {r1(esp)} mm · dedo {r1(r.dedoUsado)} mm
+            · {nombreTipo} · {r.piezas.length} <T>piezas ·</T> {r1(esp)} <T>mm · dedo</T> {r1(r.dedoUsado)} <T>mm</T>
           </span>
         ) : null
       }
