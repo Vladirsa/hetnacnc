@@ -47,6 +47,8 @@ const H = {
   letreros: { url: SITIO + '/disenar/letreros', nombre: 'Letreros', que: 'Arma letreros con tu texto y bájalos en vector para láser o router.' },
   cortadores: { url: SITIO + '/disenar/cortadores-galletas', nombre: 'Cortadores de galletas', que: 'De cualquier silueta saca el cortador en STL para imprimir.' },
   rompecabezas: { url: SITIO + '/disenar/rompecabezas', nombre: 'Rompecabezas', que: 'Convierte una imagen en rompecabezas con las piezas en vector para láser.' },
+  muebles: { url: SITIO + '/disenar/rebanado-capas', nombre: 'Muebles paramétricos de costillas', que: 'Subes el modelo 3D de tu banca, sillón o panel (STL u OBJ) y te lo convierte en costillas separadas listas para router: numeradas, con los barrenos de las varillas y acomodadas en tus hojas. Sin Rhino ni Grasshopper.' },
+  costillasImg: { url: SITIO + '/disenar/costillas-desde-imagen', nombre: 'Bancas y paneles de costillas desde una imagen', que: 'De una imagen saca una banca ondulada o un panel de pared con relieve, hecho de tablas paralelas para router CNC.' },
   calculadora: { url: SITIO + '/calculadora-cnc', nombre: 'Calculadora CNC', que: 'Velocidades, avances y tiempos de corte para router y láser, según material y herramienta.', pregunta: '¿Qué parámetros usan ustedes para MDF de 15 mm con fresa de 6 mm?' },
   foro: { url: SITIO + '/foro-cnc', nombre: 'Foro CNC', que: 'Preguntas y respuestas de router, láser, plasma y torno: fresas, materiales, CAM y fallas comunes.', pregunta: '¿Cuál ha sido la falla más rara que les ha dado su router?' },
   blog: { url: SITIO + '/foro-cnc/blog', nombre: 'Guías del blog', que: 'Guías prácticas de CNC: materiales, fresas, parámetros, costos y cómo cotizar trabajos.', pregunta: '¿De qué tema les gustaría una guía?' },
@@ -55,13 +57,13 @@ const H = {
 // Grupo, aviso y lo que se le comparte (en el orden en que salen)
 const GRUPOS = [
   { id: 'VectoresCorteLaserCNC', info: '6.7 mil miembros · láser y CNC', tipo: 'diseno', herramientas: ['vectorizador', 'cajas', 'letreros', 'rompecabezas'] },
-  { id: 'cncvectores', info: '588 · archivos gratis', tipo: 'gratis', herramientas: ['cajas', 'celosias', 'vectorizador', 'letreros', 'rompecabezas'] },
+  { id: 'cncvectores', info: '588 · archivos gratis', tipo: 'gratis', herramientas: ['muebles', 'costillasImg', 'cajas', 'celosias', 'vectorizador', 'letreros', 'rompecabezas'] },
   { id: 'venta_archivos_cnc', info: '578 · venta de archivos', tipo: 'diseno', herramientas: [] },
-  { id: 'laseresp', info: '1.6 mil · láser (España)', tipo: 'diseno_sin_precio', herramientas: ['cajas', 'vectorizador', 'celosias', 'rompecabezas'] },
-  { id: 'cnces', info: '833 · router CNC (España)', tipo: 'tecnico', herramientas: ['calculadora', 'foro', 'blog'] },
+  { id: 'laseresp', info: '1.6 mil · láser (España)', tipo: 'diseno_sin_precio', herramientas: ['costillasImg', 'cajas', 'vectorizador', 'celosias', 'rompecabezas'] },
+  { id: 'cnces', info: '833 · router CNC (España)', tipo: 'tecnico', herramientas: ['muebles', 'calculadora', 'costillasImg', 'foro', 'blog'] },
   { id: 'stlspanish', info: '1.4 mil · impresión 3D', tipo: 'herramienta3d', herramientas: ['imagen3d', 'litofania', 'letras3d', 'cortadores', 'modelos3d'] },
   { id: 'impresoras3desp', info: '1.3 mil · impresión 3D (España)', tipo: 'herramienta3d', herramientas: ['litofania', 'modelos3d', 'imagen3d', 'cortadores', 'letras3d'] },
-  { id: 'aprendezbrush', info: '16 mil · escultura 3D ZBrush', tipo: 'educativo', herramientas: ['imagen3d', 'litofania'] },
+  { id: 'aprendezbrush', info: '16 mil · escultura 3D ZBrush', tipo: 'educativo', herramientas: ['muebles', 'imagen3d', 'litofania'] },
 ];
 
 // Cada liga lleva de qué grupo viene (Panel › Estrategia la cuenta por utm_content).
@@ -98,6 +100,8 @@ for (const g of GRUPOS) {
       texto = '🎁 Herramienta gratis: ' + h.nombre + NL + NL + h.que + NL + NL + 'Sin instalar nada y sin pagar: ' + h.url + pie;
     } else if (g.tipo === 'tecnico') {
       texto = '🔧 ' + h.nombre + NL + NL + h.que + NL + NL + (h.pago ? '' : 'Gratis: ') + h.url + (h.pregunta ? NL + NL + h.pregunta : '') + pie;
+    } else if (g.tipo === 'educativo' && h0.k === 'muebles') {
+      texto = '🗿 ¿Esculpiste algo en ZBrush? Exporta el STL y conviértelo en una pieza real de tablas para router CNC (estilo muebles paramétricos): ' + h.que + NL + NL + 'Gratis: ' + h.url + pie;
     } else if (g.tipo === 'educativo') {
       texto = '🗿 Para practicar o sacar una base rápida: ' + h.nombre + NL + NL + h.que + ' Sirve como punto de partida para luego refinar la malla en ZBrush.' + NL + NL + (h.pago ? 'Aquí: ' : 'Gratis: ') + h.url + pie;
     } else {
