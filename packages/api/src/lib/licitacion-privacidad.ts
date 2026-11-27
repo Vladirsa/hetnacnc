@@ -287,7 +287,8 @@ export function resumenRedes(s: any): string {
   const t = (s?.trabajo || {}) as Trabajo
   const p = privacidadDe(s)
   const quien = p.nombre === "empresa" && p.empresa === "publico" && s?.contacto?.empresa ? String(s.contacto.empresa) : "Un cliente"
-  const que = [t.servicio, t.material && `en ${t.material}`].filter(Boolean).join(" ")
+  // Sin servicio: "un trabajo en MDF" (antes salía "para en MDF")
+  const que = t.servicio ? [t.servicio, t.material && `en ${t.material}`].filter(Boolean).join(" ") : t.material ? `un trabajo en ${t.material}` : ""
   const lote = t.frecuencia && !/una vez|única|unica/i.test(t.frecuencia) ? "Producción recurrente." : t.cantidad ? `Cantidad: ${t.cantidad}.` : ""
   const donde = p.ubicacion === "confidencial" ? "" : p.ubicacion === "estado" ? t.estado_mx || "" : [t.ciudad, t.estado_mx].filter(Boolean).join(", ")
   return [

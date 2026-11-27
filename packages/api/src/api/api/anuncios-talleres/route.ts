@@ -8,7 +8,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SOLICITUD } from "../../../lib/licitacion"
-import { T_POST } from "../../../lib/social-hub"
+import { T_POST, textoBase } from "../../../lib/social-hub"
+import { resumenRedes } from "../../../lib/licitacion-privacidad"
 
 const json = (v: any) => (typeof v === "string" ? (() => { try { return JSON.parse(v) } catch { return null } })() : v)
 
@@ -22,13 +23,18 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .where("p.created_at", ">=", knex.raw(`now() - (? || ' days')::interval`, [String(dias)]))
     .orderBy("p.created_at", "desc")
     .limit(50)
-    .select("p.id", "p.titulo", "p.texto_base", "p.textos", "p.medios", "p.url_destino", "p.created_at", "s.cierra_en")
+    .select("p.id", "p.titulo", "p.texto_base", "p.medios", "p.url_destino", "p.created_at", "s.cierra_en", "s.trabajo", "s.privacidad", "s.contacto")
     .catch(() => [])) as any[]
 
   const anuncios = filas.map((p) => {
-    const textos = json(p.textos) || {}
-    const base = String(textos.grupos_facebook || textos.facebook || p.texto_base || "")
-    const texto = base.replace(/\{\{liga\}\}/g, p.url_destino || "")
+    // El texto se arma al momento con la plantilla vigente (título que llama
+    // a los talleres del estado), también para anuncios creados antes.
+    const s = { trabajo: json(p.trabajo) || {}, privacidad: json(p.privacidad), contacto: json(p.contacto) }
+    const resumen = resumenRedes(s)
+    // Mismo lugar y mismos datos que ya permite mostrar el resumen (respeta la privacidad)
+    const lugar = (resumen.match(/Ubicación: ([^.]+)\./) || [])[1] || ""
+    const titulo = s.trabajo.servicio ? [s.trabajo.servicio, s.trabajo.material].filter(Boolean).join(" - ") : s.trabajo.material ? `Trabajo - ${s.trabajo.material}` : p.titulo
+    const texto = textoBase("licitacion", { titulo, lugar, resumen }).replace(/\{\{liga\}\}/g, p.url_destino || "")
     const imagen = (json(p.medios) || []).find((m: any) => m?.url && m.tipo !== "video")?.url || null
     return {
       id: p.id,

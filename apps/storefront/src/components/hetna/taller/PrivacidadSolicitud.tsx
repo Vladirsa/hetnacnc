@@ -53,7 +53,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
 
   const privada = dirigida || modalidad === "privada"
   const resumen = useMemo(() => {
-    const que = [servicio, material && `en ${material}`].filter(Boolean).join(" ")
+    const que = servicio ? [servicio, material && `en ${material}`].filter(Boolean).join(" ") : material ? `un trabajo en ${material}` : ""
     const donde = p.ubicacion === "confidencial" ? "" : estado || ""
     return `Un cliente busca talleres CNC${que ? ` para ${que.toLowerCase()}` : ""}.${donde ? ` Ubicación: ${donde}.` : ""} Proyecto disponible para cotización en HETNA CNC.`
   }, [servicio, material, estado, p.ubicacion])

@@ -294,7 +294,8 @@ export function textoBase(origen: Origen, d: { titulo: string; resumen?: string;
   if (origen === "licitacion") {
     // Título que llama al taller de la zona: "¿Tienes CNC en Querétaro? Un cliente busca quién le cotice…"
     const estado = (d.lugar || "").split(",").map((x) => x.trim()).filter(Boolean).pop()
-    const que = d.titulo && !/^Trabajo de fabricación/i.test(d.titulo) ? d.titulo.replace(/ - /g, " en ").toLowerCase() : "un trabajo de fabricación"
+    const t = d.titulo && !/^Trabajo de fabricación/i.test(d.titulo) ? d.titulo.replace(/ - /g, " en ").toLowerCase() : "un trabajo de fabricación"
+    const que = /^(un |una |trabajo )/.test(t) ? (t.startsWith("trabajo ") ? `un ${t}` : t) : t
     return `📢 ¿Tienes CNC${estado ? ` en ${estado}` : ""}? Un cliente busca quién le cotice ${que}${l}${r}\n\n👉 Regístrate gratis y manda tu cotización hoy, sin comisión: ${LIGA_MARCA}`
   }
   if (origen === "taller") return `🏭 Nuevo taller en HETNA CNC: ${d.titulo}${l}${r}\n\nConoce sus trabajos y pídele cotización: ${LIGA_MARCA}`
