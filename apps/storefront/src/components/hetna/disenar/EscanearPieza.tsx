@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { EstudioModeloIA, type InfoModeloIa } from "@/components/hetna/escaneos/EstudioModeloIA"
 import { PromoImagen3D } from "@/components/hetna/escaneos/PromoImagen3D"
 import { saldoBreve } from "@/lib/creditos/acciones"
@@ -34,7 +35,7 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
   if (cliente) {
     return (
       <>
-        <h1 className="sr-only">Imagen a 3D con IA</h1>
+        <h1 className="sr-only"><TS>Imagen a 3D con IA</TS></h1>
         <EstudioModeloIA modeloIa={modeloIa} saldo={saldo} recientes={recientes} />
         <PromoImagen3D />
       </>
@@ -47,12 +48,12 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
       <div className="mx-auto grid w-full max-w-[1100px] items-center gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div>
           <span className="inline-block rounded-full bg-[#F07A1A]/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-[#F59A4A]">
-            Imagen a 3D con IA · 1 gratis al mes
+            <TS>Imagen a 3D con IA · 1 gratis al mes</TS>
           </span>
-          <h1 className="m-0 mt-3 text-[30px] font-bold leading-tight lg:text-[42px]">De una foto a un modelo 3D</h1>
+          <h1 className="m-0 mt-3 text-[30px] font-bold leading-tight lg:text-[42px]"><TS>De una foto a un modelo 3D</TS></h1>
           <p className="m-0 mt-3 max-w-[620px] text-[16px] leading-relaxed text-white/65">
-            Sube la foto de una pieza, figura o producto y la IA crea el modelo con textura en minutos. Descárgalo en GLB (con
-            color) o STL (para imprimir o maquinar). Todo queda guardado en tu cuenta.
+            <TS>Sube la foto de una pieza, figura o producto y la IA crea el modelo con textura en minutos. Descárgalo en GLB (con
+            color) o STL (para imprimir o maquinar). Todo queda guardado en tu cuenta.</TS>
           </p>
           <ol className="m-0 mt-7 grid list-none gap-3 p-0 sm:grid-cols-3">
             {PASOS.map((p, i) => (
@@ -67,22 +68,22 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
           </ol>
         </div>
         <div className="rounded-[16px] border border-white/10 bg-[#12161D] p-5">
-          <p className="m-0 text-[18px] font-bold">Entra para crear tu modelo</p>
+          <p className="m-0 text-[18px] font-bold"><TS>Entra para crear tu modelo</TS></p>
           <p className="m-0 mt-1.5 text-[14px] leading-relaxed text-white/60">
-            Tus modelos se guardan en tu cuenta. Si no tienes, la creas en un minuto.
+            <TS>Tus modelos se guardan en tu cuenta. Si no tienes, la creas en un minuto.</TS>
           </p>
           <div className="mt-4 flex flex-col gap-2">
             <a
               href={`/${locale}/login?volver=${volver}`}
               className="inline-flex justify-center rounded-[10px] bg-gradient-to-r from-[#F07A1A] to-[#E0480F] px-5 py-3 text-[15px] font-semibold text-white hover:brightness-110"
             >
-              Iniciar sesión
+              <TS>Iniciar sesión</TS>
             </a>
             <a
               href={`/${locale}/register?volver=${volver}`}
               className="inline-flex justify-center rounded-[10px] border border-white/20 px-5 py-3 text-[15px] font-semibold hover:bg-white hover:text-[#0D1015]"
             >
-              Crear cuenta gratis
+              <TS>Crear cuenta gratis</TS>
             </a>
           </div>
         </div>
