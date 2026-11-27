@@ -288,7 +288,7 @@ const corta = (s: string, n: number) => (s.length <= n ? s : s.slice(0, n - 1).r
 const LIGA_MARCA = "{{liga}}"
 
 /** Texto base según de dónde viene la publicación. Siempre con {{liga}}. */
-export function textoBase(origen: Origen, d: { titulo: string; resumen?: string; lugar?: string; precio?: string }) {
+export function textoBase(origen: Origen, d: { titulo: string; resumen?: string; lugar?: string; precio?: string; tipo?: string }) {
   const r = d.resumen ? `\n\n${d.resumen}` : ""
   const l = d.lugar ? `\n📍 ${d.lugar}` : ""
   if (origen === "licitacion") {
@@ -296,6 +296,9 @@ export function textoBase(origen: Origen, d: { titulo: string; resumen?: string;
     const estado = (d.lugar || "").split(",").map((x) => x.trim()).filter(Boolean).pop()
     const t = d.titulo && !/^Trabajo de fabricación/i.test(d.titulo) ? d.titulo.replace(/ - /g, " en ").toLowerCase() : "un trabajo de fabricación"
     const que = /^(un |una |trabajo )/.test(t) ? (t.startsWith("trabajo ") ? `un ${t}` : t) : t
+    // Suministro (herramienta, insertos, material): se busca proveedor, no taller
+    if (d.tipo === "suministro")
+      return `📢 ¿Vendes herramienta o material CNC${estado ? ` en ${estado}` : ""}? Un cliente busca proveedor de ${que.replace(/^un trabajo en /, "")}${l}${r}\n\n👉 Regístrate gratis como proveedor y manda tu cotización hoy, sin comisión: ${LIGA_MARCA}`
     return `📢 ¿Tienes CNC${estado ? ` en ${estado}` : ""}? Un cliente busca quién le cotice ${que}${l}${r}\n\n👉 Regístrate gratis y manda tu cotización hoy, sin comisión: ${LIGA_MARCA}`
   }
   if (origen === "taller") return `🏭 Nuevo taller en HETNA CNC: ${d.titulo}${l}${r}\n\nConoce sus trabajos y pídele cotización: ${LIGA_MARCA}`

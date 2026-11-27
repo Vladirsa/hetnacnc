@@ -17,8 +17,9 @@
 //   persona (aviso por Telegram) y deja de contestar en ese chat.
 //
 // .env: SOLICITUD_RESENA_GOOGLE (liga para opinar en Google), SOLICITUD_RESENA_FACEBOOK,
-// SOLICITUD_CUPON (código) y SOLICITUD_CUPON_TEXTO («10 % en fresas y brocas
-// seleccionadas»). Sin cupón, el cierre no menciona descuento.
+// SOLICITUD_CUPON (código), SOLICITUD_CUPON_TEXTO («10 % en fresas y brocas
+// seleccionadas») y SOLICITUD_SEGUIR («Facebook: liga|Telegram: liga»). Sin
+// cupón, el cierre no menciona descuento.
 import Anthropic from "@anthropic-ai/sdk"
 
 import { T_SOLICITUD, folioTexto } from "./licitacion"
@@ -130,12 +131,14 @@ export function textoCierre(s: { folio: number | string; contacto?: any }) {
   const cupon = (process.env.SOLICITUD_CUPON || "").trim()
   const cuponTexto = (process.env.SOLICITUD_CUPON_TEXTO || "productos seleccionados de la tienda").trim()
   const opinar = [google && `Google: ${google}`, facebook && `Facebook: ${facebook}`].filter(Boolean)
+  const seguir = String(process.env.SOLICITUD_SEGUIR || "").split("|").map((x) => x.trim()).filter(Boolean)
   return [
     `Muchas gracias${nombre ? `, ${nombre}` : ""}. Con esta información actualizaremos los datos de su solicitud *${folioTexto(s.folio)}* para publicarla y encontrarle el taller indicado con los mejores precios. En cuanto recibamos propuestas se las haremos saber por este medio.`,
     ...(cupon ? ["", `Como agradecimiento, tiene el código *${cupon}* con descuento en ${cuponTexto} de hetnacnc.com.`] : []),
     ...(opinar.length
       ? ["", "Si la atención le fue útil, nos ayudaría mucho que compartiera su opinión, con toda sinceridad:", ...opinar]
       : []),
+    ...(seguir.length ? ["", "Síganos para enterarse de ofertas, planos gratis y novedades:", ...seguir] : []),
   ].join("\n")
 }
 

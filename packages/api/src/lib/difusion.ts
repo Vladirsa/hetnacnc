@@ -269,7 +269,8 @@ export async function publicarSolicitudEnRedes(knex: any, s: any, logger: any, t
       resumen: resumenRedes(s),
       lugar: [t.ciudad, t.estado_mx].filter(Boolean).join(", "),
       url: ligaTrabajo(s.folio),
-    },
+      tipo: s.tipo,
+    } as any,
     logger
   )
 }
