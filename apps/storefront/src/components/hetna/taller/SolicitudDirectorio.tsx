@@ -4,6 +4,7 @@
 // directorio. La solicitud se manda ABIERTA a la red (sin taller elegido), así el
 // cliente recibe propuestas de talleres de HETNA aunque la empresa no responda; al
 // quedar registrada se invita a la empresa a reclamar su perfil para cotizarla.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import FormSolicitudTaller from "@/components/hetna/taller/FormSolicitudTaller"
@@ -25,7 +26,7 @@ export function QuitarPerfil({ slug }: { slug: string }) {
   if (estado === "ok")
     return (
       <p className="text-sm text-[#1E7B3A]">
-        Listo. Mandamos un correo a la dirección de contacto de la empresa para que confirme el retiro.
+        <T>Listo. Mandamos un correo a la dirección de contacto de la empresa para que confirme el retiro.</T>
       </p>
     )
   return (
