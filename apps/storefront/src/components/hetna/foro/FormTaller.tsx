@@ -3,6 +3,7 @@
 // Perfil de taller (tipo LinkedIn) en "Editar perfil": máquinas, materiales con
 // espesores y portafolio de trabajos. Pensado primero para celular Android:
 // botones grandes, una sección a la vez y un "Guardar" en cada una.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -62,7 +63,7 @@ function Guardar({ onGuardar, pendiente, error, guardado }: { onGuardar: () => v
       <button type="button" onClick={onGuardar} disabled={pendiente} className={`${botonGrande} bg-[#C2560A] hover:bg-[#A84A08] text-white`}>
         {pendiente ? "Guardando…" : "Guardar"}
       </button>
-      {guardado && !error && <span className="text-[14px] text-[#16794F]">Guardado ✓</span>}
+      {guardado && !error && <span className="text-[14px] text-[#16794F]"><T>Guardado ✓</T></span>}
       {error && (
         <span role="alert" className="text-[14px] text-[#A42A2A]">
           {MENSAJES[error] || error}
@@ -108,15 +109,15 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
   return (
     <section className={caja}>
       <div>
-        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Máquinas</h2>
-        <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">Los clientes buscan por tipo de máquina y tamaño de mesa. Agrega cada una.</p>
+        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]"><T>Máquinas</T></h2>
+        <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]"><T>Los clientes buscan por tipo de máquina y tamaño de mesa. Agrega cada una.</T></p>
       </div>
 
       {lista.map((e, i) =>
         editando === i ? (
           <div key={i} className="flex flex-col gap-3 rounded-[12px] border border-[#C2560A] bg-[#FFFBF7] p-4">
             <label className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Tipo de máquina</span>
+              <span className={etiqueta}><T>Tipo de máquina</T></span>
               <select value={e.tipo} onChange={(ev) => pon(i, { tipo: ev.target.value as TipoMaquina })} className={campo}>
                 {(Object.keys(TIPOS_MAQUINA) as TipoMaquina[]).map((t) => (
                   <option key={t} value={t}>
@@ -126,11 +127,11 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
               </select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Marca y modelo (opcional)</span>
+              <span className={etiqueta}><T>Marca y modelo (opcional)</T></span>
               <input value={e.modelo} onChange={(ev) => pon(i, { modelo: ev.target.value })} maxLength={80} placeholder="Ej: Router 1325 con spindle 3 kW" className={campo} />
             </label>
             <div className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Área de trabajo en mm (opcional)</span>
+              <span className={etiqueta}><T>Área de trabajo en mm (opcional)</T></span>
               <div className="grid grid-cols-3 gap-2">
                 {(["largo", "ancho", "alto"] as const).map((k) => (
                   <input
@@ -146,7 +147,7 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Potencia (opcional)</span>
+              <span className={etiqueta}><T>Potencia (opcional)</T></span>
               <div className="flex gap-2">
                 <input inputMode="decimal" value={txt(e.potencia)} onChange={(ev) => pon(i, { potencia: num(ev.target.value) })} placeholder="Ej: 100" className={campo} />
                 {(["W", "A"] as const).map((u) => (
@@ -161,10 +162,10 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
                   </button>
                 ))}
               </div>
-              <span className="text-[12px] text-[#6B6A63]">W para láser y spindle; A (amperes) para plasma.</span>
+              <span className="text-[12px] text-[#6B6A63]"><T>W para láser y spindle; A (amperes) para plasma.</T></span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Foto de la máquina (opcional)</span>
+              <span className={etiqueta}><T>Foto de la máquina (opcional)</T></span>
               <SubirFotos
                 fotos={e.foto ? [{ id: e.foto, url: urlFoto(e.foto) }] : []}
                 onCambio={(f) => pon(i, { foto: f.slice(-1)[0]?.id ?? null })}
@@ -174,14 +175,14 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <button type="button" onClick={() => setEditando(null)} className={`${botonGrande} border border-[#142033] text-[#142033] bg-white`}>
-                Listo
+                <T>Listo</T>
               </button>
               <button
                 type="button"
                 onClick={() => { g.cambio(); setLista((l) => l.filter((_, j) => j !== i)); setEditando(null) }}
                 className={`${botonGrande} text-[#A42A2A] bg-white border border-[#E0DCD2]`}
               >
-                Quitar máquina
+                <T>Quitar máquina</T>
               </button>
             </div>
           </div>
@@ -204,7 +205,7 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
                 {[e.modelo, areaTrabajo(e), e.potencia ? `${e.potencia} ${e.unidad}` : ""].filter(Boolean).join(" · ") || "Toca para agregar datos"}
               </span>
             </span>
-            <span className="text-[13px] font-semibold text-[#B34D07]">Editar</span>
+            <span className="text-[13px] font-semibold text-[#B34D07]"><T>Editar</T></span>
           </button>
         )
       )}
@@ -215,7 +216,7 @@ function Maquinas({ inicial }: { inicial: Equipo[] }) {
           onClick={() => { g.cambio(); setLista((l) => [...l, { ...EQUIPO_NUEVO }]); setEditando(lista.length) }}
           className={`${botonGrande} border-2 border-dashed border-[#D9D4C8] text-[#44433D] bg-white hover:border-[#C2560A]`}
         >
-          + Agregar máquina
+          <T>+ Agregar máquina</T>
         </button>
       )}
       <Guardar onGuardar={() => { setEditando(null); g.guardar({ equipos: lista }) }} pendiente={g.pendiente} error={g.error} guardado={g.guardado} />
@@ -242,9 +243,9 @@ function Materiales({ inicial }: { inicial: MaterialEspesor[] }) {
   return (
     <section className={caja}>
       <div>
-        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Materiales y espesores</h2>
+        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]"><T>Materiales y espesores</T></h2>
         <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">
-          Toca los materiales que trabajas y pon el espesor mínimo y máximo que cortas. En metales eliges el calibre de la lámina o la placa en pulgadas.
+          <T>Toca los materiales que trabajas y pon el espesor mínimo y máximo que cortas. En metales eliges el calibre de la lámina o la placa en pulgadas.</T>
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -307,9 +308,9 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
   return (
     <section className={caja}>
       <div>
-        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Portafolio de trabajos</h2>
+        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]"><T>Portafolio de trabajos</T></h2>
         <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">
-          Tus mejores piezas, de 1 a {MAX_FOTOS_TRABAJO} fotos cada una (hasta {MAX_TRABAJOS} trabajos). Es lo primero que ve un cliente.
+          <T>Tus mejores piezas, de 1 a</T> {MAX_FOTOS_TRABAJO} <T>fotos cada una (hasta</T> {MAX_TRABAJOS} <T>trabajos). Es lo primero que ve un cliente.</T>
         </p>
       </div>
 
@@ -317,7 +318,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
         editando === t.id ? (
           <div key={t.id} className="flex flex-col gap-3 rounded-[12px] border border-[#C2560A] bg-[#FFFBF7] p-4">
             <div className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Fotos (1 a {MAX_FOTOS_TRABAJO})</span>
+              <span className={etiqueta}><T>Fotos (1 a</T> {MAX_FOTOS_TRABAJO})</span>
               <SubirFotos
                 fotos={t.fotos.map((id) => ({ id, url: urlFoto(id) }))}
                 onCambio={(f) => pon(t.id, { fotos: f.map((x) => x.id).slice(0, MAX_FOTOS_TRABAJO) })}
@@ -326,12 +327,12 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
               />
             </div>
             <label className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Título</span>
+              <span className={etiqueta}><T>Título</T></span>
               <input value={t.titulo} onChange={(e) => pon(t.id, { titulo: e.target.value })} maxLength={100} placeholder="Ej: Letrero de acrílico con luz LED" className={campo} />
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1.5">
-                <span className={etiqueta}>Material</span>
+                <span className={etiqueta}><T>Material</T></span>
                 <select value={t.material} onChange={(e) => pon(t.id, { material: e.target.value as MaterialTaller | "" })} className={campo}>
                   <option value="">Elige…</option>
                   {(Object.keys(MATERIALES_TALLER) as MaterialTaller[]).map((m) => (
@@ -351,7 +352,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
               </label>
             </div>
             <label className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Máquina</span>
+              <span className={etiqueta}><T>Máquina</T></span>
               <select value={t.maquina} onChange={(e) => pon(t.id, { maquina: e.target.value as TipoMaquina | "" })} className={campo}>
                 <option value="">Elige…</option>
                 {(Object.keys(TIPOS_MAQUINA) as TipoMaquina[]).map((m) => (
@@ -362,7 +363,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
               </select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className={etiqueta}>Cuéntalo en pocas palabras (opcional)</span>
+              <span className={etiqueta}><T>Cuéntalo en pocas palabras (opcional)</T></span>
               <textarea
                 value={t.detalle}
                 onChange={(e) => pon(t.id, { detalle: e.target.value })}
@@ -374,14 +375,14 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
             </label>
             <div className="flex flex-col sm:flex-row gap-2">
               <button type="button" onClick={() => setEditando(null)} className={`${botonGrande} border border-[#142033] text-[#142033] bg-white`}>
-                Listo
+                <T>Listo</T>
               </button>
               <button
                 type="button"
                 onClick={() => { g.cambio(); setLista((l) => l.filter((x) => x.id !== t.id)); setEditando(null) }}
                 className={`${botonGrande} text-[#A42A2A] bg-white border border-[#E0DCD2]`}
               >
-                Quitar trabajo
+                <T>Quitar trabajo</T>
               </button>
             </div>
           </div>
@@ -406,7 +407,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
                   .join(" · ")}
               </span>
             </span>
-            <span className="text-[13px] font-semibold text-[#B34D07]">Editar</span>
+            <span className="text-[13px] font-semibold text-[#B34D07]"><T>Editar</T></span>
           </button>
         )
       )}
@@ -422,7 +423,7 @@ function Portafolio({ inicial }: { inicial: Trabajo[] }) {
           }}
           className={`${botonGrande} border-2 border-dashed border-[#D9D4C8] text-[#44433D] bg-white hover:border-[#C2560A]`}
         >
-          + Agregar trabajo
+          <T>+ Agregar trabajo</T>
         </button>
       )}
       <Guardar onGuardar={() => { setEditando(null); g.guardar({ portafolio: lista }) }} pendiente={g.pendiente} error={g.error} guardado={g.guardado} />
