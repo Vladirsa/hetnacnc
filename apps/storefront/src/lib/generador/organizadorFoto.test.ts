@@ -33,6 +33,8 @@ test("encuentra la hoja, la endereza y mide la herramienta", () => {
   for (const [x, y] of c[0]) (x0 = Math.min(x0, x)), (x1 = Math.max(x1, x)), (y0 = Math.min(y0, y)), (y1 = Math.max(y1, y))
   assert.ok(Math.abs(x1 - x0 - 120) < 3, `ancho ${x1 - x0}`)
   assert.ok(Math.abs(y1 - y0 - 30) < 3, `alto ${y1 - y0}`)
+  // sin espejo: la herramienta está a 120–150 mm del borde de arriba (Y hacia arriba: 129.4–159.4)
+  assert.ok(Math.abs(y0 - (279.4 - 150)) < 3, `abajo en ${y0}`)
   const o = hacerOrganizador(c, OPCIONES_ORGANIZADOR)
   assert.deepEqual(o.errores, [])
   assert.equal(o.piezas, 1)

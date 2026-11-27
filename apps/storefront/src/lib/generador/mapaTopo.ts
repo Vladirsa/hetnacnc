@@ -7,9 +7,9 @@
 // datos SRTM y otros, libres): el navegador baja las imágenes y las decodifica
 // (altura = R·256 + G + B/256 − 32768). Este archivo es la parte pura
 // (alturas → piezas) y la cuenta de mosaicos; la descarga está en la pantalla.
-import { recortarARect } from "@/lib/generador/contornos"
+import { recortarARect, rectPts } from "@/lib/generador/contornos"
 import { acomodarEnHojas } from "@/lib/generador/geo2d"
-import { aplanar } from "@/lib/generador/llaveros"
+import { mascaraAMM } from "@/lib/generador/llaveros"
 import { curvasDeMascara } from "@/lib/generador/trazado"
 import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
 
@@ -86,19 +86,17 @@ export function piezasMapa(alturas: Float32Array, w: number, h: number, o: Opcio
   const n = Math.max(2, Math.min(30, Math.round(o.capas)))
   const esc = o.ancho / Math.max(w, h) // mm por pixel
   const niveles = Array.from({ length: n }, (_, i) => min + ((i + 1) * (max - min)) / (n + 1))
+  const W = w * esc, H = h * esc
   const contornosDe = (nivel: number): P[][] => {
     const m = new Uint8Array(w * h)
     for (let i = 0; i < m.length; i++) m[i] = (o.invertir ? e[i] <= nivel : e[i] >= nivel) ? 1 : 0
-    return curvasDeMascara(m, w, h, { tolerancia: 0.6, manchas: Math.max(6, (w * h) / 3000), suave: true })
-      .map((c) => aplanar(c, 0.5).map(([x, y]) => [x * esc, (h + y) * esc] as P)) // el trazado ya da Y hacia arriba (negativa)
-      .filter((p) => p.length >= 3)
+    const c = mascaraAMM(curvasDeMascara(m, w, h, { tolerancia: 0.6, manchas: Math.max(6, (w * h) / 3000), suave: true }), h, esc)
+    // la curva suavizada puede salirse un poco donde la capa toca la orilla: se recorta a la base
+    return recortarARect(c, 0, 0, W, H)
   }
-  const W = w * esc, H = h * esc
-  // el contorno suavizado puede salirse un poco donde la capa toca la orilla: se recorta a la base
-  const enLaBase = (c: P[][]) => recortarARect(c, 0, 0, W, H)
   const grupos: Trazo[][] = []
   // la base: el rectángulo completo, con la silueta de la capa 1 grabada
-  const capas = [[[[0, 0], [W, 0], [W, H], [0, H]] as P[]], ...niveles.map((n) => enLaBase(contornosDe(n)))]
+  const capas = [[rectPts(0, 0, W, H)], ...niveles.map(contornosDe)]
   const avisos: string[] = []
   capas.forEach((c, i) => {
     if (!c.length) return

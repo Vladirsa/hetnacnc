@@ -9,7 +9,7 @@
 // Todo es puro (recibe píxeles) para probarlo sin navegador.
 import { LIMPIEZA_MM, areaPts as areaSigno, extruirEn } from "@/lib/generador/contornos"
 import { desplazar } from "@/lib/generador/cortadores"
-import { aplanar } from "@/lib/generador/llaveros"
+import { mascaraAMM } from "@/lib/generador/llaveros"
 import { contornos, curvasDeMascara, umbralAutomatico } from "@/lib/generador/trazado"
 import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
@@ -99,9 +99,7 @@ export function contornosHerramientas(gris: Uint8Array, w: number, h: number, px
   const u = umbralAutomatico(Uint8Array.from(dentro))
   const m = new Uint8Array(w * h)
   for (let y = orilla; y < h - orilla; y++) for (let x = orilla; x < w - orilla; x++) m[y * w + x] = gris[y * w + x] < u ? 1 : 0
-  return curvasDeMascara(m, w, h, { tolerancia: 0.8, manchas: Math.max(30, 25 * pxmm * pxmm), suave: true })
-    .map((c) => aplanar(c, 0.5).map(([x, y]) => [x / pxmm, (h + y) / pxmm] as P)) // el trazado ya da Y hacia arriba (negativa)
-    .filter((p) => p.length >= 3)
+  return mascaraAMM(curvasDeMascara(m, w, h, { tolerancia: 0.8, manchas: Math.max(30, 25 * pxmm * pxmm), suave: true }), h, 1 / pxmm)
 }
 
 // ── 4. el inserto ──────────────────────────────────────────────────────────

@@ -60,6 +60,7 @@ export function recortarARect(c: P[][], x0: number, y0: number, x1: number, y1: 
   cl.AddPaths(s, ClipperLib.PolyType.ptSubject, true)
   cl.AddPaths([aC(rectPts(x0, y0, x1, y1))], ClipperLib.PolyType.ptClip, true)
   const sol: { X: number; Y: number }[][] = []
+  // par-impar en el sujeto: los huecos de curvasDeMascara cuentan como huecos sin importar su sentido
   cl.Execute(ClipperLib.ClipType.ctIntersection, sol, ClipperLib.PolyFillType.pftEvenOdd, ClipperLib.PolyFillType.pftNonZero)
   return sol.filter((p) => p.length >= 3).map((p) => p.map((q) => [q.X / ESC, q.Y / ESC] as P))
 }

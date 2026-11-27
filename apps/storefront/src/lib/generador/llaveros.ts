@@ -83,6 +83,11 @@ export function aplanar(c: Curva, paso = 0.3): P[] {
   return pts
 }
 
+/** Curvas de una máscara de w×h px (curvasDeMascara) a contornos en mm con Y hacia arriba:
+ *  `aplanar` voltea la Y (queda en [−h, 0]) y aquí se sube h, así la fila 0 de la imagen queda en Y = h·k. */
+export const mascaraAMM = (curvas: Curva[], h: number, k: number, paso = 0.5): P[][] =>
+  curvas.map((c) => aplanar(c, paso).map(([x, y]) => [x * k, (h + y) * k] as P)).filter((p) => p.length >= 3)
+
 const circulo = (cx: number, cy: number, r: number, m = 48): P[] =>
   Array.from({ length: m }, (_, j) => [cx + r * Math.cos((2 * Math.PI * j) / m), cy + r * Math.sin((2 * Math.PI * j) / m)] as P)
 
