@@ -44,13 +44,13 @@ export default function TerminosVendedores() {
 
       <h2><TS>1. Quiénes somos y qué acuerdan estos términos</TS></h2>
       <p>
-        <TS>HETNA CNC (</TS>{EMPRESA.sitio}<TS>) es una plataforma operada por</TS> {responsableLegal("es")}<TS>, con domicilio en</TS>{" "}
-        {EMPRESA.domicilioCompleto} <TS>(en adelante, «HETNA»). En HETNA, talleres, fabricantes y comercios (cada uno, el
+        <TS>HETNA CNC (</TS><TS>{EMPRESA.sitio}</TS><TS>) es una plataforma operada por</TS> {responsableLegal("es")}<TS>, con domicilio en</TS><TS>{" "}</TS>
+        <TS>{EMPRESA.domicilioCompleto}</TS> <TS>(en adelante, «HETNA»). En HETNA, talleres, fabricantes y comercios (cada uno, el
         «Vendedor») publican y venden productos, diseños y servicios de CNC a clientes.</TS>
       </p>
       <p>
-        <TS>Estos términos son el contrato entre HETNA y el Vendedor. Se suman a los</TS>{" "}
-        <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> <TS>generales y al</TS>{" "}
+        <TS>Estos términos son el contrato entre HETNA y el Vendedor. Se suman a los</TS><TS>{" "}</TS>
+        <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> <TS>generales y al</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/aviso-de-privacidad"><TS>Aviso de privacidad</TS></LocalizedClientLink><TS>. Si algo se contradice, para
         el Vendedor mandan estos términos.</TS>
       </p>
