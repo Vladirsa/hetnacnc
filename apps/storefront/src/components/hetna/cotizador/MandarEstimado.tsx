@@ -4,6 +4,7 @@
 // precio y todavía no pide propuestas puede guardarlo en su correo. Con su
 // permiso entra al Reactivador de estimados (seguimiento a los 2 y 7 días) y
 // cuenta como Lead para los anuncios.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { nuevoEventoEstimado, trackEstimadoInstantaneo } from "@/lib/analytics/events"
@@ -15,11 +16,11 @@ export function MandarEstimado(p: { servicio: string; material: string; largoMm:
   const [estado, setEstado] = useState<"" | "enviando" | "listo" | "error">("")
   const [mensaje, setMensaje] = useState("")
 
-  if (estado === "listo") return <p className="mt-3 rounded-xl bg-[#EEF7F0] px-4 py-2 text-sm text-[#17633A]">✓ Listo, te mandamos el estimado a tu correo.</p>
+  if (estado === "listo") return <p className="mt-3 rounded-xl bg-[#EEF7F0] px-4 py-2 text-sm text-[#17633A]"><T>✓ Listo, te mandamos el estimado a tu correo.</T></p>
   if (!abierto)
     return (
       <button type="button" onClick={() => setAbierto(true)} className="mt-3 text-sm font-semibold text-[#142033] underline decoration-dotted hover:text-[#C2560A]">
-        ✉️ Mándame este estimado por correo
+        <T>✉️ Mándame este estimado por correo</T>
       </button>
     )
 
@@ -55,15 +56,15 @@ export function MandarEstimado(p: { servicio: string; material: string; largoMm:
   return (
     <form onSubmit={enviar} className="mt-3 grid gap-2 rounded-xl border border-[#E7E4DC] bg-white p-3">
       <label className="flex flex-col gap-1 text-[13px] font-medium text-[#1B1B18]">
-        Tu correo
+        <T>Tu correo</T>
         <input name="email" type="email" required defaultValue={p.emailInicial} autoComplete="email" className="rounded-lg border border-[#D9D5CA] px-3 py-2 text-[15px]" />
       </label>
       <input name="sitio_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
       <label className="flex items-start gap-2 text-[12.5px] text-[#40403A]">
         <input type="checkbox" name="acepta" value="1" required className="mt-0.5 accent-[#C2560A]" />
-        <span>Mándame este estimado y un recordatorio en unos días para pedir propuestas. Puedo darme de baja cuando quiera.</span>
+        <span><T>Mándame este estimado y un recordatorio en unos días para pedir propuestas. Puedo darme de baja cuando quiera.</T></span>
       </label>
-      {estado === "error" && <p className="text-xs text-[#B3261E]">{mensaje}</p>}
+      {estado === "error" && <p className="text-xs text-[#B3261E]"><T>{mensaje}</T></p>}
       <button type="submit" disabled={estado === "enviando"} className="justify-self-start rounded-lg bg-[#142033] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
         {estado === "enviando" ? "Enviando…" : "Mandar a mi correo"}
       </button>
