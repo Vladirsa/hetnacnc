@@ -50,7 +50,7 @@ export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller
         </div>
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-2 font-bold text-[#142033]">
-            {t.nombre}
+            <TS>{t.nombre}</TS>
             {t.verificado && (
               <span className="rounded-full bg-[#E7F5EC] px-2 py-0.5 text-[10px] font-bold uppercase text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><TS>✓ Verificado</TS></span>
             )}
@@ -58,12 +58,12 @@ export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller
               <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-[10px] font-bold uppercase text-[#C2560A]"><TS>★ Taller fundador</TS></span>
             )}
           </p>
-          {donde && <p className="text-sm text-[#6B675C]">📍 {donde}</p>}
+          {donde && <p className="text-sm text-[#6B675C]">📍 <TS>{donde}</TS></p>}
         </div>
       </div>
       <ul className="mt-3 grid gap-1 text-sm text-[#40403A]">
         {datos.map((d) => (
-          <li key={d}>✓ {d}</li>
+          <li key={d}>✓ <TS>{d}</TS></li>
         ))}
       </ul>
       <LocalizedClientLink
