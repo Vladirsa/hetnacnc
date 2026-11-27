@@ -1,6 +1,6 @@
 // WhatsApp al cliente que pidió cotización (decidido por Vlado el 27 nov 2026):
-// en cuanto manda su solicitud se le confirma que HETNA le está buscando el
-// mejor taller, con la liga privada para ver y comparar propuestas.
+// en cuanto manda su solicitud se le confirma (formal, sin ligas) y se le pide
+// lo que falta; la plática sigue en lib/solicitud-conversacion.
 //
 // - Un solo mensaje por solicitud (columna wa_confirmada_en).
 // - Sólo al número que el cliente escribió en el formulario para que lo
@@ -9,8 +9,10 @@
 // - Las que entraron sin mensaje (antes de esto o con WhatsApp caído) las
 //   alcanza el job de seguimiento, de 8 a 21 h de CDMX, hasta 3 días después.
 // SOLICITUD_WHATSAPP=0 en el .env lo apaga.
-import { T_SOLICITUD, folioTexto, ligaPropuestas } from "./licitacion"
+import { T_SOLICITUD, folioTexto } from "./licitacion"
 import { T_WA, asegurarWhatsapp, enviarTexto, normalizarNumero, whatsappListo } from "./whatsapp"
+import { textoInicio } from "./solicitud-conversacion"
+import { asegurar as asegurarChat, guardarMsg } from "./whatsapp-bot"
 
 let columnaLista = false
 async function asegurarColumna(knex: any) {
@@ -29,24 +31,8 @@ export function primerNombre(nombre?: string | null) {
   return n ? n.charAt(0).toUpperCase() + n.slice(1).toLowerCase() : ""
 }
 
-export function textoConfirmacion(s: { folio: number | string; token: string; trabajo?: any; contacto?: any; tipo?: string }) {
-  const t = s.trabajo || {}
-  const que = [t.servicio && t.servicio !== "Otro" ? t.servicio : "", t.material ? `en ${t.material}` : ""].filter(Boolean).join(" ")
-  const nombre = primerNombre(s.contacto?.nombre)
-  const quien = s.tipo === "suministro" ? "proveedor" : "taller"
-  return [
-    `Hola${nombre ? ` ${nombre}` : ""} 👋, te saluda HETNA CNC.`,
-    "",
-    `Recibimos tu solicitud *${folioTexto(s.folio)}*${que ? ` (${que})` : ""}. Ya estamos buscando el mejor ${quien} para que te dé tu cotización.`,
-    "",
-    "En cuanto lleguen propuestas te avisamos. Aquí puedes ver tu solicitud y comparar precios:",
-    ligaPropuestas(s.token),
-    "",
-    "Si tienes el archivo, fotos o medidas, mándalos por aquí y se los pasamos a los talleres.",
-    "",
-    "_Si no quieres mensajes por WhatsApp, escribe BAJA._",
-  ].join("\n")
-}
+/** Primer mensaje: formal, sin ligas, con la primera pregunta (lib/solicitud-conversacion). */
+export const textoConfirmacion = textoInicio
 
 /**
  * Manda la confirmación una sola vez. true si salió. Nunca truena al que la llama.
@@ -65,7 +51,10 @@ export async function confirmarSolicitudWhatsapp(knex: any, s: any, logger?: any
     if (!apartada) return false
     try {
       if (!ya) await knex(T_WA).insert({ numero, quien: "cliente", avisos: true }).onConflict("numero").ignore()
-      await enviarTexto(numero, textoConfirmacion(s))
+      const texto = textoConfirmacion(s)
+      await enviarTexto(numero, texto)
+      // Queda en el chat: la conversación (lib/solicitud-conversacion) sigue desde aquí
+      await asegurarChat(knex).then(() => guardarMsg(knex, numero, "agente", texto)).catch(() => null)
       logger?.info?.(`[solicitud-whatsapp] ${folioTexto(s.folio)}: confirmación enviada`)
       return true
     } catch (e) {
