@@ -14,7 +14,7 @@ export const SellerScore = ({
       <div className="flex gap-2 items-center mb-4 text-secondary">
         <StarRating rate={rate} starSize={16} /> {rate.toFixed(1)}
       </div>
-      <p className="text-secondary">{reviewCount} <TS>reviews</TS></p>
+      <p className="text-secondary"><TS>{reviewCount}</TS> <TS>reviews</TS></p>
     </div>
   )
 }
