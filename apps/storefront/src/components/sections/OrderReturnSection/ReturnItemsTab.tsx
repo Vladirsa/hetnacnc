@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Card } from "@/components/atoms/Card/Card"
 import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import { convertToLocale } from "@/lib/helpers/money"
@@ -30,7 +31,7 @@ export const ReturnItemsTab = ({
     <div>
       <Card className="bg-secondary p-4">
         <p className="label-md">
-          Seller: <span className="font-semibold">{order.seller.name}</span>
+          <T>Seller:</T> <span className="font-semibold">{order.seller.name}</span>
         </p>
       </Card>
       <Card className="flex items-center justify-between p-4">
@@ -122,7 +123,7 @@ export const ReturnItemsTab = ({
                           value={reason.id}
                           className="cursor-default select-none relative pl-6 pr-10 hover:bg-gray-50 py-4 border-b"
                         >
-                          {reason.label}
+                          <T>{reason.label}</T>
                         </ListboxOption>
                       ))}
                     </ListboxOptions>
@@ -130,7 +131,7 @@ export const ReturnItemsTab = ({
                       !selectedItems.find((i) => i.line_item_id === item.id)
                         ?.reason_id && (
                         <p className="absolute -bottom-6 text-red-700 label-md">
-                          Selecciona un motivo
+                          <T>Selecciona un motivo</T>
                         </p>
                       )}
                   </div>
