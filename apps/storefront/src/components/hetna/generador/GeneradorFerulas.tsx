@@ -3,6 +3,7 @@
 // Férulas termoformables dentro del 3D Studio: el profesional mete las medidas del
 // paciente (persona o animal), elige la ventilación y las correas, y sale la pieza
 // PLANA en STL para imprimir y moldear con calor. Motor: lib/generador/ferulas.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -100,7 +101,7 @@ export function GeneradorFerulas() {
         <div className="grid grid-cols-3 gap-1.5">
           {FERULAS.map((f) => (
             <button key={f.id} type="button" onClick={() => cambiarTipo(f.id)} aria-pressed={tipo === f.id} title={f.detalle} className={botonSel(tipo === f.id)}>
-              {f.nombre}
+              <T>{f.nombre}</T>
             </button>
           ))}
         </div>
@@ -108,7 +109,7 @@ export function GeneradorFerulas() {
           <div className="mt-2 grid grid-cols-2 gap-1.5">
             {(["derecho", "izquierdo"] as const).map((l) => (
               <button key={l} type="button" onClick={() => setLado(l)} aria-pressed={lado === l} className={botonSel(lado === l)}>
-                Brazo {l}
+                Brazo <T>{l}</T>
               </button>
             ))}
           </div>
@@ -139,7 +140,7 @@ export function GeneradorFerulas() {
         <div className="grid grid-cols-4 gap-1.5">
           {VENTILACIONES.map((v) => (
             <button key={v.id} type="button" onClick={() => setVentilacion(v.id)} aria-pressed={ventilacion === v.id} className={botonSel(ventilacion === v.id)}>
-              {v.nombre}
+              <T>{v.nombre}</T>
             </button>
           ))}
         </div>
@@ -160,10 +161,10 @@ export function GeneradorFerulas() {
 
       {r.errores.map((e) => (
         <Aviso key={e} tipo="error">
-          {e}
+          <T>{e}</T>
         </Aviso>
       ))}
-      {listo && r.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
+      {listo && r.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
@@ -239,7 +240,7 @@ export function GeneradorFerulas() {
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </div>
   )
 
@@ -254,7 +255,7 @@ export function GeneradorFerulas() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {medidas}</span> : null}
+      barra={listo ? <span>· <T>{medidas}</T></span> : null}
     />
   )
 }
