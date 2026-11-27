@@ -3,13 +3,14 @@
 // Mapa topográfico por capas (2D Studio · Decoración). El navegador baja los
 // mosaicos de alturas (imágenes públicas) y el motor (lib/generador/mapaTopo.ts)
 // saca una pieza por capa.
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Aviso, Boton, CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
+import { Aviso, Boton, CampoNum, Interruptor, Seccion, descargar, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
 import { contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
 import { largoCorte } from "@/lib/generador/geo2d"
-import { CREDITO, LUGARES, alturaTerrarium, piezasMapa, planMosaicos } from "@/lib/generador/mapaTopo"
+import { CREDITO, LUGARES, OPCIONES_MAPA_3D, alturaTerrarium, mallaMapa, piezasMapa, planMosaicos } from "@/lib/generador/mapaTopo"
+import { mallaSTL } from "@/lib/generador/vectores"
 
 const HOJAS = [
   { nombre: "60 × 40 cm", ancho: 600, alto: 400 },
@@ -68,8 +69,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
   const [error, setError] = useState("")
   const carga = useRef(0)
 
-  const cargar = async () => {
-    const la = numero(lat), lo = numero(lon), k = numero(km)
+  const cargar = async (la = numero(lat), lo = numero(lon), k = numero(km)) => {
     if (!(Math.abs(la) <= 84 && Math.abs(lo) <= 180 && k >= 1 && k <= 300)) return setError("Revisa la latitud, la longitud y el ancho (1 a 300 km).")
     setError("")
     setCargando(true)
@@ -84,6 +84,28 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       if (n === carga.current) setCargando(false)
     }
   }
+  // Liga con el lugar (la ficha del mapa impreso: "modificar"): lo carga solo
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const v = (k: string) => (q.get(k)?.trim() ? Number(q.get(k)) : NaN)
+    const la = v("lat"), lo = v("lon"), k = v("km")
+    if (Number.isFinite(v("capas")) && v("capas") >= 2) setCapas(String(Math.min(30, Math.round(v("capas")))))
+    if (Number.isFinite(v("ancho")) && v("ancho") >= 50) setAncho(String(Math.min(1500, v("ancho"))))
+    if (Math.abs(la) <= 84 && Math.abs(lo) <= 180 && k >= 1 && k <= 300) {
+      setLat(String(la)), setLon(String(lo)), setKm(String(k))
+      void cargar(la, lo, k)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // para impresora 3D: las mismas capas apiladas en una pieza (base y montaña, y la cumbre de otro color)
+  const bajarSTL = () => {
+    if (!alturas) return
+    const m = mallaMapa(alturas.alt, alturas.w, alturas.h, { capas: numero(capas) || 10, ancho: numero(ancho) || 300, invertir, ...OPCIONES_MAPA_3D })
+    if (m.errores.length) return setError(m.errores[0])
+    descargar(`mapa-topografico-${numero(lat).toFixed(2)}_${numero(lon).toFixed(2)}.stl`, mallaSTL(m.malla), "model/stl")
+  }
+
   const r = useMemo(() => (alturas ? piezasMapa(alturas.alt, alturas.w, alturas.h, { capas: numero(capas) || 10, ancho: numero(ancho) || 300, hoja: HOJAS[hoja], invertir }) : null), [alturas, capas, ancho, hoja, invertir])
 
   // precio aprox.: corte en láser de MDF de 3 mm, por hoja de material (la guía rayada no se cobra aparte)
@@ -110,7 +132,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
         <CampoNum etiqueta="Longitud" valor={lon} cambiar={setLon} sufijo="" />
         <CampoNum etiqueta="Ancho" valor={km} cambiar={setKm} sufijo="km" />
       </div>
-      <Boton tipo="primario" onClick={cargar} disabled={cargando}>
+      <Boton tipo="primario" onClick={() => void cargar()} disabled={cargando}>
         {cargando ? "Bajando alturas…" : alturas ? "Volver a cargar" : "Cargar el terreno"}
       </Boton>
       <div className="grid grid-cols-2 gap-2">
@@ -129,6 +151,10 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       <Interruptor etiqueta="Profundidad (lagos y mar) en vez de altura" activo={invertir} cambiar={setInvertir} />
       {error && <Aviso tipo="error">{error}</Aviso>}
       {r && <span className="text-[12px] text-[#F2D29B]">{r.niveles.length} capas de {Math.round(r.niveles[0] || 0)} a {Math.round(r.niveles[r.niveles.length - 1] || 0)} m · {r.hojas} {r.hojas === 1 ? "hoja" : "hojas"}</span>}
+      {r && !r.errores.length && (
+        <Boton onClick={bajarSTL}>Bajar STL para impresora 3D</Boton>
+      )}
+      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Para impresora 3D sale en una sola pieza: base de {OPCIONES_MAPA_3D.base} mm y capas de {OPCIONES_MAPA_3D.grosorCapa} mm (la cumbre puede ir de otro color).</span>
       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada pieza trae rayada (línea punteada) la silueta de la que va encima: pégalas en orden sobre la base. {CREDITO}</span>
     </div>
   )

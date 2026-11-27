@@ -7,11 +7,11 @@
 // datos SRTM y otros, libres): el navegador baja las imágenes y las decodifica
 // (altura = R·256 + G + B/256 − 32768). Este archivo es la parte pura
 // (alturas → piezas) y la cuenta de mosaicos; la descarga está en la pantalla.
-import { recortarARect, rectPts } from "@/lib/generador/contornos"
+import { extruirEn, recortarARect, rectPts } from "@/lib/generador/contornos"
 import { acomodarEnHojas } from "@/lib/generador/geo2d"
 import { mascaraAMM } from "@/lib/generador/llaveros"
 import { curvasDeMascara } from "@/lib/generador/trazado"
-import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
+import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
 export const MOSAICOS = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
 export const CREDITO = "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre."
@@ -76,17 +76,17 @@ function suavizar(e: Float32Array, w: number, h: number): Float32Array {
   return s
 }
 
-export function piezasMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa): ResultadoMapa {
-  const vacio = (e: string): ResultadoMapa => ({ dibujo: { trazos: [], avisos: [], unidades: "mm" }, hojas: 0, noCaben: 0, niveles: [], avisos: [], errores: [e] })
-  if (w < 8 || h < 8 || alturas.length !== w * h) return vacio("No hay alturas para ese lugar.")
+/** Las capas del mapa en mm (Y hacia arriba): la base (rectángulo W × H) y los contornos de cada nivel. */
+export function capasMapa(alturas: Float32Array, w: number, h: number, o: Pick<OpcionesMapa, "capas" | "ancho" | "invertir">) {
+  if (w < 8 || h < 8 || alturas.length !== w * h) return { error: "No hay alturas para ese lugar." } as const
   const e = suavizar(alturas, w, h)
   let min = Infinity, max = -Infinity
   for (const v of e) (min = Math.min(min, v)), (max = Math.max(max, v))
-  if (!(max - min > 5)) return vacio("El terreno es casi plano en esa zona: escoge un lugar con montañas o barrancas.")
+  if (!(max - min > 5)) return { error: "El terreno es casi plano en esa zona: escoge un lugar con montañas o barrancas." } as const
   const n = Math.max(2, Math.min(30, Math.round(o.capas)))
   const esc = o.ancho / Math.max(w, h) // mm por pixel
-  const niveles = Array.from({ length: n }, (_, i) => min + ((i + 1) * (max - min)) / (n + 1))
   const W = w * esc, H = h * esc
+  const niveles = Array.from({ length: n }, (_, i) => min + ((i + 1) * (max - min)) / (n + 1))
   const contornosDe = (nivel: number): P[][] => {
     const m = new Uint8Array(w * h)
     for (let i = 0; i < m.length; i++) m[i] = (o.invertir ? e[i] <= nivel : e[i] >= nivel) ? 1 : 0
@@ -94,19 +94,48 @@ export function piezasMapa(alturas: Float32Array, w: number, h: number, o: Opcio
     // la curva suavizada puede salirse un poco donde la capa toca la orilla: se recorta a la base
     return recortarARect(c, 0, 0, W, H)
   }
+  // la base: el rectángulo completo; luego una por nivel
+  const capas: P[][][] = [[rectPts(0, 0, W, H)], ...niveles.map(contornosDe)]
+  return { W, H, niveles, capas }
+}
+
+export function piezasMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa): ResultadoMapa {
+  const c = capasMapa(alturas, w, h, o)
+  if ("error" in c) return { dibujo: { trazos: [], avisos: [], unidades: "mm" }, hojas: 0, noCaben: 0, niveles: [], avisos: [], errores: [c.error!] }
+  const { capas, niveles } = c
   const grupos: Trazo[][] = []
-  // la base: el rectángulo completo, con la silueta de la capa 1 grabada
-  const capas = [[rectPts(0, 0, W, H)], ...niveles.map(contornosDe)]
   const avisos: string[] = []
-  capas.forEach((c, i) => {
-    if (!c.length) return
+  capas.forEach((cs, i) => {
+    if (!cs.length) return
     const siguiente = capas[i + 1] || []
     // corte en rojo y guía en azul: en el SVG/PDF quedan en capas distintas (la guía se raya, no se corta)
-    grupos.push([...c.map((pts) => ({ pts, cerrado: true, capa: "corte", color: "#FF0000" })), ...siguiente.map((pts) => ({ pts, cerrado: true, capa: "marcar", color: "#0000FF" }))])
+    grupos.push([...cs.map((pts) => ({ pts, cerrado: true, capa: "corte", color: "#FF0000" })), ...siguiente.map((pts) => ({ pts, cerrado: true, capa: "marcar", color: "#0000FF" }))])
   })
-  const vacias = capas.filter((c) => !c.length).length
+  const vacias = capas.filter((cs) => !cs.length).length
   if (vacias) avisos.push(`${vacias} capas quedan vacías: usa menos capas.`)
   const r = acomodarEnHojas(grupos, o.hoja, 6)
   if (r.noCaben) avisos.push(`${r.noCaben} piezas no caben en la hoja: haz el mapa más chico o usa una hoja más grande.`)
   return { dibujo: { trazos: r.trazos, avisos: [], unidades: "mm" }, hojas: r.hojas, noCaben: r.noCaben, niveles, avisos, errores: [] }
+}
+
+// ── para impresora 3D ──────────────────────────────────────────────────────
+export type OpcionesMapa3D = { capas: number; ancho: number; invertir: boolean; base: number; grosorCapa: number; cumbre: number } // cumbre: fracción de capas de arriba (2.º color)
+export const OPCIONES_MAPA_3D = { base: 2, grosorCapa: 2, cumbre: 0.3 }
+
+/**
+ * El mapa como una pieza para imprimir: la base y cada capa encima de la
+ * anterior, cada una sólo en su grosor (así el volumen y los gramos salen
+ * bien). Dos partes para imprimir a dos colores: base y faldas, y la cumbre.
+ */
+export function mallaMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa3D): { malla: Malla; alto: number; errores: string[] } {
+  const c = capasMapa(alturas, w, h, o)
+  if ("error" in c) return { malla: { tris: [], avisos: [] }, alto: 0, errores: [c.error!] }
+  const base = Math.max(0.6, Math.min(10, o.base)), g = Math.max(0.2, Math.min(10, o.grosorCapa))
+  const niveles = c.capas.slice(1)
+  const desde = Math.max(1, Math.min(niveles.length - 1, Math.round(niveles.length * (1 - Math.max(0, Math.min(0.9, o.cumbre))))))
+  const tramo = (a: number, b: number) => ([] as number[]).concat(...niveles.slice(a, b).map((cs, i) => (cs.length ? extruirEn(cs, g, base + (a + i) * g) : [])))
+  const abajo = [...extruirEn(c.capas[0], base, 0), ...tramo(0, desde)]
+  const arriba = tramo(desde, niveles.length)
+  const malla = arriba.length ? conPartes(["Base y montaña", abajo], ["Cumbre", arriba]) : conPartes(["Base y montaña", abajo])
+  return { malla, alto: base + niveles.length * g, errores: [] }
 }

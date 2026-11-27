@@ -25,6 +25,7 @@ import { OPCIONES_IMPRESION_FABRICA, hacerLetrasImpresion, pararMalla } from "@/
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta, type DisenoCatalogo } from "@/lib/impresion/catalogo-disenos"
 import { construirMalla, limpiarValores, modeloPorId, valoresIniciales } from "@/lib/generador/modelos3d"
+import { CREDITO, OPCIONES_MAPA_3D, mallaMapa } from "@/lib/generador/mapaTopo"
 
 // La página baja opentype.js del CDN; aquí se usa una copia local (OPENTYPE_JS=ruta a dist/opentype.js)
 // Se carga hasta que hace falta: con SOLO_MODELOS no se necesita
@@ -41,6 +42,7 @@ const DIR = process.env.FUENTES_DIR || ""
 const SALIDA = resolve(__dirname, "../../../docs/impresion-bajo-pedido/catalogo.json")
 const FOTOS = resolve(__dirname, "../../../docs/impresion-bajo-pedido/fotos")
 const MODELOS = resolve(__dirname, "../../../docs/impresion-bajo-pedido/modelos")
+const ALTURAS = resolve(__dirname, "../../../docs/impresion-bajo-pedido/alturas") // scripts/alturas-mapas.ts
 const SOLO_MODELOS = process.env.SOLO_MODELOS === "1"
 
 /**
@@ -247,6 +249,20 @@ for (const d of CATALOGO_IMPRESION) {
     const vista = await guardarVista(d.handle, ([] as number[]).concat(...cuerpos), tramosDe(d.handle, cuerpos.map((c) => ({ triangulos: c.length / 9 }))))
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${partes.length} pieza(s), la mayor ${mayor.medidas_mm.join(" × ")} mm (foto lista)`)
     salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...vista, modelo: d.modelo, valores: d.valores || {}, volumen_cm3: m.volumen_cm3, medidas_mm: mayor.medidas_mm, piezas: partes.length, ...(partes.length === 2 ? { grupos_color: ["Pieza grande", "Pieza chica"] } : {}) })
+    continue
+  }
+  if (d.pieza === "mapa" && d.mapa) {
+    // alturas guardadas (scripts/alturas-mapas.ts): sin red
+    const ruta = join(ALTURAS, `${d.handle}.json`)
+    if (!existsSync(ruta)) throw new Error(`Falta ${ruta}: corre scripts/alturas-mapas.ts`)
+    const a = JSON.parse(readFileSync(ruta, "utf8"))
+    const r = mallaMapa(Float32Array.from(a.alturas), a.w, a.h, { capas: d.mapa.capas, ancho: d.mapa.ancho, invertir: false, ...OPCIONES_MAPA_3D })
+    if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
+    const m = medir(r.malla.tris)
+    // base y montaña verde; la cumbre clara, como nevada
+    const tramos = r.malla.partes!.map((p, i) => ({ triangulos: p.triangulos, rgb: i === 0 ? VERDE : BLANCO }))
+    console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramos)), diseno: d.mapa, ...m, capas: d.mapa.capas, credito: CREDITO, ...(r.malla.partes!.length === 2 ? { grupos_color: ["Base y montaña", "Cumbre"] } : {}) })
     continue
   }
   if (SOLO_MODELOS) {

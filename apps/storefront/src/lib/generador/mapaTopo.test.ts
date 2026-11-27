@@ -3,7 +3,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 import { cajaDe } from "./contornos"
-import { alturaTerrarium, piezasMapa, planMosaicos } from "./mapaTopo"
+import { OPCIONES_MAPA_3D, alturaTerrarium, mallaMapa, piezasMapa, planMosaicos } from "./mapaTopo"
+import { volumenMalla } from "./vectores"
 
 test("Terrarium: 32768 de base", () => {
   assert.equal(alturaTerrarium(128, 0, 0), 0)
@@ -57,4 +58,36 @@ test("el norte queda arriba: la guía de un cerro en la fila de arriba cae arrib
   assert.ok(guia.y1 <= base.y1 + 1e-6 && guia.y0 >= base.y0 - 1e-6, "la guía dentro de la base")
   assert.ok(guia.y1 - base.y0 > ALTO * 0.9, `la guía toca la orilla de arriba (${guia.y1 - base.y0})`)
   assert.ok(guia.y0 - base.y0 > ALTO * 0.5, `y no baja de la mitad (${guia.y0 - base.y0})`)
+})
+
+test("mapa para imprimir: capas apiladas, volumen real y dos colores", () => {
+  const r = mallaMapa(cerro(40, 30, 300), W_, H_, { capas: 6, ancho: 120, invertir: false, ...OPCIONES_MAPA_3D })
+  assert.deepEqual(r.errores, [])
+  assert.equal(r.malla.partes?.length, 2)
+  assert.equal(r.malla.partes!.reduce((s, p) => s + p.triangulos, 0) * 9, r.malla.tris.length)
+  let zmax = -Infinity, zmin = Infinity
+  for (let i = 2; i < r.malla.tris.length; i += 3) (zmax = Math.max(zmax, r.malla.tris[i])), (zmin = Math.min(zmin, r.malla.tris[i]))
+  assert.ok(Math.abs(zmin) < 1e-6 && Math.abs(zmax - r.alto) < 1e-6, `de ${zmin} a ${zmax}`)
+  assert.ok(Math.abs(r.alto - (OPCIONES_MAPA_3D.base + 6 * OPCIONES_MAPA_3D.grosorCapa)) < 1e-9)
+  // volumen: la base llena más cada capa en su grosor (menos que un bloque macizo de la altura total)
+  const cm3 = (mm3: number) => mm3 / 1000
+  const v = volumenMalla(r.malla.tris) // cm³
+  assert.ok(v > cm3(120 * 90 * OPCIONES_MAPA_3D.base) && v < cm3(120 * 90 * r.alto) * 0.6, `volumen ${v} cm³`)
+})
+
+test("mapas del catálogo: sus alturas guardadas, 2 colores y liga que carga el lugar", async () => {
+  const { readFileSync } = await import("node:fs")
+  const { join } = await import("node:path")
+  const { CATALOGO_IMPRESION, urlHerramienta } = await import("../impresion/catalogo-disenos")
+  const mapas = CATALOGO_IMPRESION.filter((d) => d.pieza === "mapa")
+  assert.ok(mapas.length >= 4)
+  for (const d of mapas) {
+    const a = JSON.parse(readFileSync(join(__dirname, "../../../../../docs/impresion-bajo-pedido/alturas", `${d.handle}.json`), "utf8"))
+    assert.equal(a.alturas.length, a.w * a.h, d.handle)
+    const r = mallaMapa(Float32Array.from(a.alturas), a.w, a.h, { capas: d.mapa!.capas, ancho: d.mapa!.ancho, invertir: false, ...OPCIONES_MAPA_3D })
+    assert.equal(r.malla.partes?.length, 2, d.handle)
+    const u = new URL(urlHerramienta(d), "https://x")
+    assert.equal(u.pathname, "/disenar/mapa-topografico")
+    assert.equal(Number(u.searchParams.get("lat")), d.mapa!.lat)
+  }
 })

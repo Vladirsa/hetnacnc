@@ -44,6 +44,9 @@ export type LetrasCatalogo = {
   maxTexto: number
 }
 
+/** Mapa topográfico impreso (lib/generador/mapaTopo.ts): un lugar fijo; las alturas se guardan en docs/impresion-bajo-pedido/alturas */
+export type MapaCatalogo = { lugar: string; lat: number; lon: number; km: number; ancho: number; capas: number }
+
 export type DisenoCatalogo = {
   handle: string
   titulo: string
@@ -53,9 +56,9 @@ export type DisenoCatalogo = {
    * "pieza" = rodillo o placa del Texturizador; "soporte" = el mango con eje;
    * "cortador" = cortador de galletas; "modelo" = un modelo paramétrico de
    * Modelos 3D (modelo + valores); "llavero" = llavero o placa con nombre;
-   * "letras" = letras 3D para impresora
+   * "letras" = letras 3D para impresora; "mapa" = mapa topográfico por capas
    */
-  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras" | "mapa"
   /** rodillos, placas y soporte */
   diseno?: Partial<DisenoTexturizador>
   cortador?: CortadorCatalogo
@@ -64,6 +67,7 @@ export type DisenoCatalogo = {
   valores?: Record<string, number>
   llavero?: LlaveroCatalogo
   letras?: LetrasCatalogo
+  mapa?: MapaCatalogo
   etiquetas: string[]
 }
 
@@ -130,6 +134,18 @@ const LETRAS_IMPRESION: DisenoCatalogo[] = [
   letras("letras-familia-pared-impresas-3d", "Letras FAMILIA para pared", "Letras sueltas de 8 cm para colgar, con barreno oculto atrás. Incluye la plantilla de montaje para que queden derechas.", { texto: "FAMILIA", estilo: "pared", fuente: "montserrat", alto: 80, profundidad: 12, maxTexto: 8 }, ["letras para pared", "familia", "decoración", "sala"]),
   letras("letras-nombre-pared-impresas-3d", "Letras con tu nombre para pared", "Tu nombre o el de tu negocio en letras de 10 cm para colgar, con barreno oculto atrás y plantilla de montaje.", { texto: "SOFIA", estilo: "pared", fuente: "alfa-slab-one", alto: 100, profundidad: 14, maxTexto: 8 }, ["letras con nombre", "cuarto de niños", "negocio", "pared"]),
   letras("letras-huecas-led-impresas-3d", "Letras huecas para LED", "Letras de 10 cm huecas por atrás para meter tira LED; el frente delgado deja pasar la luz. Para negocios y fiestas.", { texto: "OPEN", estilo: "luz", fuente: "alfa-slab-one", alto: 100, profundidad: 25, maxTexto: 6 }, ["letras luminosas", "led", "anuncio", "negocio"]),
+]
+
+// Mapas topográficos impresos (27 nov 2026): montañas reales en capas, a dos
+// colores (base y montaña, y la cumbre). Las alturas son de Mapzen Terrain Tiles.
+const mapa = (handle: string, titulo: string, resumen: string, m: MapaCatalogo, etiquetas: string[]): DisenoCatalogo => ({
+  handle, titulo, resumen, pieza: "mapa", mapa: m, etiquetas,
+})
+const MAPAS_IMPRESION: DisenoCatalogo[] = [
+  mapa("mapa-pico-de-orizaba-impreso-3d", "Mapa topográfico del Pico de Orizaba", "El volcán más alto de México en 10 capas, con el relieve real. Pídelo a dos colores para que la cumbre se vea nevada.", { lugar: "Pico de Orizaba", lat: 19.03, lon: -97.27, km: 12, ancho: 120, capas: 10 }, ["mapa topográfico", "pico de orizaba", "citlaltépetl", "volcán", "regalo"]),
+  mapa("mapa-popocatepetl-iztaccihuatl-impreso-3d", "Mapa topográfico del Popocatépetl e Iztaccíhuatl", "Los dos volcanes juntos en 10 capas, con el relieve real. A dos colores, las cumbres salen de otro color.", { lugar: "Popocatépetl e Iztaccíhuatl", lat: 19.1, lon: -98.65, km: 40, ancho: 120, capas: 10 }, ["mapa topográfico", "popocatépetl", "iztaccíhuatl", "volcanes", "regalo"]),
+  mapa("mapa-nevado-de-toluca-impreso-3d", "Mapa topográfico del Nevado de Toluca", "El Xinantécatl y su cráter en 10 capas, con el relieve real. Para tu escritorio o para regalar a quien lo subió.", { lugar: "Nevado de Toluca", lat: 19.11, lon: -99.76, km: 10, ancho: 120, capas: 10 }, ["mapa topográfico", "nevado de toluca", "xinantécatl", "volcán", "regalo"]),
+  mapa("mapa-cerro-de-la-silla-impreso-3d", "Mapa topográfico del Cerro de la Silla", "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina.", { lugar: "Cerro de la Silla", lat: 25.63, lon: -100.23, km: 9, ancho: 120, capas: 10 }, ["mapa topográfico", "cerro de la silla", "monterrey", "regalo"]),
 ]
 
 export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
@@ -243,6 +259,7 @@ export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
   ...MODELOS_IMPRESION,
   ...LLAVEROS_IMPRESION,
   ...LETRAS_IMPRESION,
+  ...MAPAS_IMPRESION,
 ]
 
 /** Liga a la herramienta con el diseño cargado. */
@@ -271,6 +288,11 @@ export function urlHerramienta(d: DisenoCatalogo, extra = ""): string {
     if (l.icono) q.set("icono", l.icono)
     if (l.escala) q.set("escala", String(l.escala))
     return `/disenar/llaveros?${q.toString()}${extra}`
+  }
+  if (d.pieza === "mapa" && d.mapa) {
+    const m = d.mapa
+    const q = new URLSearchParams({ lat: String(m.lat), lon: String(m.lon), km: String(m.km), capas: String(m.capas), ancho: String(m.ancho) })
+    return `/disenar/mapa-topografico?${q.toString()}${extra}`
   }
   if (d.pieza === "modelo") {
     // la página propia del modelo (título y rangos desde el servidor); las medidas van en la liga

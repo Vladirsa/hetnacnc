@@ -2306,5 +2306,188 @@
       "Frente",
       "Paredes"
     ]
+  },
+  {
+    "handle": "mapa-pico-de-orizaba-impreso-3d",
+    "titulo": "Mapa topográfico del Pico de Orizaba",
+    "resumen": "El volcán más alto de México en 10 capas, con el relieve real. Pídelo a dos colores para que la cumbre se vea nevada.",
+    "pieza": "mapa",
+    "etiquetas": [
+      "mapa topográfico",
+      "pico de orizaba",
+      "citlaltépetl",
+      "volcán",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/mapa-topografico?lat=19.03&lon=-97.27&km=12&capas=10&ancho=120",
+    "foto": "fotos/mapa-pico-de-orizaba-impreso-3d.png",
+    "modelo_3d": "modelos/mapa-pico-de-orizaba-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 13100,
+        "hex": "#1f964c"
+      },
+      {
+        "triangulos": 1624,
+        "hex": "#e4e1d8"
+      }
+    ],
+    "diseno": {
+      "lugar": "Pico de Orizaba",
+      "lat": 19.03,
+      "lon": -97.27,
+      "km": 12,
+      "ancho": 120,
+      "capas": 10
+    },
+    "volumen_cm3": 139.2,
+    "medidas_mm": [
+      120,
+      120,
+      22
+    ],
+    "capas": 10,
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "grupos_color": [
+      "Base y montaña",
+      "Cumbre"
+    ]
+  },
+  {
+    "handle": "mapa-popocatepetl-iztaccihuatl-impreso-3d",
+    "titulo": "Mapa topográfico del Popocatépetl e Iztaccíhuatl",
+    "resumen": "Los dos volcanes juntos en 10 capas, con el relieve real. A dos colores, las cumbres salen de otro color.",
+    "pieza": "mapa",
+    "etiquetas": [
+      "mapa topográfico",
+      "popocatépetl",
+      "iztaccíhuatl",
+      "volcanes",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/mapa-topografico?lat=19.1&lon=-98.65&km=40&capas=10&ancho=120",
+    "foto": "fotos/mapa-popocatepetl-iztaccihuatl-impreso-3d.png",
+    "modelo_3d": "modelos/mapa-popocatepetl-iztaccihuatl-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 12764,
+        "hex": "#1f964c"
+      },
+      {
+        "triangulos": 1508,
+        "hex": "#e4e1d8"
+      }
+    ],
+    "diseno": {
+      "lugar": "Popocatépetl e Iztaccíhuatl",
+      "lat": 19.1,
+      "lon": -98.65,
+      "km": 40,
+      "ancho": 120,
+      "capas": 10
+    },
+    "volumen_cm3": 112.6,
+    "medidas_mm": [
+      120,
+      120,
+      22
+    ],
+    "capas": 10,
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "grupos_color": [
+      "Base y montaña",
+      "Cumbre"
+    ]
+  },
+  {
+    "handle": "mapa-nevado-de-toluca-impreso-3d",
+    "titulo": "Mapa topográfico del Nevado de Toluca",
+    "resumen": "El Xinantécatl y su cráter en 10 capas, con el relieve real. Para tu escritorio o para regalar a quien lo subió.",
+    "pieza": "mapa",
+    "etiquetas": [
+      "mapa topográfico",
+      "nevado de toluca",
+      "xinantécatl",
+      "volcán",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/mapa-topografico?lat=19.11&lon=-99.76&km=10&capas=10&ancho=120",
+    "foto": "fotos/mapa-nevado-de-toluca-impreso-3d.png",
+    "modelo_3d": "modelos/mapa-nevado-de-toluca-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 16712,
+        "hex": "#1f964c"
+      },
+      {
+        "triangulos": 3160,
+        "hex": "#e4e1d8"
+      }
+    ],
+    "diseno": {
+      "lugar": "Nevado de Toluca",
+      "lat": 19.11,
+      "lon": -99.76,
+      "km": 10,
+      "ancho": 120,
+      "capas": 10
+    },
+    "volumen_cm3": 141.3,
+    "medidas_mm": [
+      120,
+      120,
+      22
+    ],
+    "capas": 10,
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "grupos_color": [
+      "Base y montaña",
+      "Cumbre"
+    ]
+  },
+  {
+    "handle": "mapa-cerro-de-la-silla-impreso-3d",
+    "titulo": "Mapa topográfico del Cerro de la Silla",
+    "resumen": "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina.",
+    "pieza": "mapa",
+    "etiquetas": [
+      "mapa topográfico",
+      "cerro de la silla",
+      "monterrey",
+      "regalo"
+    ],
+    "herramienta_url": "/disenar/mapa-topografico?lat=25.63&lon=-100.23&km=9&capas=10&ancho=120",
+    "foto": "fotos/mapa-cerro-de-la-silla-impreso-3d.png",
+    "modelo_3d": "modelos/mapa-cerro-de-la-silla-impreso-3d.stl",
+    "vista_colores": [
+      {
+        "triangulos": 17192,
+        "hex": "#1f964c"
+      },
+      {
+        "triangulos": 2168,
+        "hex": "#e4e1d8"
+      }
+    ],
+    "diseno": {
+      "lugar": "Cerro de la Silla",
+      "lat": 25.63,
+      "lon": -100.23,
+      "km": 9,
+      "ancho": 120,
+      "capas": 10
+    },
+    "volumen_cm3": 90.2,
+    "medidas_mm": [
+      120,
+      120,
+      22
+    ],
+    "capas": 10,
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "grupos_color": [
+      "Base y montaña",
+      "Cumbre"
+    ]
   }
 ]

@@ -35,6 +35,15 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
 - Las fotos y la vista 3D salen paradas y de frente. El STL que baja el cliente en la herramienta viene en la posición para imprimir.
 - "Modificar" abre `/disenar/letras-3d?modo=impresion&texto=…&estilo=…`. Las de colgar traen la plantilla de montaje en PDF a tamaño real.
 
+## Mapas topográficos
+
+- Están en `MAPAS_IMPRESION` (`catalogo-disenos.ts`): Pico de Orizaba, Popocatépetl e Iztaccíhuatl, Nevado de Toluca y Cerro de la Silla.
+- Se arman con `mallaMapa` (`lib/generador/mapaTopo.ts`): una base de 2 mm y 10 capas de 2 mm, cada una sólo en su grosor, de 120 × 120 mm.
+- Van a dos colores: «Base y montaña» y «Cumbre» (las capas de arriba).
+- Las alturas están guardadas en `alturas/<handle>.json`, así que el generador no usa la red. Para un lugar nuevo, súmalo y corre `npx tsx scripts/alturas-mapas.ts` en `apps/storefront`.
+- El crédito de las alturas (Mapzen Terrain Tiles, datos SRTM/NASA y otros) sale en la descripción de la ficha.
+- "Modificar" abre `/disenar/mapa-topografico?lat=…&lon=…&km=…`, que carga el lugar solo. Ahí el cliente baja el STL para su impresora o las capas en DXF para láser.
+
 ## Publicar o actualizar el catálogo
 
 1. Edita `apps/storefront/src/lib/impresion/catalogo-disenos.ts`.
