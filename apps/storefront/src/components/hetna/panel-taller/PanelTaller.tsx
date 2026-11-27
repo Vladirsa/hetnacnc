@@ -17,6 +17,7 @@
 // Reglas: precios siempre en MXN con IVA incluido; el cliente cotiza sin
 // registrarse, el taller necesita su cuenta para responder; nunca se muestran
 // datos de contacto del cliente (el servidor ya no los manda).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { capacidadVigente, textoCapacidad, type CapacidadLibre } from "@/lib/hetna/capacidad-libre"
 import { PRECIO_PLAN } from "@/lib/hetna/app-taller"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -264,9 +265,9 @@ export function PanelTaller() {
   if (estado === "error")
     return (
       <Centro>
-        <p className="text-[15px] text-[#3F3D37]">No pudimos cargar tu panel.</p>
+        <p className="text-[15px] text-[#3F3D37]"><T>No pudimos cargar tu panel.</T></p>
         <button type="button" onClick={() => { setEstado("cargando"); cargar() }} className={BTN_PRIMARIO}>
-          Reintentar
+          <T>Reintentar</T>
         </button>
       </Centro>
     )
@@ -289,7 +290,7 @@ export function PanelTaller() {
               {new Date().toLocaleDateString("es-MX", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" })}
             </p>
             <h1 className="mt-0.5 font-display text-[26px] font-bold leading-tight text-[#142033] sm:text-[30px]">
-              Hola, {nombre}
+              <T>Hola,</T> {nombre}
             </h1>
           </div>
           <Interruptor activo={recibe} alCambiar={cambiarRecibe} />
@@ -307,7 +308,7 @@ export function PanelTaller() {
 
         {!recibe && (
           <p className="mt-4 rounded-xl border border-[#F2D4B8] bg-[#FDF3EA] px-4 py-3 text-[14px] text-[#8A3F06]">
-            Pausaste las solicitudes: no te avisamos de solicitudes nuevas. Las que un cliente te mande directo te siguen llegando.
+            <T>Pausaste las solicitudes: no te avisamos de solicitudes nuevas. Las que un cliente te mande directo te siguen llegando.</T>
           </p>
         )}
 
@@ -316,14 +317,14 @@ export function PanelTaller() {
           <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
             <Anillo pct={perfil.pct} />
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold text-[#1B1B18]">Tu perfil está {perfil.pct}% completo</p>
+              <p className="text-[15px] font-semibold text-[#1B1B18]"><T>Tu perfil está</T> {perfil.pct}<T>% completo</T></p>
               <p className="mt-0.5 text-[14px] text-[#5C5A53]">
-                Te falta: <span className="font-medium text-[#1B1B18]">{perfil.faltan.join(", ")}</span>. Los perfiles completos aparecen
-                primero en el directorio de talleres.
+                <T>Te falta:</T> <span className="font-medium text-[#1B1B18]">{perfil.faltan.join(", ")}</span><T>. Los perfiles completos aparecen
+                primero en el directorio de talleres.</T>
               </p>
             </div>
             <a href="/seller/perfil-taller" className={`${BTN_SECUNDARIO} shrink-0`}>
-              Completar perfil
+              <T>Completar perfil</T>
             </a>
           </section>
         )}
@@ -336,7 +337,7 @@ export function PanelTaller() {
             icono={IC.solicitudes}
             nota={
               hoyVence ? (
-                <span className="font-semibold text-[#C2560A]">{hoyVence.folio} vence hoy</span>
+                <span className="font-semibold text-[#C2560A]">{hoyVence.folio} <T>vence hoy</T></span>
               ) : nuevas.length ? (
                 "Ninguna vence hoy"
               ) : (
@@ -417,9 +418,9 @@ function BarraLateral({ nuevas, cupo }: { nuevas: number; cupo: Cupo }) {
     <aside className="z-30 bg-[#142033] text-white lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col">
       <div className="flex items-center justify-between px-4 py-3 lg:px-6 lg:py-6">
         <LocalizedClientLink href="/" className="font-display text-[19px] font-bold tracking-tight">
-          HETNA <span className="text-[#FF8A3D]">CNC</span>
+          <T>HETNA</T> <span className="text-[#FF8A3D]"><T>CNC</T></span>
         </LocalizedClientLink>
-        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80 lg:hidden">Taller</span>
+        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/80 lg:hidden"><T>Taller</T></span>
       </div>
       <nav aria-label="Secciones del panel" className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:px-3 lg:pb-0">
         {items.map((it) => (
@@ -429,7 +430,7 @@ function BarraLateral({ nuevas, cupo }: { nuevas: number; cupo: Cupo }) {
             className="flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-xl px-3 text-[14px] font-medium text-white/80 hover:bg-white/10 hover:text-white lg:px-3.5"
           >
             <I d={it.icono} className="h-[18px] w-[18px]" />
-            <span className="whitespace-nowrap">{it.texto}</span>
+            <span className="whitespace-nowrap"><T>{it.texto}</T></span>
             {it.cuenta ? (
               <span className="ml-auto min-w-[22px] rounded-full bg-[#FF6A1A] px-1.5 text-center text-[12px] font-bold leading-[22px] text-white">{it.cuenta}</span>
             ) : null}
@@ -457,20 +458,20 @@ function TarjetaPlan({ cupo, compacta = false }: { cupo: Cupo; compacta?: boolea
     <div className={`rounded-2xl bg-white/[0.07] ${compacta ? "flex items-center gap-3 px-3 py-2.5" : "p-4"}`}>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-[13px] font-semibold">Plan {nombre}</p>
-          <p className="text-[12px] text-white/60">{PRECIO_PLAN[plan] || "$0"} MXN/mes</p>
+          <p className="text-[13px] font-semibold"><T>Plan</T> {nombre}</p>
+          <p className="text-[12px] text-white/60">{PRECIO_PLAN[plan] || "$0"} <T>MXN/mes</T></p>
         </div>
         {cupo === null ? (
-          <p className="mt-1 text-[12px] text-white/60">No pudimos leer tu uso de este mes.</p>
+          <p className="mt-1 text-[12px] text-white/60"><T>No pudimos leer tu uso de este mes.</T></p>
         ) : limite == null ? (
-          <p className="mt-1 text-[12px] text-white/70">Cotizaciones sin límite este mes ({usadas} enviadas)</p>
+          <p className="mt-1 text-[12px] text-white/70"><T>Cotizaciones sin límite este mes (</T>{usadas} <T>enviadas)</T></p>
         ) : (
           <>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-valuenow={usadas} aria-valuemin={0} aria-valuemax={limite} aria-label="Cotizaciones usadas este mes">
               <div className={`h-full rounded-full ${lleno ? "bg-[#F2B544]" : "bg-[#FF8A3D]"}`} style={{ width: `${pct}%` }} />
             </div>
             <p className="mt-1.5 text-[12px] text-white/70">
-              {usadas} de {limite} cotizaciones este mes
+              {usadas} <T>de</T> {limite} <T>cotizaciones este mes</T>
             </p>
           </>
         )}
@@ -512,12 +513,12 @@ function TarjetaCapacidad({ capacidad, guardar }: { capacidad: CapacidadLibre | 
         <div>
           <p className="text-[15px] font-bold text-[#0F5C2A]">{textoCapacidad(capacidad)}</p>
           <p className="text-[13px] text-[#1E4D2B]">
-            Hasta el {new Date(capacidad.hasta).toLocaleDateString("es-MX", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" })}: las solicitudes nuevas te llegan antes.
+            <T>Hasta el</T> {new Date(capacidad.hasta).toLocaleDateString("es-MX", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" })}<T>: las solicitudes nuevas te llegan antes.</T>
             {capacidad.nota ? ` “${capacidad.nota}”` : ""}
           </p>
         </div>
         <button type="button" disabled={ocupado} onClick={() => correr({ activa: false })} className="rounded-xl border border-[#1E7B3A] bg-white px-4 py-2 text-[13px] font-semibold text-[#0F5C2A] disabled:opacity-60">
-          Ya no tengo máquina libre
+          <T>Ya no tengo máquina libre</T>
         </button>
       </section>
     )
@@ -526,19 +527,19 @@ function TarjetaCapacidad({ capacidad, guardar }: { capacidad: CapacidadLibre | 
     return (
       <button type="button" onClick={() => setAbierta(true)} className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-dashed border-[#C9C5BA] bg-white p-4 text-left">
         <span>
-          <span className="block text-[15px] font-bold text-[#142033]">⚡ ¿Tienes máquina libre esta semana?</span>
-          <span className="block text-[13px] text-[#6B6A63]">Avísanos y las solicitudes nuevas te llegan antes. Si quieres, ofrece un descuento para llenarla.</span>
+          <span className="block text-[15px] font-bold text-[#142033]"><T>⚡ ¿Tienes máquina libre esta semana?</T></span>
+          <span className="block text-[13px] text-[#6B6A63]"><T>Avísanos y las solicitudes nuevas te llegan antes. Si quieres, ofrece un descuento para llenarla.</T></span>
         </span>
-        <span className="shrink-0 rounded-xl bg-[#142033] px-4 py-2 text-[13px] font-semibold text-white">Avisar</span>
+        <span className="shrink-0 rounded-xl bg-[#142033] px-4 py-2 text-[13px] font-semibold text-white"><T>Avisar</T></span>
       </button>
     )
   }
   return (
     <section className="mt-4 grid gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
-      <p className="text-[15px] font-bold text-[#142033]">⚡ Tengo máquina libre</p>
+      <p className="text-[15px] font-bold text-[#142033]"><T>⚡ Tengo máquina libre</T></p>
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
-          Descuento que ofreces
+          <T>Descuento que ofreces</T>
           <select value={descuento} onChange={(e) => setDescuento(Number(e.target.value))} className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]">
             {[0, 5, 10, 15, 20].map((d) => (
               <option key={d} value={d}>{d ? `${d}%` : "Sin descuento"}</option>
@@ -546,7 +547,7 @@ function TarjetaCapacidad({ capacidad, guardar }: { capacidad: CapacidadLibre | 
           </select>
         </label>
         <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
-          ¿Por cuántos días?
+          <T>¿Por cuántos días?</T>
           <select value={dias} onChange={(e) => setDias(Number(e.target.value))} className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]">
             {[3, 7, 14].map((d) => (
               <option key={d} value={d}>{d} días</option>
@@ -554,16 +555,16 @@ function TarjetaCapacidad({ capacidad, guardar }: { capacidad: CapacidadLibre | 
           </select>
         </label>
         <label className="flex flex-col gap-1 text-[13px] text-[#40403A]">
-          Nota (opcional)
+          <T>Nota (opcional)</T>
           <input value={nota} onChange={(e) => setNota(e.target.value)} maxLength={140} placeholder="Ej. Router 1.3 × 2.5 m libre" className="rounded-lg border border-[#E7E4DC] px-3 py-2 text-[14px]" />
         </label>
       </div>
-      <p className="text-[12px] text-[#6B6A63]">El descuento lo aplicas tú en tus propuestas; el cliente ve que lo ofreces. Se apaga solo al terminar los días.</p>
+      <p className="text-[12px] text-[#6B6A63]"><T>El descuento lo aplicas tú en tus propuestas; el cliente ve que lo ofreces. Se apaga solo al terminar los días.</T></p>
       <div className="flex gap-2">
         <button type="button" disabled={ocupado} onClick={() => correr({ activa: true, descuento_pct: descuento, dias, nota })} className={BTN_PRIMARIO}>
           {ocupado ? "Guardando…" : "Avisar que tengo máquina libre"}
         </button>
-        <button type="button" onClick={() => setAbierta(false)} className="rounded-xl px-4 py-2 text-[14px] text-[#40403A]">Cancelar</button>
+        <button type="button" onClick={() => setAbierta(false)} className="rounded-xl px-4 py-2 text-[14px] text-[#40403A]"><T>Cancelar</T></button>
       </div>
     </section>
   )
@@ -618,13 +619,13 @@ function Indicador({
   return (
     <div className={`rounded-2xl border bg-white p-4 ${destacado ? "border-[#F2B98C] ring-1 ring-[#F2B98C]" : "border-[#E7E4DC]"}`}>
       <div className="flex items-center justify-between">
-        <p className="text-[13px] font-medium text-[#6B6A63]">{etiqueta}</p>
+        <p className="text-[13px] font-medium text-[#6B6A63]"><T>{etiqueta}</T></p>
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#F6F4EF] text-[#142033]">
           <I d={icono} className="h-4 w-4" />
         </span>
       </div>
       <p className={`mt-2 font-display font-bold text-[#142033] ${valorChico ? "text-[19px] leading-[34px]" : "text-[28px] leading-[34px]"}`}>{valor}</p>
-      <p className="mt-1 text-[13px] text-[#6B6A63]">{nota}</p>
+      <p className="mt-1 text-[13px] text-[#6B6A63]"><T>{nota}</T></p>
     </div>
   )
 }
@@ -669,8 +670,8 @@ function Solicitudes({
     <section id="solicitudes" className="mt-9 scroll-mt-28">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-[21px] font-bold text-[#142033]">Solicitudes de cotización</h2>
-          <p className="text-[14px] text-[#6B6A63]">Ordenadas por fecha límite. Tus precios van en MXN con IVA incluido.</p>
+          <h2 className="font-display text-[21px] font-bold text-[#142033]"><T>Solicitudes de cotización</T></h2>
+          <p className="text-[14px] text-[#6B6A63]"><T>Ordenadas por fecha límite. Tus precios van en MXN con IVA incluido.</T></p>
         </div>
         <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#ECE9E1] p-1 sm:flex" role="tablist" aria-label="Filtrar solicitudes">
           {filtros.map(([k, t]) => (
@@ -695,7 +696,7 @@ function Solicitudes({
           <p className="text-[15px] font-medium text-[#1B1B18]">
             {filtro === "nuevas" ? "No tienes solicitudes nuevas" : filtro === "aceptadas" ? "Aún no te aceptan una cotización" : "Nada por aquí"}
           </p>
-          <p className="mt-1 text-[14px] text-[#6B6A63]">Los clientes cotizan sin registrarse; te avisamos por correo y aquí en cuanto llegue una para ti.</p>
+          <p className="mt-1 text-[14px] text-[#6B6A63]"><T>Los clientes cotizan sin registrarse; te avisamos por correo y aquí en cuanto llegue una para ti.</T></p>
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
@@ -732,11 +733,11 @@ function TarjetaSolicitud({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 text-[12px]">
             <span className="font-mono font-semibold text-[#6B6A63]">{s.folio}</span>
-            {nueva && <Etiqueta tono="naranja">Nueva</Etiqueta>}
-            {respondida && <Etiqueta tono="azul">Respondida</Etiqueta>}
-            {aceptada && <Etiqueta tono="verde">Aceptada</Etiqueta>}
-            {s.para_mi && <Etiqueta tono="gris">Te la mandaron a ti</Etiqueta>}
-            {s.tipo === "suministro" && <Etiqueta tono="gris">Suministro</Etiqueta>}
+            {nueva && <Etiqueta tono="naranja"><T>Nueva</T></Etiqueta>}
+            {respondida && <Etiqueta tono="azul"><T>Respondida</T></Etiqueta>}
+            {aceptada && <Etiqueta tono="verde"><T>Aceptada</T></Etiqueta>}
+            {s.para_mi && <Etiqueta tono="gris"><T>Te la mandaron a ti</T></Etiqueta>}
+            {s.tipo === "suministro" && <Etiqueta tono="gris"><T>Suministro</T></Etiqueta>}
           </div>
           <h3 className="mt-1.5 text-[16px] font-semibold leading-snug text-[#1B1B18]">{tituloDe(t)}</h3>
         </div>
@@ -758,7 +759,7 @@ function TarjetaSolicitud({
 
       {s.mi_propuesta && (
         <p className="mt-3 rounded-xl bg-[#F6F4EF] px-3 py-2 text-[13px] text-[#3F3D37]">
-          Tu cotización: <b>{mxn(s.mi_propuesta.precio)}</b> con IVA · {s.mi_propuesta.dias} {s.mi_propuesta.dias === 1 ? "día" : "días"} de entrega
+          <T>Tu cotización:</T> <b>{mxn(s.mi_propuesta.precio)}</b> <T>con IVA ·</T> {s.mi_propuesta.dias} {s.mi_propuesta.dias === 1 ? "día" : "días"} <T>de entrega</T>
           {aceptada ? " · el cliente la aceptó" : ""}
         </p>
       )}
@@ -781,11 +782,11 @@ function TarjetaSolicitud({
       </div>
       {sinCupo && (
         <p className="mt-2 text-[13px] text-[#8A3F06]">
-          Ya usaste las {cupo?.limite} cotizaciones de tu plan este mes.{" "}
+          <T>Ya usaste las</T> {cupo?.limite} <T>cotizaciones de tu plan este mes.</T>{" "}
           <LocalizedClientLink href="/servicios/cotizador-cnc#planes" className="font-semibold underline underline-offset-2">
-            Mejora tu plan
+            <T>Mejora tu plan</T>
           </LocalizedClientLink>{" "}
-          para seguir cotizando.
+          <T>para seguir cotizando.</T>
         </p>
       )}
 
@@ -818,7 +819,7 @@ function Detalle({ s }: { s: Solicitud }) {
   const rep = s.reputacion_cliente
   return (
     <div className="mt-4 rounded-xl border border-[#EFECE4] bg-[#FBFAF7] p-4 text-[14px]">
-      {t.descripcion && <p className="whitespace-pre-line leading-relaxed text-[#2B2A26]">{t.descripcion}</p>}
+      {t.descripcion && <p className="whitespace-pre-line leading-relaxed text-[#2B2A26]"><T>{t.descripcion}</T></p>}
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {filas
           .filter(([, v]) => Boolean(v && String(v).trim()))
@@ -831,7 +832,7 @@ function Detalle({ s }: { s: Solicitud }) {
           v={rep?.suficiente && rep.promedio != null ? `★ ${rep.promedio.toFixed(1)} (${rep.evaluaciones} evaluaciones)` : "Cliente nuevo en HETNA"}
         />
       </dl>
-      <p className="mt-3 text-[12px] text-[#8A877E]">Por seguridad, los datos de contacto del cliente no se muestran: todo se trata dentro de HETNA.</p>
+      <p className="mt-3 text-[12px] text-[#8A877E]"><T>Por seguridad, los datos de contacto del cliente no se muestran: todo se trata dentro de HETNA.</T></p>
     </div>
   )
 }
@@ -898,9 +899,9 @@ function FormCotizar({
 
   return (
     <form onSubmit={enviar} className="mt-4 grid gap-3 rounded-xl border border-[#F2D4B8] bg-[#FFF9F4] p-4 sm:grid-cols-2">
-      <p className="text-[12.5px] text-[#6B6A63] sm:col-span-2">Todos los campos con * son obligatorios: así el cliente compara tu propuesta con las demás con los mismos datos.</p>
+      <p className="text-[12.5px] text-[#6B6A63] sm:col-span-2"><T>Todos los campos con * son obligatorios: así el cliente compara tu propuesta con las demás con los mismos datos.</T></p>
       <label className={etiqueta}>
-        Precio total (MXN, IVA incluido) *
+        <T>Precio total (MXN, IVA incluido) *</T>
         <div className="mt-1 flex min-h-[44px] items-center rounded-xl border border-[#D9D5CB] bg-white px-3 focus-within:border-[#C2560A]">
           <span className="text-[#8A877E]">$</span>
           <input
@@ -915,33 +916,33 @@ function FormCotizar({
         </div>
       </label>
       <label className={etiqueta}>
-        Días de fabricación *
+        <T>Días de fabricación *</T>
         <input inputMode="numeric" value={dias} onChange={(e) => setDias(e.target.value)} className={campo} placeholder="5" required />
       </label>
       <label className={etiqueta}>
-        Fecha estimada de entrega *
+        <T>Fecha estimada de entrega *</T>
         <input type="date" min={hoy} value={fecha} onChange={(e) => setFecha(e.target.value)} className={campo} required />
       </label>
       <label className={etiqueta}>
-        Vigencia de la propuesta (días) *
+        <T>Vigencia de la propuesta (días) *</T>
         <input inputMode="numeric" value={vigencia} onChange={(e) => setVigencia(e.target.value)} className={campo} required />
       </label>
       <label className={`${etiqueta} sm:col-span-2`}>
-        Material y especificaciones *
+        <T>Material y especificaciones *</T>
         <textarea value={materiales} onChange={(e) => setMateriales(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. MDF 18 mm, corte con fresa de 6 mm, tolerancia ±0.2 mm" required />
       </label>
       <label className={etiqueta}>
-        Condiciones de pago *
+        <T>Condiciones de pago *</T>
         <textarea value={pago} onChange={(e) => setPago(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. 50% para empezar y 50% al entregar" required />
       </label>
       <label className={etiqueta}>
-        Garantía *
+        <T>Garantía *</T>
         <textarea value={garantia} onChange={(e) => setGarantia(e.target.value)} rows={2} maxLength={600} className={area} placeholder="Ej. Reposición sin costo por defecto de fabricación en 30 días" required />
       </label>
       <label className={`${etiqueta} sm:col-span-2`}>
-        Nota para el cliente (opcional)
+        <T>Nota para el cliente (opcional)</T>
         <textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2} maxLength={1500} className={area} placeholder="Qué incluye, cómo se entrega…" />
-        <span className="mt-1 block text-[12px] font-normal text-[#8A877E]">Sin teléfonos ni correos: el trato sigue dentro de HETNA. Puedes adjuntar planos o fotos desde el panel de vendedor.</span>
+        <span className="mt-1 block text-[12px] font-normal text-[#8A877E]"><T>Sin teléfonos ni correos: el trato sigue dentro de HETNA. Puedes adjuntar planos o fotos desde el panel de vendedor.</T></span>
       </label>
       {error && <p className="text-[13px] text-[#B3261E] sm:col-span-2">{error}</p>}
       <div className="flex flex-wrap gap-2 sm:col-span-2">
@@ -949,7 +950,7 @@ function FormCotizar({
           {enviando ? "Enviando…" : s.mi_propuesta ? "Guardar cambios" : "Enviar cotización"}
         </button>
         <button type="button" onClick={alCancelar} className={BTN_SECUNDARIO}>
-          Cancelar
+          <T>Cancelar</T>
         </button>
       </div>
     </form>
@@ -978,7 +979,7 @@ function ArchivosCliente({ s }: { s: Solicitud }) {
       <button type="button" onClick={descargar} disabled={estado === "pidiendo"} className="min-h-[44px] rounded-lg px-2 text-[13px] font-semibold text-[#B34D07] underline-offset-2 hover:underline">
         {estado === "pidiendo" ? "Preparando…" : archivos.length === 1 ? "Descargar archivo" : "Descargar archivos"}
       </button>
-      {estado === "error" && <span className="text-[13px] text-[#B3261E]">No se pudieron preparar los archivos.</span>}
+      {estado === "error" && <span className="text-[13px] text-[#B3261E]"><T>No se pudieron preparar los archivos.</T></span>}
     </div>
   )
 }
@@ -1008,18 +1009,18 @@ function AcuerdoNda({ s }: { s: Solicitud }) {
   return (
     <div className="mt-3 rounded-xl border border-[#F2D4B8] bg-[#FFF9F4] p-3 text-[13.5px] text-[#3F3D37]">
       <p className="m-0">
-        <b>🔏 Este cliente pide acuerdo de confidencialidad.</b> Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.
+        <b><T>🔏 Este cliente pide acuerdo de confidencialidad.</T></b> <T>Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.</T>
       </p>
       {texto === null ? (
         <button type="button" onClick={leer} className={BTN_SECUNDARIO + " mt-2"}>
-          Leer el acuerdo
+          <T>Leer el acuerdo</T>
         </button>
       ) : (
         <div className="mt-2">
-          <div className="max-h-56 overflow-y-auto whitespace-pre-line rounded-lg border border-[#E7E4DC] bg-white p-3 text-[13px] leading-relaxed">{texto}</div>
+          <div className="max-h-56 overflow-y-auto whitespace-pre-line rounded-lg border border-[#E7E4DC] bg-white p-3 text-[13px] leading-relaxed"><T>{texto}</T></div>
           <label className="mt-2 flex min-h-[44px] items-center gap-2">
             <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} className="h-5 w-5 accent-[#C2560A]" />
-            Leí el acuerdo y lo acepto a nombre de mi taller.
+            <T>Leí el acuerdo y lo acepto a nombre de mi taller.</T>
           </label>
           <button type="button" disabled={!acepto || enviando} onClick={aceptar} className={BTN_PRIMARIO}>
             {enviando ? "Guardando…" : "Aceptar acuerdo"}
@@ -1047,12 +1048,12 @@ function Trabajos({
 }) {
   return (
     <section id="trabajos" className="mt-10 scroll-mt-28">
-      <h2 className="font-display text-[21px] font-bold text-[#142033]">Trabajos en curso</h2>
-      <p className="text-[14px] text-[#6B6A63]">Cada vez que avanzas una etapa, el cliente recibe aviso.</p>
+      <h2 className="font-display text-[21px] font-bold text-[#142033]"><T>Trabajos en curso</T></h2>
+      <p className="text-[14px] text-[#6B6A63]"><T>Cada vez que avanzas una etapa, el cliente recibe aviso.</T></p>
       {trabajos.length === 0 ? (
         <div className="mt-4 rounded-2xl border border-dashed border-[#D9D5CB] bg-white px-5 py-10 text-center">
-          <p className="text-[15px] font-medium text-[#1B1B18]">Aún no tienes trabajos en curso</p>
-          <p className="mt-1 text-[14px] text-[#6B6A63]">Cuando un cliente acepte tu cotización y pague, aparece aquí.</p>
+          <p className="text-[15px] font-medium text-[#1B1B18]"><T>Aún no tienes trabajos en curso</T></p>
+          <p className="mt-1 text-[14px] text-[#6B6A63]"><T>Cuando un cliente acepte tu cotización y pague, aparece aquí.</T></p>
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
@@ -1119,12 +1120,12 @@ function FilaTrabajo({
           <p className="font-display text-[20px] font-bold text-[#142033]">{mxn(monto)}</p>
           {safe ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[12px] font-semibold text-[#16794F]">
-              <I d={IC.escudo} className="h-3.5 w-3.5" /> SafeDeal apartado
+              <I d={IC.escudo} className="h-3.5 w-3.5" /> <T>SafeDeal apartado</T>
             </p>
           ) : t.pagada ? (
-            <p className="mt-0.5 text-[12px] text-[#6B6A63]">Pagado a tu cuenta</p>
+            <p className="mt-0.5 text-[12px] text-[#6B6A63]"><T>Pagado a tu cuenta</T></p>
           ) : (
-            <p className="mt-0.5 text-[12px] text-[#8A3F06]">Esperando el pago</p>
+            <p className="mt-0.5 text-[12px] text-[#8A3F06]"><T>Esperando el pago</T></p>
           )}
         </div>
       </div>
@@ -1135,7 +1136,7 @@ function FilaTrabajo({
           <span className="font-semibold text-[#142033]">
             {entregada ? "Entregado · esperando que el cliente confirme" : t.pagada ? ETAPAS[i].nombre : "Esperando el pago del cliente"}
           </span>
-          {t.pagada && !entregada && <span className="text-[#8A877E]">Etapa {i + 1} de {ETAPAS.length}</span>}
+          {t.pagada && !entregada && <span className="text-[#8A877E]"><T>Etapa</T> {i + 1} <T>de</T> {ETAPAS.length}</span>}
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#EFECE4]" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Avance del trabajo">
           <div className="h-full rounded-full bg-[#FF6A1A] transition-all" style={{ width: `${pct}%` }} />
@@ -1158,7 +1159,7 @@ function FilaTrabajo({
           ) : (
             !entrega && (
               <button type="button" onClick={() => setEntrega(true)} className={BTN_PRIMARIO}>
-                Marcar como entregado
+                <T>Marcar como entregado</T>
               </button>
             )
           )}
@@ -1167,11 +1168,11 @@ function FilaTrabajo({
       {entrega && !entregada && (
         <form onSubmit={entregar} className="mt-3 grid gap-3 rounded-xl border border-[#E7E4DC] bg-[#FBFAF7] p-4 sm:grid-cols-2">
           <label className="block text-[13px] font-medium text-[#3F3D37]">
-            Paquetería (si la envías)
+            <T>Paquetería (si la envías)</T>
             <input value={paqueteria} onChange={(e) => setPaqueteria(e.target.value)} maxLength={60} className="mt-1 min-h-[44px] w-full rounded-xl border border-[#D9D5CB] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]" placeholder="Ej. Estafeta" />
           </label>
           <label className="block text-[13px] font-medium text-[#3F3D37]">
-            Número de guía
+            <T>Número de guía</T>
             <input value={guia} onChange={(e) => setGuia(e.target.value)} maxLength={80} className="mt-1 min-h-[44px] w-full rounded-xl border border-[#D9D5CB] bg-white px-3 text-[15px] outline-none focus:border-[#C2560A]" />
           </label>
           <div className="flex flex-wrap gap-2 sm:col-span-2">
@@ -1179,7 +1180,7 @@ function FilaTrabajo({
               {ocupado ? "Guardando…" : "Confirmar entrega"}
             </button>
             <button type="button" onClick={() => setEntrega(false)} className={BTN_SECUNDARIO}>
-              Cancelar
+              <T>Cancelar</T>
             </button>
           </div>
         </form>
@@ -1242,20 +1243,20 @@ function SinSesion() {
   return (
     <Centro>
       <span className="font-display text-[22px] font-bold text-[#142033]">
-        HETNA <span className="text-[#FF6A1A]">CNC</span>
+        <T>HETNA</T> <span className="text-[#FF6A1A]"><T>CNC</T></span>
       </span>
-      <h1 className="font-display text-[26px] font-bold text-[#142033]">Panel del taller</h1>
+      <h1 className="font-display text-[26px] font-bold text-[#142033]"><T>Panel del taller</T></h1>
       <p className="text-[15px] leading-relaxed text-[#5C5A53]">
-        Aquí respondes las solicitudes de cotización y sigues tus trabajos. Los clientes cotizan sin registrarse; para responder necesitas tu
-        cuenta de taller.
+        <T>Aquí respondes las solicitudes de cotización y sigues tus trabajos. Los clientes cotizan sin registrarse; para responder necesitas tu
+        cuenta de taller.</T>
       </p>
       <a href="/seller" className={`${BTN_PRIMARIO} w-full`}>
-        Iniciar sesión como taller
+        <T>Iniciar sesión como taller</T>
       </a>
       <LocalizedClientLink href="/talleres/unete" className={`${BTN_SECUNDARIO} w-full`}>
-        Registrar mi taller
+        <T>Registrar mi taller</T>
       </LocalizedClientLink>
-      <p className="text-[13px] text-[#8A877E]">Después de iniciar sesión, vuelve a esta página.</p>
+      <p className="text-[13px] text-[#8A877E]"><T>Después de iniciar sesión, vuelve a esta página.</T></p>
     </Centro>
   )
 }
