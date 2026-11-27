@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -13,7 +15,7 @@ import { DISENO_A_LA_MEDIDA } from "@/lib/hetna/herramientas"
 // cada estudio.
 const SITIO = "https://hetnacnc.com"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   // Título ≤ 60 y descripción ≤ 155 caracteres: lo que Google muestra sin cortar
   title: "Diseño 2D y 3D gratis para CNC y láser",
   description:
@@ -102,10 +104,10 @@ const TarjetaEstudioGrande = ({
       aria-hidden="true"
     />
     <span className="relative text-[13px] font-extrabold uppercase tracking-[0.14em]" style={{ color: acento }}>
-      HETNA {ESTUDIOS[e].nombre}
+      <TS>HETNA</TS> {ESTUDIOS[e].nombre}
     </span>
-    <span className="relative mt-2 text-[24px] font-extrabold leading-tight text-white lg:text-[28px]">{titulo}</span>
-    <span className="relative mt-2 text-[14.5px] leading-relaxed text-white/65">{texto}</span>
+    <span className="relative mt-2 text-[24px] font-extrabold leading-tight text-white lg:text-[28px]"><TS>{titulo}</TS></span>
+    <span className="relative mt-2 text-[14.5px] leading-relaxed text-white/65"><TS>{texto}</TS></span>
     <span className="relative mt-4 flex flex-wrap gap-1.5">
       {puntos.map((p) => (
         <span key={p} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[12px] font-semibold text-white/75">
@@ -114,7 +116,7 @@ const TarjetaEstudioGrande = ({
       ))}
     </span>
     <span className="relative mt-6 inline-flex self-start rounded-[10px] px-5 py-3 text-[15px] font-extrabold text-white" style={{ background: acento }}>
-      Abrir {ESTUDIOS[e].nombre} →
+      <TS>Abrir</TS> {ESTUDIOS[e].nombre} →
     </span>
   </LocalizedClientLink>
 )
@@ -161,14 +163,14 @@ export default function DisenarInicio() {
       >
         <div className="mx-auto max-w-[1240px]">
           <span className="inline-block rounded-full bg-[#F07A1A]/15 px-3 py-1 text-[12px] font-extrabold uppercase tracking-wide text-[#F59A4A]">
-            Gratis · en tu navegador · listo para fabricar
+            <TS>Gratis · en tu navegador · listo para fabricar</TS>
           </span>
           <h1 className="m-0 mt-4 max-w-[880px] text-[34px] font-extrabold leading-[1.05] text-white lg:text-[54px]">
-            Diseña en 3D y 2D para tu CNC, láser o impresora 3D
+            <TS>Diseña en 3D y 2D para tu CNC, láser o impresora 3D</TS>
           </h1>
           <p className="m-0 mt-4 max-w-[720px] text-[16.5px] leading-relaxed text-white/70">
-            Convierte una foto en modelo 3D con IA, crea letras 3D y llaveros, o arma cajas, letreros y vectores DXF. Descarga el
-            archivo o mándalo a fabricar con un taller de HETNA.
+            <TS>Convierte una foto en modelo 3D con IA, crea letras 3D y llaveros, o arma cajas, letreros y vectores DXF. Descarga el
+            archivo o mándalo a fabricar con un taller de HETNA.</TS>
           </p>
 
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
@@ -233,24 +235,24 @@ export default function DisenarInicio() {
           className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4 rounded-[20px] bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] px-6 py-6 text-white hover:brightness-110 lg:px-8"
         >
           <span>
-            <span className="block text-[22px] font-extrabold lg:text-[26px]">Más de 170 cajas y empaques listos para cortar</span>
+            <span className="block text-[22px] font-extrabold lg:text-[26px]"><TS>Más de 170 cajas y empaques listos para cortar</TS></span>
             <span className="mt-1 block text-[14.5px] text-white/85">
-              Cajas con tapa, organizadores, cajas de regalo y de pizza. Pones tus medidas y descargas el DXF.
+              <TS>Cajas con tapa, organizadores, cajas de regalo y de pizza. Pones tus medidas y descargas el DXF.</TS>
             </span>
           </span>
-          <span className="rounded-[10px] bg-white px-5 py-3 text-[15px] font-extrabold text-[#1E3A8A]">Ver catálogo de cajas →</span>
+          <span className="rounded-[10px] bg-white px-5 py-3 text-[15px] font-extrabold text-[#1E3A8A]"><TS>Ver catálogo de cajas →</TS></span>
         </LocalizedClientLink>
       </section>
 
       {/* Lo que hacemos */}
       <section className="bg-[#F7F6F2] px-4 py-12 lg:px-8">
         <div className="mx-auto max-w-[1240px]">
-          <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#B34D07]">Todo HETNA CNC</span>
+          <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#B34D07]"><TS>Todo HETNA CNC</TS></span>
           <h2 className="m-0 mt-1.5 text-[26px] font-extrabold leading-tight text-[#1B1B18] lg:text-[34px]">
-            Diseñas aquí. Lo fabricas con nosotros.
+            <TS>Diseñas aquí. Lo fabricas con nosotros.</TS>
           </h2>
           <p className="m-0 mt-2 max-w-[720px] text-[15px] leading-relaxed text-[#4A4943]">
-            HETNA es el marketplace de CNC de México: talleres, máquinas, herramientas, archivos y cursos en un solo lugar.
+            <TS>HETNA es el marketplace de CNC de México: talleres, máquinas, herramientas, archivos y cursos en un solo lugar.</TS>
           </p>
           <ul className="m-0 mt-7 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {SERVICIOS.map((s) => (
@@ -291,9 +293,9 @@ export default function DisenarInicio() {
 
           <div className="mt-12 grid gap-4 lg:grid-cols-2">
             <div className="rounded-[16px] bg-[#142033] p-6 text-white">
-              <h2 className="m-0 text-[19px] font-bold">¿Prefieres que te hagamos el diseño?</h2>
+              <h2 className="m-0 text-[19px] font-bold"><TS>¿Prefieres que te hagamos el diseño?</TS></h2>
               <p className="m-0 mt-1.5 text-[14px] leading-relaxed text-white/75">
-                De tu idea, foto o boceto a un archivo listo para tu máquina, hecho a la medida.
+                <TS>De tu idea, foto o boceto a un archivo listo para tu máquina, hecho a la medida.</TS>
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {DISENO_A_LA_MEDIDA.map((s) => (
@@ -316,24 +318,24 @@ export default function DisenarInicio() {
       <section className="bg-white px-4 py-12 lg:px-8">
         <div className="mx-auto grid max-w-[1240px] gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <div className="text-[15px] leading-relaxed text-[#4A4943]">
-            <h2 className="m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18]">Diseño CNC en línea, gratis y en español</h2>
+            <h2 className="m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18]"><TS>Diseño CNC en línea, gratis y en español</TS></h2>
             <p className="mt-3">
-              Con <strong>HETNA 3D Studio</strong> conviertes una <strong>imagen a 3D</strong> con inteligencia artificial: subes la
-              foto de una figura, una pieza o un producto y recibes el modelo con textura en GLB y en{" "}
-              <strong>STL para impresión 3D</strong> o router. También haces <strong>letras 3D</strong> para anuncios luminosos,{" "}
-              <strong>llaveros con nombre</strong>, <strong>litofanías</strong> y extruyes cualquier SVG o DXF a STL.
+              <TS>Con</TS> <strong><TS>HETNA 3D Studio</TS></strong> <TS>conviertes una</TS> <strong><TS>imagen a 3D</TS></strong> <TS>con inteligencia artificial: subes la
+              foto de una figura, una pieza o un producto y recibes el modelo con textura en GLB y en</TS>{" "}
+              <strong><TS>STL para impresión 3D</TS></strong> <TS>o router. También haces</TS> <strong><TS>letras 3D</TS></strong> <TS>para anuncios luminosos,</TS>{" "}
+              <strong><TS>llaveros con nombre</TS></strong>, <strong><TS>litofanías</TS></strong> <TS>y extruyes cualquier SVG o DXF a STL.</TS>
             </p>
             <p className="mt-3">
-              En <strong>HETNA 2D Studio</strong> generas <strong>cajas para corte láser</strong> con juntas de dedo, plantillas de
-              empaque, letreros, rompecabezas y despiece de muebles, y <strong>vectorizas imágenes a DXF</strong> para router CNC,
-              láser y plasma. Todo con medidas exactas, el espesor de tu material y el ajuste del kerf.
+              <TS>En</TS> <strong><TS>HETNA 2D Studio</TS></strong> <TS>generas</TS> <strong><TS>cajas para corte láser</TS></strong> <TS>con juntas de dedo, plantillas de
+              empaque, letreros, rompecabezas y despiece de muebles, y</TS> <strong><TS>vectorizas imágenes a DXF</TS></strong> <TS>para router CNC,
+              láser y plasma. Todo con medidas exactas, el espesor de tu material y el ajuste del kerf.</TS>
             </p>
             <p className="mt-3">
-              Cuando tengas tu archivo, pásalo a G-code o mándalo a fabricar con talleres CNC de todo México sin salir de HETNA.
+              <TS>Cuando tengas tu archivo, pásalo a G-code o mándalo a fabricar con talleres CNC de todo México sin salir de HETNA.</TS>
             </p>
           </div>
           <div>
-            <h2 className="m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18]">Preguntas frecuentes</h2>
+            <h2 className="m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18]"><TS>Preguntas frecuentes</TS></h2>
             <div className="mt-3 divide-y divide-[#E7E4DC] rounded-[14px] border border-[#E7E4DC]">
               {FAQ.map((f) => (
                 <details key={f.p} className="group px-4 py-3.5">
@@ -350,4 +352,9 @@ export default function DisenarInicio() {
       </section>
     </div>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
