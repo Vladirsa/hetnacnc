@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Radio, Radio as RadioGroupOption } from "@headlessui/react"
 import { Text, clx } from "@medusajs/ui"
 import React, { useContext, useMemo, type JSX } from "react"
@@ -60,7 +61,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
             </Text>
             {info?.descripcion && (
               <Text className="text-[12px] leading-snug text-[#6B6A63]">
-                {info.descripcion}
+                <T>{info.descripcion}</T>
               </Text>
             )}
           </div>
@@ -135,7 +136,7 @@ export const StripeCardContainer = ({
         (stripeReady ? (
           <div className="my-4 transition-all duration-150 ease-in-out">
             <Text className="txt-medium-plus text-ui-fg-base mb-1">
-              Enter your card details:
+              <T>Enter your card details:</T>
             </Text>
             <CardElement
               options={useOptions as StripeCardElementOptions}
