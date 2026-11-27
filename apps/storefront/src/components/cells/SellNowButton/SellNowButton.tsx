@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Button } from "@/components/atoms/Button/Button"
 import { ArrowRightIcon } from "@/icons"
 import Link from "next/link"
@@ -8,7 +9,7 @@ export const SellNowButton = () => {
       href={process.env.NEXT_PUBLIC_VENDOR_URL || "/seller"}
     >
       <Button className="group uppercase !font-bold pl-12 gap-1 flex items-center">
-        Vende con nosotros
+        <TS>Vende con nosotros</TS>
         <ArrowRightIcon
           color="white"
           className="w-5 h-5 group-hover:opacity-100 opacity-0 transition-all duration-300"
