@@ -2,6 +2,7 @@
 // los talleres publicados. Sólo se dibuja cuando ya hay suficientes talleres
 // para que la cifra ayude (CIFRAS_MINIMO_TALLERES, 10 por omisión): un "3
 // talleres" en la portada espanta más de lo que convence.
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres } from "@/lib/hetna/talleres"
 
@@ -35,7 +36,7 @@ export async function CifrasHetna() {
         href="/talleres"
         className="shrink-0 self-start lg:self-auto bg-[#142033] hover:bg-black text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]"
       >
-        Ver talleres
+        <TS>Ver talleres</TS>
       </LocalizedClientLink>
     </section>
   )
