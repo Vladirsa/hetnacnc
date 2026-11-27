@@ -206,7 +206,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
 
   const panel = (
     <div className="flex flex-col gap-4">
-      {cabecera}
+      <T>{cabecera}</T>
       <Seccion titulo="Empieza con un modelo">
         <div className="grid grid-cols-3 gap-1.5">
           {MODELOS.map((m) => (
@@ -216,7 +216,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
               onClick={() => elegirModelo(m)}
               className="rounded-[8px] bg-[#1C2431] px-1.5 py-2 text-[11.5px] font-semibold leading-tight text-[#C9D2E0] hover:bg-[#243045] hover:text-white"
             >
-              {m.nombre}
+              <T>{m.nombre}</T>
             </button>
           ))}
         </div>
@@ -255,7 +255,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
                 fuenteId === t.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
               }`}
             >
-              {t.nombre}
+              <T>{t.nombre}</T>
             </button>
           ))}
           </div>
@@ -274,7 +274,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
                 forma === f.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
               }`}
             >
-              {f.nombre}
+              <T>{f.nombre}</T>
             </button>
           ))}
         </div>
@@ -292,7 +292,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
               onClick={() => setIcono(i.id)}
               className={`h-10 rounded-[8px] text-[17px] ${icono === i.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
             >
-              {i.simbolo}
+              <T>{i.simbolo}</T>
             </button>
           ))}
         </div>
@@ -301,19 +301,19 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
       <Seccion titulo="Tu logo" nota="PNG, JPG o SVG, de preferencia oscuro sobre fondo claro. Queda en relieve (3D) o grabado (láser), a la izquierda del texto.">
         <div className="flex flex-wrap items-center gap-2">
           <label className="cursor-pointer rounded-[8px] bg-[#1C2431] px-3 py-2 text-[12.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
-            {leyendoLogo ? "Leyendo…" : logo ? "Cambiar logo" : "Subir logo"}
+            <T>{leyendoLogo ? "Leyendo…" : logo ? "Cambiar logo" : "Subir logo"}</T>
             <input type="file" accept={TIPOS_LOGO} className="hidden" onChange={(e) => subirLogo(e.target.files?.[0])} data-testid="logo-llavero" />
           </label>
           {logo && (
             <>
-              <span className="max-w-[150px] truncate text-[12px] text-[#8A97AB]">{logoNombre}</span>
+              <span className="max-w-[150px] truncate text-[12px] text-[#8A97AB]"><T>{logoNombre}</T></span>
               <button type="button" onClick={() => { setLogo(null); setLogoNombre("") }} className="text-[12px] font-semibold text-[#F2A36B] underline">
                 <T>Quitar</T>
               </button>
             </>
           )}
         </div>
-        {logoAviso && <Aviso tipo="error">{logoAviso}</Aviso>}
+        {logoAviso && <Aviso tipo="error"><T>{logoAviso}</T></Aviso>}
       </Seccion>
 
       <Destacado titulo="Tamaño">
@@ -355,20 +355,20 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
 
       <CampoNum etiqueta="Cuántos quieres (para cotizar)" valor={cantidad} cambiar={setCantidad} sufijo="pzas" />
 
-      {error && <Aviso tipo="error">{error}</Aviso>}
+      {error && <Aviso tipo="error"><T>{error}</T></Aviso>}
       {r?.errores.map((e) => (
         <Aviso key={e} tipo="error">
-          {e}
+          <T>{e}</T>
         </Aviso>
       ))}
-      {listo && r!.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
+      {listo && r!.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
   const diseno2d = (
     <div className="flex h-full flex-col gap-3 p-4">
       {!listo ? (
-        <p className="m-0 text-[14px] text-[#8A97AB]">{cargando ? "Cargando tipografía…" : "Escribe un texto."}</p>
+        <p className="m-0 text-[14px] text-[#8A97AB]"><T>{cargando ? "Cargando tipografía…" : "Escribe un texto."}</T></p>
       ) : (
         <>
           <Datos
@@ -476,9 +476,9 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
         />
         <div className="flex flex-wrap items-center gap-2">
           <Boton tipo="primario" disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("stl")}>
-            {armandoZip ? "Armando…" : `ZIP con ${listaNombres.length || 0} STL`}
+            <T>{armandoZip ? "Armando…" : `ZIP con ${listaNombres.length || 0} STL`}</T>
           </Boton>
-          <Boton disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("dxf")}>{`ZIP con ${listaNombres.length || 0} DXF`}</Boton>
+          <Boton disabled={armandoZip || !listaNombres.length} onClick={() => zipNombres("dxf")}><T>{`ZIP con ${listaNombres.length || 0} DXF`}</T></Boton>
         </div>
       </TarjetaExport>
 
@@ -512,7 +512,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </div>
   )
 
@@ -528,7 +528,7 @@ export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } =
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} <T>mm ·</T> {formaNombre}</span> : null}
+      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} <T>mm ·</T> <T>{formaNombre}</T></span> : null}
     />
   )
 }
