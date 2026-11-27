@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Estrellas } from "./Estrellas"
 import { FormularioResena } from "./FormularioResena"
 import type { Pendiente, ResenasDeProducto } from "@/lib/resenas/acciones"
@@ -34,11 +35,11 @@ export const ResenasProducto = ({
       id="resenas"
       data-testid="product-reviews"
     >
-      <h2 className="text-[17px] font-bold text-[#1B1B18]">Reseñas de este producto</h2>
+      <h2 className="text-[17px] font-bold text-[#1B1B18]"><TS>Reseñas de este producto</TS></h2>
 
       {total === 0 ? (
         <p className="mt-2 text-[14px] leading-relaxed text-[#4A4943]">
-          Todavía no hay reseñas.{" "}
+          <TS>Todavía no hay reseñas.</TS>{" "}
           {pendiente
             ? "Tú lo compraste: tu reseña sería la primera."
             : "Las escriben quienes ya lo compraron, así que las que veas aquí son de compras reales."}
@@ -97,7 +98,7 @@ export const ResenasProducto = ({
                 <span className="flex items-center gap-2">
                   <Estrellas valor={r.calificacion} />
                   <span className="rounded-full bg-[#EAF3EE] px-2 py-0.5 text-[11px] font-semibold text-[#1E7A52]">
-                    Compra verificada
+                    <TS>Compra verificada</TS>
                   </span>
                 </span>
                 <span className="shrink-0 text-[12px] text-[#8A8780]">
@@ -129,7 +130,7 @@ export const ResenasProducto = ({
 
               {r.respuesta_taller && (
                 <div className="mt-2 rounded-[10px] border-l-[3px] border-[#C2560A] bg-[#FFF8F3] px-3 py-2">
-                  <p className="text-[12px] font-bold text-[#B34D07]">Respuesta del taller</p>
+                  <p className="text-[12px] font-bold text-[#B34D07]"><TS>Respuesta del taller</TS></p>
                   <p className="mt-0.5 text-[13px] leading-relaxed text-[#4A4943]">
                     {r.respuesta_taller}
                   </p>
