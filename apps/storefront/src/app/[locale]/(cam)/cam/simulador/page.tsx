@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { JsonLd } from "@/components/hetna/JsonLd"
@@ -7,7 +9,7 @@ import { migas } from "@/lib/hetna/schema"
 
 const URL_PAGINA = "https://hetnacnc.com/mx/cam/simulador"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: URL_PAGINA },
   title: "Simulador CNC gratis: fresadora, router y torno en 3D",
   description:
@@ -104,26 +106,26 @@ export default function PaginaSimulador() {
       />
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="m-0 text-[16px] font-bold">
-          Simulador <span className="text-[#F28A3C]">CNC</span>{" "}
-          <span className="text-[12.5px] font-normal text-[#8A97AB]">fresadora, router y torno: escribe tu G-code y míralo cortar</span>
+          <TS>Simulador</TS> <span className="text-[#F28A3C]"><TS>CNC</TS></span>{" "}
+          <span className="text-[12.5px] font-normal text-[#8A97AB]"><TS>fresadora, router y torno: escribe tu G-code y míralo cortar</TS></span>
         </h1>
         <LocalizedClientLink href="/servicios/aprendizaje-cnc" className="text-[12.5px] font-semibold text-[#F28A3C] hover:underline">
-          Cursos de la Academia →
+          <TS>Cursos de la Academia →</TS>
         </LocalizedClientLink>
       </div>
 
       <SimuladorModos />
 
       <section className="mx-auto mt-8 max-w-[1000px] text-[#C9CED6]">
-        <h2 className="text-[17px] font-bold text-white">Cómo se usa</h2>
+        <h2 className="text-[17px] font-bold text-white"><TS>Cómo se usa</TS></h2>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-[14px]">
-          <li>Elige la máquina (fresadora y router, o torno) y un ejercicio, o escribe tu programa (también puedes abrir un archivo .nc, .gcode o .tap).</li>
-          <li>Pon las medidas de tu material y tu fresa. Z0 es la cara de arriba del material.</li>
-          <li>Presiona <b>Ciclo de inicio</b>. Con <b>Bloque a bloque</b> la máquina se detiene en cada línea, como en una máquina real.</li>
-          <li>Si hay un error, la máquina se detiene en esa línea y te dice qué corregir.</li>
+          <li><TS>Elige la máquina (fresadora y router, o torno) y un ejercicio, o escribe tu programa (también puedes abrir un archivo .nc, .gcode o .tap).</TS></li>
+          <li><TS>Pon las medidas de tu material y tu fresa. Z0 es la cara de arriba del material.</TS></li>
+          <li><TS>Presiona</TS> <b><TS>Ciclo de inicio</TS></b><TS>. Con</TS> <b><TS>Bloque a bloque</TS></b> <TS>la máquina se detiene en cada línea, como en una máquina real.</TS></li>
+          <li><TS>Si hay un error, la máquina se detiene en esa línea y te dice qué corregir.</TS></li>
         </ol>
 
-        <h2 className="mt-6 text-[17px] font-bold text-white">Códigos que entiende</h2>
+        <h2 className="mt-6 text-[17px] font-bold text-white"><TS>Códigos que entiende</TS></h2>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full text-left text-[13.5px]">
             <tbody>
@@ -137,7 +139,7 @@ export default function PaginaSimulador() {
           </table>
         </div>
 
-        <h2 className="mt-6 text-[17px] font-bold text-white">En el torno</h2>
+        <h2 className="mt-6 text-[17px] font-bold text-white"><TS>En el torno</TS></h2>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full text-left text-[13.5px]">
             <tbody>
@@ -151,7 +153,7 @@ export default function PaginaSimulador() {
           </table>
         </div>
 
-        <h2 className="mt-6 text-[17px] font-bold text-white">Preguntas frecuentes</h2>
+        <h2 className="mt-6 text-[17px] font-bold text-white"><TS>Preguntas frecuentes</TS></h2>
         {PREGUNTAS.map((f) => (
           <details key={f.p} className="border-t border-[#2B3648] py-2">
             <summary className="cursor-pointer font-semibold text-white">{f.p}</summary>
@@ -160,10 +162,15 @@ export default function PaginaSimulador() {
         ))}
 
         <p className="mt-6 text-[13.5px]">
-          ¿Quieres generar el G-code de tu pieza? Usa el <LocalizedClientLink href="/cam/subir" className="font-semibold text-[#F28A3C] hover:underline">CAM 2D</LocalizedClientLink> o
-          calcula RPM y avance con la <LocalizedClientLink href="/calculadora-cnc" className="font-semibold text-[#F28A3C] hover:underline">Calculadora CNC</LocalizedClientLink>.
+          <TS>¿Quieres generar el G-code de tu pieza? Usa el</TS> <LocalizedClientLink href="/cam/subir" className="font-semibold text-[#F28A3C] hover:underline"><TS>CAM 2D</TS></LocalizedClientLink> <TS>o
+          calcula RPM y avance con la</TS> <LocalizedClientLink href="/calculadora-cnc" className="font-semibold text-[#F28A3C] hover:underline"><TS>Calculadora CNC</TS></LocalizedClientLink>.
         </p>
       </section>
     </div>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

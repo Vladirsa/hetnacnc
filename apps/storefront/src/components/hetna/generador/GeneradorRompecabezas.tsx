@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -24,7 +25,7 @@ function descargar(nombre: string, contenido: string, tipo: string) {
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
       {sufijo && <span className="pr-3 text-[13px] text-[#9A978C]">{sufijo}</span>}
@@ -93,10 +94,10 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Rompecabezas para corte láser</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Rompecabezas para corte láser</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Mide la placa, di cuántas piezas quieres y descarga el DXF o SVG con las líneas de corte: cada línea va de orilla a orilla en un solo trazo, y ninguna pieza se repite. Con marco y base opcionales para armarlo encima.
+          <T>Mide la placa, di cuántas piezas quieres y descarga el DXF o SVG con las líneas de corte: cada línea va de orilla a orilla en un solo trazo, y ninguna pieza se repite. Con marco y base opcionales para armarlo encima.</T>
         </p>
       </section>
 
@@ -104,12 +105,12 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           {cabecera}
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Empieza con un modelo</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Empieza con un modelo</T></span>
             <div className="grid grid-cols-3 gap-1.5">
               {MODELOS.map((m) => (
                 <button key={m.id} type="button" onClick={() => elegirModelo(m)} className="rounded-[10px] border border-[#E7E4DC] bg-white px-1.5 py-2 text-left leading-tight hover:border-[#C2560A]">
                   <span className="block text-[11.5px] font-semibold text-[#1B1B18]">{m.nombre}</span>
-                  <span className="block text-[10.5px] text-[#6B6A63]">{m.detalle}</span>
+                  <span className="block text-[10.5px] text-[#6B6A63]"><T>{m.detalle}</T></span>
                 </button>
               ))}
             </div>
@@ -127,18 +128,18 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
             <Campo etiqueta="Variación" valor={variacion} cambiar={setVariacion} sufijo="%" />
             <Campo etiqueta="Esquinas redondas" valor={esquinas} cambiar={setEsquinas} />
             <label className="flex flex-col gap-1">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Acomodo nº {semilla}</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Acomodo nº</T> {semilla}</span>
               <button type="button" onClick={() => setSemilla(1 + Math.floor(Math.random() * 9999))} className="h-[46px] rounded-[10px] border border-[#E7E4DC] bg-white text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
-                Otro acomodo
+                <T>Otro acomodo</T>
               </button>
             </label>
           </div>
-          <p className="m-0 -mt-2 text-[12px] text-[#6B6A63]">El nudo clásico es 20 %; con 4 % de variación ninguna pieza queda igual. El número de acomodo te deja volver a generar exactamente el mismo rompecabezas.</p>
+          <p className="m-0 -mt-2 text-[12px] text-[#6B6A63]"><T>El nudo clásico es 20 %; con 4 % de variación ninguna pieza queda igual. El número de acomodo te deja volver a generar exactamente el mismo rompecabezas.</T></p>
 
           <div className="border-t border-[#E7E4DC] pt-3 flex flex-col gap-3">
             <label className="flex items-center gap-2 text-[14px] font-semibold text-[#1B1B18]">
               <input type="checkbox" checked={conMarco} onChange={(e) => setConMarco(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
-              Agregar marco y base
+              <T>Agregar marco y base</T>
             </label>
             {conMarco && (
               <div className="grid grid-cols-2 gap-2">
@@ -146,7 +147,7 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
                 <Campo etiqueta="Holgura" valor={holgura} cambiar={setHolgura} />
               </div>
             )}
-            <p className="m-0 text-[12px] text-[#6B6A63]">El marco es un anillo y la base una placa lisa: se pegan y el rompecabezas se arma adentro. Van en las capas MARCO y BASE para cortarlas aparte.</p>
+            <p className="m-0 text-[12px] text-[#6B6A63]"><T>El marco es un anillo y la base una placa lisa: se pegan y el rompecabezas se arma adentro. Van en las capas MARCO y BASE para cortarlas aparte.</T></p>
           </div>
         </section>
 
@@ -160,7 +161,7 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
             {listo ? (
               <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[440px]" dangerouslySetInnerHTML={{ __html: vista }} />
             ) : (
-              <span className="text-[14px] text-[#6B6A63]">Revisa las medidas</span>
+              <span className="text-[14px] text-[#6B6A63]"><T>Revisa las medidas</T></span>
             )}
           </div>
           {listo && (
@@ -188,7 +189,7 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
                 className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                Ver precio al instante en el Cotizador
+                <T>Ver precio al instante en el Cotizador</T>
               </button>
               <button
                 type="button"
@@ -199,21 +200,21 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
                 className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                Fabrícamelo: que un taller lo corte
+                <T>Fabrícamelo: que un taller lo corte</T>
               </button>
               {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => descargar(`${archivo}.dxf`, dibujoDXF(r.dibujo), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                  Descargar DXF
+                  <T>Descargar DXF</T>
                 </button>
                 <button type="button" onClick={() => descargar(`${archivo}.svg`, dibujoSVG(r.dibujo, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                  Descargar SVG
+                  <T>Descargar SVG</T>
                 </button>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                ¿Quieres una foto en el rompecabezas? Prepárala en{" "}
-                <LocalizedClientLink href="/disenar/grabado-foto" className="font-semibold text-[#B34D07] hover:underline">Foto para grabado láser</LocalizedClientLink>{" "}
-                al mismo tamaño de la placa, graba primero y corta después con este archivo. Recomendado: MDF o triplay de 3 mm; en LightBurn pon la capa CORTE a cortar y deja el marco y la base en capas aparte.
+                <T>¿Quieres una foto en el rompecabezas? Prepárala en</T>{" "}
+                <LocalizedClientLink href="/disenar/grabado-foto" className="font-semibold text-[#B34D07] hover:underline"><T>Foto para grabado láser</T></LocalizedClientLink>{" "}
+                <T>al mismo tamaño de la placa, graba primero y corta después con este archivo. Recomendado: MDF o triplay de 3 mm; en LightBurn pon la capa CORTE a cortar y deja el marco y la base en capas aparte.</T>
               </p>
             </>
           )}

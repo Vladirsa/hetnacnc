@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -9,7 +11,7 @@ import { leerDistribuidor, ligaCotizador } from "@/lib/hetna/distribuidor"
 // cuanto el taller se registra (supabase/referidos.sql → aplicar_referido).
 type Props = { params: Promise<{ codigo: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { codigo } = await params
   const d = await leerDistribuidor(codigo)
   if (!d) return { title: "Código de distribuidor", robots: { index: false } }
@@ -30,26 +32,26 @@ export default async function DistribuidorPage({ params }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[900px] px-4 py-14 text-center lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Regalo de {d.nombre}</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Regalo de</TS> {d.nombre}</p>
           <h1 className="mx-auto mt-2 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">
-            {meses} de HETNA Taller, gratis
+            {meses} <TS>de HETNA Taller, gratis</TS>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/75">
-            Con tu máquina nueva viene el Cotizador HETNA: sube tu DXF o STL y sabe en 2 minutos cuánto tarda, cuánto te cuesta y cuánto cobrar.
+            <TS>Con tu máquina nueva viene el Cotizador HETNA: sube tu DXF o STL y sabe en 2 minutos cuánto tarda, cuánto te cuesta y cuánto cobrar.</TS>
           </p>
           <div className="mx-auto mt-8 max-w-sm rounded-2xl bg-white/10 p-5">
-            <p className="m-0 text-xs uppercase tracking-widest text-white/60">Tu código</p>
+            <p className="m-0 text-xs uppercase tracking-widest text-white/60"><TS>Tu código</TS></p>
             <CopiarCodigo codigo={d.codigo} />
           </div>
           <a href={liga} className="mt-6 inline-block rounded-xl bg-[#C2560A] px-8 py-4 text-lg font-semibold text-white no-underline hover:brightness-110">
-            Activar mis {d.dias} días
+            <TS>Activar mis</TS> {d.dias} <TS>días</TS>
           </a>
-          <p className="mt-3 text-sm text-white/60">El código se aplica solo al registrarte desde este botón.</p>
+          <p className="mt-3 text-sm text-white/60"><TS>El código se aplica solo al registrarte desde este botón.</TS></p>
         </div>
       </section>
 
       <section className="mx-auto max-w-[900px] px-4 py-12 lg:px-6">
-        <h2 className="text-center text-2xl font-extrabold text-[#142033]">En 3 pasos</h2>
+        <h2 className="text-center text-2xl font-extrabold text-[#142033]"><TS>En 3 pasos</TS></h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
             ["1", "Regístrate", "Con el botón de arriba. Si ya bajaste la app, escribe el código en Menú → Invitar a un taller."],
@@ -64,9 +66,14 @@ export default async function DistribuidorPage({ params }: Props) {
           ))}
         </div>
         <p className="mt-8 text-center text-[12px] text-[#7A776E]">
-          Vale para talleres nuevos en sus primeros 30 días. Al terminar el regalo puedes seguir con el plan gratis o contratar un plan.
+          <TS>Vale para talleres nuevos en sus primeros 30 días. Al terminar el regalo puedes seguir con el plan gratis o contratar un plan.</TS>
         </p>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

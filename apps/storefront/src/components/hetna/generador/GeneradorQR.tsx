@@ -2,6 +2,7 @@
 
 // Código QR para grabar (2D Studio): QR vectorial para placas, mesas de
 // restaurante, empaques y tarjetas de madera.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 
 import { CampoNum, CampoTexto, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -72,7 +73,7 @@ export function GeneradorQR({ cabecera }: { cabecera?: React.ReactNode }) {
         </div>
         <CampoTexto valor={etiqueta} cambiar={setEtiqueta} max={40} placeholder="Sin texto" />
         {etiqueta.trim() && <CampoNum etiqueta="Alto de las letras" valor={altoEtiqueta} cambiar={setAltoEtiqueta} />}
-        {errorFuente && <span className="text-[12px] text-[#F6B8AE]">No se pudo cargar la letra; el QR sí sale.</span>}
+        {errorFuente && <span className="text-[12px] text-[#F6B8AE]"><T>No se pudo cargar la letra; el QR sí sale.</T></span>}
       </Seccion>
       <Seccion titulo="Tamaño">
         <div className="grid grid-cols-2 gap-2">

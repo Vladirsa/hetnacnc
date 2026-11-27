@@ -3,6 +3,7 @@
 // "Tu negocio": a qué se dedica el cliente. Lo ven los talleres que le venden
 // (Mis clientes, en su panel) para entender qué necesita — nunca su correo ni
 // su teléfono. Se guarda en metadata.giro de la cuenta.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 
 import { guardarGiro } from "@/lib/cuenta/giro"
@@ -29,9 +30,9 @@ export function TuNegocio({ inicial }: { inicial: string }) {
 
   return (
     <section id="negocio" className="scroll-mt-28 rounded-[16px] bg-white/80 p-5 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md sm:p-6">
-      <h2 className="m-0 text-[19px] font-bold text-[#142033]">Tu negocio</h2>
+      <h2 className="m-0 text-[19px] font-bold text-[#142033]"><T>Tu negocio</T></h2>
       <p className="m-0 mb-4 mt-1 text-[14px] text-[#6B6A63]">
-        ¿A qué te dedicas? Así los talleres entienden mejor lo que necesitas. Nunca compartimos tu correo ni tu teléfono.
+        <T>¿A qué te dedicas? Así los talleres entienden mejor lo que necesitas. Nunca compartimos tu correo ni tu teléfono.</T>
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <select

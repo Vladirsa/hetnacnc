@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { ChipsSecciones, ColIzquierda, Composer, LATERAL_FIJO, Publicacion } from "@/components/hetna/foro/Feed"
@@ -21,7 +23,7 @@ import {
 } from "@/lib/foro/red"
 import { objetivoSeccion, objetivoTaller, urlPerfil, urlRed, urlTema } from "@/lib/foro/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "Mi red | Foro CNC México" },
   description: "Sigue talleres, proveedores y profesionales CNC de México y entérate de sus productos, trabajos y publicaciones.",
   robots: { index: false, follow: true },
@@ -50,11 +52,11 @@ export default async function MiRed({ searchParams }: Props) {
       <main className="w-full bg-[#F4F1EA]">
         <div className="mx-auto flex max-w-[860px] flex-col gap-5 px-4 py-8">
           <section className="rounded-[18px] bg-[#142033] p-6 text-white sm:p-10">
-            <p className="m-0 text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Red CNC de México</p>
-            <h1 className="m-0 mt-2 text-3xl font-extrabold sm:text-4xl">Tu red profesional CNC</h1>
+            <p className="m-0 text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Red CNC de México</TS></p>
+            <h1 className="m-0 mt-2 text-3xl font-extrabold sm:text-4xl"><TS>Tu red profesional CNC</TS></h1>
             <p className="m-0 mt-3 max-w-2xl text-white/80">
-              Sigue a los talleres, proveedores y profesionales que te interesan y entérate de sus productos nuevos, sus trabajos y lo que publican.
-              Arma tu currículum, recibe avales y recomendaciones, y encuentra empleo o proyectos.
+              <TS>Sigue a los talleres, proveedores y profesionales que te interesan y entérate de sus productos nuevos, sus trabajos y lo que publican.
+              Arma tu currículum, recibe avales y recomendaciones, y encuentra empleo o proyectos.</TS>
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <LocalizedClientLink
@@ -65,7 +67,7 @@ export default async function MiRed({ searchParams }: Props) {
               </LocalizedClientLink>
               {!sesion && (
                 <LocalizedClientLink href="/login" className="rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
-                  Ya tengo cuenta
+                  <TS>Ya tengo cuenta</TS>
                 </LocalizedClientLink>
               )}
             </div>
@@ -116,23 +118,23 @@ export default async function MiRed({ searchParams }: Props) {
           <ChipsSecciones secciones={secs} />
           <section className={`${CAJA_RED} flex flex-wrap items-center justify-between gap-3`}>
             <div>
-              <h1 className="m-0 text-[22px] font-extrabold text-[#142033]">Mi red</h1>
+              <h1 className="m-0 text-[22px] font-extrabold text-[#142033]"><TS>Mi red</TS></h1>
               <p className="m-0 text-[13.5px] text-[#6B6A63]">
                 <a href="?ver=seguidores" className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                  {cuentas.seguidores} seguidores
+                  {cuentas.seguidores} <TS>seguidores</TS>
                 </a>{" "}
                 ·{" "}
                 <a href="?ver=siguiendo" className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                  {cuentas.siguiendo} siguiendo
+                  {cuentas.siguiendo} <TS>siguiendo</TS>
                 </a>
               </p>
             </div>
             <LocalizedClientLink href={urlPerfil(p.usuario)} className="text-[14px] font-semibold text-[#B34D07] hover:underline">
-              Ver mi perfil →
+              <TS>Ver mi perfil →</TS>
             </LocalizedClientLink>
             <p className="m-0 basis-full text-[13.5px] text-[#6B6A63]">
-              Aquí ves lo que publican las personas, talleres y comunidades que sigues, y lo tuyo. Lo que publiques sale en el foro y en la red de
-              quienes te siguen.
+              <TS>Aquí ves lo que publican las personas, talleres y comunidades que sigues, y lo tuyo. Lo que publiques sale en el foro y en la red de
+              quienes te siguen.</TS>
             </p>
           </section>
 
@@ -146,12 +148,12 @@ export default async function MiRed({ searchParams }: Props) {
                   <strong>
                     {pendientes.recomendaciones === 1 ? "1 recomendación espera" : `${pendientes.recomendaciones} recomendaciones esperan`}
                   </strong>{" "}
-                  que decidas si salen en tu perfil →
+                  <TS>que decidas si salen en tu perfil →</TS>
                 </LocalizedClientLink>
               )}
               {pendientes.vacantes.map((v) => (
                 <LocalizedClientLink key={v.slug} href={`${urlTema({ seccion: v.seccion, slug: v.slug })}#postulaciones`} className="text-[14px] text-[#5A3A12] hover:underline">
-                  <strong>{v.n === 1 ? "1 postulación" : `${v.n} postulaciones`}</strong> a tu vacante “{v.titulo}” →
+                  <strong>{v.n === 1 ? "1 postulación" : `${v.n} postulaciones`}</strong> <TS>a tu vacante “</TS><TS>{v.titulo}</TS>” →
                 </LocalizedClientLink>
               ))}
             </section>
@@ -200,7 +202,7 @@ export default async function MiRed({ searchParams }: Props) {
             <section className={`${CAJA_RED} flex flex-col gap-5`}>
               {siguiendo.talleres.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Talleres</h2>
+                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Talleres</TS></h2>
                   {siguiendo.talleres.map((t) => (
                     <TarjetaTallerRed key={t.id} t={t} sesion siguiendo />
                   ))}
@@ -208,7 +210,7 @@ export default async function MiRed({ searchParams }: Props) {
               )}
               {siguiendo.personas.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Personas</h2>
+                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Personas</TS></h2>
                   {siguiendo.personas.map((a) => (
                     <TarjetaPersona key={a.id} a={a} sesion siguiendo />
                   ))}
@@ -216,7 +218,7 @@ export default async function MiRed({ searchParams }: Props) {
               )}
               {siguiendo.secciones.length > 0 && (
                 <div className="flex flex-col gap-3">
-                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Comunidades</h2>
+                  <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Comunidades</TS></h2>
                   {siguiendo.secciones.map((s) => (
                     <div key={s.slug} className="flex items-center justify-between gap-3">
                       <LocalizedClientLink href={`/foro-cnc/${s.slug}`} className="font-semibold text-[#1B1B18] hover:text-[#B34D07]">
@@ -227,7 +229,7 @@ export default async function MiRed({ searchParams }: Props) {
                   ))}
                 </div>
               )}
-              {nadaQueVer && <p className="m-0 text-[14.5px] text-[#6B6A63]">Aún no sigues a nadie.</p>}
+              {nadaQueVer && <p className="m-0 text-[14.5px] text-[#6B6A63]"><TS>Aún no sigues a nadie.</TS></p>}
             </section>
           )}
 
@@ -239,7 +241,7 @@ export default async function MiRed({ searchParams }: Props) {
                 ))
               ) : (
                 <p className="m-0 text-[14.5px] text-[#6B6A63]">
-                  Aún no tienes seguidores. Publica tus trabajos, responde preguntas y completa tu currículum: así te encuentran.
+                  <TS>Aún no tienes seguidores. Publica tus trabajos, responde preguntas y completa tu currículum: así te encuentran.</TS>
                 </p>
               )}
             </section>
@@ -249,7 +251,7 @@ export default async function MiRed({ searchParams }: Props) {
         <aside className={`flex flex-col gap-3 ${LATERAL_FIJO}`}>
           {sugeridos.length > 0 && (
             <section className={`${CAJA_RED} flex flex-col gap-3`}>
-              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Personas que quizá conozcas</h2>
+              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Personas que quizá conozcas</TS></h2>
               {sugeridos.map((a) => (
                 <TarjetaPersona key={a.id} a={a} sesion />
               ))}
@@ -257,18 +259,18 @@ export default async function MiRed({ searchParams }: Props) {
           )}
           {talleresSugeridos.length > 0 && (
             <section className={`${CAJA_RED} flex flex-col gap-3`}>
-              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Talleres para seguir</h2>
+              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Talleres para seguir</TS></h2>
               {talleresSugeridos.map((t) => (
                 <TarjetaTallerRed key={t.id} t={t} sesion />
               ))}
               <LocalizedClientLink href="/talleres" className="text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                Ver todos los talleres →
+                <TS>Ver todos los talleres →</TS>
               </LocalizedClientLink>
             </section>
           )}
           {comunidades.length > 0 && (
             <section className={`${CAJA_RED} flex flex-col gap-3`}>
-              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Comunidades</h2>
+              <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Comunidades</TS></h2>
               {comunidades.map((s) => (
                 <div key={s.slug} className="flex items-center justify-between gap-2">
                   <LocalizedClientLink href={`/foro-cnc/${s.slug}`} className="min-w-0 truncate text-[14px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
@@ -283,4 +285,9 @@ export default async function MiRed({ searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

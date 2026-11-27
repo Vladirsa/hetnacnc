@@ -4,6 +4,7 @@
 // "Características") y la pone arriba, en un cuadro que se lee de un vistazo.
 // Si la descripción no trae lista, no se muestra nada.
 
+import { TS } from "@/i18n/TS"
 const limpiar = (html: string) =>
   html
     .replace(/<[^>]+>/g, " ")
@@ -33,7 +34,7 @@ export const LoMasImportante = ({ descripcion }: { descripcion?: string | null }
   return (
     <section className="overflow-hidden rounded-[14px] border border-[#F2DCC8] bg-white" data-testid="lo-mas-importante">
       <h2 className="m-0 bg-gradient-to-r from-[#142033] to-[#1E3250] px-4 py-2.5 text-[15px] font-bold text-white">
-        Lo más importante
+        <TS>Lo más importante</TS>
       </h2>
       <ul className="m-0 grid list-none gap-2 p-4 sm:grid-cols-2">
         {lista.map((t) => (

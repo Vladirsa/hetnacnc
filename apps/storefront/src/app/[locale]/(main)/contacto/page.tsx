@@ -1,10 +1,12 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, ligaWhatsApp, ubicacionEmpresa } from "@/lib/hetna/empresa"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/contacto" },
   title: "Contacto",
   description: "Contacta a HETNA CNC por WhatsApp, teléfono o correo. Atención de lunes a viernes de 9:00 a 18:00 h.",
@@ -34,43 +36,43 @@ export default function Contacto() {
     <PaginaInfo etiqueta="HETNA CNC" titulo="Contacto" resumen="Estamos para ayudarte con compras, cotizaciones y envíos." jsonLd={jsonLd}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={TARJETA}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">WhatsApp</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>WhatsApp</TS></p>
           <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.whatsappVisible}</p>
           <a href={ligaWhatsApp("Hola HETNA CNC")} target="_blank" rel="noopener noreferrer">
-            Abrir WhatsApp →
+            <TS>Abrir WhatsApp →</TS>
           </a>
         </div>
         <div className={TARJETA}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">Teléfono</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Teléfono</TS></p>
           <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.telefonoVisible}</p>
-          <a href={`tel:+${EMPRESA.telefono}`}>Llamar →</a>
+          <a href={`tel:+${EMPRESA.telefono}`}><TS>Llamar →</TS></a>
         </div>
         {EMPRESA.correo && (
           <div className={TARJETA}>
-            <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">Correo</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Correo</TS></p>
             <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.correo}</p>
-            <a href={`mailto:${EMPRESA.correo}`}>Escribir correo →</a>
+            <a href={`mailto:${EMPRESA.correo}`}><TS>Escribir correo →</TS></a>
           </div>
         )}
         <div className={TARJETA}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">Horario</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Horario</TS></p>
           <p className="mt-1 font-semibold text-[#142033]">{EMPRESA.horario}</p>
         </div>
         <div className={TARJETA}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">Ubicación</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Ubicación</TS></p>
           <p className="mt-1 font-semibold text-[#142033]">{EMPRESA.domicilioCompleto || ubicacionEmpresa()}</p>
-          <p className="text-sm text-[#6B675C]">Envíos a toda la República Mexicana</p>
-          {EMPRESA.razonSocial && <p className="mt-2 text-sm text-[#6B675C]">Responsable: {EMPRESA.razonSocial}</p>}
+          <p className="text-sm text-[#6B675C]"><TS>Envíos a toda la República Mexicana</TS></p>
+          {EMPRESA.razonSocial && <p className="mt-2 text-sm text-[#6B675C]"><TS>Responsable:</TS> {EMPRESA.razonSocial}</p>}
         </div>
       </div>
 
-      <h2>¿Necesitas una cotización?</h2>
+      <h2><TS>¿Necesitas una cotización?</TS></h2>
       <p>
-        Para trabajos de corte, grabado o maquinado usa <LocalizedClientLink href="/cotizar">Solicitar cotización</LocalizedClientLink>:
-        así tu solicitud queda registrada y te respondemos por correo.
+        <TS>Para trabajos de corte, grabado o maquinado usa</TS> <LocalizedClientLink href="/cotizar"><TS>Solicitar cotización</TS></LocalizedClientLink><TS>:
+        así tu solicitud queda registrada y te respondemos por correo.</TS>
       </p>
 
-      <h2>Síguenos</h2>
+      <h2><TS>Síguenos</TS></h2>
       <ul>
         {EMPRESA.redes.map((r) => (
           <li key={r.nombre}>
@@ -82,4 +84,9 @@ export default function Contacto() {
       </ul>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

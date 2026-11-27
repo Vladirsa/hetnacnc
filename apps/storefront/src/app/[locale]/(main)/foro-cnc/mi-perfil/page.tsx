@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -11,7 +13,7 @@ import { buscarMiTaller } from "@/lib/foro/acciones"
 import { secciones, sesionForo } from "@/lib/foro/consultas"
 import { urlPerfil } from "@/lib/foro/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mi perfil del Foro CNC México",
   robots: { index: false, follow: false },
 }
@@ -37,24 +39,24 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
           <div>
             <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]">{p ? "Tu perfil" : "Crea tu perfil del foro"}</h1>
             <p className="m-0 mt-1.5 text-[14.5px] text-[#6B6A63] max-w-[620px]">
-              Tu perfil es tu tarjeta de presentación en la comunidad: los clientes ven quién eres, qué máquinas tienes y tus trabajos.
+              <TS>Tu perfil es tu tarjeta de presentación en la comunidad: los clientes ven quién eres, qué máquinas tienes y tus trabajos.</TS>
             </p>
           </div>
           {p && (
             <LocalizedClientLink href={urlPerfil(p.usuario)} className="text-[14px] font-semibold text-[#B34D07] hover:underline">
-              Ver mi perfil público
+              <TS>Ver mi perfil público</TS>
             </LocalizedClientLink>
           )}
         </div>
         {!sesion ? (
           <div className="bg-white border border-[#E7E4DC] rounded-[16px] p-6 flex flex-col gap-3">
-            <p className="m-0 text-[15px] text-[#44433D]">Primero entra con tu cuenta de HETNA CNC (es gratis y es la misma de la tienda).</p>
+            <p className="m-0 text-[15px] text-[#44433D]"><TS>Primero entra con tu cuenta de HETNA CNC (es gratis y es la misma de la tienda).</TS></p>
             <div className="flex gap-2">
               <LocalizedClientLink href="/login" className="border border-[#E0DCD2] font-semibold px-4 py-2.5 rounded-[10px] text-[14px] hover:border-[#C2560A]">
-                Entrar
+                <TS>Entrar</TS>
               </LocalizedClientLink>
               <LocalizedClientLink href="/register" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-                Crear cuenta gratis
+                <TS>Crear cuenta gratis</TS>
               </LocalizedClientLink>
             </div>
           </div>
@@ -106,4 +108,9 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

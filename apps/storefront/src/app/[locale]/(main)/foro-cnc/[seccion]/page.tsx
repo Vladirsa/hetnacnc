@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { descripcionCorta } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
@@ -21,7 +23,7 @@ type Props = {
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || ""
 const ORDENES: Orden[] = ["recientes", "populares", "sin-respuesta", "nuevos"]
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params, searchParams }: Props): Promise<Metadata> {
   const { seccion } = await params
   const q = await searchParams
   const s = (await secciones())?.find((x) => x.slug === seccion)
@@ -66,9 +68,9 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-[28px] lg:text-[34px] font-bold m-0 text-[#1B1B18]">{s.nombre}</h1>
-            <p className="m-0 mt-1.5 text-[15px] text-[#6B6A63] max-w-[680px] leading-relaxed">{s.descripcion}</p>
+            <p className="m-0 mt-1.5 text-[15px] text-[#6B6A63] max-w-[680px] leading-relaxed"><TS>{s.descripcion}</TS></p>
             {s.soloNegocios && (
-              <p className="m-0 mt-2 text-[13px] text-[#9A4A06]">Aquí solo publican talleres, proveedores y marcas. Todos pueden responder.</p>
+              <p className="m-0 mt-2 text-[13px] text-[#9A4A06]"><TS>Aquí solo publican talleres, proveedores y marcas. Todos pueden responder.</TS></p>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
@@ -86,16 +88,16 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
             {fabricar && pagina === 1 && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3">
                 <span className="text-[14px] text-[#44433D]">
-                  <strong className="text-[#1B1B18]">{fabricar.titulo}</strong> {fabricar.texto}
+                  <strong className="text-[#1B1B18]"><TS>{fabricar.titulo}</TS></strong> <TS>{fabricar.texto}</TS>
                 </span>
                 <span className="flex gap-3 shrink-0">
                   {talleres && (
                     <LocalizedClientLink href={talleres.href} className="text-[13.5px] font-semibold text-[#142033] hover:text-[#B34D07]">
-                      Ver talleres
+                      <TS>Ver talleres</TS>
                     </LocalizedClientLink>
                   )}
                   <LocalizedClientLink href={fabricar.href} className="rounded-full bg-[#C2560A] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[#A84A08]">
-                    {fabricar.boton}
+                    <TS>{fabricar.boton}</TS>
                   </LocalizedClientLink>
                 </span>
               </div>
@@ -118,7 +120,7 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
               </div>
             ) : (
               <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[14px] p-8 text-center flex flex-col items-center gap-3">
-                <p className="m-0 text-[15px] text-[#44433D]">Todavía no hay temas en {s.nombre}. ¡Abre el primero!</p>
+                <p className="m-0 text-[15px] text-[#44433D]"><TS>Todavía no hay temas en</TS> {s.nombre}<TS>. ¡Abre el primero!</TS></p>
                 <BotonPublicar seccion={s.slug} />
               </div>
             )}
@@ -129,4 +131,9 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

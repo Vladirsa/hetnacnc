@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { FormFiscal } from "@/components/hetna/cuenta/Facturacion"
@@ -10,7 +12,7 @@ import { ProfilePassword } from "@/components/molecules/ProfileDetails/ProfilePa
 import { leerFiscal } from "@/lib/cuenta/facturas"
 import { retrieveCustomer } from "@/lib/data/customer"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Datos y contraseña",
   robots: { index: false, follow: false },
 }
@@ -27,26 +29,31 @@ export default async function DatosCuenta() {
         <UserNavigation />
         <div className="flex min-w-0 flex-col gap-6 md:col-span-3" data-testid="profile-settings-container">
           <div>
-            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]">Datos y contraseña</h1>
-            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">Tus datos de contacto, tu contraseña y los datos para que los talleres te facturen.</p>
+            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]"><TS>Datos y contraseña</TS></h1>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]"><TS>Tus datos de contacto, tu contraseña y los datos para que los talleres te facturen.</TS></p>
           </div>
           <ProfileDetails user={user} />
           <WhatsappCuenta telefono={user.phone} />
           <TuNegocio inicial={String((user.metadata as Record<string, unknown> | null)?.giro || "")} />
           <ProfilePassword user={user} />
           <section id="fiscal" className="scroll-mt-28 rounded-[16px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5 sm:p-6">
-            <h2 className="m-0 text-[19px] font-bold text-[#142033]">Datos fiscales</h2>
+            <h2 className="m-0 text-[19px] font-bold text-[#142033]"><TS>Datos fiscales</TS></h2>
             <p className="m-0 mb-4 mt-1 text-[14px] text-[#6B6A63]">
-              Guárdalos una vez y pide factura (CFDI) desde cada pedido. Cada taller emite la factura de lo que te vendió.
+              <TS>Guárdalos una vez y pide factura (CFDI) desde cada pedido. Cada taller emite la factura de lo que te vendió.</TS>
             </p>
             {fiscal ? (
               <FormFiscal inicial={fiscal.fiscal} regimenes={fiscal.regimenes} usos={fiscal.usos} />
             ) : (
-              <p className="m-0 text-[14px] text-[#B3261E]">No pudimos cargar tus datos fiscales. Recarga la página.</p>
+              <p className="m-0 text-[14px] text-[#B3261E]"><TS>No pudimos cargar tus datos fiscales. Recarga la página.</TS></p>
             )}
           </section>
         </div>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

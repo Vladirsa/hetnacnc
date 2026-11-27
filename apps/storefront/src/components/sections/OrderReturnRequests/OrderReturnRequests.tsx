@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { OrdersPagination } from "@/components/organisms/OrdersPagination/OrdersPagination"
 import { SingleOrderReturn } from "@/components/organisms/SingleOrderReturn/SingleOrderReturn"
 import { Heading } from "@medusajs/ui"
@@ -28,7 +29,7 @@ export const OrderReturnRequests = ({
     return (
       <div className="mt-8" data-testid="order-return-requests-empty-state">
         <Heading level="h2" className="uppercase text-center heading-lg" data-testid="no-returns-heading">
-          Sin devoluciones
+          <TS>Sin devoluciones</TS>
         </Heading>
         <p className="text-center text-secondary w-96 mt-8 mx-auto" data-testid="no-returns-description">
           {

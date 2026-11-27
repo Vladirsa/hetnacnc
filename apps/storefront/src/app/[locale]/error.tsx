@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -30,11 +31,11 @@ export default function ErrorDeSeccion({
     <main className="container flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-[520px] rounded-[14px] border border-[#E7E4DC] bg-white p-6 text-center">
         <h1 className="text-[22px] font-bold text-[#1B1B18]">
-          Esta parte no se pudo cargar
+          <T>Esta parte no se pudo cargar</T>
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">
-          Tu carrito y tu cuenta están bien. Fue esta pantalla, y ya quedamos
-          enterados.
+          <T>Tu carrito y tu cuenta están bien. Fue esta pantalla, y ya quedamos
+          enterados.</T>
         </p>
 
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -43,33 +44,33 @@ export default function ErrorDeSeccion({
             onClick={reset}
             className="rounded-[10px] bg-[#C2560A] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
           >
-            Volver a intentar
+            <T>Volver a intentar</T>
           </button>
           <LocalizedClientLink
             href="/cart"
             className="rounded-[10px] border border-[#E7E4DC] px-6 py-3 text-[15px] font-semibold text-[#1B1B18] hover:border-[#C2560A]"
           >
-            Ir a mi carrito
+            <T>Ir a mi carrito</T>
           </LocalizedClientLink>
         </div>
 
         <p className="mt-5 text-[13px] leading-relaxed text-[#6B6A63]">
-          ¿Ibas a pagar y no te deja?{" "}
+          <T>¿Ibas a pagar y no te deja?</T>{" "}
           <a
             href={ligaWhatsApp("Hola, me salió un error en la página al intentar comprar.")}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-[#B34D07] underline"
           >
-            Escríbenos por WhatsApp
+            <T>Escríbenos por WhatsApp</T>
           </a>{" "}
-          y lo cerramos contigo. {EMPRESA.horario}.
+          <T>y lo cerramos contigo.</T> {EMPRESA.horario}.
         </p>
 
         {/* El digest es el identificador que Next deja también en el log del
             servidor: con él se encuentra el error exacto de este visitante. */}
         {error.digest && (
-          <p className="mt-3 text-[11px] text-[#A5A29A]">Referencia: {error.digest}</p>
+          <p className="mt-3 text-[11px] text-[#A5A29A]"><T>Referencia:</T> {error.digest}</p>
         )}
       </div>
     </main>

@@ -4,6 +4,7 @@
 // medida, rejilla de categorías, fabricación por proceso y cierre. Los datos
 // (conteos y precios "desde") llegan calculados del servidor
 // (lib/hetna/tienda.ts); aquí sólo se filtran y se buscan.
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 import { useMemo, useState } from "react"
 
@@ -77,7 +78,7 @@ export function TiendaVista({
       {/* Buscador */}
       <form role="search" onSubmit={(e) => e.preventDefault()} className="relative">
         <label htmlFor="buscar-tienda" className="sr-only">
-          Buscar en la tienda
+          <T>Buscar en la tienda</T>
         </label>
         <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-[#5B6370]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
@@ -123,11 +124,11 @@ export function TiendaVista({
           {filtro !== "cotizar" && (
             <section aria-labelledby="titulo-categorias" className="mt-8">
               <h2 id="titulo-categorias" className="fuente-condensada text-[28px] font-bold uppercase leading-none text-[#1E2329]">
-                Categorías
+                <T>Categorías</T>
               </h2>
               {catalogo.fallo && (
                 <p className="mt-3 rounded-md border border-[#F3C9A8] bg-[#FFF4EC] px-4 py-3 text-[14px] text-[#A84303]">
-                  No pudimos leer el catálogo en este momento. Recarga la página en un minuto.
+                  <T>No pudimos leer el catálogo en este momento. Recarga la página en un minuto.</T>
                 </p>
               )}
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -140,11 +141,11 @@ export function TiendaVista({
               </div>
               {verTodo && !catalogo.fallo && (
                 <p className="fuente-mono mt-4 text-[13px] leading-relaxed text-[#5B6370]">
-                  Total en la tienda: {catalogo.total} {catalogo.total === 1 ? "producto publicado" : "productos publicados"}
-                  {conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}. Los planes del Cotizador y los talleres del
-                  directorio no son productos de la tienda y no entran en la cuenta.{" "}
+                  <T>Total en la tienda:</T> {catalogo.total} <T>{catalogo.total === 1 ? "producto publicado" : "productos publicados"}</T>
+                  {conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}<T>. Los planes del Cotizador y los talleres del
+                  directorio no son productos de la tienda y no entran en la cuenta.</T>{" "}
                   <LocalizedClientLink href="/categories" className="font-semibold text-[#C24E03] underline">
-                    Ver todos los productos en una lista
+                    <T>Ver todos los productos en una lista</T>
                   </LocalizedClientLink>
                 </p>
               )}
@@ -182,14 +183,14 @@ function Destacada() {
             <Etiqueta tipo="cotizacion" />
           </div>
           <h2 id="titulo-fabricacion" className="fuente-condensada text-[34px] font-bold uppercase leading-[0.95] sm:text-[44px]">
-            Fabricación a medida
+            <T>Fabricación a medida</T>
           </h2>
           <p className="max-w-md text-[16px] leading-relaxed text-white/80">
-            Cotiza tu pieza en 2 minutos, sin registro. Sube tu archivo o escribe las medidas, ve un precio aproximado al instante y pide propuestas a los talleres.
+            <T>Cotiza tu pieza en 2 minutos, sin registro. Sube tu archivo o escribe las medidas, ve un precio aproximado al instante y pide propuestas a los talleres.</T>
           </p>
           <div>
             <LocalizedClientLink href="/cotizar" className={BTN}>
-              Cotizar mi pieza
+              <T>Cotizar mi pieza</T>
             </LocalizedClientLink>
           </div>
         </div>
@@ -222,8 +223,8 @@ function Tarjeta({ children, foto }: { children: React.ReactNode; foto: React.Re
 function Cifras({ izq, der }: { izq: string; der: string }) {
   return (
     <div className="fuente-mono mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-dashed border-[#D4D9DF] pt-3 text-[13px]">
-      <span className="text-[#1E2329]">{izq}</span>
-      <span className="font-semibold text-[#1E2329]">{der}</span>
+      <span className="text-[#1E2329]"><T>{izq}</T></span>
+      <span className="font-semibold text-[#1E2329]"><T>{der}</T></span>
     </div>
   )
 }
@@ -243,7 +244,7 @@ function TarjetaCategoria({ c }: { c: CategoriaTienda }) {
         <Etiqueta tipo={c.estado} />
       </div>
       <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">{c.nombre}</h3>
-      <p className="text-[14px] leading-snug text-[#5B6370]">{c.descripcion}</p>
+      <p className="text-[14px] leading-snug text-[#5B6370]"><T>{c.descripcion}</T></p>
       <Cifras izq={textoConteo(c.conteo, c.estado)} der={textoDesde(c.desde)} />
       <LocalizedClientLink href={`/tienda/${c.clave}`} className={`${BTN} mt-2 w-full`}>
         {ACCION[c.clave]}
@@ -259,7 +260,7 @@ function TarjetaProxima({ c }: { c: CategoriaTienda }) {
         <Etiqueta tipo="proximamente" />
       </div>
       <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">{c.nombre}</h3>
-      <p className="text-[14px] leading-snug text-[#5B6370]">{c.descripcion}</p>
+      <p className="text-[14px] leading-snug text-[#5B6370]"><T>{c.descripcion}</T></p>
       <Cifras izq="0 productos" der="Aún sin productos" />
       <div className="mt-2">
         <Avisame categoria={c.clave} nombre={c.nombre} />
@@ -280,18 +281,18 @@ function TarjetaCotizador({ planes }: { planes: { nombre: string; precio: string
       <div>
         <Etiqueta tipo="talleres" />
       </div>
-      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">Cotizador para talleres</h3>
-      <p className="text-[14px] leading-snug text-[#5B6370]">La app para cotizar, cobrar y llevar tus pedidos. Es una suscripción, no un producto de la tienda.</p>
+      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>Cotizador para talleres</T></h3>
+      <p className="text-[14px] leading-snug text-[#5B6370]"><T>La app para cotizar, cobrar y llevar tus pedidos. Es una suscripción, no un producto de la tienda.</T></p>
       <div className="fuente-mono mt-auto grid grid-cols-2 gap-1 border-t border-dashed border-[#D4D9DF] pt-3 text-[13px] text-[#1E2329]">
         {planes.map((p) => (
           <span key={p.nombre}>
             {p.nombre} <b>{p.precio}</b>
-            <span className="text-[#5B6370]">/mes</span>
+            <span className="text-[#5B6370]"><T>/mes</T></span>
           </span>
         ))}
       </div>
       <LocalizedClientLink href="/servicios/cotizador-cnc#planes" className={`${BTN2} mt-2 w-full`}>
-        Ver planes
+        <T>Ver planes</T>
       </LocalizedClientLink>
     </Tarjeta>
   )
@@ -303,7 +304,7 @@ function TarjetaTalleres({ activos, verificados }: { activos: number; verificado
       <div>
         <Etiqueta tipo="directorio" />
       </div>
-      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">Talleres CNC</h3>
+      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>Talleres CNC</T></h3>
       <p className="text-[14px] leading-snug text-[#5B6370]">
         {activos === 0
           ? "Todavía no hay talleres activos. ¿Tienes uno? Sé el primero: registrarte es gratis."
@@ -316,11 +317,11 @@ function TarjetaTalleres({ activos, verificados }: { activos: number; verificado
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {activos > 0 && (
           <LocalizedClientLink href="/talleres" className={BTN2}>
-            Ver talleres
+            <T>Ver talleres</T>
           </LocalizedClientLink>
         )}
         <LocalizedClientLink href="/talleres/unete" className={`${BTN} ${activos > 0 ? "" : "sm:col-span-2"}`}>
-          Registrar mi taller
+          <T>Registrar mi taller</T>
         </LocalizedClientLink>
       </div>
     </Tarjeta>
@@ -331,9 +332,9 @@ function Procesos({ procesos }: { procesos: Proceso[] }) {
   return (
     <section aria-labelledby="titulo-procesos" className="mt-10">
       <h2 id="titulo-procesos" className="fuente-condensada text-[28px] font-bold uppercase leading-none text-[#1E2329]">
-        Fabricación por proceso
+        <T>Fabricación por proceso</T>
       </h2>
-      <p className="mt-1 text-[15px] text-[#5B6370]">Elige el proceso y cotiza con talleres. Se cotiza por pieza, sin registro.</p>
+      <p className="mt-1 text-[15px] text-[#5B6370]"><T>Elige el proceso y cotiza con talleres. Se cotiza por pieza, sin registro.</T></p>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {procesos.map((p) => (
           <LocalizedClientLink
@@ -346,8 +347,8 @@ function Procesos({ procesos }: { procesos: Proceso[] }) {
             </div>
             <div className="flex flex-1 flex-col justify-center gap-1 p-3">
               <span className="fuente-condensada text-[20px] font-bold uppercase leading-none text-[#1E2329]">{p.nombre}</span>
-              <span className="text-[13px] leading-snug text-[#5B6370]">{p.texto}</span>
-              <span className="mt-1 text-[13px] font-semibold text-[#C24E03] group-hover:underline">Cotizar →</span>
+              <span className="text-[13px] leading-snug text-[#5B6370]"><T>{p.texto}</T></span>
+              <span className="mt-1 text-[13px] font-semibold text-[#C24E03] group-hover:underline"><T>Cotizar →</T></span>
             </div>
           </LocalizedClientLink>
         ))}
@@ -360,17 +361,17 @@ function Cierre() {
   return (
     <section className="mt-12 flex flex-col gap-4 rounded-md border-2 border-[#1E2329] bg-white p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
       <div>
-        <h2 className="fuente-condensada text-[30px] font-bold uppercase leading-none text-[#1E2329]">¿No está lo que buscas?</h2>
+        <h2 className="fuente-condensada text-[30px] font-bold uppercase leading-none text-[#1E2329]"><T>¿No está lo que buscas?</T></h2>
         <p className="mt-2 max-w-xl text-[15px] text-[#5B6370]">
-          Descríbelo y te conseguimos quién lo fabrique. Si tienes dudas, escríbenos desde Contacto: te respondemos aquí mismo, dentro de HETNA.
+          <T>Descríbelo y te conseguimos quién lo fabrique. Si tienes dudas, escríbenos desde Contacto: te respondemos aquí mismo, dentro de HETNA.</T>
         </p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <LocalizedClientLink href="/cotizar" className={BTN}>
-          Cotizar lo que necesito
+          <T>Cotizar lo que necesito</T>
         </LocalizedClientLink>
         <LocalizedClientLink href="/contacto" className={BTN2}>
-          Contacto
+          <T>Contacto</T>
         </LocalizedClientLink>
       </div>
     </section>
@@ -406,7 +407,7 @@ function Resultados({
   return (
     <section className="mt-5" aria-live="polite">
       <p className="fuente-mono text-[14px] text-[#5B6370]">
-        {r.productos.length} {r.productos.length === 1 ? "producto" : "productos"} para «{termino}»
+        {r.productos.length} <T>{r.productos.length === 1 ? "producto" : "productos"}</T> <T>para «</T>{termino}»
       </p>
 
       {r.productos.length > 0 && (
@@ -419,7 +420,7 @@ function Resultados({
                 </div>
                 <div className="min-w-0 flex-1">
                   <Etiqueta tipo={etiquetaDe(p)} />
-                  <p className="mt-1 line-clamp-2 text-[14px] font-semibold leading-snug text-[#1E2329]">{p.titulo}</p>
+                  <p className="mt-1 line-clamp-2 text-[14px] font-semibold leading-snug text-[#1E2329]"><T>{p.titulo}</T></p>
                   <p className="fuente-mono mt-1 text-[14px] font-semibold text-[#1E2329]">
                     {p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}
                   </p>
@@ -435,12 +436,12 @@ function Resultados({
           {r.categorias.map((c) => (
             <LocalizedClientLink key={c.clave} href={`/tienda/${c.clave}`} className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[#C5CCD3] bg-white px-3 text-[14px] font-semibold text-[#1E2329] hover:border-[#1E2329]">
               {c.nombre}
-              <span className="fuente-mono text-[12px] font-normal text-[#5B6370]">{c.conteo ? textoConteo(c.conteo, c.estado) : "Próximamente"}</span>
+              <span className="fuente-mono text-[12px] font-normal text-[#5B6370]"><T>{c.conteo ? textoConteo(c.conteo, c.estado) : "Próximamente"}</T></span>
             </LocalizedClientLink>
           ))}
           {r.procesos.map((p) => (
             <LocalizedClientLink key={p.nombre} href={cotizarHref({ servicio: p.servicio, descripcion: termino, origen: "tienda-busqueda" })} onClick={cotizar} className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[#C5CCD3] bg-white px-3 text-[14px] font-semibold text-[#1E2329] hover:border-[#1E2329]">
-              Cotizar {p.nombre.toLowerCase()}
+              <T>Cotizar</T> {p.nombre.toLowerCase()}
             </LocalizedClientLink>
           ))}
         </div>
@@ -448,16 +449,16 @@ function Resultados({
 
       {nada && (
         <div className="mt-4 rounded-md border-2 border-dashed border-[#E85D04] bg-white p-5 sm:p-6">
-          <h3 className="fuente-condensada text-[26px] font-bold uppercase leading-none text-[#1E2329]">Todavía no vendemos «{termino}»</h3>
+          <h3 className="fuente-condensada text-[26px] font-bold uppercase leading-none text-[#1E2329]"><T>Todavía no vendemos «</T>{termino}»</h3>
           <p className="mt-2 max-w-xl text-[15px] text-[#5B6370]">
-            Pero te lo podemos conseguir: cotízalo y los talleres de HETNA te mandan su precio. Ya llevamos escrito lo que buscaste.
+            <T>Pero te lo podemos conseguir: cotízalo y los talleres de HETNA te mandan su precio. Ya llevamos escrito lo que buscaste.</T>
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <LocalizedClientLink href={cotizarHref({ descripcion: termino, origen: "tienda-busqueda" })} onClick={cotizar} className={BTN}>
-              Cotizar «{termino.length > 28 ? `${termino.slice(0, 26)}…` : termino}»
+              <T>Cotizar «</T>{termino.length > 28 ? `${termino.slice(0, 26)}…` : termino}»
             </LocalizedClientLink>
             <button type="button" onClick={alLimpiar} className={BTN2}>
-              Ver todas las categorías
+              <T>Ver todas las categorías</T>
             </button>
           </div>
         </div>

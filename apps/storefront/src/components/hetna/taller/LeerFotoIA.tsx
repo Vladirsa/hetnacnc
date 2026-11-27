@@ -3,6 +3,7 @@
 // "¿Sin archivo? Toma una foto": la IA lee la foto o el boceto y llena la
 // solicitud (estrategia 2.2). El cliente revisa y corrige antes de mandar.
 // La foto también se adjunta a la solicitud para que el taller la vea.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRef, useState } from "react"
 
 import { leerFotoSolicitud, type LecturaFoto } from "@/lib/cotizar/acciones"
@@ -66,9 +67,9 @@ export function LeerFotoIA({ alLeer, adjuntar }: { alLeer: (l: LecturaFoto) => v
 
   return (
     <div className="rounded-xl border border-[#F2C9A5] bg-[#FFF8F1] p-4">
-      <p className="m-0 text-sm font-bold text-[#142033]">📷 ¿No tienes archivo? Toma una foto o un boceto</p>
+      <p className="m-0 text-sm font-bold text-[#142033]"><T>📷 ¿No tienes archivo? Toma una foto o un boceto</T></p>
       <p className="m-0 mt-1 text-xs text-[#6B675C]">
-        De la pieza que quieres copiar, de un dibujo a mano o de una referencia. La IA llena la solicitud por ti y tú la revisas antes de mandarla.
+        <T>De la pieza que quieres copiar, de un dibujo a mano o de una referencia. La IA llena la solicitud por ti y tú la revisas antes de mandarla.</T>
       </p>
       <input ref={entrada} type="file" accept="image/*" capture="environment" className="sr-only" id="foto-ia" onChange={(e) => elegir(e.target.files?.[0])} />
       <label
@@ -80,20 +81,20 @@ export function LeerFotoIA({ alLeer, adjuntar }: { alLeer: (l: LecturaFoto) => v
       {error && <p className="m-0 mt-2 text-xs font-semibold text-[#B3261E]">{error}</p>}
       {lectura && !lectura.es_pieza && (
         <p className="m-0 mt-2 text-xs text-[#8A3D06]">
-          No vimos una pieza para fabricar en esa foto. {lectura.descripcion} Prueba con otra o describe tu pieza abajo.
+          <T>No vimos una pieza para fabricar en esa foto.</T> <T>{lectura.descripcion}</T> <T>Prueba con otra o describe tu pieza abajo.</T>
         </p>
       )}
       {lectura?.es_pieza && (
         <div className="mt-3 rounded-lg bg-white p-3 text-xs text-[#40403A]">
-          <p className="m-0 font-bold text-[#0F7A4A]">✓ Llenamos la solicitud con lo que se ve: {lectura.pieza}</p>
+          <p className="m-0 font-bold text-[#0F7A4A]"><T>✓ Llenamos la solicitud con lo que se ve:</T> {lectura.pieza}</p>
           <p className="m-0 mt-1">
-            Proceso sugerido: <b>{lectura.proceso}</b>
-            {lectura.material ? <> · Material: <b>{lectura.material}</b></> : null}
-            {lectura.medidas ? <> · Medidas{lectura.medidas_aproximadas ? " aprox." : ""}: <b>{lectura.medidas}</b></> : null}
+            <T>Proceso sugerido:</T> <b>{lectura.proceso}</b>
+            {lectura.material ? <> <T>· Material:</T> <b>{lectura.material}</b></> : null}
+            {lectura.medidas ? <> <T>· Medidas</T>{lectura.medidas_aproximadas ? " aprox." : ""}: <b>{lectura.medidas}</b></> : null}
           </p>
           {lectura.preguntas.length > 0 && (
             <>
-              <p className="m-0 mt-2 font-semibold text-[#142033]">Para que te coticen bien, agrega en los detalles:</p>
+              <p className="m-0 mt-2 font-semibold text-[#142033]"><T>Para que te coticen bien, agrega en los detalles:</T></p>
               <ul className="m-0 mt-1 list-disc pl-4">
                 {lectura.preguntas.map((p) => (
                   <li key={p}>{p}</li>
@@ -102,7 +103,7 @@ export function LeerFotoIA({ alLeer, adjuntar }: { alLeer: (l: LecturaFoto) => v
             </>
           )}
           <p className="m-0 mt-2 text-[11px] text-[#7A776E]">
-            Revisa y corrige abajo antes de enviar.{lectura.confianza === "baja" ? " La foto no era muy clara: revisa con cuidado." : ""} La foto va adjunta para el taller.
+            <T>Revisa y corrige abajo antes de enviar.</T>{lectura.confianza === "baja" ? " La foto no era muy clara: revisa con cuidado." : ""} <T>La foto va adjunta para el taller.</T>
           </p>
         </div>
       )}

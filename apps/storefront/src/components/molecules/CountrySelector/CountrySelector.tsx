@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import {
   Listbox,
   ListboxButton,
@@ -81,7 +82,7 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
 
   return (
     <div className="md:flex gap-2 items-center justify-end relative">
-      <Label className="label-md hidden md:block">Enviar a</Label>
+      <Label className="label-md hidden md:block"><T>Enviar a</T></Label>
       <div>
         <Listbox
           onChange={handleChange}

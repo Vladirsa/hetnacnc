@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BotonPreferenciasCookies } from "@/components/hetna/AvisoCookies"
 import { SocialIcon } from "@/components/hetna/SocialIcon"
@@ -12,7 +13,7 @@ const Columna = ({
   links: { label: string; path: string }[]
 }) => (
   <div className="flex flex-col gap-2.5">
-    <span className="text-white font-semibold text-[13.5px]">{titulo}</span>
+    <span className="text-white font-semibold text-[13.5px]"><TS>{titulo}</TS></span>
     {links.map(({ label, path }) =>
       path.startsWith("/") && !path.startsWith("/seller") ? (
         <LocalizedClientLink
@@ -23,7 +24,7 @@ const Columna = ({
           prefetch={false}
           className="text-[13px] text-[#9FACC2] hover:text-white"
         >
-          {label}
+          <TS>{label}</TS>
         </LocalizedClientLink>
       ) : (
         <a
@@ -31,7 +32,7 @@ const Columna = ({
           href={path}
           className="text-[13px] text-[#9FACC2] hover:text-white"
         >
-          {label}
+          <TS>{label}</TS>
         </a>
       )
     )}
@@ -80,7 +81,7 @@ export function Footer() {
         <Columna titulo="Guías CNC" links={guias} />
         <div className="flex flex-col gap-2.5">
           <span className="text-white font-semibold text-[13.5px]">
-            Síguenos
+            <TS>Síguenos</TS>
           </span>
           {footerLinks.connect.map(({ label, path }) => (
             <a
@@ -91,7 +92,7 @@ export function Footer() {
               className="text-[13px] text-[#9FACC2] hover:text-white flex items-center gap-2"
             >
               <SocialIcon label={label} size={14} />
-              {label}
+              <TS>{label}</TS>
             </a>
           ))}
         </div>
@@ -102,7 +103,7 @@ export function Footer() {
         className="not-italic pt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[13px] text-[#9FACC2]"
         data-testid="footer-contacto"
       >
-        <span className="text-white font-semibold text-[13.5px]">Atención a clientes</span>
+        <span className="text-white font-semibold text-[13.5px]"><TS>Atención a clientes</TS></span>
         {EMPRESA.correo ? (
           <a href={`mailto:${EMPRESA.correo}`} className="hover:text-white">
             {EMPRESA.correo}
@@ -114,7 +115,7 @@ export function Footer() {
           rel="noopener noreferrer"
           className="hover:text-white"
         >
-          WhatsApp {EMPRESA.whatsappVisible}
+          <TS>WhatsApp</TS> {EMPRESA.whatsappVisible}
         </a>
         <span>{EMPRESA.horario}</span>
       </address>
@@ -123,9 +124,9 @@ export function Footer() {
         data-testid="footer-copyright"
       >
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#9FACC2]">
-          <span>© 2026 HETNA CNC. Hecho en México.</span>
+          <span><TS>© 2026 HETNA CNC. Hecho en México.</TS></span>
           <LocalizedClientLink href="/aviso-de-privacidad" prefetch={false} className="hover:text-white">
-            Privacidad
+            <TS>Privacidad</TS>
           </LocalizedClientLink>
           <BotonPreferenciasCookies className="hover:text-white" />
         </span>

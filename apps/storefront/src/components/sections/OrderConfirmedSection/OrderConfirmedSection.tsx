@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import OrderDetails from "@/components/organisms/OrderDefails/OrderDetails"
 import OrderShipping from "@/components/organisms/OrderDefails/OrderShipping"
 import OrderTotals from "@/components/organisms/OrderDefails/OrderTotals"
@@ -36,12 +37,12 @@ export const OrderConfirmedSection = ({
               level="h1"
               className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
             >
-              <span>¡Gracias!</span>
-              <span>Tu pedido se realizó con éxito.</span>
+              <span><TS>¡Gracias!</TS></span>
+              <span><TS>Tu pedido se realizó con éxito.</TS></span>
             </Heading>
 
             <Text>
-              Te enviamos los detalles de tu pedido a{" "}
+              <TS>Te enviamos los detalles de tu pedido a</TS>{" "}
               <span
                 className="text-ui-fg-medium-plus font-semibold"
                 data-testid="order-email"

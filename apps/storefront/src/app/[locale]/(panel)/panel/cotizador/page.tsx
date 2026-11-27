@@ -1,5 +1,6 @@
 // HETNA Panel → App (Cotizador): talleres registrados, en prueba, gratis y
 // pagando; a quién hablarle esta semana.
+import { TS } from "@/i18n/TS"
 import { SubApp } from "@/components/hetna/panel/SubApp"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, fechaCorta, pesos } from "@/lib/panel/sesion"
@@ -19,10 +20,10 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="talleres" />
-      {error && <Vacio>No pude leer la app: {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer la app:</TS> {error}</Vacio>}
       {c && (
         <Tarjeta>
-          <Titulo extra={<span className="text-[11px] text-[#6B675C]">los 3 números de la semana</span>}>Crecimiento</Titulo>
+          <Titulo extra={<span className="text-[11px] text-[#6B675C]"><TS>los 3 números de la semana</TS></span>}><TS>Crecimiento</TS></Titulo>
           <div className="grid grid-cols-3 gap-2">
             <Kpi etiqueta="Talleres activos" valor={String(c.resumen.activos_7)} antes={`7 días · ${c.resumen.activos_30} en 30`} />
             <Kpi etiqueta="Con simulador" valor={String(c.resumen.simulador_7)} antes={`de ${c.resumen.cotizaciones_7} cotiz. · ${c.resumen.simulador_30}/${c.resumen.cotizaciones_30} en 30 días`} />
@@ -38,7 +39,7 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
       {p && (
         <>
           <Tarjeta>
-            <Titulo>Talleres en la app</Titulo>
+            <Titulo><TS>Talleres en la app</TS></Titulo>
             <div className="grid grid-cols-2 gap-2">
               <Kpi etiqueta="Registrados" valor={String(p.resumen.talleres)} antes={`+${p.resumen.nuevos_7} esta semana · +${p.resumen.nuevos_30} en 30 días`} />
               <Kpi etiqueta="Pagando" valor={String(p.resumen.pagan)} antes={`Taller ${p.resumen.pagan_por_plan.taller || 0} · Pro ${p.resumen.pagan_por_plan.pro || 0} · Ind. ${p.resumen.pagan_por_plan.industrial || 0}`} />
@@ -49,29 +50,29 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
             </div>
           </Tarjeta>
           <Tarjeta>
-            <Titulo>A quién hablarle esta semana</Titulo>
-            {p.por_vencer.length === 0 ? <Vacio>Nadie por vencer.</Vacio> : (
+            <Titulo><TS>A quién hablarle esta semana</TS></Titulo>
+            {p.por_vencer.length === 0 ? <Vacio><TS>Nadie por vencer.</TS></Vacio> : (
               <ul className="divide-y divide-[#EFEDE6]">
                 {p.por_vencer.map((f) => (
                   <li key={f.id} className="flex items-center justify-between gap-2 py-2.5">
                     <div className="min-w-0">
                       <p className="truncate text-[13.5px] font-bold">{f.nombre}</p>
-                      <p className="text-[11.5px] text-[#6B675C]">{f.plan}{f.prueba_dias != null ? ` · ${f.prueba_dias} días de prueba` : ""}{f.vence ? ` · vence ${fechaCorta(f.vence)}` : ""} · {f.cotizaciones_mes} cotiz. este mes</p>
+                      <p className="text-[11.5px] text-[#6B675C]">{f.plan}{f.prueba_dias != null ? ` · ${f.prueba_dias} días de prueba` : ""}{f.vence ? ` · vence ${fechaCorta(f.vence)}` : ""} · {f.cotizaciones_mes} <TS>cotiz. este mes</TS></p>
                     </div>
-                    {f.telefono && <a href={wa(f.telefono)} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EC] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]">WhatsApp</a>}
+                    {f.telefono && <a href={wa(f.telefono)} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EC] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]"><TS>WhatsApp</TS></a>}
                   </li>
                 ))}
               </ul>
             )}
           </Tarjeta>
           <Tarjeta>
-            <Titulo>Últimos registrados</Titulo>
+            <Titulo><TS>Últimos registrados</TS></Titulo>
             <ul className="divide-y divide-[#EFEDE6]">
               {[...p.filas].sort((a, b) => String(b.registrado || "").localeCompare(String(a.registrado || ""))).slice(0, 15).map((f) => (
                 <li key={f.id} className="flex items-center justify-between gap-2 py-2">
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold">{f.nombre}</p>
-                    <p className="text-[11px] text-[#6B675C]">{fechaCorta(f.registrado)} · {f.cotizaciones_mes} cotiz.</p>
+                    <p className="text-[11px] text-[#6B675C]">{fechaCorta(f.registrado)} · {f.cotizaciones_mes} <TS>cotiz.</TS></p>
                   </div>
                   <Etiqueta color={f.paga ? "verde" : f.plan === "prueba" ? "azul" : "gris"}>{f.plan}</Etiqueta>
                 </li>
@@ -89,7 +90,7 @@ function Tendencia({ semanas }: { semanas: Crec["semanas"] }) {
   const max = Math.max(1, ...semanas.map((s) => Math.max(s.activos, s.cotizaciones)))
   return (
     <div className="mt-3">
-      <p className="mb-1 text-[11px] font-semibold text-[#6B675C]">Últimas 8 semanas · <span className="text-[#0F7A4A]">■</span> activos · <span className="text-[#1F5FBF]">■</span> cotizaciones (<span className="text-[#7FA6E0]">■</span> con simulador)</p>
+      <p className="mb-1 text-[11px] font-semibold text-[#6B675C]"><TS>Últimas 8 semanas ·</TS> <span className="text-[#0F7A4A]">■</span> <TS>activos ·</TS> <span className="text-[#1F5FBF]">■</span> <TS>cotizaciones (</TS><span className="text-[#7FA6E0]">■</span> <TS>con simulador)</TS></p>
       <div className="flex h-16 items-end gap-1.5">
         {semanas.map((s) => (
           <div key={s.semana} className="flex flex-1 items-end justify-center gap-[2px]" title={`Semana del ${s.semana}: ${s.activos} activos · ${s.cotizaciones} cotizaciones (${s.simulador} con simulador) · ${s.nuevos} nuevos · ${s.licitaciones} licitaciones`}>
@@ -100,7 +101,7 @@ function Tendencia({ semanas }: { semanas: Crec["semanas"] }) {
           </div>
         ))}
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-[#9A968B]"><span>{semanas[0]?.semana.slice(5)}</span><span>hoy</span></div>
+      <div className="mt-1 flex justify-between text-[10px] text-[#9A968B]"><span>{semanas[0]?.semana.slice(5)}</span><span><TS>hoy</TS></span></div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Card } from "@/components/atoms/Card/Card"
 import { getAuthHeaders } from "@/lib/data/cookies"
 
@@ -39,20 +40,20 @@ export const OrderTrack = async ({ order }: { order: any }) => {
 
   return (
     <div>
-      <h2 className="text-primary label-lg uppercase">Seguimiento del pedido</h2>
+      <h2 className="text-primary label-lg uppercase"><TS>Seguimiento del pedido</TS></h2>
       <ul className="mt-4 flex flex-col gap-2">
         {envios.map((e) => {
           const contenido = (
             <Card className="px-4 hover:bg-secondary/30">
               {e.paqueteria && <span className="font-semibold">{e.paqueteria} · </span>}
-              <span className="text-secondary">Guía </span>
+              <span className="text-secondary"><TS>Guía</TS> </span>
               <span className="font-semibold">{e.guia}</span>
               {(e.estado || e.entregado) && (
                 <span className="ml-2 text-secondary">
                   — {e.entregado ? "Entregado" : ESTADO[e.estado as string] || e.estado}
                 </span>
               )}
-              {e.url && <span className="ml-2 text-[#B34D07] underline">Rastrear →</span>}
+              {e.url && <span className="ml-2 text-[#B34D07] underline"><TS>Rastrear →</TS></span>}
             </Card>
           )
           return (

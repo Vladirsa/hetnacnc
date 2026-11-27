@@ -3,6 +3,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useEffect, useState } from "react"
@@ -60,7 +61,7 @@ export const FavoritosBoton = () => {
       className="relative flex items-center gap-1.5 p-2 -m-2 text-[#1B1B18] hover:text-[#B34D07]"
     >
       <Corazon />
-      <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium">Favoritos</span>
+      <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium"><T>Favoritos</T></span>
       {lista.length > 0 && (
         <span className="absolute top-0 left-5 min-w-4 h-4 px-1 rounded-full bg-[#C2560A] text-white text-[10px] font-bold flex items-center justify-center">
           {lista.length}
@@ -141,15 +142,15 @@ export const ListaFavoritos = () => {
         <span className="text-[#C2560A]">
           <Corazon size={40} />
         </span>
-        <p className="m-0 text-[16px] font-semibold">Aún no tienes favoritos</p>
+        <p className="m-0 text-[16px] font-semibold"><T>Aún no tienes favoritos</T></p>
         <p className="m-0 text-[14px] text-[#6B6A63] max-w-[360px]">
-          Toca el corazón en cualquier producto para guardarlo aquí.
+          <T>Toca el corazón en cualquier producto para guardarlo aquí.</T>
         </p>
         <LocalizedClientLink
           href="/categories"
           className="mt-2 bg-[#C2560A] hover:bg-[#A84A08] text-white px-6 py-3 rounded-[10px] text-[14.5px] font-semibold"
         >
-          Explorar catálogo
+          <T>Explorar catálogo</T>
         </LocalizedClientLink>
       </div>
     )
@@ -168,7 +169,7 @@ export const ListaFavoritos = () => {
                 // eslint-disable-next-line @next/next/no-img-element
                 <Image src={f.thumbnail} alt={f.title} className="w-full h-full object-cover" width={300} height={300} />
               ) : (
-                <span className="text-[#6B6A63] text-[12px]">Sin imagen</span>
+                <span className="text-[#6B6A63] text-[12px]"><T>Sin imagen</T></span>
               )}
             </div>
             <div className="p-3 text-[13.5px] font-semibold leading-snug">{f.title}</div>
@@ -178,7 +179,7 @@ export const ListaFavoritos = () => {
             onClick={() => quitarFavorito(f.id)}
             className="mt-auto mx-3 mb-3 text-[12.5px] font-semibold text-[#B34D07] text-left hover:underline"
           >
-            Quitar de favoritos
+            <T>Quitar de favoritos</T>
           </button>
         </div>
       ))}

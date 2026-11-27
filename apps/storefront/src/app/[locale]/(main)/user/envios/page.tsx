@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { EvidenciaEnvio } from "@/components/hetna/envios/EvidenciaEnvio"
@@ -5,7 +7,7 @@ import { UserNavigation } from "@/components/molecules/UserNavigation/UserNaviga
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { misEnvios } from "@/lib/envios/cotizar"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mis envíos | Envíos HETNA",
   robots: { index: false, follow: false },
 }
@@ -26,10 +28,10 @@ export default async function MisEnvios() {
     return (
       <main className="container">
         <div className="mx-auto max-w-[460px] py-16 text-center">
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">Entra a tu cuenta</h1>
-          <p className="mt-2 text-[15px] text-[#4A4943]">Tus envíos y su evidencia viven en tu cuenta.</p>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><TS>Entra a tu cuenta</TS></h1>
+          <p className="mt-2 text-[15px] text-[#4A4943]"><TS>Tus envíos y su evidencia viven en tu cuenta.</TS></p>
           <LocalizedClientLink href="/login" className="mt-6 inline-block rounded-[10px] bg-[#C2560A] px-6 py-3 font-semibold text-white">
-            Iniciar sesión
+            <TS>Iniciar sesión</TS>
           </LocalizedClientLink>
         </div>
       </main>
@@ -44,29 +46,29 @@ export default async function MisEnvios() {
       <div className="min-w-0 md:col-span-3">
       <div className="flex flex-wrap gap-1.5 text-[13px] text-[#6B6A63]">
         <LocalizedClientLink href="/user" className="hover:text-[#B34D07]">
-          Mi cuenta
+          <TS>Mi cuenta</TS>
         </LocalizedClientLink>
         <span>/</span>
-        <span className="font-medium text-[#1B1B18]">Mis envíos</span>
+        <span className="font-medium text-[#1B1B18]"><TS>Mis envíos</TS></span>
       </div>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[26px] font-bold text-[#1B1B18] lg:text-[32px]">Mis envíos</h1>
+          <h1 className="text-[26px] font-bold text-[#1B1B18] lg:text-[32px]"><TS>Mis envíos</TS></h1>
           <p className="mt-1 max-w-[720px] text-[15px] text-[#4A4943]">
-            Antes de entregar cada paquete, pega la guía y sube aquí las 4 fotos: alto, largo y ancho con cinta métrica y el paquete en la
-            báscula, con la guía visible. Si la paquetería reporta sobrepeso o hay un daño, es tu prueba.
+            <TS>Antes de entregar cada paquete, pega la guía y sube aquí las 4 fotos: alto, largo y ancho con cinta métrica y el paquete en la
+            báscula, con la guía visible. Si la paquetería reporta sobrepeso o hay un daño, es tu prueba.</TS>
           </p>
         </div>
         <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:brightness-110">
-          Cotizar otro envío
+          <TS>Cotizar otro envío</TS>
         </LocalizedClientLink>
       </div>
 
-      {!r.ok && <p className="mt-6 rounded-xl bg-[#FDECEA] p-4 text-[#B3261E]">No pudimos cargar tus envíos. Intenta de nuevo en un momento.</p>}
+      {!r.ok && <p className="mt-6 rounded-xl bg-[#FDECEA] p-4 text-[#B3261E]"><TS>No pudimos cargar tus envíos. Intenta de nuevo en un momento.</TS></p>}
 
       {r.ok && r.sobrepesos.length > 0 && (
         <section className="mt-6 flex flex-col gap-3">
-          <h2 className="m-0 text-lg font-extrabold text-[#142033]">Cobros por sobrepeso</h2>
+          <h2 className="m-0 text-lg font-extrabold text-[#142033]"><TS>Cobros por sobrepeso</TS></h2>
           {r.sobrepesos.map((s) => (
             <div
               key={s.folio}
@@ -80,29 +82,29 @@ export default async function MisEnvios() {
                 </strong>
                 {s.kg_cotizado != null && s.kg_reportado != null && (
                   <span>
-                    Cotizado {s.kg_cotizado} kg · la paquetería reportó {s.kg_reportado} kg ·{" "}
+                    <TS>Cotizado</TS> {s.kg_cotizado} <TS>kg · la paquetería reportó</TS> {s.kg_reportado} <TS>kg ·</TS>{" "}
                   </span>
                 )}
-                <strong>{pesos(s.monto)} MXN</strong> · {s.estado_nombre}
+                <strong>{pesos(s.monto)} <TS>MXN</TS></strong> · {s.estado_nombre}
               </div>
               {s.pago_url && (
                 <a href={s.pago_url} className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110">
-                  Pagar sobrepeso
+                  <TS>Pagar sobrepeso</TS>
                 </a>
               )}
             </div>
           ))}
           <p className="m-0 text-xs text-[#6B675C]">
-            Mientras haya un sobrepeso por pagar no se pueden solicitar envíos nuevos. ¿Crees que es injusto y tienes tus fotos? Escríbenos con el folio y
-            lo disputamos con la paquetería.
+            <TS>Mientras haya un sobrepeso por pagar no se pueden solicitar envíos nuevos. ¿Crees que es injusto y tienes tus fotos? Escríbenos con el folio y
+            lo disputamos con la paquetería.</TS>
           </p>
         </section>
       )}
       {r.ok && envios.length === 0 && (
         <p className="mt-6 rounded-2xl border border-dashed border-[#D9D4C8] bg-white p-8 text-center text-[#6B675C]">
-          Aún no tienes envíos.{" "}
+          <TS>Aún no tienes envíos.</TS>{" "}
           <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="font-semibold text-[#C2560A] underline">
-            Cotiza el primero
+            <TS>Cotiza el primero</TS>
           </LocalizedClientLink>
           .
         </p>
@@ -120,10 +122,10 @@ export default async function MisEnvios() {
                   </p>
                   <p className="m-0 text-sm text-[#40403A]">
                     {e.origen?.municipio || e.origen?.cp} → {e.destino?.municipio || e.destino?.cp} · {e.paquete?.largo}×{e.paquete?.ancho}×
-                    {e.paquete?.alto} cm · {e.paquete?.peso} kg cotizados
+                    {e.paquete?.alto} <TS>cm ·</TS> {e.paquete?.peso} <TS>kg cotizados</TS>
                   </p>
                   <p className="m-0 text-sm text-[#6B675C]">
-                    {pesos(e.precio)} MXN
+                    {pesos(e.precio)} <TS>MXN</TS>
                     {e.proteccion_valor ? ` · protegido por ${pesos(e.proteccion_valor)}` : ""}
                     {e.contenido_estado === "usado" ? " · usado" : ""}
                   </p>
@@ -132,12 +134,12 @@ export default async function MisEnvios() {
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${color}`}>{estado}</span>
                   {e.pago_url && (
                     <a href={e.pago_url} className="text-sm font-semibold text-[#C2560A] underline">
-                      Pagar ahora
+                      <TS>Pagar ahora</TS>
                     </a>
                   )}
                   {e.guia?.url && (
                     <a href={e.guia.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#C2560A] underline">
-                      Descargar guía {e.guia.numero || ""}
+                      <TS>Descargar guía</TS> {e.guia.numero || ""}
                     </a>
                   )}
                 </div>
@@ -155,4 +157,9 @@ export default async function MisEnvios() {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

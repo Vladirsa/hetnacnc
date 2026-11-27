@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -293,20 +294,20 @@ export function GeneradorEmpaques() {
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">
-          Gratis
+          <T>Gratis</T>
         </span>
         <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">
-          Generador de plantillas de empaque
+          <T>Generador de plantillas de empaque</T>
         </h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[680px]">
-          Más de 40 modelos: cajas con tapa, de regalo, para pizza o pastel, bolsas con asas, sobres, tubos, pirámides y más, a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.
+          <T>Más de 40 modelos: cajas con tapa, de regalo, para pizza o pastel, bolsas con asas, sobres, tubos, pirámides y más, a tu medida. Descarga la plantilla para imprimir, para plotter de corte o para láser.</T>
         </p>
       </section>
 
       <div className="px-4 lg:px-8 pb-12 grid lg:grid-cols-[380px_1fr] gap-5 items-start">
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Plantilla <span className="font-normal text-[#6B6A63]">({FORMAS.length} modelos)</span></span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Plantilla</T> <span className="font-normal text-[#6B6A63]">({FORMAS.length} <T>modelos)</T></span></span>
             {GRUPOS.map((g) => {
               const abierto = grupoAbierto === g
               const lista = FORMAS.filter((f) => f.grupo === g)
@@ -343,11 +344,11 @@ export function GeneradorEmpaques() {
                 </div>
               )
             })}
-            {def.detalle && <p className="m-0 text-[12.5px] text-[#6B6A63]">{def.nombre}: {def.detalle}.</p>}
+            {def.detalle && <p className="m-0 text-[12.5px] text-[#6B6A63]">{def.nombre}: <T>{def.detalle}</T>.</p>}
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Unidades</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Unidades</T></span>
             <div className="flex gap-2">
               {(["mm", "cm", "in"] as Unidad[]).map((u) => (
                 <Opcion key={u} activa={unidad === u} onClick={() => cambiarUnidad(u)}>
@@ -378,13 +379,13 @@ export function GeneradorEmpaques() {
           {def.campos.includes("conBase") && (
             <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
               <input type="checkbox" checked={conBase} onChange={(e) => setConBase(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-              {ETIQUETAS[forma].conBase || "Con base"} (pestañas y tapa redonda)
+              {ETIQUETAS[forma].conBase || "Con base"} <T>(pestañas y tapa redonda)</T>
             </label>
           )}
 
           {def.campos.includes("pestana") && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Ángulo de las pestañas</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Ángulo de las pestañas</T></span>
               <div className="flex flex-wrap gap-2">
                 {["30", "45", "60", "90"].map((a) => (
                   <Opcion key={a} activa={anguloPestana === a} onClick={() => setAnguloPestana(a)}>
@@ -393,17 +394,17 @@ export function GeneradorEmpaques() {
                 ))}
               </div>
               <p className="m-0 text-[12px] text-[#9A978C]">
-                45° es lo normal. Con menos ángulo las pestañas quedan más afiladas y no chocan en las esquinas; con 90° quedan rectangulares y pegan más.
+                <T>45° es lo normal. Con menos ángulo las pestañas quedan más afiladas y no chocan en las esquinas; con 90° quedan rectangulares y pegan más.</T>
               </p>
             </div>
           )}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Líneas de doblez</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Líneas de doblez</T></span>
             <div className="flex flex-wrap gap-2">
-              <Opcion activa={modoDoblez === "marcar"} onClick={() => setModoDoblez("marcar")}>Marcar</Opcion>
-              <Opcion activa={modoDoblez === "perforado"} onClick={() => setModoDoblez("perforado")}>Perforado (cartón)</Opcion>
-              <Opcion activa={modoDoblez === "ninguno"} onClick={() => setModoDoblez("ninguno")}>Sin líneas</Opcion>
+              <Opcion activa={modoDoblez === "marcar"} onClick={() => setModoDoblez("marcar")}><T>Marcar</T></Opcion>
+              <Opcion activa={modoDoblez === "perforado"} onClick={() => setModoDoblez("perforado")}><T>Perforado (cartón)</T></Opcion>
+              <Opcion activa={modoDoblez === "ninguno"} onClick={() => setModoDoblez("ninguno")}><T>Sin líneas</T></Opcion>
             </div>
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
               {modoDoblez === "marcar" && "Línea continua para marcar con plotter o grabar con láser a baja potencia."}
@@ -418,7 +419,7 @@ export function GeneradorEmpaques() {
                       <span className="text-[13px] font-semibold text-[#1B1B18]">{t}</span>
                       <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
                         <input type="text" inputMode="decimal" value={val} onChange={(e) => set(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
-                        <span className="pr-3 text-[13px] text-[#9A978C]">mm</span>
+                        <span className="pr-3 text-[13px] text-[#9A978C]"><T>mm</T></span>
                       </span>
                     </label>
                   ))}
@@ -435,13 +436,13 @@ export function GeneradorEmpaques() {
                     </button>
                   ))}
                 </div>
-                <p className="m-0 text-[12px] text-[#9A978C]">Son valores para empezar. Haz una prueba en tu cartón: si dobla duro, alarga el corte; si se rompe, alarga el puente.</p>
+                <p className="m-0 text-[12px] text-[#9A978C]"><T>Son valores para empezar. Haz una prueba en tu cartón: si dobla duro, alarga el corte; si se rompe, alarga el puente.</T></p>
               </>
             )}
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Tamaño de hoja</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tamaño de hoja</T></span>
             <select
               value={tamano}
               onChange={(e) => setTamano(e.target.value)}
@@ -463,8 +464,8 @@ export function GeneradorEmpaques() {
               <>
                 {tamano !== "medida" && (
                   <div className="flex gap-2">
-                    <Opcion activa={!horizontal} onClick={() => setHorizontal(false)}>Vertical</Opcion>
-                    <Opcion activa={horizontal} onClick={() => setHorizontal(true)}>Horizontal</Opcion>
+                    <Opcion activa={!horizontal} onClick={() => setHorizontal(false)}><T>Vertical</T></Opcion>
+                    <Opcion activa={horizontal} onClick={() => setHorizontal(true)}><T>Horizontal</T></Opcion>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
@@ -482,7 +483,7 @@ export function GeneradorEmpaques() {
                   ))}
                 </div>
                 <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                  Las piezas se acomodan en la hoja y se giran si así caben. Si no caben en una, se usan varias y cada hoja se descarga en su propio archivo. Al imprimir, cada hoja sale en su página.
+                  <T>Las piezas se acomodan en la hoja y se giran si así caben. Si no caben en una, se usan varias y cada hoja se descarga en su propio archivo. Al imprimir, cada hoja sale en su página.</T>
                 </p>
               </>
             )}
@@ -504,13 +505,13 @@ export function GeneradorEmpaques() {
                   dangerouslySetInnerHTML={{ __html: vista }}
                 />
                 <div className="mt-3 flex flex-wrap gap-4 text-[12.5px] text-[#6B6A63]">
-                  <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> Corte</span>
-                  {dob.modo === "marcar" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#1F5FBF]" /> Doblez (marcar)</span>}
-                  {dob.modo === "perforado" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#B0127A]" /> Doblez perforado ({r1(dob.corte)} mm corte / {r1(dob.puente)} mm puente)</span>}
-                  {hoja && !medidaHoja && <span>Hoja necesaria: {r1(hoja.ancho)} × {r1(hoja.alto)} mm</span>}
+                  <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> <T>Corte</T></span>
+                  {dob.modo === "marcar" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#1F5FBF]" /> <T>Doblez (marcar)</T></span>}
+                  {dob.modo === "perforado" && <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-dashed border-[#B0127A]" /> <T>Doblez perforado (</T>{r1(dob.corte)} <T>mm corte /</T> {r1(dob.puente)} <T>mm puente)</T></span>}
+                  {hoja && !medidaHoja && <span><T>Hoja necesaria:</T> {r1(hoja.ancho)} × {r1(hoja.alto)} <T>mm</T></span>}
                   {medidaHoja && hojas.length > 0 && (
                     <span>
-                      {hojas.length === 1 ? "1 hoja" : `${hojas.length} hojas`} {nombreHoja} de {r1(medidaHoja.w)} × {r1(medidaHoja.h)} mm · aprovechamiento {usoHojas}%
+                      {hojas.length === 1 ? "1 hoja" : `${hojas.length} hojas`} {nombreHoja} <T>de</T> {r1(medidaHoja.w)} × {r1(medidaHoja.h)} <T>mm · aprovechamiento</T> {usoHojas}%
                     </span>
                   )}
                 </div>
@@ -518,12 +519,12 @@ export function GeneradorEmpaques() {
 
               {acomodo.noCaben.length > 0 && (
                 <p className="m-0 text-[13.5px] text-[#8A1C1C] bg-[#FDECEC] border border-[#F2B8B5] rounded-[12px] px-4 py-3">
-                  No cabe en la hoja {nombreHoja} ni girándola: {acomodo.noCaben.join(", ")}. Elige una hoja más grande, baja las medidas o usa &quot;Ajustar al dibujo&quot;.
+                  <T>No cabe en la hoja</T> {nombreHoja} <T>ni girándola:</T> {acomodo.noCaben.join(", ")}<T>. Elige una hoja más grande, baja las medidas o usa &quot;Ajustar al dibujo&quot;.</T>
                 </p>
               )}
               {sinPerforar > 0 && (
                 <p className="m-0 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] px-4 py-3">
-                  {sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`} para {r1(dob.corte)} mm de corte y {r1(dob.puente)} mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.
+                  {sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`} <T>para</T> {r1(dob.corte)} <T>mm de corte y</T> {r1(dob.puente)} <T>mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.</T>
                 </p>
               )}
               {r.avisos.length > 0 && (
@@ -538,7 +539,7 @@ export function GeneradorEmpaques() {
                 className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                Ver precio al instante en el Cotizador
+                <T>Ver precio al instante en el Cotizador</T>
               </button>
               <button
                 type="button"
@@ -546,7 +547,7 @@ export function GeneradorEmpaques() {
                 className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                Fabrícamelo: que un taller la corte
+                <T>Fabrícamelo: que un taller la corte</T>
               </button>
               {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -555,25 +556,25 @@ export function GeneradorEmpaques() {
                   onClick={() => descargarHojas("dxf")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
-                  Descargar DXF
+                  <T>Descargar DXF</T>
                 </button>
                 <button
                   type="button"
                   onClick={() => descargarHojas("svg")}
                   className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]"
                 >
-                  Descargar SVG
+                  <T>Descargar SVG</T>
                 </button>
                 <button
                   type="button"
                   onClick={imprimir}
                   className="bg-white border border-[#142033] text-[#142033] font-semibold py-3 rounded-[10px] text-[14px]"
                 >
-                  PDF / Imprimir
+                  <T>PDF / Imprimir</T>
                 </button>
               </div>
               <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">¿Es más grande que tu hoja?</span>
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>¿Es más grande que tu hoja?</T></span>
                 <select
                   value={papelMosaico}
                   onChange={(e) => setPapelMosaico(e.target.value)}
@@ -589,10 +590,10 @@ export function GeneradorEmpaques() {
                   onClick={imprimirMosaico}
                   className="bg-white border border-[#142033] text-[#142033] font-semibold px-3 py-1.5 rounded-[8px] text-[14px]"
                 >
-                  Imprimir en mosaico{mosaico ? ` (${mosaico.paginas.length} ${mosaico.paginas.length === 1 ? "página" : "páginas"} + mapa)` : ""}
+                  <T>Imprimir en mosaico</T>{mosaico ? ` (${mosaico.paginas.length} ${mosaico.paginas.length === 1 ? "página" : "páginas"} + mapa)` : ""}
                 </button>
                 <span className="basis-full text-[12px] text-[#6B6A63]">
-                  Parte la plantilla en hojas {papel.nombre} que se recortan y se pegan encimadas 10 mm, con un mapa para armarlas.
+                  <T>Parte la plantilla en hojas</T> {papel.nombre} <T>que se recortan y se pegan encimadas 10 mm, con un mapa para armarlas.</T>
                 </span>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">

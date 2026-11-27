@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -11,7 +13,7 @@ import { estadosIndexables, rutaEstado } from "@/lib/seo/estados"
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres/directorio" },
   title: "Directorio de talleres y proveedores CNC en México",
   description:
@@ -54,36 +56,36 @@ export default async function DirectorioPage({
   return (
     <main className="mx-auto w-full max-w-[1100px] px-4 py-8 lg:px-8">
       <nav className="mb-4 text-sm text-[#6B675C]">
-        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]">Talleres</LocalizedClientLink> › Directorio
+        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> <TS>› Directorio</TS>
       </nav>
       <h1 className="text-3xl font-extrabold text-[#142033] sm:text-4xl">
-        Directorio CNC de México{estadoSel ? `: ${estadoSel}` : ""}
+        <TS>Directorio CNC de México</TS>{estadoSel ? `: ${estadoSel}` : ""}
       </h1>
       <p className="mt-2 max-w-3xl text-[#40403A]">
-        Empresas de maquinado, corte y fabricación CNC, proveedores e instructores que todavía no forman parte de HETNA.
-        Los datos son públicos y vienen del sitio web de cada empresa.
+        <TS>Empresas de maquinado, corte y fabricación CNC, proveedores e instructores que todavía no forman parte de HETNA.
+        Los datos son públicos y vienen del sitio web de cada empresa.</TS>
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-4 text-sm text-[#40403A]">
-          <p className="font-bold text-[#142033]">¿Buscas quién te fabrique?</p>
+          <p className="font-bold text-[#142033]"><TS>¿Buscas quién te fabrique?</TS></p>
           <p className="mt-1">
-            Al pedir cotización desde un perfil, tu solicitud llega a la red de talleres HETNA{enHetna ? ` (${enHetna} ${estadoSel ? "en " + estadoSel : "registrados"})` : ""} y
-            además invitamos a esa empresa a responderte. Tus datos de contacto no se comparten y pagas dentro de HETNA.
+            <TS>Al pedir cotización desde un perfil, tu solicitud llega a la red de talleres HETNA</TS>{enHetna ? ` (${enHetna} ${estadoSel ? "en " + estadoSel : "registrados"})` : ""} <TS>y
+            además invitamos a esa empresa a responderte. Tus datos de contacto no se comparten y pagas dentro de HETNA.</TS>
           </p>
         </div>
         <div className="rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-4 text-sm text-[#40403A]">
-          <p className="font-bold text-[#142033]">¿Tu empresa aparece aquí?</p>
-          <p className="mt-1">Reclama tu perfil gratis para recibir las solicitudes de clientes, cotizar y vender en HETNA.</p>
+          <p className="font-bold text-[#142033]"><TS>¿Tu empresa aparece aquí?</TS></p>
+          <p className="mt-1"><TS>Reclama tu perfil gratis para recibir las solicitudes de clientes, cotizar y vender en HETNA.</TS></p>
           <LocalizedClientLink href="/talleres/unete" className="mt-2 inline-block font-semibold text-[#C2560A] underline">
-            Reclamar mi perfil →
+            <TS>Reclamar mi perfil →</TS>
           </LocalizedClientLink>
         </div>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         <LocalizedClientLink href={liga({ estado: estadoSel })} className={`${CHIP} ${!tipoSel ? "bg-[#142033] text-white" : "bg-[#F3F1EA] text-[#40403A]"}`}>
-          Todos
+          <TS>Todos</TS>
         </LocalizedClientLink>
         {TIPOS.map((t) => (
           <LocalizedClientLink
@@ -97,7 +99,7 @@ export default async function DirectorioPage({
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <LocalizedClientLink href={liga({ tipo: tipoSel })} className={`${CHIP} ${!estadoSel ? "bg-[#C2560A] text-white" : "bg-white text-[#40403A] border border-[#E7E4DC]"}`}>
-          Todo México
+          <TS>Todo México</TS>
         </LocalizedClientLink>
         {estados.map((e) => (
           <LocalizedClientLink
@@ -116,18 +118,18 @@ export default async function DirectorioPage({
             href={rutaEstado(porEstado.find((x) => x.ciudad.estado === estadoSel)!.ciudad)}
             className="font-semibold text-[#C2560A] underline"
           >
-            Ver la página de talleres CNC en {estadoSel} con servicios y preguntas frecuentes →
+            <TS>Ver la página de talleres CNC en</TS> {estadoSel} <TS>con servicios y preguntas frecuentes →</TS>
           </LocalizedClientLink>
         </p>
       )}
       {!estadoSel && porEstado.length > 0 && (
         <nav aria-label="Talleres CNC por estado" className="mt-6">
-          <p className="text-sm font-semibold text-[#142033]">Talleres CNC por estado</p>
+          <p className="text-sm font-semibold text-[#142033]"><TS>Talleres CNC por estado</TS></p>
           <ul className="mt-2 flex flex-wrap gap-2 text-sm">
             {porEstado.map((x) => (
               <li key={x.ciudad.slug}>
                 <LocalizedClientLink href={rutaEstado(x.ciudad)} className="text-[#C2560A] hover:underline">
-                  Talleres CNC en {x.ciudad.estado}
+                  <TS>Talleres CNC en</TS> {x.ciudad.estado}
                 </LocalizedClientLink>
               </li>
             ))}
@@ -141,9 +143,9 @@ export default async function DirectorioPage({
       </p>
       {lista.length === 0 ? (
         <p className="mt-3 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[#40403A]">
-          No hay empresas con este filtro.{" "}
+          <TS>No hay empresas con este filtro.</TS>{" "}
           <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline">
-            Ver los talleres de HETNA
+            <TS>Ver los talleres de HETNA</TS>
           </LocalizedClientLink>
         </p>
       ) : (
@@ -159,7 +161,7 @@ export default async function DirectorioPage({
               </p>
               {e.servicios && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]">{e.servicios}</p>}
               <span className="mt-2 inline-block rounded-full bg-[#F3F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#6B675C]">
-                Perfil no reclamado
+                <TS>Perfil no reclamado</TS>
               </span>
             </li>
           ))}
@@ -170,7 +172,7 @@ export default async function DirectorioPage({
         <nav aria-label="Páginas del directorio" className="mt-6 flex flex-wrap items-center gap-2 text-sm">
           {paginaSel > 1 && (
             <LocalizedClientLink href={liga({ estado: estadoSel, tipo: tipoSel, pagina: paginaSel - 1 })} rel="prev" className={`${CHIP} border border-[#E7E4DC] bg-white text-[#40403A]`}>
-              ← Anterior
+              <TS>← Anterior</TS>
             </LocalizedClientLink>
           )}
           {Array.from({ length: paginas }, (_, i) => i + 1).map((n) => (
@@ -185,11 +187,16 @@ export default async function DirectorioPage({
           ))}
           {paginaSel < paginas && (
             <LocalizedClientLink href={liga({ estado: estadoSel, tipo: tipoSel, pagina: paginaSel + 1 })} rel="next" className={`${CHIP} border border-[#E7E4DC] bg-white text-[#40403A]`}>
-              Siguiente →
+              <TS>Siguiente →</TS>
             </LocalizedClientLink>
           )}
         </nav>
       )}
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

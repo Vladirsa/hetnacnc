@@ -1,10 +1,11 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { LoginForm } from "@/components/molecules/LoginForm/LoginForm"
 import { destinoSeguro } from "@/lib/seguridad/destino-seguro"
 import { retrieveCustomer } from "@/lib/data/customer"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Iniciar sesión",
   robots: { index: false, follow: false },
 }
@@ -21,4 +22,9 @@ export default async function Pagina({ searchParams }: Props) {
   }
 
   return <LoginForm />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

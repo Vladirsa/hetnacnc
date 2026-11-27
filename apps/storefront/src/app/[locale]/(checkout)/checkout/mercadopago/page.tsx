@@ -1,16 +1,23 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { Suspense } from "react"
 
 import { RetornoMercadoPago } from "./RetornoMercadoPago"
 
-export const metadata = {
+const metadataEs = {
   title: "Confirmando tu pago",
   robots: { index: false, follow: false },
 }
 
 export default function PaginaRetornoMercadoPago() {
   return (
-    <Suspense fallback={<p className="text-center py-16">Confirmando tu pago…</p>}>
+    <Suspense fallback={<p className="text-center py-16"><TS>Confirmando tu pago…</TS></p>}>
       <RetornoMercadoPago />
     </Suspense>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

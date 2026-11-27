@@ -5,6 +5,7 @@
 // esquinas, elige plasma, láser o router y el espesor, y sale el panel con
 // marco listo para cortar. El motor está en lib/generador/celosiaImagen.ts.
 // La imagen no sale del navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 
 import { CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -278,7 +279,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
             {modo === "pieza" && <Interruptor etiqueta="Ignorar el fondo (lo que toca la orilla de la foto)" activo={fondo} cambiar={setFondo} />}
             {!umbralAuto && (
               <label className="flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
-                <span>Umbral: {umbral}</span>
+                <span><T>Umbral:</T> {umbral}</span>
                 <input type="range" min={1} max={254} value={umbral} onChange={(e) => setUmbral(Number(e.target.value))} className="accent-[#C2560A]" />
               </label>
             )}
@@ -334,12 +335,12 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
               }}
               className="mt-2 rounded-full bg-[#1C2431] px-3 py-1 text-[12px] text-[#C9D2E0] hover:bg-[#232D3D]"
             >
-              Alto según la proporción de la imagen
+              <T>Alto según la proporción de la imagen</T>
             </button>
             <Interruptor etiqueta="Barrenos en las esquinas" activo={barrenos} cambiar={setBarrenos} />
             {barrenos && <CampoNum etiqueta="Diámetro" valor={diam} cambiar={setDiam} />}
           </Seccion>
-          {calculando && <p className="text-[12.5px] text-[#8A97AB]">Calculando…</p>}
+          {calculando && <p className="text-[12.5px] text-[#8A97AB]"><T>Calculando…</T></p>}
         </>
       )}
     </div>
@@ -378,7 +379,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
             ]
           : []
       }
-      vacio={<p className="text-center text-[14px] text-[#8A97AB]">Sube la imagen de la celosía que te gustó y aquí aparece el panel listo para cortar.</p>}
+      vacio={<p className="text-center text-[14px] text-[#8A97AB]"><T>Sube la imagen de la celosía que te gustó y aquí aparece el panel listo para cortar.</T></p>}
     />
   )
 }

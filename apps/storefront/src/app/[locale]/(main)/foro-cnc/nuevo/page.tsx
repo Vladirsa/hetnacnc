@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
@@ -7,7 +9,7 @@ import { ForoCerrado, Migas } from "@/components/hetna/foro/Piezas"
 import { secciones, sesionForo } from "@/lib/foro/consultas"
 import { ES_NEGOCIO } from "@/lib/foro/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Publicar en el Foro CNC México",
   robots: { index: false, follow: false },
 }
@@ -31,21 +33,21 @@ export default async function ForoNuevo({ params, searchParams }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <div className="max-w-[820px] mx-auto px-4 py-6 lg:py-8 flex flex-col gap-5">
         <Migas items={[{ nombre: "Foro CNC", href: "/foro-cnc" }, { nombre: "Publicar" }]} />
-        <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]">Publicar en el foro</h1>
+        <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]"><TS>Publicar en el foro</TS></h1>
         {!sesion ? (
           <div className="bg-white border border-[#E7E4DC] rounded-[16px] p-6 flex flex-col gap-3">
-            <p className="m-0 text-[15px] text-[#44433D]">Para publicar necesitas tu cuenta de HETNA CNC. Es gratis y es la misma con la que compras.</p>
+            <p className="m-0 text-[15px] text-[#44433D]"><TS>Para publicar necesitas tu cuenta de HETNA CNC. Es gratis y es la misma con la que compras.</TS></p>
             <div className="flex gap-2">
               <LocalizedClientLink href="/login" className="border border-[#E0DCD2] font-semibold px-4 py-2.5 rounded-[10px] text-[14px] hover:border-[#C2560A]">
-                Entrar
+                <TS>Entrar</TS>
               </LocalizedClientLink>
               <LocalizedClientLink href="/register" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-                Crear cuenta gratis
+                <TS>Crear cuenta gratis</TS>
               </LocalizedClientLink>
             </div>
           </div>
         ) : sesion.perfil?.suspendido ? (
-          <p className="m-0 text-[15px] text-[#A42A2A]">Tu cuenta del foro está suspendida. Escríbenos si crees que es un error.</p>
+          <p className="m-0 text-[15px] text-[#A42A2A]"><TS>Tu cuenta del foro está suspendida. Escríbenos si crees que es un error.</TS></p>
         ) : (
           <div className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-7">
             <FormTema
@@ -59,4 +61,9 @@ export default async function ForoNuevo({ params, searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

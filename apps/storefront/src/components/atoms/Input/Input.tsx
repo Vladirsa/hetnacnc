@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons"
@@ -54,7 +55,7 @@ export function Input({
 
   return (
     <div className="flex flex-col">
-      <label className="label-md">{label}</label>
+      <label className="label-md"><T>{label}</T></label>
       <div className="relative mt-2">
         {icon && onIconClick && (
           <button

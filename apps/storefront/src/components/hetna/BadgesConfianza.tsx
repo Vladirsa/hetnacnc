@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { BadgeCheck, Headset, ShieldCheck, Truck } from "lucide-react"
 
 const BADGES = [
@@ -21,8 +22,8 @@ export default function BadgesConfianza() {
               <Icono size={24} strokeWidth={2} aria-hidden="true" />
             </span>
             <span className="flex flex-col">
-              <span className="text-[15px] font-bold leading-tight text-[#142033]">{b.titulo}</span>
-              <span className="mt-0.5 text-[13px] leading-snug text-[#6B6A63]">{b.texto}</span>
+              <span className="text-[15px] font-bold leading-tight text-[#142033]"><TS>{b.titulo}</TS></span>
+              <span className="mt-0.5 text-[13px] leading-snug text-[#6B6A63]"><TS>{b.texto}</TS></span>
             </span>
           </div>
         )

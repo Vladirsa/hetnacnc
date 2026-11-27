@@ -1,6 +1,7 @@
 "use client"
 
 // Botones del foro: votar, no útil, encuesta, mejor respuesta, compartir, reportar y ocultar
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -63,7 +64,7 @@ export function BotonVoto({ temaId, respuestaId, votos, votado, propio }: { tema
         } disabled:opacity-60`}
       >
         <IconoUtil size={18} />
-        Útil · {estado.votos}
+        <T>Útil ·</T> {estado.votos}
       </button>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </div>
@@ -101,7 +102,7 @@ export function BotonNoUtil({ temaId, respuestaId, marcado, propio }: { temaId?:
         } disabled:opacity-60`}
       >
         <IconoNoUtil size={18} />
-        No útil
+        <T>No útil</T>
       </button>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </div>
@@ -127,7 +128,7 @@ export function EncuestaVotar({ temaId, pregunta, opciones, resultados, elegida,
   }
   return (
     <div className="border border-[#E7E4DC] rounded-[12px] p-4 flex flex-col gap-3 bg-[#FCFBF8]">
-      <p className="m-0 font-bold text-[15px] text-[#1B1B18]">{pregunta}</p>
+      <p className="m-0 font-bold text-[15px] text-[#1B1B18]"><T>{pregunta}</T></p>
       <div className="flex flex-col gap-2">
         {opciones.map((o, i) => {
           const pct = total ? Math.round((res[i] / total) * 100) : 0
@@ -272,7 +273,7 @@ export function MenuMas({ tipo, id, puedeOcultar, esModerador, estado }: { tipo:
           {modo === "menu" && (
             <>
               <button type="button" onClick={() => setModo("reporte")} className="text-left px-3 py-2 rounded-[8px] hover:bg-[#F6F4EF]">
-                Reportar
+                <T>Reportar</T>
               </button>
               {puedeOcultar && estado !== "oculto" && (
                 <button type="button" disabled={pendiente} onClick={() => estadoNuevo("oculto")} className="text-left px-3 py-2 rounded-[8px] hover:bg-[#F6F4EF]">
@@ -281,14 +282,14 @@ export function MenuMas({ tipo, id, puedeOcultar, esModerador, estado }: { tipo:
               )}
               {esModerador && estado !== "publicado" && (
                 <button type="button" disabled={pendiente} onClick={() => estadoNuevo("publicado")} className="text-left px-3 py-2 rounded-[8px] hover:bg-[#F6F4EF]">
-                  Publicar (moderación)
+                  <T>Publicar (moderación)</T>
                 </button>
               )}
             </>
           )}
           {modo === "reporte" && (
             <div className="flex flex-col gap-2 p-1">
-              <span className="font-semibold text-[13.5px]">¿Qué pasa?</span>
+              <span className="font-semibold text-[13.5px]"><T>¿Qué pasa?</T></span>
               {MOTIVOS.map((m) => (
                 <label key={m} className="flex items-center gap-2 text-[13.5px] cursor-pointer">
                   <input type="radio" name={`motivo-${tipo}-${id}`} checked={motivo === m} onChange={() => setMotivo(m)} />
@@ -304,11 +305,11 @@ export function MenuMas({ tipo, id, puedeOcultar, esModerador, estado }: { tipo:
                 className="border border-[#E0DCD2] rounded-[8px] px-2 py-1.5 text-[13.5px] resize-none"
               />
               <button type="button" disabled={pendiente} onClick={enviar} className="bg-[#142033] text-white rounded-[8px] py-2 font-semibold text-[13.5px] disabled:opacity-60">
-                Enviar reporte
+                <T>Enviar reporte</T>
               </button>
             </div>
           )}
-          {modo === "listo" && <p className="m-0 px-3 py-2 text-[13.5px] text-[#16794F]">Gracias. Lo revisamos pronto.</p>}
+          {modo === "listo" && <p className="m-0 px-3 py-2 text-[13.5px] text-[#16794F]"><T>Gracias. Lo revisamos pronto.</T></p>}
           {error && <PideCuenta error={error} />}
         </div>
       )}

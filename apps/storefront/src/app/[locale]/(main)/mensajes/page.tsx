@@ -1,12 +1,14 @@
 // Bandeja de mensajes del cliente: todas sus conversaciones con talleres.
 
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { misConversaciones, sesionChat } from "@/lib/chat/consultas"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Mis mensajes", robots: { index: false } }
+const metadataEs = { title: "Mis mensajes", robots: { index: false } }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -16,10 +18,10 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mis mensajes</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white"><TS>Mis mensajes</TS></h1>
       {lista.length === 0 ? (
         <p className="mt-6 text-gray-600 dark:text-gray-300">
-          Aún no has escrito a ningún taller. Entra a un producto o a un taller y toca “Preguntar al taller”.
+          <TS>Aún no has escrito a ningún taller. Entra a un producto o a un taller y toca “Preguntar al taller”.</TS>
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-[#142033]">
@@ -41,4 +43,9 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
       )}
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

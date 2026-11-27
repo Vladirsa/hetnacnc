@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -12,7 +14,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 // packages/api/src/lib/cotizador-en-linea.ts
 type Props = { params: Promise<{ slug: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params
   const t = await leerTallerPublico(slug)
   if (!t) return { title: "Taller no encontrado", robots: { index: false, follow: false } }
@@ -39,13 +41,18 @@ export default async function TallerEnLineaPage({ params }: Props) {
     <main className="container py-6 md:py-10">
       {tienda && (
         <div className="mx-auto mb-4 flex max-w-[860px] flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E7E4DC] bg-[#FAF8F3] px-4 py-3 text-sm text-[#40403A]">
-          <span>Conoce sus máquinas, trabajos, reseñas y productos.</span>
+          <span><TS>Conoce sus máquinas, trabajos, reseñas y productos.</TS></span>
           <LocalizedClientLink href={`/talleres/${tienda}`} className="font-semibold text-[#C2560A] hover:underline">
-            Ver perfil del taller →
+            <TS>Ver perfil del taller →</TS>
           </LocalizedClientLink>
         </div>
       )}
       <CotizadorEnLinea taller={taller} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

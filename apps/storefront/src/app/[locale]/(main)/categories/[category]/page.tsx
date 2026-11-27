@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { GuiaCategoria, IntroCategoria } from "@/components/hetna/TextoCategoria"
 import { contenidoCategoria } from "@/lib/hetna/contenido-categorias"
@@ -40,7 +41,7 @@ const ALIAS_CATEGORIA: Record<string, string> = {
 
 export const revalidate = 60
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ category: string; locale: string }>
@@ -232,3 +233,8 @@ async function Category({
 }
 
 export default Category
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
+}

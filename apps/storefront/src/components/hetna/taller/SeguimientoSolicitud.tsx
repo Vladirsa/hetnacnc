@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import HitosProduccion from "./HitosProduccion"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -55,7 +56,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
   return (
     <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-extrabold text-[#142033]">Seguimiento</h2>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>Seguimiento</T></h2>
         <span
           className={`rounded-full px-3 py-1 text-sm font-bold ${
             s.etapa === "cancelada" ? "bg-[#FDECEA] text-[#B3261E]" : "bg-[#FFF1E6] text-[#C2560A]"
@@ -100,10 +101,10 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
 
       {s.envio && (
         <p className="mt-4 rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#2B2A26]">
-          Envío: <strong>{s.envio.paqueteria || "—"}</strong>
+          <T>Envío:</T> <strong>{s.envio.paqueteria || "—"}</strong>
           {s.envio.guia && (
             <>
-              {" "}· Guía <strong className="select-all">{s.envio.guia}</strong>
+              {" "}<T>· Guía</T> <strong className="select-all">{s.envio.guia}</strong>
             </>
           )}
         </p>
@@ -112,8 +113,8 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
       {s.puede_confirmar && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border-2 border-[#1E7B3A] bg-[#EEF6EE] p-4">
           <p className="min-w-0 flex-1 text-sm text-[#1F5A2B]">
-            ¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, repórtalo abajo antes de confirmar. Si no
-            confirmas ni reportas nada, el proyecto se cierra solo a los {DIAS_CIERRE_AUTOMATICO} días de la entrega
+            <T>¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, repórtalo abajo antes de confirmar. Si no
+            confirmas ni reportas nada, el proyecto se cierra solo a los</T> {DIAS_CIERRE_AUTOMATICO} <T>días de la entrega</T>
             {s.cobro_directo ? "." : " y HETNA le libera el pago al taller."}
           </p>
           <button
@@ -130,23 +131,23 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
 
       {s.disputa && (
         <div className="mt-4 rounded-xl border-2 border-[#C2560A] bg-[#FFF6EE] p-4 text-sm text-[#5A2E0A]">
-          <p className="font-bold">Reportaste un problema: {s.disputa.nombre}</p>
+          <p className="font-bold"><T>Reportaste un problema:</T> {s.disputa.nombre}</p>
           <p className="mt-1">
             {queSigue ||
               `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y busca resolver en ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
-            Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.
+            <T>Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.</T>
           </p>
         </div>
       )}
 
       {s.puede_reportar && !reportando && (
         <button type="button" onClick={() => setReportando(true)} className="mt-4 text-sm font-semibold text-[#B3261E] underline">
-          Reportar un problema o cancelar
+          <T>Reportar un problema o cancelar</T>
         </button>
       )}
       {s.puede_reportar && reportando && (
         <div className="mt-4 grid gap-3 rounded-xl border border-[#E7E4DC] bg-[#FAF9F5] p-4">
-          <p className="text-sm font-bold text-[#142033]">¿Qué pasó?</p>
+          <p className="text-sm font-bold text-[#142033]"><T>¿Qué pasó?</T></p>
           <div className="grid gap-2">
             {TIPOS.map((t) => (
               <label key={t.v} className="flex items-center gap-2 text-sm text-[#2B2A26]">
@@ -154,7 +155,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
               </label>
             ))}
           </div>
-          {ayuda && <p className="text-xs text-[#6B675C]">{ayuda}</p>}
+          {ayuda && <p className="text-xs text-[#6B675C]"><T>{ayuda}</T></p>}
           <textarea
             value={detalle}
             onChange={(e) => setDetalle(e.target.value)}
@@ -167,7 +168,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             {s.cobro_directo
               ? "Mientras lo revisamos el proyecto no se cierra solo. Como le pagaste directo al taller, si procede un reembolso lo hace él y HETNA se lo exige."
               : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}{" "}
-            Buscamos resolver en {DIAS_HABILES_DECISION_DISPUTA} días hábiles. Esto no limita tu derecho de acudir a la PROFECO.
+            <T>Buscamos resolver en</T> {DIAS_HABILES_DECISION_DISPUTA} <T>días hábiles. Esto no limita tu derecho de acudir a la PROFECO.</T>
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={enviarProblema} disabled={pendiente}
@@ -175,7 +176,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
               {pendiente ? "Enviando…" : "Enviar a HETNA"}
             </button>
             <button type="button" onClick={() => setReportando(false)} className="rounded-xl border border-[#E7E4DC] px-5 py-2.5 text-sm">
-              Cancelar
+              <T>Cancelar</T>
             </button>
           </div>
           {errorProblema && <p className="text-sm text-[#B3261E]">{errorProblema}</p>}
@@ -186,13 +187,13 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
 
       {(s.historial || []).length > 0 && (
         <div className="mt-5 border-t border-[#E7E4DC] pt-4">
-          <p className="text-sm font-bold text-[#142033]">Mensajes y avances</p>
+          <p className="text-sm font-bold text-[#142033]"><T>Mensajes y avances</T></p>
           <ul className="mt-2 grid gap-2">
             {[...(s.historial || [])].reverse().map((h, i) => (
               <li key={i} className="text-sm text-[#40403A]">
                 <span className="font-semibold text-[#142033]">{QUIEN[h.quien] || h.quien}</span>{" "}
                 <span className="text-xs text-[#6B675C]">{fecha(h.fecha)}</span>
-                <span className="block">{h.nota}</span>
+                <span className="block"><T>{h.nota}</T></span>
               </li>
             ))}
           </ul>

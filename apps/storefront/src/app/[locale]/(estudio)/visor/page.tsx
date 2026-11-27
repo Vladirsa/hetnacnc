@@ -1,9 +1,10 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
 import { VisorDeLiga } from "@/components/hetna/visor/VisorDeLiga"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Visor de planos y modelos",
   robots: { index: false, follow: false },
 }
@@ -18,4 +19,9 @@ export default function VisorPagina() {
       <VisorDeLiga />
     </Suspense>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

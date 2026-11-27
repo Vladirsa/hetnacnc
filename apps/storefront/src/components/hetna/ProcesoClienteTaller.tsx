@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 type Paso = { titulo: string; texto: string }
@@ -53,9 +54,9 @@ const Ruta = ({
             (oscuro ? "bg-[#C2560A] text-white" : "bg-[#FAF6EF] text-[#B34D07]")
           }
         >
-          {etiqueta}
+          <TS>{etiqueta}</TS>
         </span>
-        <h3 className="mt-2 text-[22px] md:text-[26px] font-extrabold leading-tight">{titulo}</h3>
+        <h3 className="mt-2 text-[22px] md:text-[26px] font-extrabold leading-tight"><TS>{titulo}</TS></h3>
       </div>
       <LocalizedClientLink
         href={href}
@@ -82,9 +83,9 @@ const Ruta = ({
             <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-[#C2560A] text-[16px] font-extrabold text-white">
               {i + 1}
             </span>
-            <p className="text-[16px] font-bold leading-snug">{p.titulo}</p>
+            <p className="text-[16px] font-bold leading-snug"><TS>{p.titulo}</TS></p>
             <p className={"mt-1 text-[13.5px] leading-snug " + (oscuro ? "text-[#C9D2E0]" : "text-[#6B6A63]")}>
-              {p.texto}
+              <TS>{p.texto}</TS>
             </p>
           </div>
           {i < pasos.length - 1 && (
@@ -106,10 +107,10 @@ export default function ProcesoClienteTaller() {
     <section className="px-4 lg:px-16 py-10 md:py-14">
       <div className="mx-auto mb-8 max-w-[760px] text-center">
         <h2 className="text-[34px] md:text-[48px] font-extrabold leading-[1.05] text-[#142033]">
-          Nuestro <span className="text-[#C2560A]">proceso</span>
+          <TS>Nuestro</TS> <span className="text-[#C2560A]"><TS>proceso</TS></span>
         </h2>
         <p className="mt-3 text-[15px] md:text-[17px] text-[#6B6A63]">
-          Sencillo para quien necesita fabricar y para el taller que quiere ofrecer sus servicios.
+          <TS>Sencillo para quien necesita fabricar y para el taller que quiere ofrecer sus servicios.</TS>
         </p>
       </div>
       <div className="mx-auto flex max-w-[1400px] flex-col gap-5">

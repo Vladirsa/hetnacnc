@@ -1,4 +1,5 @@
 'use client';
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from 'react';
 
 const KEY = 'hetna-install-dismissed';
@@ -61,12 +62,12 @@ export function InstallPrompt() {
   return (
     <div className="md:hidden fixed left-3 right-3 bottom-20 z-50 bg-white border border-[#E7E4DC] rounded-xl shadow-lg p-3 flex items-center gap-3">
       <div className="flex-1 text-sm text-[#1B1B18]">
-        <div className="font-semibold">Instala la app de HetNa</div>
+        <div className="font-semibold"><T>Instala la app de HetNa</T></div>
         <div className="text-xs text-[#6B6A63]">
           {ios ? 'Toca Compartir y luego "Agregar a pantalla de inicio".' : 'Acceso directo, más rápida y sin Play Store.'}
         </div>
       </div>
-      {!ios && <button onClick={install} className="bg-[#F08A3C] text-white text-sm font-semibold px-3 py-2 rounded-lg">Instalar</button>}
+      {!ios && <button onClick={install} className="bg-[#F08A3C] text-white text-sm font-semibold px-3 py-2 rounded-lg"><T>Instalar</T></button>}
       <button onClick={dismiss} aria-label="Cerrar" className="text-[#999] text-xl">✕</button>
     </div>
   );

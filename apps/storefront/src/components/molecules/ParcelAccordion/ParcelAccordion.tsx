@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { format } from 'date-fns';
 
 import { Button } from '@/components/atoms/Button/Button'
@@ -32,13 +33,13 @@ export const ParcelAccordion = ({
           className="heading-sm truncate"
           data-testid="order-display-id"
         >
-          ORDER SET {orderDisplayId}
+          <TS>ORDER SET</TS> {orderDisplayId}
         </h2>
         <h2
           className="label-md"
           data-testid="order-date"
         >
-          Order date:{' '}
+          <TS>Order date:</TS>{' '}
           <span className="text-primary lg:block xl:inline-block">
             {format(createdAt || '', 'yyyy-MM-dd')}
           </span>
@@ -47,7 +48,7 @@ export const ParcelAccordion = ({
           className="label-md"
           data-testid="order-total"
         >
-          Total:{' '}
+          <TS>Total:</TS>{' '}
           <span
             className="text-primary lg:block xl:inline-block"
             data-testid={`order-${orderId}-price`}
@@ -62,7 +63,7 @@ export const ParcelAccordion = ({
             variant="tonal"
             data-testid="order-view-button"
           >
-            <span className="label-md text-primary">VER PEDIDO</span>
+            <span className="label-md text-primary"><TS>VER PEDIDO</TS></span>
           </Button>
         </LocalizedClientLink>
       </div>

@@ -1,4 +1,5 @@
 'use client';
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@/lib/helpers/zod-resolver';
 import { z } from 'zod';
@@ -56,7 +57,7 @@ export const ReportSellerForm = ({
                   errors?.reason && 'text-negative'
                 )}
               >
-                Motivo
+                <T>Motivo</T>
               </p>
               <SelectField
                 options={reasonOptions}
@@ -83,7 +84,7 @@ export const ReportSellerForm = ({
                   errors?.comment && 'text-negative'
                 )}
               >
-                Comentario
+                <T>Comentario</T>
               </p>
               <Textarea
                 rows={5}
@@ -105,7 +106,7 @@ export const ReportSellerForm = ({
               type='submit'
               className='w-full py-3 uppercase'
             >
-              Reportar vendedor
+              <T>Reportar vendedor</T>
             </Button>
           </div>
         </form>
@@ -113,14 +114,14 @@ export const ReportSellerForm = ({
         <div className='text-center'>
           <div className='px-4 pb-5'>
             <h4 className='heading-lg uppercase'>
-              ¡Gracias!
+              <T>¡Gracias!</T>
             </h4>
             <p className='max-w-[466px] mx-auto mt-4 text-lg text-secondary'>
-              We&apos;ll check the listing to see if it
+              <T>We&apos;ll check the listing to see if it
               violates our guidelines and take the necessary
               action to ensure a safe shopping experience
               for everyone. Thank you for helping us
-              maintain a trusted community.
+              maintain a trusted community.</T>
             </p>
           </div>
 
@@ -129,7 +130,7 @@ export const ReportSellerForm = ({
               className='w-full py-3 uppercase'
               onClick={onClose}
             >
-              Entendido
+              <T>Entendido</T>
             </Button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 // Ventana de conversación. La usan el cliente (con su sesión) y el taller (con su enlace privado).
 // Se actualiza sola cada 5 segundos mientras la pestaña está abierta.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { enviarMensaje, leerMensajes } from "@/lib/chat/acciones"
@@ -84,7 +85,7 @@ export default function ChatVentana({ yo, conversacionId, token, inicial, cerrad
   return (
     <div className="flex flex-col rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#142033]">
       <div className="flex max-h-[60vh] min-h-[280px] flex-col gap-2 overflow-y-auto p-3 md:p-4">
-        {mensajes.length === 0 && <p className="m-auto text-sm text-gray-500">Aún no hay mensajes.</p>}
+        {mensajes.length === 0 && <p className="m-auto text-sm text-gray-500"><T>Aún no hay mensajes.</T></p>}
         {mensajes.map((m) => {
           const mio = m.de === yo
           return (
@@ -104,7 +105,7 @@ export default function ChatVentana({ yo, conversacionId, token, inicial, cerrad
       </div>
 
       {cerrada ? (
-        <p className="border-t border-gray-200 p-3 text-center text-sm text-gray-500 dark:border-gray-700">Esta conversación está cerrada.</p>
+        <p className="border-t border-gray-200 p-3 text-center text-sm text-gray-500 dark:border-gray-700"><T>Esta conversación está cerrada.</T></p>
       ) : (
         <div className="border-t border-gray-200 p-3 dark:border-gray-700">
           {aviso && (
@@ -137,7 +138,7 @@ export default function ChatVentana({ yo, conversacionId, token, inicial, cerrad
             </button>
           </div>
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            No se permiten teléfonos, correos ni redes sociales. Los datos de contacto se comparten solo al concretar la compra en HETNA.
+            <T>No se permiten teléfonos, correos ni redes sociales. Los datos de contacto se comparten solo al concretar la compra en HETNA.</T>
           </p>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 // Barra de arriba de los estudios de pantalla completa: cambia entre 3D y 2D
 // y entre las herramientas del estudio, sin el encabezado ni el pie del sitio.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect } from "react"
 import { useParams, usePathname } from "next/navigation"
 
@@ -28,7 +29,7 @@ export function BarraEstudio() {
       <div className="flex h-14 items-center gap-3 px-3 lg:px-4">
         <LocalizedClientLink href="/" className="flex shrink-0 items-center gap-2 text-[15px] font-extrabold tracking-wide" aria-label="Ir a HETNA CNC">
           <span className="h-2.5 w-2.5 rounded-full bg-[#F07A1A] shadow-[0_0_12px_#F07A1A]" />
-          HETNA
+          <T>HETNA</T>
         </LocalizedClientLink>
 
         <nav aria-label="Estudio" className="flex shrink-0 rounded-[10px] bg-white/[0.06] p-1">
@@ -52,10 +53,10 @@ export function BarraEstudio() {
 
         <div className="ml-auto flex shrink-0 items-center gap-1 text-[13px] font-semibold">
           <LocalizedClientLink href="/disenar" className="hidden rounded-[8px] px-2.5 py-1.5 text-white/65 hover:bg-white/10 hover:text-white sm:block">
-            Todas
+            <T>Todas</T>
           </LocalizedClientLink>
           <LocalizedClientLink href="/user" className="rounded-[8px] px-2.5 py-1.5 text-white/65 hover:bg-white/10 hover:text-white">
-            Mi cuenta
+            <T>Mi cuenta</T>
           </LocalizedClientLink>
         </div>
       </div>

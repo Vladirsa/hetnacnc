@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { DIAS_SOLICITUD_ABIERTA, PLAZO_PRIMERA_RESPUESTA } from "@/lib/hetna/promesas"
 import EjemploCotizacion from "@/components/hetna/cotizar/EjemploCotizacion"
 import CasosReales from "@/components/hetna/CasosReales"
@@ -23,7 +25,7 @@ const METADATA: Metadata = {
 }
 
 // ?wa=N: la liga viene del WhatsApp de HETNA y la tarjeta muestra un anuncio (lib/publicidad/vista-previa.ts)
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ wa?: string }> }): Promise<Metadata> {
+async function generateMetadataEs({ searchParams }: { searchParams: Promise<{ wa?: string }> }): Promise<Metadata> {
   const { wa } = await searchParams
   return vistaPreviaWhatsapp(wa, METADATA)
 }
@@ -107,7 +109,7 @@ export default async function CotizarPage({
       />
       <div className="mx-auto w-full max-w-[1100px] px-4 py-8 lg:px-6">
         <header className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotización</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><TS>Cotización</TS></p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
             {t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado?.proceso === "Impresión 3D" ? "Fabrícamelo: elige quién la imprime" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
           </h1>
@@ -120,7 +122,7 @@ export default async function CotizarPage({
           </p>
           {/* Tarea 6 de la auditoría de mejoras: el plazo, visible antes del formulario */}
           <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#EEF7F0] px-3 py-1.5 text-[14px] font-semibold text-[#17633A]" data-testid="plazo-respuesta">
-            ⏱ Te respondemos en {PLAZO_PRIMERA_RESPUESTA}. Sin registro: sólo tu nombre y correo.
+            <TS>⏱ Te respondemos en</TS> {PLAZO_PRIMERA_RESPUESTA}<TS>. Sin registro: sólo tu nombre y correo.</TS>
           </p>
         </header>
 
@@ -135,7 +137,7 @@ export default async function CotizarPage({
               <CotizadorCliente />
               <details className="rounded-[18px] border border-[#E7E4DC] bg-white p-5" open={Boolean(servicio || necesidad || descripcionInicial)}>
                 <summary className="cursor-pointer text-[16px] font-bold text-[#142033]">
-                  ¿Necesitas diseño, grabado, producción por volumen o no tienes medidas? Llena la solicitud completa
+                  <TS>¿Necesitas diseño, grabado, producción por volumen o no tienes medidas? Llena la solicitud completa</TS>
                 </summary>
                 <div className="mt-4">
                   <FormSolicitudTaller servicioInicial={servicio} necesidadInicial={necesidad} descripcionInicial={descripcionInicial} />
@@ -151,26 +153,26 @@ export default async function CotizarPage({
               href="/cotizar/suministro"
               className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              <p className="font-bold text-[#142033]">📦 ¿Necesitas material o insumos? →</p>
-              <p className="mt-1 text-sm text-[#40403A]">Lámina, MDF, acrílico, fresas o consumibles: los proveedores te cotizan.</p>
+              <p className="font-bold text-[#142033]"><TS>📦 ¿Necesitas material o insumos? →</TS></p>
+              <p className="mt-1 text-sm text-[#40403A]"><TS>Lámina, MDF, acrílico, fresas o consumibles: los proveedores te cotizan.</TS></p>
             </LocalizedClientLink>
-            <p className="text-sm font-semibold text-[#142033]">¿Quieres un precio al instante?</p>
+            <p className="text-sm font-semibold text-[#142033]"><TS>¿Quieres un precio al instante?</TS></p>
             {CALCULADORAS.map((c) => (
               <LocalizedClientLink
                 key={c.href}
                 href={c.href}
                 className="rounded-2xl border border-[#E7E4DC] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <p className="font-bold text-[#142033]">{c.titulo} →</p>
-                <p className="mt-1 text-sm text-[#6B675C]">{c.texto}</p>
+                <p className="font-bold text-[#142033]"><TS>{c.titulo}</TS> →</p>
+                <p className="mt-1 text-sm text-[#6B675C]"><TS>{c.texto}</TS></p>
               </LocalizedClientLink>
             ))}
             <LocalizedClientLink
               href="/talleres"
               className="rounded-2xl bg-[#142033] p-5 text-white transition hover:-translate-y-0.5"
             >
-              <p className="font-bold">Ver directorio de talleres →</p>
-              <p className="mt-1 text-sm text-white/70">Elige un taller por servicio, material o estado.</p>
+              <p className="font-bold"><TS>Ver directorio de talleres →</TS></p>
+              <p className="mt-1 text-sm text-white/70"><TS>Elige un taller por servicio, material o estado.</TS></p>
             </LocalizedClientLink>
             <BloquePublicidad />
           </aside>
@@ -179,4 +181,9 @@ export default async function CotizarPage({
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

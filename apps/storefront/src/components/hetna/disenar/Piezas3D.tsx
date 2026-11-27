@@ -7,6 +7,7 @@
 // Boxes.py no dice dónde va cada pieza al armarse, así que aquí no se arma la
 // caja: se ven las tablas cortadas con su grosor real. Se carga sólo al abrir
 // la pestaña (three.js pesa ~150 kB).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
@@ -224,7 +225,7 @@ export default function Piezas3D({ svg, espesor }: { svg: string; espesor: numbe
       <div ref={ref} className="absolute inset-0" />
       <p className="pointer-events-none absolute left-3 top-3 m-0 rounded-[8px] bg-[#0B1017]/85 px-2.5 py-1 text-[12px] text-[#C9D2E0]">{info}</p>
       <p className="pointer-events-none absolute bottom-3 left-1/2 m-0 hidden -translate-x-1/2 rounded-[8px] bg-[#0B1017]/85 px-3 py-1 text-center text-[11.5px] text-[#8A97AB] sm:block">
-        Piezas cortadas con su grosor real, tendidas como salen de la hoja · arrastra para girar
+        <T>Piezas cortadas con su grosor real, tendidas como salen de la hoja · arrastra para girar</T>
       </p>
     </div>
   )

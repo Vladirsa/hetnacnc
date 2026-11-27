@@ -4,6 +4,7 @@
 // programa, lo prueba en el simulador y lo manda a calificar: el SERVIDOR corre
 // su programa y compara la pieza con la del plano (nadie puede "pasarlo" desde
 // el navegador). Al aprobar todos, obtiene su constancia.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -141,8 +142,8 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
     if (ej && codigo) localStorage.setItem(borrador(ej.id), codigo)
   }, [codigo, ej])
 
-  if (lista === undefined) return <p className="text-[13px] text-[#8A97AB]">Cargando ejercicios…</p>
-  if (lista === null) return <p className="text-[13px] text-[#FFB4AB]">No se pudieron cargar los ejercicios. Recarga la página en un momento.</p>
+  if (lista === undefined) return <p className="text-[13px] text-[#8A97AB]"><T>Cargando ejercicios…</T></p>
+  if (lista === null) return <p className="text-[13px] text-[#FFB4AB]"><T>No se pudieron cargar los ejercicios. Recarga la página en un momento.</T></p>
 
   const aprobados = lista.ejercicios.filter((e) => e.resultado?.aprobado).length
   const total = lista.ejercicios.length
@@ -164,18 +165,18 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
       {/* Lista y avance */}
       <aside className="flex flex-col gap-3">
         <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
-          <p className="m-0 text-[13px] font-bold text-white">Tu avance: {aprobados} de {total}</p>
+          <p className="m-0 text-[13px] font-bold text-white"><T>Tu avance:</T> {aprobados} <T>de</T> {total}</p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
             <div className="h-full bg-[#1E9E52]" style={{ width: `${(aprobados / Math.max(total, 1)) * 100}%` }} />
           </div>
           {!lista.sesion && (
             <p className="m-0 mt-2 text-[12.5px] text-[#F2C94C]">
-              <LocalizedClientLink href="/user" className="font-semibold underline">Inicia sesión</LocalizedClientLink> para calificar y guardar tu avance. Puedes leer los planos y practicar sin cuenta.
+              <LocalizedClientLink href="/user" className="font-semibold underline"><T>Inicia sesión</T></LocalizedClientLink> <T>para calificar y guardar tu avance. Puedes leer los planos y practicar sin cuenta.</T>
             </p>
           )}
           {aprobados === total && total > 0 && (
             <LocalizedClientLink href="/cam/simulador/constancia" className="mt-2 inline-block rounded-[8px] bg-[#1E9E52] px-3 py-1.5 text-[13px] font-bold text-white">
-              🎓 Ver mi constancia
+              <T>🎓 Ver mi constancia</T>
             </LocalizedClientLink>
           )}
         </div>
@@ -188,7 +189,7 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
                 className={`w-full rounded-[10px] border px-3 py-2 text-left text-[13px] ${sel === e.id ? "border-[#F07A1A] bg-[#F07A1A]/10" : "border-[#2B3648] bg-[#121A26] hover:border-[#5B6779]"}`}
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-white">{i + 1}. {e.titulo}</span>
+                  <span className="font-semibold text-white">{i + 1}. <T>{e.titulo}</T></span>
                   <span className="shrink-0 text-[12px]">{e.resultado?.aprobado ? "✅" : !e.abierto ? "🔒" : e.resultado ? `${e.resultado.mejor}` : ""}</span>
                 </span>
                 <span className="text-[11.5px] text-[#8A97AB]">{e.maquina === "torno" ? "Torno" : "Fresadora"} · {e.nivel}</span>
@@ -204,7 +205,7 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
           <div className="flex flex-col gap-3">
             <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-4">
               <p className="m-0 text-[11.5px] font-bold uppercase tracking-wide text-[#F28A3C]">{torno ? "Torno CNC" : "Fresadora / router"} · {ej.nivel}</p>
-              <h2 className="m-0 mt-1 text-[18px] font-bold text-white">{ej.titulo}</h2>
+              <h2 className="m-0 mt-1 text-[18px] font-bold text-white"><T>{ej.titulo}</T></h2>
               <ul className="m-0 mt-2 space-y-1 pl-4 text-[13.5px] text-[#C9CED6]">
                 {ej.enunciado.map((t, i) => (
                   <li key={i}>{t}</li>
@@ -216,14 +217,14 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
               {pista && <p className="m-0 mt-1 rounded-[8px] bg-white/5 p-2 text-[12.5px] text-[#E6EAF0]">💡 {ej.pista}</p>}
             </div>
             <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-4">
-              <p className="m-0 mb-2 text-[13px] font-bold text-white">Plano: así debe quedar</p>
+              <p className="m-0 mb-2 text-[13px] font-bold text-white"><T>Plano: así debe quedar</T></p>
               {ej.plano.tipo === "alturas" ? (
                 <PlanoFresa p={ej.plano} ej={ej} marcas={marcasDe(resultado, false)} />
               ) : (
                 <PlanoTorno p={ej.plano} ej={ej} marcas={marcasDe(resultado, true)} />
               )}
               <p className="m-0 mt-1 text-[11.5px] text-[#8A97AB]">
-                {torno ? "Vista de lado: la parte gris clara es la pieza terminada." : "Vista desde arriba: lo más oscuro es lo más hondo."} Después de calificar, los círculos rojos marcan dónde cortaste de más y los amarillos dónde falta material.
+                {torno ? "Vista de lado: la parte gris clara es la pieza terminada." : "Vista desde arriba: lo más oscuro es lo más hondo."} <T>Después de calificar, los círculos rojos marcan dónde cortaste de más y los amarillos dónde falta material.</T>
               </p>
             </div>
           </div>
@@ -231,7 +232,7 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
           {/* Programa y calificación */}
           <div className="flex flex-col gap-3">
             <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
-              <p className="m-0 mb-2 text-[13px] font-bold text-white">Tu programa</p>
+              <p className="m-0 mb-2 text-[13px] font-bold text-white"><T>Tu programa</T></p>
               <textarea
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
@@ -241,7 +242,7 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={() => alProbar({ ejercicio: ej, codigo })} className="rounded-[8px] bg-white/10 px-3 py-2 text-[13px] font-bold text-white">
-                  ▶ Probar en el simulador
+                  <T>▶ Probar en el simulador</T>
                 </button>
                 <button
                   type="button"
@@ -254,31 +255,31 @@ export function EjerciciosSimulador({ alProbar, codigoProbado }: { alProbar: (p:
               </div>
               {!ej.abierto && lista.cobro && (
                 <p className="m-0 mt-2 text-[12.5px] text-[#F2C94C]">
-                  🔒 Este ejercicio es parte del curso del simulador.{" "}
-                  <LocalizedClientLink href={`/aprendizaje-cnc/cursos/${lista.cobro.curso}`} className="font-semibold underline">Ver el curso</LocalizedClientLink>
+                  <T>🔒 Este ejercicio es parte del curso del simulador.</T>{" "}
+                  <LocalizedClientLink href={`/aprendizaje-cnc/cursos/${lista.cobro.curso}`} className="font-semibold underline"><T>Ver el curso</T></LocalizedClientLink>
                 </p>
               )}
-              {mensaje && <p className="m-0 mt-2 text-[12.5px] text-[#FFB4AB]">{mensaje}</p>}
+              {mensaje && <p className="m-0 mt-2 text-[12.5px] text-[#FFB4AB]"><T>{mensaje}</T></p>}
             </div>
 
             {resultado && (
               <div className={`rounded-[12px] border p-4 ${resultado.aprobado ? "border-[#1E7B3A] bg-[#1E7B3A]/15" : "border-[#B3261E] bg-[#B3261E]/10"}`}>
                 <p className="m-0 text-[28px] font-extrabold text-white">{resultado.calificacion}<span className="text-[15px] font-semibold text-[#8A97AB]"> / 100</span></p>
-                <p className={`m-0 mt-1 text-[14px] font-semibold ${resultado.aprobado ? "text-[#7BE0A3]" : "text-[#FFB4AB]"}`}>{resultado.mensaje}</p>
+                <p className={`m-0 mt-1 text-[14px] font-semibold ${resultado.aprobado ? "text-[#7BE0A3]" : "text-[#FFB4AB]"}`}><T>{resultado.mensaje}</T></p>
                 {resultado.errores.length > 0 && (
                   <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[12.5px] text-[#FFB4AB]">
                     {resultado.errores.map((a, i) => (
-                      <li key={i}><b>Línea {a.linea}:</b> {a.mensaje}</li>
+                      <li key={i}><b><T>Línea</T> {a.linea}:</b> <T>{a.mensaje}</T></li>
                     ))}
                   </ul>
                 )}
                 {!resultado.errores.length && !resultado.aprobado && (
                   <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[12.5px] text-[#C9CED6]">
-                    {resultado.sobrecorte.cantidad > 0 && <li>🔴 Cortaste de más {resultado.sobrecorte.donde} (hasta {resultado.sobrecorte.peor} mm{torno ? " en diámetro" : ""}).</li>}
-                    {resultado.falta.cantidad > 0 && <li>🟡 Falta material {resultado.falta.donde} (hasta {resultado.falta.peor} mm{torno ? " en diámetro" : ""}).</li>}
+                    {resultado.sobrecorte.cantidad > 0 && <li><T>🔴 Cortaste de más</T> {resultado.sobrecorte.donde} <T>(hasta</T> {resultado.sobrecorte.peor} <T>mm</T>{torno ? " en diámetro" : ""}).</li>}
+                    {resultado.falta.cantidad > 0 && <li><T>🟡 Falta material</T> {resultado.falta.donde} <T>(hasta</T> {resultado.falta.peor} <T>mm</T>{torno ? " en diámetro" : ""}).</li>}
                   </ul>
                 )}
-                <p className="m-0 mt-2 text-[12px] text-[#8A97AB]">Mejor calificación: {resultado.mejor} · Intentos: {resultado.intentos}</p>
+                <p className="m-0 mt-2 text-[12px] text-[#8A97AB]"><T>Mejor calificación:</T> {resultado.mejor} <T>· Intentos:</T> {resultado.intentos}</p>
               </div>
             )}
           </div>

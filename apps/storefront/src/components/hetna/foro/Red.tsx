@@ -1,5 +1,6 @@
 // Piezas de la red profesional que se dibujan en el servidor: trayectoria,
 // recomendaciones, tarjetas de persona y productos de los talleres que sigues.
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from "@/components/hetna/ImagenSegura"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Taller } from "@/lib/hetna/talleres"
@@ -25,7 +26,7 @@ export const CAJA_RED = "bg-white border border-[#E7E4DC] rounded-[14px] p-5"
 
 export const Abierto = () => (
   <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF6EF] px-2.5 py-0.5 text-[12px] font-bold text-[#14683F]" title="Busca trabajo o proyectos">
-    ● Abierto a trabajo
+    <TS>● Abierto a trabajo</TS>
   </span>
 )
 
@@ -61,10 +62,10 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
               <li key={i} className="relative">
                 <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-[#C2560A]" aria-hidden="true" />
                 <strong className="block text-[15px] text-[#1B1B18]">
-                  {p.titulo}
+                  <TS>{p.titulo}</TS>
                   {p.hetna && (
                     <span className="ml-2 inline-block rounded-full bg-[#EAF6EF] px-2 py-0.5 align-middle text-[11.5px] font-bold text-[#14683F]" title="HETNA confirmó que terminó todas las lecciones">
-                      ✓ Verificado por HETNA
+                      <TS>✓ Verificado por HETNA</TS>
                     </span>
                   )}
                 </strong>
@@ -75,7 +76,7 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
                     {[p.desde, p.hasta].filter(Boolean).join(" – ")}
                   </span>
                 )}
-                {p.detalle && <p className="m-0 mt-1 whitespace-pre-line text-[14px] leading-relaxed text-[#44433D]">{p.detalle}</p>}
+                {p.detalle && <p className="m-0 mt-1 whitespace-pre-line text-[14px] leading-relaxed text-[#44433D]"><TS>{p.detalle}</TS></p>}
                 {p.tipo === "proyecto" && fotosDe(p).length > 0 && (
                   <div className="mt-2 grid max-w-[520px] grid-cols-2 gap-2 sm:grid-cols-4">
                     {fotosDe(p).map((id) => (
@@ -111,10 +112,10 @@ export function ListaRecomendaciones({ lista, propio }: { lista: Recomendacion[]
               </span>
             </div>
           </div>
-          <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#23231F]">“{r.texto}”</p>
+          <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#23231F]">“<TS>{r.texto}</TS>”</p>
           {propio && r.estado === "pendiente" && (
             <div className="mt-3 flex flex-col gap-1.5">
-              <span className="text-[12.5px] font-semibold text-[#9A4A06]">Sólo tú la ves hasta que decidas:</span>
+              <span className="text-[12.5px] font-semibold text-[#9A4A06]"><TS>Sólo tú la ves hasta que decidas:</TS></span>
               <DecidirRecomendacion id={r.id} />
             </div>
           )}
@@ -147,7 +148,7 @@ export function TarjetaPersona({
         </LocalizedClientLink>
         <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B6A63]">
           {a.taller ? <InsigniaTaller a={a} /> : <span>{TIPOS_CUENTA[a.tipo]?.nombre}</span>}
-          {detalle && <span className="truncate">{detalle}</span>}
+          {detalle && <span className="truncate"><TS>{detalle}</TS></span>}
         </div>
       </div>
       {sesion && <BotonSeguir objetivo={objetivo} siguiendo={siguiendo} seguidores={0} conCuenta={false} chico />}
@@ -180,7 +181,7 @@ export function ProductosRed({ productos }: { productos: ProductoRed[] }) {
   if (!productos.length) return null
   return (
     <section className={`${CAJA_RED} flex flex-col gap-3`}>
-      <h2 className="m-0 text-[16px] font-bold text-[#1B1B18]">Nuevos productos de los talleres que sigues</h2>
+      <h2 className="m-0 text-[16px] font-bold text-[#1B1B18]"><TS>Nuevos productos de los talleres que sigues</TS></h2>
       <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-1">
         {productos.map((p) => (
           <LocalizedClientLink key={p.id} href={`/products/${p.handle}`} className="w-[150px] shrink-0 snap-start rounded-[12px] border border-[#E7E4DC] bg-white hover:border-[#C2560A]">
@@ -188,7 +189,7 @@ export function ProductosRed({ productos }: { productos: ProductoRed[] }) {
               <Image src={p.foto || "/images/placeholder.svg"} alt={p.titulo} width={300} height={300} className="h-full w-full object-cover" />
             </span>
             <span className="block p-2.5">
-              <span className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-[#1B1B18]">{p.titulo}</span>
+              <span className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-[#1B1B18]"><TS>{p.titulo}</TS></span>
               {p.precio !== null && <span className="mt-1 block text-[13.5px] font-bold text-[#C2560A]">{pesos.format(p.precio)}</span>}
               <span className="mt-0.5 block truncate text-[12px] text-[#6B6A63]">{p.taller.nombre}</span>
             </span>

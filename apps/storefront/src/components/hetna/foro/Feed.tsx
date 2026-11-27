@@ -2,6 +2,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import AnunciosEspacio from "@/components/hetna/publicidad/AnunciosEspacio"
@@ -35,7 +36,7 @@ export const Composer = ({ sesion }: { sesion: SesionForo }) => {
           href="/foro-cnc/nuevo"
           className="flex-1 px-4 py-3 rounded-full border border-[#D9D4C8] text-[14.5px] text-[#6B6A63] hover:bg-[#F6F4EF]"
         >
-          ¿Qué quieres compartir o preguntar?
+          <TS>¿Qué quieres compartir o preguntar?</TS>
         </LocalizedClientLink>
       </div>
       <div className="flex gap-1.5 flex-wrap">
@@ -70,23 +71,23 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
                 {p.nombre}
               </LocalizedClientLink>
               <span className="text-[13px] text-[#6B6A63]">
-                {TIPOS_CUENTA[p.tipo]?.nombre} · {p.reputacion} pts
+                {TIPOS_CUENTA[p.tipo]?.nombre} · {p.reputacion} <TS>pts</TS>
               </span>
               <LocalizedClientLink href="/foro-cnc/mi-perfil" className="text-[13px] font-semibold text-[#B34D07] hover:underline mt-1">
-                Editar perfil
+                <TS>Editar perfil</TS>
               </LocalizedClientLink>
             </>
           ) : (
             <>
               <span className="inline-block w-16 h-16 rounded-full bg-[#E7E4DC] ring-4 ring-white" />
-              <strong className="text-[15px] text-[#1B1B18] mt-1">Únete a la comunidad CNC</strong>
-              <p className="m-0 text-[13px] text-[#6B6A63] leading-relaxed">Pregunta, muestra tus trabajos y date a conocer. Es gratis.</p>
+              <strong className="text-[15px] text-[#1B1B18] mt-1"><TS>Únete a la comunidad CNC</TS></strong>
+              <p className="m-0 text-[13px] text-[#6B6A63] leading-relaxed"><TS>Pregunta, muestra tus trabajos y date a conocer. Es gratis.</TS></p>
               <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/register"} className={`${BTN} mt-2`}>
                 {sesion ? "Crear mi perfil" : "Crear cuenta gratis"}
               </LocalizedClientLink>
               {!sesion && (
                 <LocalizedClientLink href="/login" className="text-center text-[13.5px] font-semibold text-[#B34D07] hover:underline mt-1">
-                  Ya tengo cuenta
+                  <TS>Ya tengo cuenta</TS>
                 </LocalizedClientLink>
               )}
             </>
@@ -99,31 +100,31 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
           href="/foro-cnc/blog"
           className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#14683F] bg-[#EEF6EE] hover:bg-[#E0F0E4]"
         >
-          <span>Blog y guías</span>
+          <span><TS>Blog y guías</TS></span>
           <span aria-hidden="true">→</span>
         </LocalizedClientLink>
         <LocalizedClientLink
           href="/foro-cnc/red"
           className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#142033] bg-[#EEF1F6] hover:bg-[#E2E7EF]"
         >
-          <span>Mi red</span>
+          <span><TS>Mi red</TS></span>
           <span aria-hidden="true">→</span>
         </LocalizedClientLink>
         <LocalizedClientLink
           href="/foro-cnc/empleos"
           className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
         >
-          <span>Empleos y proyectos</span>
+          <span><TS>Empleos y proyectos</TS></span>
           <span aria-hidden="true">→</span>
         </LocalizedClientLink>
         <LocalizedClientLink
           href="/foro-cnc/profesionales"
           className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
         >
-          <span>Profesionales CNC</span>
+          <span><TS>Profesionales CNC</TS></span>
           <span aria-hidden="true">→</span>
         </LocalizedClientLink>
-        <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
+        <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Secciones</TS></span>
         <ul className="m-0 p-0 list-none">
           {secciones.map((s) => (
             <li key={s.slug}>
@@ -152,7 +153,7 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
         !actual ? "bg-[#142033] text-white border-[#142033]" : "bg-white text-[#44433D] border-[#D9D4C8]"
       }`}
     >
-      Todo
+      <TS>Todo</TS>
     </LocalizedClientLink>
     {secciones.map((s) => (
       <LocalizedClientLink
@@ -173,8 +174,8 @@ export const ColDerecha = ({ destacados, semana = [], sesion = null }: { destaca
     <QuienesAyudan semana={semana} siempre={destacados} />
     <CaptarTaller sesion={sesion} />
     <LocalizedClientLink href="/calculadora-cnc" className="bg-[#142033] text-white rounded-[12px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
-      <strong className="text-[14.5px]">¿Prisa? Usa la Calculadora CNC</strong>
-      <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances, tiempos y costos de tu máquina al instante.</span>
+      <strong className="text-[14.5px]"><TS>¿Prisa? Usa la Calculadora CNC</TS></strong>
+      <span className="text-[13px] text-[#C9D2E0]"><TS>Velocidades, avances, tiempos y costos de tu máquina al instante.</TS></span>
     </LocalizedClientLink>
     {/* Publicidad del foro (no dibuja nada si no hay anuncios vigentes) */}
     <AnunciosEspacio espacio="foro_lateral" />
@@ -204,7 +205,7 @@ export const QuienesAyudan = ({ semana, siempre }: { semana: Ayudador[]; siempre
             <LocalizedClientLink href={urlPerfil(a.usuario)} className="text-[14px] font-semibold text-[#1B1B18] truncate hover:text-[#B34D07]">
               {a.nombre}
             </LocalizedClientLink>
-            <span className="text-[12px] text-[#6B6A63] truncate">{a.detalle}</span>
+            <span className="text-[12px] text-[#6B6A63] truncate"><TS>{a.detalle}</TS></span>
           </span>
           <InsigniaTaller a={a} />
         </div>
@@ -220,9 +221,9 @@ export const CaptarTaller = ({ sesion }: { sesion: SesionForo }) =>
       href={sesion?.perfil && ["taller", "proveedor", "profesional"].includes(sesion.perfil.tipo) ? "/foro-cnc/mi-perfil#taller" : "/talleres/unete"}
       className="bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] p-4 flex flex-col gap-1 hover:border-[#C2560A]"
     >
-      <strong className="text-[14.5px] text-[#1B1B18]">¿Tienes taller? Que te encuentren</strong>
+      <strong className="text-[14.5px] text-[#1B1B18]"><TS>¿Tienes taller? Que te encuentren</TS></strong>
       <span className="text-[13px] text-[#5A3A12]">
-        Liga tu taller a tu perfil: tus respuestas llevan a tu página y recibes solicitudes de cotización.
+        <TS>Liga tu taller a tu perfil: tus respuestas llevan a tu página y recibes solicitudes de cotización.</TS>
       </span>
     </LocalizedClientLink>
   )
@@ -248,7 +249,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
       </div>
       {t.fijado && (
         <span className="text-[12px] font-bold text-[#6B6A63] inline-flex items-center gap-1">
-          <Ico n="pin" size={13} /> Fijado
+          <Ico n="pin" size={13} /> <TS>Fijado</TS>
         </span>
       )}
     </div>
@@ -258,17 +259,17 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
         <InsigniaTema tipo={t.tipo} />
         {t.resuelto && (
           <span className="text-[12px] font-bold text-[#16794F] inline-flex items-center gap-1">
-            <Ico n="check" size={13} /> Resuelto
+            <Ico n="check" size={13} /> <TS>Resuelto</TS>
           </span>
         )}
-        {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]">Patrocinado</span>}
+        {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Patrocinado</TS></span>}
         <LocalizedClientLink href={`/foro-cnc/${t.seccion.slug}`} className="text-[12.5px] text-[#6B6A63] hover:text-[#B34D07]">
-          en {t.seccion.nombre}
+          <TS>en</TS> {t.seccion.nombre}
         </LocalizedClientLink>
       </div>
       <h3 className="m-0 text-[17px] leading-snug font-bold text-[#1B1B18]">
         <LocalizedClientLink href={urlTema(t)} className="hover:text-[#B34D07]">
-          {t.titulo}
+          <TS>{t.titulo}</TS>
         </LocalizedClientLink>
       </h3>
       {t.extracto && <p className="m-0 text-[14.5px] text-[#44433D] leading-relaxed line-clamp-3">{t.extracto}</p>}
@@ -283,21 +284,21 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
 
     <div className="px-4 py-2 flex items-center justify-between text-[12.5px] text-[#6B6A63]">
       <span className="inline-flex items-center gap-1">
-        <Ico n="voto" size={13} /> {t.votos} útil
+        <Ico n="voto" size={13} /> {t.votos} <TS>útil</TS>
       </span>
       <span>
-        {t.respuestas} {t.respuestas === 1 ? "respuesta" : "respuestas"} · {t.vistas} vistas
+        {t.respuestas} {t.respuestas === 1 ? "respuesta" : "respuestas"} · {t.vistas} <TS>vistas</TS>
       </span>
     </div>
     <div className="grid grid-cols-3 border-t border-[#EFECE5] text-[13.5px] font-semibold text-[#44433D]">
       <LocalizedClientLink href={urlTema(t)} className="py-2.5 text-center hover:bg-[#F6F4EF] inline-flex items-center justify-center gap-1.5">
-        <Ico n="voto" size={15} /> Útil
+        <Ico n="voto" size={15} /> <TS>Útil</TS>
       </LocalizedClientLink>
       <LocalizedClientLink href={`${urlTema(t)}#respuestas`} className={`py-2.5 text-center hover:bg-[#F6F4EF] inline-flex items-center justify-center gap-1.5 ${t.respuestas === 0 ? "text-[#B34D07]" : ""}`}>
         <Ico n="respuesta" size={15} /> {t.respuestas === 0 ? "Responder" : "Comentar"}
       </LocalizedClientLink>
       <LocalizedClientLink href={urlTema(t)} className="py-2.5 text-center hover:bg-[#F6F4EF] inline-flex items-center justify-center gap-1.5">
-        <Ico n="vista" size={15} /> Ver
+        <Ico n="vista" size={15} /> <TS>Ver</TS>
       </LocalizedClientLink>
     </div>
   </article>

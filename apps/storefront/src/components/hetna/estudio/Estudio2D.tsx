@@ -11,6 +11,7 @@
 //
 // La herramienta sólo arma el Dibujo (lib/generador/geo2d); aquí se ve, se
 // mide y se descarga en DXF, SVG o PDF, o se manda a cotizar o a fabricar.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -266,9 +267,9 @@ export function Estudio2D({
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#C2560A]/20 text-[#F28A3C]">{icono}</span>
           <div className="min-w-0">
             <h1 className="m-0 text-[16px] font-bold">
-              {titulo} {acento && <span className="text-[#F28A3C]">{acento}</span>}
+              <T>{titulo}</T> {acento && <span className="text-[#F28A3C]">{acento}</span>}
             </h1>
-            <p className="m-0 text-[12px] text-[#8A97AB]">{subtitulo}</p>
+            <p className="m-0 text-[12px] text-[#8A97AB]"><T>{subtitulo}</T></p>
           </div>
         </div>
 
@@ -297,7 +298,7 @@ export function Estudio2D({
                 ))}
               </div>
               <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
-                Copias de cada pieza
+                <T>Copias de cada pieza</T>
                 <span className="flex items-center rounded-[8px] bg-[#1C2431]">
                   <button type="button" aria-label="Menos copias" onClick={() => setCopias((c) => Math.max(1, c - 1))} className="px-2.5 py-1 text-[15px] hover:text-white">−</button>
                   <span className="w-8 text-center font-semibold text-white">{copias}</span>
@@ -306,9 +307,9 @@ export function Estudio2D({
               </label>
               {anidado && (
                 <p className="m-0 rounded-[8px] bg-[#C2560A]/10 px-2.5 py-2 text-[12px] leading-snug text-[#F2D29B]">
-                  {anidado.totalPiezas} piezas en <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> de {HOJAS[hojaSel].nombre.replace(/^\S+ /, "")} mm · aprovechamiento{" "}
+                  {anidado.totalPiezas} <T>piezas en</T> <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> <T>de</T> {HOJAS[hojaSel].nombre.replace(/^\S+ /, "")} <T>mm · aprovechamiento</T>{" "}
                   <b className="text-white">{Math.round(anidado.aprovechamiento * 100)}%</b>
-                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]">No caben en esta hoja: {anidado.noCaben.slice(0, 3).join(", ")}. Elige una hoja más grande.</span>}
+                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en esta hoja:</T> {anidado.noCaben.slice(0, 3).join(", ")}<T>. Elige una hoja más grande.</T></span>}
                 </p>
               )}
             </>
@@ -320,9 +321,9 @@ export function Estudio2D({
             descargas(exportar)
           ) : (
             <div className="flex gap-2">
-              <Boton tipo="primario" onClick={() => exportar("dxf")}>DXF</Boton>
-              <Boton onClick={() => exportar("svg")}>SVG</Boton>
-              <Boton onClick={() => exportar("pdf")}>PDF</Boton>
+              <Boton tipo="primario" onClick={() => exportar("dxf")}><T>DXF</T></Boton>
+              <Boton onClick={() => exportar("svg")}><T>SVG</T></Boton>
+              <Boton onClick={() => exportar("pdf")}><T>PDF</T></Boton>
             </div>
           )}
         </Seccion>
@@ -347,7 +348,7 @@ export function Estudio2D({
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo en Fabrícamelo.")
               }}
             >
-              Fabrícamelo
+              <T>Fabrícamelo</T>
             </Boton>
             <Boton
               onClick={() => {
@@ -356,7 +357,7 @@ export function Estudio2D({
                   setAviso("El archivo es muy grande para mandarlo así. Descárgalo y súbelo al cotizador.")
               }}
             >
-              Cotizar
+              <T>Cotizar</T>
             </Boton>
           </div>
           {herramientaSlug && (
@@ -370,7 +371,7 @@ export function Estudio2D({
             />
           )}
         </Seccion>
-        <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]">Todo se calcula en tu navegador. Medidas en milímetros.</p>
+        <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]"><T>Todo se calcula en tu navegador. Medidas en milímetros.</T></p>
       </aside>
 
       {/* En el celular la vista va arriba y fija: se ve cada cambio del panel */}
@@ -392,7 +393,7 @@ export function Estudio2D({
               ))}
             </div>
           ) : (
-            <span className="mr-auto font-semibold text-[#C9D2E0]">Vista 2D</span>
+            <span className="mr-auto font-semibold text-[#C9D2E0]"><T>Vista 2D</T></span>
           )}
           {(en3D ? [] : [
             ["Ajustar", () => setVista({ x: 0, y: 0, k: 1 })],
@@ -463,17 +464,17 @@ export function Estudio2D({
         <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[#1F2937] bg-[#0F141C] px-4 py-2 text-[12.5px] text-[#8A97AB]">
           {medidas && (
             <span>
-              Medidas: <b className="text-white">{Math.round(ancho * 10) / 10} × {Math.round(alto * 10) / 10} mm</b>
+              <T>Medidas:</T> <b className="text-white">{Math.round(ancho * 10) / 10} × {Math.round(alto * 10) / 10} <T>mm</T></b>
             </span>
           )}
           {paraExportar && (
             <span>
-              Trazos: <b className="text-white">{paraExportar.trazos.length}</b>
+              <T>Trazos:</T> <b className="text-white">{paraExportar.trazos.length}</b>
             </span>
           )}
           {largo > 0 && (
             <span>
-              Corte: <b className="text-white">{largo >= 1000 ? `${(largo / 1000).toFixed(2)} m` : `${Math.round(largo)} mm`}</b>
+              <T>Corte:</T> <b className="text-white">{largo >= 1000 ? `${(largo / 1000).toFixed(2)} m` : `${Math.round(largo)} mm`}</b>
             </span>
           )}
           {datos.map(([t, v]) => (

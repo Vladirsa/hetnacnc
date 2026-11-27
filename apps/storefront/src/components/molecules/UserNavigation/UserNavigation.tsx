@@ -3,6 +3,7 @@
 // Menú de "Mi cuenta": agrupado como en los marketplaces grandes (Compras,
 // Fabricación, Comunidad, Cuenta), en español y con iconos. En celular es un
 // desplegable para no empujar el contenido hacia abajo.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { LogoutButton } from "@/components/atoms/LogoutButton/LogoutButton"
 import { IconoCuenta, type NombreIcono } from "@/components/hetna/cuenta/IconoCuenta"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -79,7 +80,7 @@ export const UserNavigation = () => {
     <nav aria-label="Mi cuenta" className="flex flex-col gap-4">
       {GRUPOS.map((g) => (
         <div key={g.titulo}>
-          <p className="m-0 mb-1 px-3 text-[11.5px] font-bold uppercase tracking-wide text-[#9A978C]">{g.titulo}</p>
+          <p className="m-0 mb-1 px-3 text-[11.5px] font-bold uppercase tracking-wide text-[#9A978C]"><T>{g.titulo}</T></p>
           <ul className="m-0 list-none p-0">
             {g.items.map((i) => (
               <li key={i.href}>
@@ -89,7 +90,7 @@ export const UserNavigation = () => {
                     className="flex items-center gap-3 rounded-[10px] px-3 py-2 text-[14.5px] text-[#1B1B18] hover:bg-[#F6F4EF]"
                   >
                     <IconoCuenta n={i.icono} size={19} />
-                    <span className="flex-1">{i.label}</span>
+                    <span className="flex-1"><T>{i.label}</T></span>
                   </a>
                 ) : (
                 <LocalizedClientLink
@@ -100,7 +101,7 @@ export const UserNavigation = () => {
                   }`}
                 >
                   <IconoCuenta n={i.icono} size={19} />
-                  <span className="flex-1">{i.label}</span>
+                  <span className="flex-1"><T>{i.label}</T></span>
                   {i.insignia === "chat" && Boolean(unreads?.length) && (
                     <span className="min-w-[20px] rounded-full bg-[#C2560A] px-1.5 text-center text-[11px] font-bold leading-5 text-white">
                       {unreads?.length}
@@ -116,7 +117,7 @@ export const UserNavigation = () => {
       <div className="border-t border-[#E7E4DC] pt-2">
         <LogoutButton unstyled className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2 text-left text-[14.5px] text-[#6B6A63] hover:bg-[#F6F4EF]">
           <IconoCuenta n="salir" size={19} />
-          Cerrar sesión
+          <T>Cerrar sesión</T>
         </LogoutButton>
       </div>
     </nav>
@@ -129,7 +130,7 @@ export const UserNavigation = () => {
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[15px] font-semibold text-[#1B1B18]">
           <span className="flex items-center gap-2">
             {actual && <IconoCuenta n={actual.icono} size={19} />}
-            Mi cuenta{actual && actual.href !== "/user" ? ` · ${actual.label}` : ""}
+            <T>Mi cuenta</T>{actual && actual.href !== "/user" ? ` · ${actual.label}` : ""}
           </span>
           <span className="text-[#9A978C] transition group-open:rotate-180" aria-hidden="true">
             ▾

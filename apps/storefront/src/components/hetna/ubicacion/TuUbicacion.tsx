@@ -4,6 +4,7 @@
 // postal (listas de talleres de la ficha: TalleresCerca, TalleresImpresion y
 // TalleresPlano). CreditoIp: el crédito que pide la licencia de DB-IP (CC BY
 // 4.0) donde se use la ubicación aproximada por IP.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { textoUbicacion } from "@/lib/ubicacion/cercania"
@@ -11,9 +12,9 @@ import type { Ubicacion } from "@/lib/ubicacion/useUbicacion"
 
 export const CreditoIp = () => (
   <span className="text-[#6B6A63]">
-    {" "}(aproximado,{" "}
+    {" "}<T>(aproximado,</T>{" "}
     <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="underline">
-      IP Geolocation by DB-IP
+      <T>IP Geolocation by DB-IP</T>
     </a>
     )
   </span>
@@ -37,7 +38,7 @@ export function TuUbicacion({ ubicacion, ponerCp, aviso }: { ubicacion: Ubicacio
   if (ubicacion && !editar)
     return (
       <p className="m-0 text-[12.5px] text-[#40403A]" data-testid="tu-ubicacion">
-        📍 Cerca de <b>{lugar}</b>
+        <T>📍 Cerca de</T> <b>{lugar}</b>
         {ubicacion.fuente === "ip" && <CreditoIp />}
         {" · "}
         <button type="button" onClick={() => setEditar(true)} className="font-semibold text-[#B34D07] underline">
@@ -49,7 +50,7 @@ export function TuUbicacion({ ubicacion, ponerCp, aviso }: { ubicacion: Ubicacio
   return (
     <form onSubmit={enviar} className="flex flex-wrap items-center gap-2" data-testid="tu-ubicacion-cp">
       <label htmlFor="cp-cercania" className="text-[12.5px] text-[#40403A]">
-        📍 Tu código postal para ver los más cercanos:
+        <T>📍 Tu código postal para ver los más cercanos:</T>
       </label>
       <input
         id="cp-cercania"

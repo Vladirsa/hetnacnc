@@ -2,6 +2,7 @@
 
 // Botones de la comunidad: seguir un tema, pedir respuesta, asistir a un
 // evento, mensajes directos, bloquear, preferencias de correo y la campana.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 
@@ -82,8 +83,8 @@ export function PedirRespuesta({ temaId, candidatos }: { temaId: number; candida
   return (
     <div className="flex flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-white p-4">
       <div>
-        <strong className="block text-[14.5px] text-[#1B1B18]">Pide una respuesta</strong>
-        <span className="text-[13px] text-[#6B6A63]">Invita a quien sabe de esto. Le llega un aviso.</span>
+        <strong className="block text-[14.5px] text-[#1B1B18]"><T>Pide una respuesta</T></strong>
+        <span className="text-[13px] text-[#6B6A63]"><T>Invita a quien sabe de esto. Le llega un aviso.</T></span>
       </div>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {candidatos.map((c) => (
@@ -155,7 +156,7 @@ export function BotonAsistir({ temaId, n, yo, pasado }: { temaId: number; n: num
           {estado.n === 0 ? (pasado ? "" : "Sé el primero en confirmar") : estado.n === 1 ? "1 persona va" : `${estado.n} personas van`}
         </span>
       </div>
-      {!pasado && estado.yo && <span className="text-[12.5px] text-[#6B6A63]">Te recordamos un día antes.</span>}
+      {!pasado && estado.yo && <span className="text-[12.5px] text-[#6B6A63]"><T>Te recordamos un día antes.</T></span>}
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </div>
   )
@@ -215,7 +216,7 @@ export function FormMensaje({ usuario, deshabilitado }: { usuario: string; desha
           {pendiente ? "…" : "Enviar"}
         </button>
       </div>
-      <span className="text-[12px] text-[#9A978C]">Enter para enviar · Shift+Enter para otro renglón · Los teléfonos y correos se ocultan: cierra tus tratos dentro de HETNA.</span>
+      <span className="text-[12px] text-[#9A978C]"><T>Enter para enviar · Shift+Enter para otro renglón · Los teléfonos y correos se ocultan: cierra tus tratos dentro de HETNA.</T></span>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </form>
   )
@@ -271,9 +272,9 @@ export function FormPreferencias({ inicial }: { inicial: { correoAvisos: CorreoA
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Avisos por correo</h2>
+        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]"><T>Avisos por correo</T></h2>
         <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-          Respuestas a tus temas, nuevos seguidores, mensajes, avales, postulaciones y recordatorios de eventos. Todo sale también en la campana del foro.
+          <T>Respuestas a tus temas, nuevos seguidores, mensajes, avales, postulaciones y recordatorios de eventos. Todo sale también en la campana del foro.</T>
         </p>
       </div>
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
@@ -304,8 +305,8 @@ export function FormPreferencias({ inicial }: { inicial: { correoAvisos: CorreoA
           className="mt-1 h-4 w-4 accent-[#C2560A]"
         />
         <span>
-          Resumen semanal los lunes
-          <span className="block text-[13px] text-[#6B6A63]">Lo mejor de lo que sigues, preguntas que puedes responder, vacantes y eventos.</span>
+          <T>Resumen semanal los lunes</T>
+          <span className="block text-[13px] text-[#6B6A63]"><T>Lo mejor de lo que sigues, preguntas que puedes responder, vacantes y eventos.</T></span>
         </span>
       </label>
       {(pendiente || estado) && <span className="text-[13.5px] font-semibold text-[#16794F]">{pendiente ? "Guardando…" : estado}</span>}

@@ -6,6 +6,7 @@
 // Regla: nada de existencias, tiempos de envío ni reseñas que no existan.
 // Todo sale del producto (descripción, metadata) o de reglas que ya son ciertas
 // para cualquier descarga en HETNA.
+import { TS } from "@/i18n/TS"
 import "@/components/hetna/tienda/fuentes-tienda.css"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -95,22 +96,22 @@ export function ModificarDiseno({ product, vendedor }: { product: Producto; vend
   return (
       <section className="rounded-xl border border-dashed border-[#C5CCD3] bg-[#F7F8FA] p-4" aria-labelledby="titulo-modificar">
         <h2 id="titulo-modificar" className="m-0 text-[14.5px] font-bold text-[#1E2329]">
-          ¿Lo quieres ya fabricado o con otras medidas?
+          <TS>¿Lo quieres ya fabricado o con otras medidas?</TS>
         </h2>
         <p className="m-0 mt-1 text-[13px] text-[#3A414B]">
-          Pide una modificación{vendedor?.name ? ` a ${vendedor.name}` : ""} o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.
+          <TS>Pide una modificación</TS>{vendedor?.name ? ` a ${vendedor.name}` : ""} <TS>o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.</TS>
         </p>
         <LocalizedClientLink
           href={ligaModificacion(product, vendedor)}
           className="mt-2 inline-flex min-h-[44px] items-center rounded border border-[#1E2329] bg-white px-4 text-[14px] font-semibold text-[#1E2329] hover:bg-[#1E2329] hover:text-white"
         >
-          Pedir una modificación
+          <TS>Pedir una modificación</TS>
         </LocalizedClientLink>
         <a
           href="#fabricar"
           className="mt-2 ml-2 inline-flex min-h-[44px] items-center rounded bg-[#1E2329] px-4 text-[14px] font-semibold text-white hover:bg-[#3A414B]"
         >
-          Cotizar fabricación
+          <TS>Cotizar fabricación</TS>
         </a>
       </section>
   )
@@ -122,12 +123,12 @@ function PiezaFabricada({ fotos, compradores }: { fotos: string[]; compradores: 
   return (
     <section aria-labelledby="titulo-fabricada" className="rounded-md border border-[#D4D9DF] bg-white p-5">
       <h2 id="titulo-fabricada" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
-        La pieza fabricada
+        <TS>La pieza fabricada</TS>
       </h2>
-      <p className="m-0 mt-1 text-[13.5px] text-[#5B6370]">Fotos reales de la pieza ya cortada o impresa con este archivo.</p>
+      <p className="m-0 mt-1 text-[13.5px] text-[#5B6370]"><TS>Fotos reales de la pieza ya cortada o impresa con este archivo.</TS></p>
       {fotos.length > 0 && (
         <>
-          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">Del vendedor</p>
+          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]"><TS>Del vendedor</TS></p>
           <ul className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {fotos.map((u) => (
               <li key={u} className="relative aspect-square overflow-hidden rounded border border-[#E2E5E9] bg-[#F4F5F7]">
@@ -141,7 +142,7 @@ function PiezaFabricada({ fotos, compradores }: { fotos: string[]; compradores: 
       )}
       {compradores.length > 0 && (
         <>
-          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]">De compradores</p>
+          <p className="m-0 mt-3 text-[12.5px] font-bold uppercase tracking-[0.06em] text-[#5B6370]"><TS>De compradores</TS></p>
           <ul className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {compradores.map((id) => (
               <li key={id} className="relative aspect-square overflow-hidden rounded border border-[#E2E5E9] bg-[#F4F5F7]">
@@ -194,7 +195,7 @@ export function AbajoDescarga({
             contenido: product.description ? (
               <div className="product-details text-[15px] leading-relaxed text-[#2E333A]" dangerouslySetInnerHTML={{ __html: htmlSeguro(product.description) }} />
             ) : (
-              <p className="m-0 text-[14px] text-[#5B6370]">El vendedor no escribió una descripción.</p>
+              <p className="m-0 text-[14px] text-[#5B6370]"><TS>El vendedor no escribió una descripción.</TS></p>
             ),
           },
           {
@@ -229,7 +230,7 @@ export function AbajoDescarga({
             contenido: (
               <div className="text-[14px] text-[#2E333A]">
                 <p className="m-0">
-                  <strong>Licencia {licencia.nombre}.</strong> {licencia.resumen}
+                  <strong><TS>Licencia</TS> {licencia.nombre}.</strong> <TS>{licencia.resumen}</TS>
                 </p>
                 <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
                   {licencia.permisos.map((x) => (
@@ -237,25 +238,25 @@ export function AbajoDescarga({
                       <Marca si={x.si} />
                       <span>
                         {x.que}
-                        {x.nota ? <span className="text-[#5B6370]"> ({x.nota})</span> : null}
+                        {x.nota ? <span className="text-[#5B6370]"> (<TS>{x.nota}</TS>)</span> : null}
                       </span>
                     </li>
                   ))}
                 </ul>
-                <p className="m-0 mt-4 font-semibold text-[#1E2329]">Aplica a todas las licencias</p>
+                <p className="m-0 mt-4 font-semibold text-[#1E2329]"><TS>Aplica a todas las licencias</TS></p>
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-[#3A414B]">
                   {REGLAS_COMUNES.map((r) => (
                     <li key={r}>{r}</li>
                   ))}
                 </ul>
                 <p className="m-0 mt-3 text-[13px] text-[#5B6370]">
-                  Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.{" "}
+                  <TS>Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.</TS>{" "}
                   <LocalizedClientLink href="/devoluciones" className="underline">
-                    Ver política
+                    <TS>Ver política</TS>
                   </LocalizedClientLink>{" "}
                   ·{" "}
                   <LocalizedClientLink href="/licencias-disenos" className="underline">
-                    Comparar las tres licencias
+                    <TS>Comparar las tres licencias</TS>
                   </LocalizedClientLink>
                 </p>
               </div>
@@ -267,19 +268,19 @@ export function AbajoDescarga({
             contenido: (
           <section aria-labelledby="titulo-recibes">
             <h2 id="titulo-recibes" className="sr-only">
-              Qué recibes
+              <TS>Qué recibes</TS>
             </h2>
             <ul className="mt-2 grid gap-1.5 text-[13.5px] text-[#1E2329]">
               <li className="flex gap-2">
                 <Marca si />
-                <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}, listo para tu CAM.</span>
+                <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}<TS>, listo para tu CAM.</TS></span>
               </li>
               {programas.length > 0 && (
                 <li className="flex gap-2">
                   <Marca si />
                   <span>
-                    Se abre en: <b className="font-semibold">{programas.join(", ")}</b>
-                    {" "}y cualquier programa que lea {formatosDe(product).join(" o ")}.
+                    <TS>Se abre en:</TS> <b className="font-semibold">{programas.join(", ")}</b>
+                    {" "}<TS>y cualquier programa que lea</TS> {formatosDe(product).join(" o ")}.
                   </span>
                 </li>
               )}
@@ -294,16 +295,16 @@ export function AbajoDescarga({
               <li className="flex gap-2">
                 <Marca si />
                 <span>
-                  Lo descargas en{" "}
+                  <TS>Lo descargas en</TS>{" "}
                   <LocalizedClientLink href="/user/descargas" className="font-semibold underline">
-                    Mi cuenta › Mis descargas
+                    <TS>Mi cuenta › Mis descargas</TS>
                   </LocalizedClientLink>{" "}
-                  en cuanto se confirma el pago.
+                  <TS>en cuanto se confirma el pago.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
                 <Marca si />
-                <span>Licencia {licencia.nombre} a tu nombre.</span>
+                <span><TS>Licencia</TS> {licencia.nombre} <TS>a tu nombre.</TS></span>
               </li>
             </ul>
           </section>
@@ -316,7 +317,7 @@ export function AbajoDescarga({
 
       <section aria-labelledby="titulo-como" className="rounded-md border border-[#D4D9DF] bg-white p-5">
         <h2 id="titulo-como" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
-          Cómo funciona
+          <TS>Cómo funciona</TS>
         </h2>
         <ol className="mt-4 grid gap-4 sm:grid-cols-3">
           {PASOS.map((p) => (
@@ -327,11 +328,11 @@ export function AbajoDescarga({
                 <p className="m-0 mt-0.5 text-[14px] leading-snug text-[#5B6370]">
                   {p.n === "02" ? (
                     <>
-                      El archivo aparece en{" "}
+                      <TS>El archivo aparece en</TS>{" "}
                       <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#1E2329] underline">
-                        Mi cuenta › Mis descargas
+                        <TS>Mi cuenta › Mis descargas</TS>
                       </LocalizedClientLink>{" "}
-                      en cuanto se confirma el pago.
+                      <TS>en cuanto se confirma el pago.</TS>
                     </>
                   ) : (
                     p.d
@@ -358,18 +359,18 @@ export function AbajoDescarga({
             }}
           />
           <h2 id="titulo-faq" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
-            Preguntas frecuentes
+            <TS>Preguntas frecuentes</TS>
           </h2>
           <div className="mt-3 divide-y divide-[#EEF0F2]">
             {preguntas.map((q) => (
               <details key={q.pregunta} className="group py-1">
                 <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold text-[#1E2329]">
-                  {q.pregunta}
+                  <TS>{q.pregunta}</TS>
                   <span className="text-[20px] text-[#E85D04] transition-transform group-open:rotate-45" aria-hidden="true">
                     +
                   </span>
                 </summary>
-                <p className="m-0 pb-3 text-[14.5px] leading-relaxed text-[#3A414B]">{q.respuesta}</p>
+                <p className="m-0 pb-3 text-[14.5px] leading-relaxed text-[#3A414B]"><TS>{q.respuesta}</TS></p>
               </details>
             ))}
           </div>

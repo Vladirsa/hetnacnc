@@ -11,7 +11,9 @@ import { RastreoCorreo } from '@/components/hetna/RastreoCorreo';
 import { HtmlLangSetter } from '@/components/atoms/HtmlLangSetter/HtmlLangSetter';
 import { AvisoCookies } from '@/components/hetna/AvisoCookies';
 import { Traductor } from '@/components/hetna/Traductor';
+import { IdiomaProvider } from '@/components/hetna/i18n/Idioma';
 import { COOKIE_IDIOMA, SCRIPT_VELO } from '@/i18n/idioma';
+import { idiomaServidor, metaEnIdioma } from '@/i18n/servidor';
 import { toHreflang } from '@/lib/helpers/hreflang';
 import { retrieveCart } from '@/lib/data/cart';
 
@@ -42,7 +44,7 @@ const hetnaDisplay = localFont({
   display: 'swap'
 });
 
-export const metadata: Metadata = {
+const metadataBase: Metadata = {
   title: {
     template: `%s | ${
       process.env.NEXT_PUBLIC_SITE_NAME || 'HETNA CNC - Marketplace de CNC en México'
@@ -78,6 +80,15 @@ export const metadata: Metadata = {
       : {})
   }
 };
+
+// Título y descripción en el idioma de la página (Google en /us los lee en inglés)
+export async function generateMetadata(): Promise<Metadata> {
+  const m = await metaEnIdioma(metadataBase);
+  if ((await idiomaServidor()) === 'en') {
+    m.openGraph = { ...m.openGraph, locale: 'en_US' };
+  }
+  return m;
+}
 
 export const viewport = { themeColor: '#142033', viewportFit: 'cover' as const };
 
@@ -124,12 +135,16 @@ export default async function RootLayout({
         <RastreoCorreo />
         <HtmlLangSetter />
         <Traductor />
-        <Providers cart={cart}>
-          {children}
-          {!esWidget && <MobileBottomNav />}
-          {!esWidget && <InstallPrompt />}
-        </Providers>
-        {!esWidget && <AvisoCookies />}
+        {/* El servidor arma la página en el idioma elegido (<T>, useT, src/i18n/servidor.ts);
+            el Traductor del navegador sólo completa lo que todavía no pasa por ahí. */}
+        <IdiomaProvider idioma={enIngles ? 'en' : 'es'}>
+          <Providers cart={cart}>
+            {children}
+            {!esWidget && <MobileBottomNav />}
+            {!esWidget && <InstallPrompt />}
+          </Providers>
+          {!esWidget && <AvisoCookies />}
+        </IdiomaProvider>
         <Toaster position="top-right" />
       </body>
     </html>

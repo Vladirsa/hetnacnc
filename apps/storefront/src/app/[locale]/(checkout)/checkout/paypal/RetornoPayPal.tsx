@@ -6,6 +6,7 @@
 // crea los pedidos por vendedor y redirige al detalle del pedido.
 // Nota: aunque alguien escriba esta dirección a mano, el servidor revisa con PayPal
 // que el pago exista y esté completo antes de crear el pedido.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
@@ -50,14 +51,14 @@ export function RetornoPayPal() {
     <main className="container max-w-xl mx-auto py-16 px-4 text-center flex flex-col items-center gap-4">
       {estado === "procesando" && (
         <>
-          <h1 className="heading-md text-primary">¡Pago aprobado!</h1>
-          <p className="text-secondary">Estamos creando tu pedido. No cierres esta página.</p>
+          <h1 className="heading-md text-primary"><T>¡Pago aprobado!</T></h1>
+          <p className="text-secondary"><T>Estamos creando tu pedido. No cierres esta página.</T></p>
         </>
       )}
 
       {estado === "no-pagado" && (
         <>
-          <h1 className="heading-md text-primary">El pago no se completó</h1>
+          <h1 className="heading-md text-primary"><T>El pago no se completó</T></h1>
           <p className="text-secondary">
             {cancelado
               ? "Cancelaste el pago en PayPal. No se hizo ningún cargo y tu carrito sigue guardado."
@@ -67,24 +68,24 @@ export function RetornoPayPal() {
             href="/checkout?step=payment"
             className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 h-11 rounded-full"
           >
-            Volver al pago
+            <T>Volver al pago</T>
           </LocalizedClientLink>
         </>
       )}
 
       {estado === "error" && (
         <>
-          <h1 className="heading-md text-primary">Tu pago se recibió, pero no pudimos crear el pedido</h1>
+          <h1 className="heading-md text-primary"><T>Tu pago se recibió, pero no pudimos crear el pedido</T></h1>
           <p className="text-secondary">
-            No vuelvas a pagar. Revisa «Mis pedidos»; si no aparece, escríbenos por WhatsApp con tu correo y
-            lo resolvemos.
+            <T>No vuelvas a pagar. Revisa «Mis pedidos»; si no aparece, escríbenos por WhatsApp con tu correo y
+            lo resolvemos.</T>
           </p>
-          {detalle && <p className="text-xs text-secondary">Detalle: {detalle}</p>}
+          {detalle && <p className="text-xs text-secondary"><T>Detalle:</T> <T>{detalle}</T></p>}
           <LocalizedClientLink
             href="/user/orders"
             className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 h-11 rounded-full"
           >
-            Ver mis pedidos
+            <T>Ver mis pedidos</T>
           </LocalizedClientLink>
         </>
       )}

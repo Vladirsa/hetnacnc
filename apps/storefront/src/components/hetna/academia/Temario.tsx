@@ -3,6 +3,7 @@
 // Temario con reproductor: las lecciones abiertas (vista previa o inscrito)
 // se ven aquí mismo; las cerradas muestran un candado. El alumno inscrito
 // marca cada lección como vista; con todas vistas obtiene su certificado.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -65,7 +66,7 @@ export function Temario({
         <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="m-0 text-[14px] font-bold text-[#1B1B18]">
-              Tu avance: {hechas} de {total} {total === 1 ? "lección" : "lecciones"}
+              <T>Tu avance:</T> {hechas} <T>de</T> {total} {total === 1 ? "lección" : "lecciones"}
             </p>
             <span className="text-[13px] font-semibold text-[#C2560A]">{pct}%</span>
           </div>
@@ -74,12 +75,12 @@ export function Temario({
           </div>
           {terminado && slug && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[10px] bg-[#E6F4EC] px-3 py-2.5">
-              <span className="text-[14px] font-semibold text-[#16794F]">¡Terminaste el curso! Ya tienes tu certificado.</span>
+              <span className="text-[14px] font-semibold text-[#16794F]"><T>¡Terminaste el curso! Ya tienes tu certificado.</T></span>
               <LocalizedClientLink
                 href={`/aprendizaje-cnc/cursos/${slug}/certificado`}
                 className="rounded-[8px] bg-[#16794F] px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-[#12623F]"
               >
-                Ver mi certificado
+                <T>Ver mi certificado</T>
               </LocalizedClientLink>
             </div>
           )}
@@ -102,7 +103,7 @@ export function Temario({
             />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            {titulo && <p className="m-0 text-[15px] font-semibold text-[#1B1B18]">{titulo}</p>}
+            {titulo && <p className="m-0 text-[15px] font-semibold text-[#1B1B18]"><T>{titulo}</T></p>}
             {inscrito && actual && (
               <button
                 type="button"
@@ -121,7 +122,7 @@ export function Temario({
         </div>
       )}
 
-      <h2 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">Contenido del curso</h2>
+      <h2 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]"><T>Contenido del curso</T></h2>
       <div className="flex flex-col gap-3">
         {secciones.map((seccion, i) => (
           <div key={seccion.id} className="overflow-hidden rounded-[14px] border border-[#E7E4DC] bg-white">
@@ -129,7 +130,7 @@ export function Temario({
               <h3 className="m-0 text-[14.5px] font-bold text-[#1B1B18]">
                 {i + 1}. {seccion.title}
               </h3>
-              <span className="shrink-0 text-[12.5px] text-[#9A978C]">{seccion.lessons.length} lecciones</span>
+              <span className="shrink-0 text-[12.5px] text-[#9A978C]">{seccion.lessons.length} <T>lecciones</T></span>
             </div>
             <ul className="m-0 list-none p-0">
               {seccion.lessons.map((l) => {
@@ -159,7 +160,7 @@ export function Temario({
                       <span className="flex shrink-0 items-center gap-2 text-[#9A978C]">
                         {l.is_preview && !inscrito && (
                           <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#C2560A]">
-                            Vista previa
+                            <T>Vista previa</T>
                           </span>
                         )}
                         {duracionTexto(l.duration_seconds)}

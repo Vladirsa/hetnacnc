@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from '@/components/atoms/Button/Button'
 import { useState } from 'react';
 import { Modal } from '../Modal/Modal';
@@ -14,7 +15,7 @@ export const ProductReportButton = () => {
         variant='tonal'
         onClick={() => setOpenModal(true)}
       >
-        Reportar publicación
+        <T>Reportar publicación</T>
       </Button>
       {openModal && (
         <Modal

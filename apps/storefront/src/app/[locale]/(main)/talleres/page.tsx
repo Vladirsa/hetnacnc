@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import DirectorioTalleres from "@/components/hetna/taller/DirectorioTalleres"
@@ -17,7 +19,7 @@ const rutaDePais = (pais: string) => {
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { redPorEstado } from "@/lib/foro/red"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres" },
   title: "Talleres CNC en México",
   description:
@@ -41,43 +43,43 @@ export default async function TalleresPage({
             "repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 28px)",
         }}
       >
-        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#C2560A]">Directorio HETNA</p>
+        <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#C2560A]"><TS>Directorio HETNA</TS></p>
         <h1 className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight sm:text-5xl">
-          Talleres CNC en todo México
+          <TS>Talleres CNC en todo México</TS>
         </h1>
         <p className="mt-3 max-w-xl text-white/70">
-          Elige un taller por capacidad, máquina o material. Pide cotización directa y recibe envío con Envíos HETNA.
+          <TS>Elige un taller por capacidad, máquina o material. Pide cotización directa y recibe envío con Envíos HETNA.</TS>
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <LocalizedClientLink
             href="/cotizar"
             className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:brightness-110"
           >
-            Cotizar mi pieza
+            <TS>Cotizar mi pieza</TS>
           </LocalizedClientLink>
           <a
             href="#directorio"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
-            Ver talleres
+            <TS>Ver talleres</TS>
           </a>
           <LocalizedClientLink
             href="/talleres/ranking"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
-            🏆 Ranking
+            <TS>🏆 Ranking</TS>
           </LocalizedClientLink>
           <LocalizedClientLink
             href="/talleres/directorio"
             className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10"
           >
-            Directorio CNC
+            <TS>Directorio CNC</TS>
           </LocalizedClientLink>
           <a
             href="#para-talleres"
             className="rounded-xl border border-[#F2A25F] px-5 py-3 font-semibold text-[#F2A25F] hover:bg-white/10"
           >
-            Tengo un taller
+            <TS>Tengo un taller</TS>
           </a>
         </div>
       </header>
@@ -88,12 +90,12 @@ export default async function TalleresPage({
         className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-5 transition hover:shadow-md sm:p-6"
       >
         <span>
-          <span className="block text-lg font-extrabold text-[#142033]">¿Tienes un taller CNC? Lleva tu taller a más clientes</span>
+          <span className="block text-lg font-extrabold text-[#142033]"><TS>¿Tienes un taller CNC? Lleva tu taller a más clientes</TS></span>
           <span className="block text-sm text-[#44433D]">
-            Únete gratis a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción de todo México.
+            <TS>Únete gratis a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción de todo México.</TS>
           </span>
         </span>
-        <span className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white">Registrar mi taller →</span>
+        <span className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white"><TS>Registrar mi taller →</TS></span>
       </a>
 
       <div id="directorio" className="scroll-mt-24" />
@@ -107,13 +109,18 @@ export default async function TalleresPage({
           preguntas y registro, aquí mismo (la versión completa vive en
           /talleres/unete). */}
       <div id="para-talleres" className="mt-16 scroll-mt-24 border-t-4 border-[#C2560A] pt-10">
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Para talleres</p>
-        <h2 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">Lleva tu taller a más clientes</h2>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><TS>Para talleres</TS></p>
+        <h2 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl"><TS>Lleva tu taller a más clientes</TS></h2>
         <p className="mt-2 max-w-2xl text-[#6B675C]">
-          Únete gratis a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción CNC de todo México.
+          <TS>Únete gratis a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción CNC de todo México.</TS>
         </p>
         <ParaTalleres />
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

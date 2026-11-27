@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -47,9 +48,9 @@ export function AvisoCookies() {
         {/* Texto corto a propósito: en celular el aviso no debe tapar la portada
             ni ser lo más grande de la pantalla (Google lo mide como el contenido principal). */}
         <p className="text-[13px] leading-snug sm:text-sm">
-          Usamos cookies para que el sitio funcione y, con tu permiso, para estadísticas y anuncios.{" "}
+          <T>Usamos cookies para que el sitio funcione y, con tu permiso, para estadísticas y anuncios.</T>{" "}
           <LocalizedClientLink href="/aviso-de-privacidad#cookies" className="font-semibold text-[#B34D07] underline">
-            Más información
+            <T>Más información</T>
           </LocalizedClientLink>
         </p>
         <div className="flex shrink-0 gap-2">
@@ -58,14 +59,14 @@ export function AvisoCookies() {
             onClick={() => elegir("necesarias")}
             className="min-h-[40px] flex-1 rounded-lg border border-[#142033] px-3 text-sm font-semibold text-[#142033] sm:flex-none"
           >
-            Solo necesarias
+            <T>Solo necesarias</T>
           </button>
           <button
             type="button"
             onClick={() => elegir("todas")}
             className="min-h-[40px] flex-1 rounded-lg bg-[#C2560A] px-3 text-sm font-semibold text-white sm:flex-none"
           >
-            Aceptar todas
+            <T>Aceptar todas</T>
           </button>
         </div>
       </div>
@@ -81,7 +82,7 @@ export function BotonPreferenciasCookies({ className }: { className?: string }) 
       className={className}
       onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_PREFERENCIAS))}
     >
-      Preferencias de cookies
+      <T>Preferencias de cookies</T>
     </button>
   )
 }

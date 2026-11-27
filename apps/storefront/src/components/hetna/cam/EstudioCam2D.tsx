@@ -13,6 +13,7 @@
 // El cálculo vive en el servidor (POST /api/cam/gcode con "config" → motor
 // infra/cam/bridges/cam2d.py). Las máquinas y fresas se guardan en la cuenta
 // del cliente (lib/data/cam-maquinas) o, sin sesión, en este navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { tomarPiezaParaCam2D } from "@/lib/generador/aLaboratorio"
@@ -178,7 +179,7 @@ const nuevoId = () => Math.random().toString(36).slice(2, 9)
 function Select({ valor, cambiar, children, etiqueta }: { valor: string; cambiar: (v: string) => void; children: React.ReactNode; etiqueta?: string }) {
   return (
     <label className="flex min-w-0 flex-col gap-1">
-      {etiqueta && <span className="text-[12px] text-[#C9D2E0]">{etiqueta}</span>}
+      {etiqueta && <span className="text-[12px] text-[#C9D2E0]"><T>{etiqueta}</T></span>}
       <select value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full rounded-[8px] bg-[#1C2431] px-2 py-2 text-[13px] text-white outline-none focus:ring-1 focus:ring-[#C2560A]">
         {children}
       </select>
@@ -696,9 +697,9 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
       <aside className="flex w-full flex-col gap-4 border-b border-[#1F2937] bg-[#111722] p-4 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:w-[330px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div>
           <h1 className="m-0 text-[16px] font-bold">
-            CAM <span className="text-[#F28A3C]">2D</span>
+            <T>CAM</T> <span className="text-[#F28A3C]">2D</span>
           </h1>
-          <p className="m-0 text-[12px] text-[#8A97AB]">Router y láser: varias operaciones por pieza</p>
+          <p className="m-0 text-[12px] text-[#8A97AB]"><T>Router y láser: varias operaciones por pieza</T></p>
         </div>
         <label
           onDragOver={(e) => e.preventDefault()}
@@ -709,7 +710,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[12px] border-2 border-dashed border-[#2B3648] p-4 text-center hover:border-[#C2560A] hover:bg-[#C2560A]/5"
         >
           <span className="text-[14px] font-semibold">{archivo ? `${archivo.name} (cambiar)` : "Sube tu DXF o SVG"}</span>
-          <span className="text-[11.5px] text-[#8A97AB]">Una capa por operación ayuda · no guardamos tu archivo</span>
+          <span className="text-[11.5px] text-[#8A97AB]"><T>Una capa por operación ayuda · no guardamos tu archivo</T></span>
           <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {archivo && !esSVG && <Interruptor etiqueta="Mover el dibujo al origen (0,0)" activo={origen} cambiar={setOrigen} />}
@@ -752,7 +753,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           {!laser && (
             <>
               <Interruptor etiqueta="Cambiador automático de herramientas (M6)" activo={atc} cambiar={(v) => { setAtc(v); setPlan(null); setGcode(null) }} />
-              {atc && <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada fresa sale con su número T (el de su ficha en «Mis máquinas y fresas»; si no tiene, uno en orden) y M6, sin pausas.</span>}
+              {atc && <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>Cada fresa sale con su número T (el de su ficha en «Mis máquinas y fresas»; si no tiene, uno en orden) y M6, sin pausas.</T></span>}
             </>
           )}
         </Seccion>
@@ -776,7 +777,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                   {x.nombre}
                 </span>
                 <label className="flex items-center gap-1.5 text-[12px] text-[#8A97AB]">
-                  Copias
+                  <T>Copias</T>
                   <input
                     inputMode="numeric"
                     value={x.copias}
@@ -792,11 +793,11 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             ))}
             {pieza && extras.length < 12 && (
               <label className="cursor-pointer self-start rounded-[8px] bg-[#2B3648] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#3A475C]">
-                + Agregar otra pieza a la hoja
+                <T>+ Agregar otra pieza a la hoja</T>
                 <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => { agregarPieza(e.target.files?.[0]); e.target.value = "" }} />
               </label>
             )}
-            {extras.length > 0 && <span className="text-[11.5px] leading-snug text-[#8A97AB]">Las operaciones se aplican a todas las piezas: usa los mismos nombres de capa en todos tus dibujos.</span>}
+            {extras.length > 0 && <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>Las operaciones se aplican a todas las piezas: usa los mismos nombres de capa en todos tus dibujos.</T></span>}
           </div>
           {!anidarHojas && acomodo && ((numero(hoja.copias) || 1) > 1 || extras.length > 0) && (
             <span className="text-[12px] leading-snug text-[#C9D2E0]">
@@ -818,18 +819,18 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               }}
             />
             <span className="text-[11.5px] leading-snug text-[#8A97AB]">
-              Separa las piezas que vengan juntas en tu archivo, suma las copias y las otras piezas, y las reparte en todas las hojas que hagan falta, girándolas si conviene.
+              <T>Separa las piezas que vengan juntas en tu archivo, suma las copias y las otras piezas, y las reparte en todas las hojas que hagan falta, girándolas si conviene.</T>
             </span>
             {anidarHojas && anidado && (
               <>
                 <p className="m-0 rounded-[8px] bg-[#C2560A]/10 px-2.5 py-2 text-[12px] leading-snug text-[#F2D29B]">
-                  {anidado.totalPiezas} piezas en <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> de {numero(hoja.ancho) || 1220} × {numero(hoja.largo) || 2440} mm · aprovechamiento{" "}
+                  {anidado.totalPiezas} <T>piezas en</T> <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> <T>de</T> {numero(hoja.ancho) || 1220} × {numero(hoja.largo) || 2440} <T>mm · aprovechamiento</T>{" "}
                   <b className="text-white">{Math.round(anidado.aprovechamiento * 100)}%</b>
-                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]">No caben en la hoja: {anidado.noCaben.slice(0, 3).join(", ")}.</span>}
+                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en la hoja:</T> {anidado.noCaben.slice(0, 3).join(", ")}.</span>}
                 </p>
                 {anidado.hojas.length > 1 && (
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-[12px] text-[#C9D2E0]">Hoja que se calcula (un G-code por hoja):</span>
+                    <span className="text-[12px] text-[#C9D2E0]"><T>Hoja que se calcula (un G-code por hoja):</T></span>
                     <div className="flex flex-wrap gap-1.5">
                       {anidado.hojas.map((h, i) => (
                         <button
@@ -843,7 +844,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                           }}
                           className={`rounded-[8px] px-2.5 py-1 text-[12px] font-semibold ${hojaActual === i ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
                         >
-                          Hoja {i + 1} · {h.colocaciones.length}
+                          <T>Hoja</T> {i + 1} · {h.colocaciones.length}
                         </button>
                       ))}
                     </div>
@@ -856,7 +857,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
 
         <Seccion titulo="Operaciones" nota="Se hacen en este orden. Elige la capa del dibujo que usa cada una.">
           <div className="flex flex-col gap-1.5 rounded-[10px] bg-[#151C27] p-2.5">
-            <span className="text-[12px] font-semibold text-[#C9D2E0]">Plantillas</span>
+            <span className="text-[12px] font-semibold text-[#C9D2E0]"><T>Plantillas</T></span>
             {plantillas.length > 0 && (
               <div className="flex gap-1.5">
                 <Select
@@ -893,13 +894,13 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                 }}
                 className="shrink-0 rounded-[8px] bg-[#1C2431] px-2.5 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[#243045]"
               >
-                Guardar
+                <T>Guardar</T>
               </button>
             </div>
-            <span className="text-[11px] leading-snug text-[#8A97AB]">Guarda el material, el espesor y estas operaciones (fresas, profundidades, avances) para usarlos con otro archivo.</span>
+            <span className="text-[11px] leading-snug text-[#8A97AB]"><T>Guarda el material, el espesor y estas operaciones (fresas, profundidades, avances) para usarlos con otro archivo.</T></span>
             {plantillas.length > 0 && (
               <button type="button" onClick={() => { if (confirm("¿Borrar todas tus plantillas?")) guardarPlantillas([]) }} className="self-start text-[11px] text-[#8A97AB] hover:text-[#F28A3C]">
-                Borrar plantillas
+                <T>Borrar plantillas</T>
               </button>
             )}
           </div>
@@ -932,7 +933,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     ✕
                   </button>
                 </div>
-                {info && <span className="text-[11.5px] text-[#8A97AB]">{info.nota}</span>}
+                {info && <span className="text-[11.5px] text-[#8A97AB]"><T>{info.nota}</T></span>}
                 <Select etiqueta="Capa" valor={o.capa} cambiar={(v) => cambiarOp(i, { capa: v })}>
                   <option value="">Todas las capas</option>
                   {capas.map((c) => (
@@ -981,7 +982,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     </div>
                     {o.tipo !== "grabado_v" && o.largoCorte > 0 && numero(o.profundidad) > o.largoCorte && (
                       <span className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">
-                        La profundidad es mayor que el largo de corte de esta fresa ({o.largoCorte} mm): el zanco rozaría el material.
+                        <T>La profundidad es mayor que el largo de corte de esta fresa (</T>{o.largoCorte} <T>mm): el zanco rozaría el material.</T>
                       </span>
                     )}
                     {o.tipo === "acanalado" && <CampoNum etiqueta="Largo de la rampa en cada punta" valor={o.rampa} cambiar={(v) => cambiarOp(i, { rampa: v })} />}
@@ -1001,18 +1002,18 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                           {o.roscaExt
                             ? "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm). El perno ya debe estar cilindrado a ese diámetro y con el material de alrededor retirado: la fresa baja por fuera, a un lado del perno."
                             : "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso)."}{" "}
-                          En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.
+                          <T>En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.</T>
                         </span>
                       </>
                     )}
                     {o.tipo === "incrustacion_macho" && <CampoNum etiqueta="Holgura para que embone" valor={o.holgura} cambiar={(v) => cambiarOp(i, { holgura: v })} />}
                     {(o.tipo === "incrustacion_hembra" || o.tipo === "incrustacion_macho") && (
-                      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Usa la misma figura y el mismo diámetro de fresa en la caja y en la pieza: las esquinas de la pieza salen redondeadas igual que las de la caja.</span>
+                      <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>Usa la misma figura y el mismo diámetro de fresa en la caja y en la pieza: las esquinas de la pieza salen redondeadas igual que las de la caja.</T></span>
                     )}
                     {CON_PESTANAS.includes(o.tipo) && <Interruptor etiqueta="Pestañas" activo={o.pestanas} cambiar={(v) => cambiarOp(i, { pestanas: v })} />}
                     {CON_ALIVIO.includes(o.tipo) && maquina.tipo !== "laser" && (
                       <div className="flex flex-col gap-1">
-                        <span className="text-[12px] text-[#C9D2E0]">Esquinas interiores</span>
+                        <span className="text-[12px] text-[#C9D2E0]"><T>Esquinas interiores</T></span>
                         <Opciones
                           opciones={[
                             { id: "ninguno", nombre: "Redondas" },
@@ -1023,7 +1024,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                           cambiar={(v) => cambiarOp(i, { alivio: v as Op["alivio"] })}
                           columnas={3}
                         />
-                        <span className="text-[11.5px] leading-snug text-[#8A97AB]">La fresa redonda no llega a las esquinas a escuadra. Con el alivio entra hasta el fondo y las piezas embonan (cajas, espigas, uniones de dedos).</span>
+                        <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>La fresa redonda no llega a las esquinas a escuadra. Con el alivio entra hasta el fondo y las piezas embonan (cajas, espigas, uniones de dedos).</T></span>
                       </div>
                     )}
                     {CON_ACABADO.includes(o.tipo) && (
@@ -1034,7 +1035,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     )}
                     <details className="rounded-[8px] bg-[#151C27] px-2.5 py-2">
                       <summary className="cursor-pointer text-[12px] text-[#C9D2E0]">
-                        Parámetros de corte{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}
+                        <T>Parámetros de corte</T>{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}
                       </summary>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         <CampoNum etiqueta="Prof. por pasada" valor={o.pasada} cambiar={(v) => cambiarOp(i, { pasada: v })} />
@@ -1043,7 +1044,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                         <CampoNum etiqueta="Avance" valor={o.avance} cambiar={(v) => cambiarOp(i, { avance: v })} sufijo="mm/min" />
                         <CampoNum etiqueta="Bajada" valor={o.penetracion} cambiar={(v) => cambiarOp(i, { penetracion: v })} sufijo="mm/min" />
                       </div>
-                      <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#8A97AB]">Deja un campo vacío para usar el valor recomendado para el material.</p>
+                      <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#8A97AB]"><T>Deja un campo vacío para usar el valor recomendado para el material.</T></p>
                     </details>
                   </>
                 ) : (
@@ -1063,7 +1064,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               onClick={() => setOps((l) => [...l, nuevaOp(laser ? "laser_linea" : "cajeado", espesor)])}
               className="rounded-[8px] border border-dashed border-[#3A4A63] px-3 py-2 text-[13px] font-semibold text-[#C9D2E0] hover:border-[#C2560A] hover:text-white"
             >
-              + Agregar operación
+              <T>+ Agregar operación</T>
             </button>
           )}
         </Seccion>
@@ -1078,7 +1079,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
         </button>
         {error && (
           <Aviso tipo="error">
-            <b>{error.mensaje}</b> {error.remedio}
+            <b><T>{error.mensaje}</T></b> {error.remedio}
           </Aviso>
         )}
       </aside>
@@ -1148,7 +1149,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             </svg>
           ) : (
             <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]">
-              Sube un DXF o SVG para ver tu pieza. Luego arma las operaciones, calcula y simula el corte.
+              <T>Sube un DXF o SVG para ver tu pieza. Luego arma las operaciones, calcula y simula el corte.</T>
             </div>
           )}
           {vista !== "pieza" && gcode && (
@@ -1185,16 +1186,16 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
         <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[#1F2937] bg-[#0F141C] px-4 py-2 text-[12.5px] text-[#8A97AB]">
           {lienzo && (
             <span>
-              Medidas: <b className="text-white">{Math.round(lienzo.ancho)} × {Math.round(lienzo.alto)} mm</b>
+              <T>Medidas:</T> <b className="text-white">{Math.round(lienzo.ancho)} × {Math.round(lienzo.alto)} <T>mm</T></b>
             </span>
           )}
           {dibujo && (
             <span>
-              Trazos: <b className="text-white">{dibujo.trazos.length}</b> · Capas: <b className="text-white">{capas.length}</b>
+              <T>Trazos:</T> <b className="text-white">{dibujo.trazos.length}</b> <T>· Capas:</T> <b className="text-white">{capas.length}</b>
             </span>
           )}
-          <span>Unidades: mm</span>
-          <span>Origen: {origen || esSVG ? "esquina inferior izquierda de la pieza" : "el del archivo"}, cara superior</span>
+          <span><T>Unidades: mm</T></span>
+          <span><T>Origen:</T> {origen || esSVG ? "esquina inferior izquierda de la pieza" : "el del archivo"}<T>, cara superior</T></span>
         </div>
       </section>
 
@@ -1204,8 +1205,8 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           {plan ? (
             <>
               <div className="rounded-[12px] bg-[#1C2431] p-3">
-                <span className="block text-[11px] uppercase tracking-wide text-[#8A97AB]">Tiempo estimado</span>
-                <span className="text-[26px] font-bold leading-tight">{reloj(plan.tiempo_estimado_min)} min</span>
+                <span className="block text-[11px] uppercase tracking-wide text-[#8A97AB]"><T>Tiempo estimado</T></span>
+                <span className="text-[26px] font-bold leading-tight">{reloj(plan.tiempo_estimado_min)} <T>min</T></span>
               </div>
               <Datos
                 filas={[
@@ -1221,7 +1222,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     <span>
                       <b>{i + 1}.</b> {NOMBRE_OP[o.tipo] || o.nombre}
                       {o.capa && <span className="text-[#8A97AB]"> · {o.capa}</span>}
-                      <span className="block text-[11px] text-[#8A97AB]">{o.figuras} figura(s)</span>
+                      <span className="block text-[11px] text-[#8A97AB]">{o.figuras} <T>figura(s)</T></span>
                     </span>
                     <span className="shrink-0 tabular-nums text-[#C9D2E0]">{reloj(o.minutos)}</span>
                   </li>
@@ -1229,12 +1230,12 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               </ol>
             </>
           ) : (
-            <span className="text-[13px] text-[#8A97AB]">Aquí aparecen el tiempo, el costo de máquina y el detalle de cada operación.</span>
+            <span className="text-[13px] text-[#8A97AB]"><T>Aquí aparecen el tiempo, el costo de máquina y el detalle de cada operación.</T></span>
           )}
           {plan && (
             <div className="flex flex-col gap-1.5">
-              <Boton onClick={hojaDeTrabajo}>Hoja de trabajo para el operador</Boton>
-              <Boton tipo="verde" onClick={cotizar}>Cotizar con mi tarifa</Boton>
+              <Boton onClick={hojaDeTrabajo}><T>Hoja de trabajo para el operador</T></Boton>
+              <Boton tipo="verde" onClick={cotizar}><T>Cotizar con mi tarifa</T></Boton>
               {avisoDoc && <span className="text-[12px] text-[#F28A3C]">{avisoDoc}</span>}
             </div>
           )}
@@ -1257,9 +1258,9 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                 <Boton onClick={guardarEnNube}>{nube.estado === "guardando" ? "Guardando…" : nube.estado === "ok" ? "✓ En tu HetNa Cloud" : "☁️ Guardar en HetNa Cloud"}</Boton>
                 {nube.texto && (
                   <span className={`text-[12px] leading-snug ${nube.estado === "ok" ? "text-[#9BE3B8]" : "text-[#F28A3C]"}`}>
-                    {nube.texto}{" "}
-                    {nube.estado === "ok" && <a href="/seller/nube" className="underline">Abrir mi nube</a>}
-                    {nube.sinTaller && <a href="/mx/talleres/unete" className="underline">Abrir mi taller</a>}
+                    <T>{nube.texto}</T>{" "}
+                    {nube.estado === "ok" && <a href="/seller/nube" className="underline"><T>Abrir mi nube</T></a>}
+                    {nube.sinTaller && <a href="/mx/talleres/unete" className="underline"><T>Abrir mi taller</T></a>}
                   </span>
                 )}
               </div>
@@ -1269,9 +1270,9 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
         )}
         <Seccion titulo="¿Necesitas más?" nota="3D, 4 o 5 ejes, o que un taller te lo corte.">
           <div className="flex flex-col gap-2">
-            <Boton href="/mx/cam/lab">CAM 3, 4 y 5 ejes</Boton>
+            <Boton href="/mx/cam/lab"><T>CAM 3, 4 y 5 ejes</T></Boton>
             <Boton tipo="verde" href="/mx/fabricacion">
-              Que un taller lo corte
+              <T>Que un taller lo corte</T>
             </Boton>
           </div>
         </Seccion>
@@ -1283,7 +1284,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
 function Fila({ texto, quitar }: { texto: string; quitar: () => void }) {
   return (
     <li className="flex list-none items-center justify-between gap-2 rounded-[6px] bg-[#1C2431] px-2 py-1 text-[12.5px]">
-      <span className="min-w-0 truncate">{texto}</span>
+      <span className="min-w-0 truncate"><T>{texto}</T></span>
       <button type="button" onClick={quitar} className="text-[#F6B8AE] hover:text-white" aria-label="Quitar">
         ✕
       </button>
@@ -1300,7 +1301,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-[#2B3648] bg-[#151C27] p-3">
       <span className="text-[12px] text-[#8A97AB]">{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</span>
-      <b className="text-[12.5px]">Máquinas</b>
+      <b className="text-[12.5px]"><T>Máquinas</T></b>
       {datos.maquinas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
           {datos.maquinas.map((x) => (
@@ -1326,9 +1327,9 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
           setM({ ...m, nombre: "" })
         }}
       >
-        Agregar máquina
+        <T>Agregar máquina</T>
       </Boton>
-      <b className="text-[12.5px]">Base de herramientas</b>
+      <b className="text-[12.5px]"><T>Base de herramientas</T></b>
       {datos.fresas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
           {porGrupo(datos.fresas).flatMap(([g, lista]) => [
@@ -1359,7 +1360,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
         </ul>
       )}
       {ficha === null ? (
-        <Boton onClick={() => setFicha("")}>Dar de alta una herramienta</Boton>
+        <Boton onClick={() => setFicha("")}><T>Dar de alta una herramienta</T></Boton>
       ) : (
         <FichaFresa
           key={ficha || "nueva"}

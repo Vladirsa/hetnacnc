@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
 import { SingleProductReview } from "@/types/product"
 import { Divider } from "@medusajs/ui"
@@ -34,7 +35,7 @@ export const SellerReview = ({ review }: { review: SingleProductReview }) => {
             <div className="flex flex-col gap-2">
               <div className="flex gap-2 items-center">
                 <p className="label-md text-primary">
-                  Reply from {review.seller.name}
+                  <T>Reply from</T> {review.seller.name}
                 </p>
                 <Divider
                   orientation="vertical"

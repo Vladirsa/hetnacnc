@@ -1,10 +1,12 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 // Aquí regresa el taller después de:
 //   · conectar (o cancelar) su Mercado Pago  -> /api/cotizador-mp/callback
 //   · vincular su PayPal (cuenta=paypal)     -> /api/cotizador-paypal/callback
 //   · pagar la comisión HETNA del mes (resultado=comision)
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Cuenta de cobro | Cotizador HETNA",
   robots: { index: false, follow: false },
 }
@@ -43,10 +45,15 @@ export default async function CuentaConectadaPage({ searchParams }: Props) {
         <p className="m-0 text-[44px] leading-none" aria-hidden="true">
           {icono}
         </p>
-        <h1 className="m-0 mt-3 text-[22px] font-bold text-[#142033]">{titulo}</h1>
-        <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]">{texto}</p>
-        <p className="m-0 mt-5 text-[14px] text-[#7A776E]">Ya puedes cerrar esta pestaña y regresar a la app.</p>
+        <h1 className="m-0 mt-3 text-[22px] font-bold text-[#142033]"><TS>{titulo}</TS></h1>
+        <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]"><TS>{texto}</TS></p>
+        <p className="m-0 mt-5 text-[14px] text-[#7A776E]"><TS>Ya puedes cerrar esta pestaña y regresar a la app.</TS></p>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

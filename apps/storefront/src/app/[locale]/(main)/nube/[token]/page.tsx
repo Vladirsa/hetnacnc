@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -7,7 +9,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 // cliente o su operador. Se ven las piezas y la última revisión de cada
 // archivo (ligas de descarga de 1 hora). Nunca se indexa.
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Archivos compartidos | HetNa Cloud",
   robots: { index: false, follow: false },
 }
@@ -61,9 +63,9 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
   if ("error" in d) {
     return (
       <main className="container max-w-[760px] py-16 text-center">
-        <h1 className="text-2xl font-bold text-[#142033]">Liga no disponible</h1>
+        <h1 className="text-2xl font-bold text-[#142033]"><TS>Liga no disponible</TS></h1>
         <p className="mt-2 text-[#40403A]">{d.error}</p>
-        <p className="mt-1 text-[#6B675C]">Pide al taller que te comparta una nueva.</p>
+        <p className="mt-1 text-[#6B675C]"><TS>Pide al taller que te comparta una nueva.</TS></p>
       </main>
     )
   }
@@ -73,12 +75,12 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
 
   return (
     <main className="container max-w-[860px] py-8 md:py-12">
-      <p className="m-0 text-[13px] font-semibold uppercase tracking-wide text-[#C2560A]">HetNa Cloud · archivos compartidos</p>
+      <p className="m-0 text-[13px] font-semibold uppercase tracking-wide text-[#C2560A]"><TS>HetNa Cloud · archivos compartidos</TS></p>
       <h1 className="m-0 mt-1 text-[26px] font-extrabold text-[#142033]">{d.proyecto.nombre}</h1>
       <p className="m-0 mt-1 text-[14px] text-[#6B675C]">
         {d.taller ? (
           <>
-            Compartido por{" "}
+            <TS>Compartido por</TS>{" "}
             <LocalizedClientLink href={`/talleres/${d.taller.handle}`} className="font-semibold text-[#142033] hover:underline">
               {d.taller.nombre}
             </LocalizedClientLink>
@@ -86,7 +88,7 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
         ) : (
           "Compartido por un taller de HETNA"
         )}
-        {" · "}la liga vence el {new Date(d.vence).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
+        {" · "}<TS>la liga vence el</TS> {new Date(d.vence).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
         {d.solo_liberados ? " · sólo archivos liberados para producción" : ""}
       </p>
 
@@ -108,26 +110,31 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
                   </span>
                   {a.url ? (
                     <a href={a.url} className="rounded-xl bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:brightness-110" rel="noopener">
-                      Descargar
+                      <TS>Descargar</TS>
                     </a>
                   ) : (
-                    <span className="text-[13px] text-[#A42A2A]">No disponible</span>
+                    <span className="text-[13px] text-[#A42A2A]"><TS>No disponible</TS></span>
                   )}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="m-0 mt-2 text-[14px] text-[#6B675C]">Sin archivos {d.solo_liberados ? "liberados " : ""}todavía.</p>
+            <p className="m-0 mt-2 text-[14px] text-[#6B675C]"><TS>Sin archivos</TS> {d.solo_liberados ? "liberados " : ""}<TS>todavía.</TS></p>
           )}
         </section>
       ))}
       <p className="mt-6 text-center text-[13px] text-[#6B675C]">
-        Las ligas de descarga duran 15 minutos: si una ya no abre, recarga esta página. ¿Tienes taller?{" "}
+        <TS>Las ligas de descarga duran 15 minutos: si una ya no abre, recarga esta página. ¿Tienes taller?</TS>{" "}
         <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#C2560A]">
-          Organiza tus archivos con HetNa Cloud
+          <TS>Organiza tus archivos con HetNa Cloud</TS>
         </LocalizedClientLink>
         .
       </p>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

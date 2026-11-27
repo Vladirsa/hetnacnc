@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useState } from "react"
 
 import { LogoutButton } from "@/components/atoms/LogoutButton/LogoutButton"
@@ -100,17 +101,17 @@ export const UserDropdown = ({
                   <span className="block truncate text-[14px] font-bold text-[#1B1B18]">
                     {etiqueta || "Mi cuenta"}
                   </span>
-                  <span className="block text-[12px] text-[#6B6A63]">Ver tu perfil</span>
+                  <span className="block text-[12px] text-[#6B6A63]"><T>Ver tu perfil</T></span>
                 </span>
               </LocalizedClientLink>
 
               <Grupo>
-                <Opcion href="/user/orders" icono="📦">Compras</Opcion>
-                <Opcion href="/user/envios" icono="🚚">Mis envíos</Opcion>
+                <Opcion href="/user/orders" icono="📦"><T>Compras</T></Opcion>
+                <Opcion href="/user/envios" icono="🚚"><T>Mis envíos</T></Opcion>
                 <Opcion href="/user/messages" icono="💬" insignia={sinLeer}>
-                  Mensajes
+                  <T>Mensajes</T>
                 </Opcion>
-                <Opcion href="/user/returns" icono="↩️">Devoluciones</Opcion>
+                <Opcion href="/user/returns" icono="↩️"><T>Devoluciones</T></Opcion>
               </Grupo>
 
               <Grupo>
@@ -120,7 +121,7 @@ export const UserDropdown = ({
                 >
                   <span className="flex items-center gap-3 text-[14px] text-[#1B1B18]">
                     <span aria-hidden="true" className="w-5 text-center">🎟️</span>
-                    Saldo
+                    <T>Saldo</T>
                   </span>
                   <span className="text-[14px] font-bold text-[#1B1B18]">
                     {saldo === null ? (
@@ -146,7 +147,7 @@ export const UserDropdown = ({
                       href="/user/creditos"
                       className="font-semibold text-[#B34D07] underline"
                     >
-                      Comprar
+                      <T>Comprar</T>
                     </LocalizedClientLink>
                   </p>
                 )}
@@ -156,45 +157,45 @@ export const UserDropdown = ({
                   className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-[#1B1B18] hover:bg-[#F7F5EF]"
                 >
                   <span aria-hidden="true" className="w-5 text-center">🏪</span>
-                  <span className="flex-1">Mi tienda</span>
+                  <span className="flex-1"><T>Mi tienda</T></span>
                 </a>
-                <Opcion href="/user/escaneos" icono="📷">Mis escaneos 3D</Opcion>
-                <Opcion href="/herramientas-cnc" icono="🛠️">Herramientas CNC</Opcion>
-                <Opcion href="/user/cam" icono="🧭">Mis trabajos CAM</Opcion>
-                <Opcion href="/user/solicitudes" icono="🏭">Mis solicitudes de fabricación</Opcion>
-                <Opcion href="/user/piezas" icono="🔁">Mis piezas (repetir pedido)</Opcion>
-                <Opcion href="/cotizar" icono="📐">Cotizar una pieza</Opcion>
+                <Opcion href="/user/escaneos" icono="📷"><T>Mis escaneos 3D</T></Opcion>
+                <Opcion href="/herramientas-cnc" icono="🛠️"><T>Herramientas CNC</T></Opcion>
+                <Opcion href="/user/cam" icono="🧭"><T>Mis trabajos CAM</T></Opcion>
+                <Opcion href="/user/solicitudes" icono="🏭"><T>Mis solicitudes de fabricación</T></Opcion>
+                <Opcion href="/user/piezas" icono="🔁"><T>Mis piezas (repetir pedido)</T></Opcion>
+                <Opcion href="/cotizar" icono="📐"><T>Cotizar una pieza</T></Opcion>
               </Grupo>
 
               <Grupo ultimo>
-                <Opcion href="/user/addresses" icono="📍">Direcciones</Opcion>
-                <Opcion href="/user/settings" icono="⚙️">Configuración de la cuenta</Opcion>
+                <Opcion href="/user/addresses" icono="📍"><T>Direcciones</T></Opcion>
+                <Opcion href="/user/settings" icono="⚙️"><T>Configuración de la cuenta</T></Opcion>
                 <LogoutButton
                   unstyled
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] text-[#1B1B18] hover:bg-[#F7F5EF]"
                 >
                   <span aria-hidden="true" className="w-5 text-center">🚪</span>
-                  Salir
+                  <T>Salir</T>
                 </LogoutButton>
               </Grupo>
             </>
           ) : (
             <div className="p-4">
-              <p className="text-[14px] font-bold text-[#1B1B18]">Entra a tu cuenta</p>
+              <p className="text-[14px] font-bold text-[#1B1B18]"><T>Entra a tu cuenta</T></p>
               <p className="mt-1 text-[13px] leading-relaxed text-[#6B6A63]">
-                Para ver tus compras, tus mensajes y el saldo de tus herramientas.
+                <T>Para ver tus compras, tus mensajes y el saldo de tus herramientas.</T>
               </p>
               <LocalizedClientLink
                 href="/login"
                 className="mt-3 block rounded-[10px] bg-[#C2560A] px-4 py-2.5 text-center text-[14px] font-semibold text-white hover:bg-[#A84A08]"
               >
-                Iniciar sesión
+                <T>Iniciar sesión</T>
               </LocalizedClientLink>
               <LocalizedClientLink
                 href="/register"
                 className="mt-2 block rounded-[10px] border border-[#E7E4DC] px-4 py-2.5 text-center text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]"
               >
-                Crear cuenta
+                <T>Crear cuenta</T>
               </LocalizedClientLink>
             </div>
           )}

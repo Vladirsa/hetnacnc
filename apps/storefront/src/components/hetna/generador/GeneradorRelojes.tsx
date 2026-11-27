@@ -2,6 +2,7 @@
 
 // Relojes de pared (2D Studio): carátula con números o marcas, nombre al
 // centro y el barreno del mecanismo, lista para cortar o grabar.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, CampoTexto, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -74,7 +75,7 @@ export function GeneradorRelojes({ cabecera }: { cabecera?: React.ReactNode }) {
         <Interruptor etiqueta="Calar los números (atravesar)" activo={calados} cambiar={setCalados} />
         <Interruptor etiqueta="Marcas de minutos" activo={minutos} cambiar={setMinutos} />
         <Interruptor etiqueta="Marco grabado" activo={marco} cambiar={setMarco} />
-        {error && <span className="text-[12px] text-[#F6B8AE]">No se pudo cargar la letra. Revisa tu conexión.</span>}
+        {error && <span className="text-[12px] text-[#F6B8AE]"><T>No se pudo cargar la letra. Revisa tu conexión.</T></span>}
       </Seccion>
       <Seccion titulo="Nombre o frase al centro">
         <CampoTexto valor={nombre} cambiar={setNombre} max={24} placeholder="Ej. Familia López" />

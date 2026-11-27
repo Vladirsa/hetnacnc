@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
@@ -61,7 +62,7 @@ export const ConfianzaCompra = ({ conPaypal = false, soloDigital = false }: { co
         <path d="M12 2l8 3.5v5.9c0 5-3.4 9.3-8 10.6-4.6-1.3-8-5.6-8-10.6V5.5L12 2z" />
         <path d="M9 12l2 2 4-4" />
       </svg>
-      <h3 className="text-[14px] font-bold text-[#1B1B18]">Tu compra está protegida</h3>
+      <h3 className="text-[14px] font-bold text-[#1B1B18]"><T>Tu compra está protegida</T></h3>
     </div>
 
     <ul className="mt-2.5 flex flex-col gap-2">
@@ -69,9 +70,9 @@ export const ConfianzaCompra = ({ conPaypal = false, soloDigital = false }: { co
         <li key={p.href} className="flex gap-2 text-[13px] leading-relaxed text-[#4A4943]">
           <span className="font-bold text-[#1E7A52]">✓</span>
           <span>
-            {p.texto}{" "}
+            <T>{p.texto}</T>{" "}
             <LocalizedClientLink href={p.href} className="font-semibold text-[#B34D07] underline">
-              Ver
+              <T>Ver</T>
             </LocalizedClientLink>
           </span>
         </li>
@@ -80,7 +81,7 @@ export const ConfianzaCompra = ({ conPaypal = false, soloDigital = false }: { co
 
     <div className="mt-3 border-t border-[#EDEAE2] pt-3">
       <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#6B6A63]">
-        Puedes pagar con
+        <T>Puedes pagar con</T>
       </p>
       <LogosPago conPaypal={conPaypal} />
     </div>

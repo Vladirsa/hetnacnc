@@ -2,6 +2,7 @@
 
 // Botones para compartir la liga de Recomienda y gana: copiar, WhatsApp y
 // Facebook. En celular usa el menú de compartir del teléfono si existe.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 export function CompartirLiga({ liga, monto, minimo }: { liga: string; monto: number; minimo: number }) {
@@ -54,7 +55,7 @@ export function CompartirLiga({ liga, monto, minimo }: { liga: string; monto: nu
           rel="noreferrer"
           className={`${btn} bg-[#1FA855] text-white hover:bg-[#178C46]`}
         >
-          Enviar por WhatsApp
+          <T>Enviar por WhatsApp</T>
         </a>
         <a
           href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(liga)}`}
@@ -62,10 +63,10 @@ export function CompartirLiga({ liga, monto, minimo }: { liga: string; monto: nu
           rel="noreferrer"
           className={`${btn} bg-[#1877F2] text-white hover:bg-[#1465CF]`}
         >
-          Compartir en Facebook
+          <T>Compartir en Facebook</T>
         </a>
         <button type="button" onClick={compartir} className={`${btn} border border-[#D9D5C9] bg-white text-[#1B1B18] hover:border-[#C2560A]`}>
-          Más opciones
+          <T>Más opciones</T>
         </button>
       </div>
     </div>

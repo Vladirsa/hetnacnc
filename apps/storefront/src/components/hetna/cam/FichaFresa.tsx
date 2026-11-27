@@ -3,6 +3,7 @@
 // Alta y edición de una fresa con su ficha técnica completa. Los parámetros de
 // corte se pueden capturar a mano o pedir a la Calculadora CNC (el mismo motor
 // de /calculadora-cnc), que los saca de la ficha, el material y la máquina.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { Boton, CampoNum, numero } from "@/components/hetna/estudio3d/Controles"
@@ -104,7 +105,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
       </datalist>
       <div className="grid grid-cols-2 gap-2">
         <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-[12.5px] text-[#C9D2E0]">Tipo</span>
+          <span className="text-[12.5px] text-[#C9D2E0]"><T>Tipo</T></span>
           <select value={tipo} onChange={(e) => setTipo(e.target.value as FresaCam["tipo"])} className={campoTexto}>
             {Object.entries(TIPOS_FRESA).map(([k, v]) => (
               <option key={k} value={k}>{v.nombre}</option>
@@ -115,7 +116,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
           </select>
         </label>
         <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-[12.5px] text-[#C9D2E0]">Material de la fresa</span>
+          <span className="text-[12.5px] text-[#C9D2E0]"><T>Material de la fresa</T></span>
           <select value={matFresa} onChange={(e) => setMatFresa(e.target.value as NonNullable<FresaCam["materialFresa"]>)} className={campoTexto}>
             {Object.entries(MATERIAL_FRESA).map(([k, v]) => (
               <option key={k} value={k}>{v.nombre}</option>
@@ -124,7 +125,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         </label>
       </div>
 
-      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Medidas</span>
+      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Medidas</T></span>
       <div className="grid grid-cols-2 gap-2">
         <CampoNum etiqueta="Ø de corte" valor={t.diametro} cambiar={pon("diametro")} />
         <CampoNum etiqueta="Ø de zanco (collet)" valor={t.zanco} cambiar={pon("zanco")} />
@@ -139,9 +140,9 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         <span key={a} className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">{a}</span>
       ))}
 
-      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Avances y velocidades</span>
+      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Avances y velocidades</T></span>
       <div className="flex flex-col gap-2 rounded-[8px] bg-[#151C27] p-2.5">
-        <span className="text-[12px] leading-snug text-[#C9D2E0]">Calcúlalos con la Calculadora CNC a partir de esta ficha:</span>
+        <span className="text-[12px] leading-snug text-[#C9D2E0]"><T>Calcúlalos con la Calculadora CNC a partir de esta ficha:</T></span>
         <div className="grid grid-cols-2 gap-2">
           <select value={material} onChange={(e) => setMaterial(e.target.value)} className={campoTexto} aria-label="Material a cortar">
             {Object.entries(MAT_ROUTER).map(([k, v]) => (
@@ -160,17 +161,17 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
             <option value="cajeado">Para cajeado o desbaste de área</option>
           </select>
         )}
-        <Boton tipo="primario" onClick={calcular}>Calcular avances y velocidades</Boton>
+        <Boton tipo="primario" onClick={calcular}><T>Calcular avances y velocidades</T></Boton>
         {calculo && (
           <span className="text-[12px] leading-snug text-[#9BE3B8]">
-            Carga de viruta {calculo.carga} mm por filo · la fresa se flexiona ≈ {calculo.deflexion} mm con ese voladizo.
+            <T>Carga de viruta</T> {calculo.carga} <T>mm por filo · la fresa se flexiona ≈</T> {calculo.deflexion} <T>mm con ese voladizo.</T>
           </span>
         )}
         {calculo?.avisos.map((a) => (
           <span key={a} className="text-[12px] leading-snug text-[#F6C79B]">{a}</span>
         ))}
         <a href="/mx/calculadora-cnc" target="_blank" rel="noreferrer" className="text-[12px] text-[#F28A3C] underline">
-          Abrir la Calculadora CNC completa (potencia, par, tiempo…)
+          <T>Abrir la Calculadora CNC completa (potencia, par, tiempo…)</T>
         </a>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -180,11 +181,11 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         <CampoNum etiqueta="Prof. por pasada" valor={t.pasada} cambiar={pon("pasada")} />
         <CampoNum etiqueta="Traslape en cajeado" valor={t.traslape} cambiar={pon("traslape")} sufijo="%" />
       </div>
-      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Un campo vacío usa el valor recomendado para el material al generar el G-code.</span>
+      <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>Un campo vacío usa el valor recomendado para el material al generar el G-code.</T></span>
       <textarea value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (marca, proveedor, para qué la usas…)" maxLength={200} rows={2} className={campoTexto} />
       {n("diametro") > 0 && (
         <a href={ligaTienda({ tipo, diametro: n("diametro"), angulo: n("angulo") || 90 })} target="_blank" rel="noreferrer" className="rounded-[8px] border border-[#2B3648] px-3 py-2 text-center text-[13px] font-semibold text-[#F28A3C] hover:border-[#F28A3C]">
-          ¿No la tienes? Búscala en la tienda HETNA
+          <T>¿No la tienes? Búscala en la tienda HETNA</T>
         </a>
       )}
       {error && <span className="text-[12px] text-[#F6B8AE]">{error}</span>}
@@ -201,7 +202,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         >
           {inicial ? "Guardar cambios" : "Dar de alta"}
         </Boton>
-        {cancelar && <Boton onClick={cancelar}>Cancelar</Boton>}
+        {cancelar && <Boton onClick={cancelar}><T>Cancelar</T></Boton>}
       </div>
     </div>
   )

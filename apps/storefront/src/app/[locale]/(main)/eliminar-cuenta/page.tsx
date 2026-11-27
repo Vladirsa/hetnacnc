@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
@@ -9,7 +10,7 @@ import { idiomaServidor } from "@/lib/helpers/idioma-servidor"
 // botón dentro de la app que lleve aquí (menú Más → Eliminar mi cuenta).
 // Lo que se borra y lo que se conserva está en el aviso de privacidad, sección 14.
 
-export async function generateMetadata(): Promise<Metadata> {
+async function generateMetadataEs(): Promise<Metadata> {
   const en = (await idiomaServidor()) === "en"
   return {
     alternates: { canonical: "https://hetnacnc.com/mx/eliminar-cuenta" },
@@ -111,4 +112,9 @@ export default async function EliminarCuenta() {
       </p>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

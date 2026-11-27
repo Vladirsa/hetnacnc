@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
@@ -123,17 +124,17 @@ export default function CajaSolido({ piezas, espesor, exterior, nombreArchivo }:
     <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="m-0 text-[15px] font-semibold text-[#1B1B18]">Sólido real (STEP) para editar en tu CAD</h3>
+          <h3 className="m-0 text-[15px] font-semibold text-[#1B1B18]"><T>Sólido real (STEP) para editar en tu CAD</T></h3>
           <p className="m-0 mt-1 text-[13px] text-[#6B6A63] max-w-[480px]">
-            Genera un modelo sólido de verdad (no solo el plano de corte) y descarga un archivo STEP que puedes abrir y
-            editar en Fusion360, SolidWorks, etc. La primera vez descarga un motor 3D (~20 MB).
+            <T>Genera un modelo sólido de verdad (no solo el plano de corte) y descarga un archivo STEP que puedes abrir y
+            editar en Fusion360, SolidWorks, etc. La primera vez descarga un motor 3D (~20 MB).</T>
           </p>
         </div>
       </div>
 
       <div className="flex items-end gap-3 flex-wrap">
         <label className="flex flex-col gap-1">
-          <span className="text-[13px] font-semibold text-[#1B1B18]">Chaflán de borde (mm)</span>
+          <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Chaflán de borde (mm)</T></span>
           <input
             type="text"
             inputMode="decimal"
@@ -154,7 +155,7 @@ export default function CajaSolido({ piezas, espesor, exterior, nombreArchivo }:
         </button>
       </div>
       <p className="m-0 text-[12.5px] text-[#6B6A63]">
-        Máximo recomendado para esta pieza: {maximoChaflan.toFixed(2)} mm.
+        <T>Máximo recomendado para esta pieza:</T> {maximoChaflan.toFixed(2)} <T>mm.</T>
         {parseFloat(chaflan.replace(",", ".")) > 0 && " Con chaflán activo, generar el sólido puede tardar 10-30 segundos (más dedos = más tiempo)."}
       </p>
 

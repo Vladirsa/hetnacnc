@@ -7,6 +7,7 @@
 // Se enseña a todos, no sólo a quien ya vende: para el que vende es su panel y
 // para el que no, es la puerta para empezar. Quién puede entrar lo decide el
 // propio panel, no esta barra.
+import { TS } from "@/i18n/TS"
 export const TiendaBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
   <a
     href="/seller"
@@ -29,7 +30,7 @@ export const TiendaBoton = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
       <path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" />
       <path d="M3 9a2.5 2.5 0 0 0 4.5 1.5A2.5 2.5 0 0 0 12 10.5a2.5 2.5 0 0 0 4.5 0A2.5 2.5 0 0 0 21 9" />
     </svg>
-    <span className="hidden lg:inline text-[13px] font-medium">Mi tienda</span>
+    <span className="hidden lg:inline text-[13px] font-medium"><TS>Mi tienda</TS></span>
   </a>
 )
 
@@ -49,6 +50,6 @@ export const CotizadorBoton = () => (
       <rect x="6" y="3" width="12" height="18" rx="1.5" />
       <path d="M9 7h6M9 11h.01M12 11h.01M15 11h.01M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01M15 17h.01" />
     </svg>
-    <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium">Cotizador taller</span>
+    <span className="hidden xl:inline whitespace-nowrap text-[13px] font-medium"><TS>Cotizador taller</TS></span>
   </a>
 )

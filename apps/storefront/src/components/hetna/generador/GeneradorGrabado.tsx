@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -88,7 +89,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 const Deslizador = ({ etiqueta, valor, min, max, paso = 1, cambiar }: { etiqueta: string; valor: number; min: number; max: number; paso?: number; cambiar: (v: number) => void }) => (
   <label className="flex flex-col gap-1">
     <span className="flex justify-between text-[13px] font-semibold text-[#1B1B18]">
-      {etiqueta}
+      <T>{etiqueta}</T>
       <span className="font-normal text-[#6B6A63]">{valor}</span>
     </span>
     <input type="range" min={min} max={max} step={paso} value={valor} onChange={(e) => cambiar(Number(e.target.value))} className="w-full accent-[#C2560A]" />
@@ -223,10 +224,10 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Foto para grabado láser</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Foto para grabado láser</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Convierte una foto en una imagen lista para grabar en madera, MDF, piel, pizarra o acrílico, al tamaño y la resolución de tu láser. Tu foto no se sube a ningún servidor.
+          <T>Convierte una foto en una imagen lista para grabar en madera, MDF, piel, pizarra o acrílico, al tamaño y la resolución de tu láser. Tu foto no se sube a ningún servidor.</T>
         </p>
       </section>
 
@@ -243,31 +244,31 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
               <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
             </svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</span>
-            <span className="text-[12px] text-[#6B6A63]">JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</T></span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
 
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Ancho del grabado</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Ancho del grabado</T></span>
               <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
                 <input type="text" inputMode="decimal" value={ancho} onChange={(e) => setAncho(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
-                <span className="pr-3 text-[13px] text-[#9A978C]">mm</span>
+                <span className="pr-3 text-[13px] text-[#9A978C]"><T>mm</T></span>
               </span>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Resolución</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Resolución</T></span>
               <select value={dpi} onChange={(e) => setDpi(Number(e.target.value))} className="px-3 py-2.5 text-[16px] text-[#1B1B18] bg-white border border-[#E7E4DC] rounded-[10px] outline-none focus:border-[#C2560A]">
                 {DPIS.map((d) => <option key={d} value={d}>{d} DPI</option>)}
               </select>
             </label>
           </div>
-          {!tamOk && <p className="m-0 text-[12.5px] text-[#8A1C1C]">Escribe un ancho entre 1 y 2000 mm.</p>}
-          {muyGrande && <p className="m-0 text-[12.5px] text-[#8A1C1C]">Es demasiado grande para el navegador. Baja el tamaño o la resolución.</p>}
+          {!tamOk && <p className="m-0 text-[12.5px] text-[#8A1C1C]"><T>Escribe un ancho entre 1 y 2000 mm.</T></p>}
+          {muyGrande && <p className="m-0 text-[12.5px] text-[#8A1C1C]"><T>Es demasiado grande para el navegador. Baja el tamaño o la resolución.</T></p>}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Material</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Material</T></span>
             <div className="flex flex-wrap gap-2">
               {MATERIALES.map((m) => (
                 <Opcion key={m.nombre} activa={material === m.nombre} onClick={() => { setMaterial(m.nombre); setAj(m.a) }}>{m.nombre}</Opcion>
@@ -276,7 +277,7 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Estilo</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Estilo</T></span>
             <div className="flex flex-wrap gap-2">
               {ESTILOS.map((e) => <Opcion key={e.id} activa={estilo === e.id} onClick={() => setEstilo(e.id)}>{e.nombre}</Opcion>)}
             </div>
@@ -292,10 +293,10 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
           )}
           {estilo === "semitono" && (
             <label className="flex flex-col gap-1">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Tamaño del punto</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tamaño del punto</T></span>
               <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
                 <input type="text" inputMode="decimal" value={celda} onChange={(e) => setCelda(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
-                <span className="pr-3 text-[13px] text-[#9A978C]">mm</span>
+                <span className="pr-3 text-[13px] text-[#9A978C]"><T>mm</T></span>
               </span>
             </label>
           )}
@@ -307,22 +308,22 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
           <Deslizador etiqueta="Nitidez" valor={aj.nitidez} min={0} max={100} cambiar={(v) => setAj({ ...aj, nitidez: v })} />
           <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
             <input type="checkbox" checked={aj.invertir} onChange={(e) => setAj({ ...aj, invertir: e.target.checked })} className="w-4 h-4 accent-[#C2560A]" />
-            Invertir (el grabado sale claro)
+            <T>Invertir (el grabado sale claro)</T>
           </label>
           <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
             <input type="checkbox" checked={aj.espejo} onChange={(e) => setAj({ ...aj, espejo: e.target.checked })} className="w-4 h-4 accent-[#C2560A]" />
-            Espejo (grabar por detrás o sellos)
+            <T>Espejo (grabar por detrás o sellos)</T>
           </label>
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
           {!nombre && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14.5px] text-[#6B6A63] flex flex-col gap-2">
-              <p className="m-0 font-semibold text-[#1B1B18]">Para que salga bien</p>
+              <p className="m-0 font-semibold text-[#1B1B18]"><T>Para que salga bien</T></p>
               <ul className="m-0 pl-5 flex flex-col gap-1">
-                <li>Usa una foto nítida, con buena luz y fondo sencillo.</li>
-                <li>El tramado Jarvis es el más usado para madera; en pizarra y anodizado se invierte.</li>
-                <li>Graba primero una prueba pequeña para ajustar potencia y velocidad.</li>
+                <li><T>Usa una foto nítida, con buena luz y fondo sencillo.</T></li>
+                <li><T>El tramado Jarvis es el más usado para madera; en pizarra y anodizado se invierte.</T></li>
+                <li><T>Graba primero una prueba pequeña para ajustar potencia y velocidad.</T></li>
               </ul>
             </div>
           )}
@@ -360,15 +361,15 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
                 {preparando ? "Preparando..." : "Descargar PNG"}
               </button>
               <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={bajarSVG} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                Descargar SVG
+                <T>Descargar SVG</T>
               </button>
               <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={fabricar} className="bg-[#C2560A] hover:bg-[#A84A08] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                Fabrícamelo
+                <T>Fabrícamelo</T>
               </button>
             </div>
             {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
-              El PNG lleva guardada la resolución: LightBurn y otros programas lo abren al tamaño exacto. En el programa usa el modo «pasar» (threshold o pass-through) para que no vuelva a tramar la imagen.
+              <T>El PNG lleva guardada la resolución: LightBurn y otros programas lo abren al tamaño exacto. En el programa usa el modo «pasar» (threshold o pass-through) para que no vuelva a tramar la imagen.</T>
             </p>
           </div>
         </section>

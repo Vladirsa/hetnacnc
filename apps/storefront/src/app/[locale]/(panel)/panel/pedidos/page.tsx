@@ -1,4 +1,5 @@
 // HETNA Panel → Pedidos: los últimos pedidos de la tienda con su estado.
+import { TS } from "@/i18n/TS"
 import { Etiqueta, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, fechaCorta, pesos } from "@/lib/panel/sesion"
 
@@ -18,9 +19,9 @@ export default async function PanelPedidos({ params }: { params: Promise<{ local
   const ADMIN = (process.env.NEXT_PUBLIC_BASE_URL || "https://hetnacnc.com").replace(/\/$/, "") + "/dashboard"
   return (
     <Tarjeta>
-      <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/orders`} target="_blank" rel="noreferrer">Todos en el dashboard →</a>}>Últimos pedidos</Titulo>
-      {error && <Vacio>No pude leer los pedidos: {error}</Vacio>}
-      {!error && ordenes.length === 0 && <Vacio>Todavía no hay pedidos.</Vacio>}
+      <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/orders`} target="_blank" rel="noreferrer"><TS>Todos en el dashboard →</TS></a>}><TS>Últimos pedidos</TS></Titulo>
+      {error && <Vacio><TS>No pude leer los pedidos:</TS> {error}</Vacio>}
+      {!error && ordenes.length === 0 && <Vacio><TS>Todavía no hay pedidos.</TS></Vacio>}
       <ul className="divide-y divide-[#EFEDE6]">
         {ordenes.map((o) => {
           const p = PAGO[o.payment_status] || [o.payment_status, "gris"]

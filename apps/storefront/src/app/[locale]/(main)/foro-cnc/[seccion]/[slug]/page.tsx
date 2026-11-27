@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
 import { headers } from "next/headers"
@@ -30,7 +32,7 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { seccion, slug } = await params
   const sesion = await sesionForo()
   const t = await leerTema(seccion, slug, sesion?.perfil?.id)
@@ -202,7 +204,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
         <div className="flex items-start justify-between gap-3">
           <AutorChip a={r.autor} cuando={r.creado} size={hija ? 28 : 34} />
           <div className="flex items-center gap-1">
-            {mejor && <span className="text-[12px] font-bold text-[#16794F] whitespace-nowrap">✓ Mejor respuesta</span>}
+            {mejor && <span className="text-[12px] font-bold text-[#16794F] whitespace-nowrap"><TS>✓ Mejor respuesta</TS></span>}
             <MenuMas tipo="respuesta" id={r.id} puedeOcultar={perfil?.id === r.autor.id || esModerador} esModerador={esModerador} estado={r.estado} />
           </div>
         </div>
@@ -236,12 +238,12 @@ export default async function ForoTema({ params, searchParams }: Props) {
           <div className="flex flex-col gap-5 min-w-0">
             {aviso === "revision" && (
               <p className="m-0 bg-[#FFF6E8] border border-[#F2C98F] text-[#5A3A12] rounded-[12px] px-4 py-3 text-[14px]">
-                Recibimos tu publicación. Se mostrará a todos en cuanto la revisemos (normalmente el mismo día).
+                <TS>Recibimos tu publicación. Se mostrará a todos en cuanto la revisemos (normalmente el mismo día).</TS>
               </p>
             )}
             {aviso === "contacto" && (
               <p className="m-0 bg-[#EEF4FB] border border-[#C9DBF0] text-[#1E3A5F] rounded-[12px] px-4 py-3 text-[14px]">
-                Publicado. Ocultamos los teléfonos y correos: los clientes te escriben y compran dentro de HETNA, donde tu venta y su pago están protegidos.
+                <TS>Publicado. Ocultamos los teléfonos y correos: los clientes te escriben y compran dentro de HETNA, donde tu venta y su pago están protegidos.</TS>
               </p>
             )}
 
@@ -249,8 +251,8 @@ export default async function ForoTema({ params, searchParams }: Props) {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <InsigniaTema tipo={t.tipo} />
-                  {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]">Patrocinado</span>}
-                  {t.resuelto && <span className="text-[12px] font-bold text-[#16794F]">✓ Resuelto</span>}
+                  {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Patrocinado</TS></span>}
+                  {t.resuelto && <span className="text-[12px] font-bold text-[#16794F]"><TS>✓ Resuelto</TS></span>}
                   {t.estado !== "publicado" && (
                     <span className="text-[12px] font-bold text-[#9A4A06] bg-[#FFF3E0] px-2 py-0.5 rounded">
                       {t.estado === "revision" ? "En revisión: solo tú lo ves" : "Oculto"}
@@ -259,11 +261,11 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 </div>
                 <MenuMas tipo="tema" id={t.id} puedeOcultar={esAutor || esModerador} esModerador={esModerador} estado={t.estado} />
               </div>
-              <h1 className="m-0 font-display text-[24px] sm:text-[28px] leading-[1.2] font-bold text-[#1B1B18]">{t.titulo}</h1>
+              <h1 className="m-0 font-display text-[24px] sm:text-[28px] leading-[1.2] font-bold text-[#1B1B18]"><TS>{t.titulo}</TS></h1>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <AutorChip a={t.autor} cuando={t.creado} />
                 <span className="text-[12.5px] text-[#6B6A63]">
-                  {t.vistas} vistas · actividad {haceCuanto(t.ultimaActividad)}
+                  {t.vistas} <TS>vistas · actividad</TS> {haceCuanto(t.ultimaActividad)}
                 </span>
               </div>
               {t.evento && (
@@ -298,7 +300,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 {!esAutor && t.estado === "publicado" && <BotonSeguirTema temaId={t.id} siguiendo={siguiendoTema} />}
                 <a href="#responder" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A]">
                   <IconoResponder size={18} />
-                  Responder
+                  <TS>Responder</TS>
                 </a>
                 <CompartirRedes className="basis-full" url={`${SITIO}/mx${urlTema(t)}`} titulo={t.titulo} />
               </div>
@@ -313,7 +315,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                     <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
                       {postulaciones.length ? `${postulaciones.length} ${postulaciones.length === 1 ? "postulación" : "postulaciones"}` : "Aún no hay postulaciones"}
                     </h2>
-                    <p className="m-0 text-[13.5px] text-[#6B6A63]">Sólo tú ves esta lista. Revisa el perfil de cada persona: su trayectoria, aptitudes avaladas y recomendaciones.</p>
+                    <p className="m-0 text-[13.5px] text-[#6B6A63]"><TS>Sólo tú ves esta lista. Revisa el perfil de cada persona: su trayectoria, aptitudes avaladas y recomendaciones.</TS></p>
                     {postulaciones.map((g) => (
                       <div key={g.autor.id} className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
                         <div className="flex items-center gap-3">
@@ -327,16 +329,16 @@ export default async function ForoTema({ params, searchParams }: Props) {
                             </span>
                           </div>
                           <LocalizedClientLink href={urlPerfil(g.autor.usuario)} className="shrink-0 text-[13.5px] font-semibold text-[#3B46A6] hover:underline">
-                            Ver currículum →
+                            <TS>Ver currículum →</TS>
                           </LocalizedClientLink>
                         </div>
-                        <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#23231F]">{g.mensaje}</p>
+                        <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#23231F]"><TS>{g.mensaje}</TS></p>
                       </div>
                     ))}
                   </>
                 ) : (
                   <>
-                    <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">¿Te interesa esta vacante?</h2>
+                    <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>¿Te interesa esta vacante?</TS></h2>
                     <Postularme temaId={t.id} yaPostulado={postulado} />
                   </>
                 )}
@@ -350,48 +352,48 @@ export default async function ForoTema({ params, searchParams }: Props) {
               {nPublicadas === 0 && t.estado === "publicado" && !esAutor && (
                 <div className="rounded-[14px] border-2 border-dashed border-[#F2C98F] bg-[#FFF9F0] p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                   <span>
-                    <span className="block text-[16px] font-bold text-[#1B1B18]">Sé el primero en responder</span>
+                    <span className="block text-[16px] font-bold text-[#1B1B18]"><TS>Sé el primero en responder</TS></span>
                     <span className="text-[14px] text-[#5A3A12]">
-                      Si sabes algo de esto, tu respuesta suma puntos, te pone en &ldquo;Los que más ayudan&rdquo; y, si tienes taller, lleva a quien preguntó a tu perfil.
+                      <TS>Si sabes algo de esto, tu respuesta suma puntos, te pone en &ldquo;Los que más ayudan&rdquo; y, si tienes taller, lleva a quien preguntó a tu perfil.</TS>
                     </span>
                   </span>
                   <a href="#responder" className="shrink-0 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#A84A08]">
-                    Responder
+                    <TS>Responder</TS>
                   </a>
                 </div>
               )}
               {nPublicadas === 0 && esAutor && t.estado === "publicado" && (
                 <p className="m-0 rounded-[12px] bg-[#EEF4FB] border border-[#C9DBF0] px-4 py-3 text-[14px] text-[#1E3A5F]">
-                  Tu tema ya está publicado{t.tipo === "pregunta" || t.tipo === "busco" ? " y les avisamos a los talleres de esta especialidad" : ""}. Cuando
-                  alguien te dé la respuesta que sirve, márcala como la mejor: así el tema queda como resuelto.
+                  <TS>Tu tema ya está publicado</TS>{t.tipo === "pregunta" || t.tipo === "busco" ? " y les avisamos a los talleres de esta especialidad" : ""}<TS>. Cuando
+                  alguien te dé la respuesta que sirve, márcala como la mejor: así el tema queda como resuelto.</TS>
                 </p>
               )}
               {principales.map((r) => tarjetaRespuesta(r))}
             </section>
 
             <section id="responder" className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 flex flex-col gap-4 scroll-mt-24">
-              <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]">Tu respuesta</h2>
+              <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]"><TS>Tu respuesta</TS></h2>
               {!sesion ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <p className="m-0 text-[14.5px] text-[#44433D]">Entra o crea tu cuenta gratis para responder y ganar puntos de reputación.</p>
+                  <p className="m-0 text-[14.5px] text-[#44433D]"><TS>Entra o crea tu cuenta gratis para responder y ganar puntos de reputación.</TS></p>
                   <div className="flex gap-2 shrink-0">
                     <LocalizedClientLink href="/login" className="border border-[#E0DCD2] font-semibold px-4 py-2.5 rounded-[10px] text-[14px] hover:border-[#C2560A]">
-                      Entrar
+                      <TS>Entrar</TS>
                     </LocalizedClientLink>
                     <LocalizedClientLink href="/register" className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-                      Crear cuenta
+                      <TS>Crear cuenta</TS>
                     </LocalizedClientLink>
                   </div>
                 </div>
               ) : !perfil ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <p className="m-0 text-[14.5px] text-[#44433D]">Crea tu perfil del foro (1 minuto) para responder.</p>
+                  <p className="m-0 text-[14.5px] text-[#44433D]"><TS>Crea tu perfil del foro (1 minuto) para responder.</TS></p>
                   <LocalizedClientLink href={`/foro-cnc/mi-perfil?siguiente=${encodeURIComponent(urlTema(t) + "#responder")}`} className="shrink-0 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-                    Crear perfil
+                    <TS>Crear perfil</TS>
                   </LocalizedClientLink>
                 </div>
               ) : t.estado !== "publicado" ? (
-                <p className="m-0 text-[14px] text-[#6B6A63]">Podrás responder cuando el tema se publique.</p>
+                <p className="m-0 text-[14px] text-[#6B6A63]"><TS>Podrás responder cuando el tema se publique.</TS></p>
               ) : (
                 <FormRespuesta temaId={t.id} />
               )}
@@ -402,33 +404,33 @@ export default async function ForoTema({ params, searchParams }: Props) {
           <aside className="flex flex-col gap-4">
             <SigueHetna className="bg-white border border-[#E7E4DC] rounded-[14px] p-4" />
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex flex-col gap-3">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Publicado por</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Publicado por</TS></span>
               <AutorChip a={t.autor} />
               {!esAutor && (
                 <BotonSeguir objetivo={objetivoPerfil({ id: t.autor.id, vendedor: t.autor.taller?.id })} siguiendo={redAutor.siguiendo} seguidores={redAutor.seguidores} />
               )}
               <LocalizedClientLink href={urlPerfil(t.autor.usuario)} className="text-center border border-[#E0DCD2] rounded-[10px] py-2 text-[14px] font-semibold hover:border-[#C2560A]">
-                Ver perfil y trabajos
+                <TS>Ver perfil y trabajos</TS>
               </LocalizedClientLink>
             </div>
             {candidatos.length > 0 && <PedirRespuesta temaId={t.id} candidatos={candidatos} />}
             {talleres && (
               <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
-                <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>
-                <span className="text-[13px] text-[#C9D2E0]">Ve quién hace esto y pídele cotización.</span>
+                <strong className="text-[14.5px]"><TS>Talleres de</TS> {talleres.proceso}</strong>
+                <span className="text-[13px] text-[#C9D2E0]"><TS>Ve quién hace esto y pídele cotización.</TS></span>
               </LocalizedClientLink>
             )}
             <CaptarTaller sesion={sesion} />
             <AvisoSeguro />
             {relacionados && relacionados.temas.filter((x) => x.id !== t.id).length > 0 && (
               <div className="flex flex-col gap-3">
-                <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Más en {t.seccion.nombre}</span>
+                <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Más en</TS> {t.seccion.nombre}</span>
                 {relacionados.temas
                   .filter((x) => x.id !== t.id)
                   .slice(0, 5)
                   .map((x) => (
                     <LocalizedClientLink key={x.id} href={urlTema(x)} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3 hover:border-[#C2560A] flex flex-col gap-1">
-                      <span className="text-[14px] font-semibold text-[#1B1B18] leading-snug line-clamp-2">{x.titulo}</span>
+                      <span className="text-[14px] font-semibold text-[#1B1B18] leading-snug line-clamp-2"><TS>{x.titulo}</TS></span>
                       <span className="text-[12.5px] text-[#6B6A63]">
                         {x.respuestas} {x.respuestas === 1 ? "respuesta" : "respuestas"}
                       </span>
@@ -441,4 +443,9 @@ export default async function ForoTema({ params, searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

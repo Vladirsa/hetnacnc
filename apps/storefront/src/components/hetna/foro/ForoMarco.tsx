@@ -1,4 +1,5 @@
 // Marco de las páginas del foro: portada, pestañas, lista y barra lateral
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Ayudador, SesionForo } from "@/lib/foro/consultas"
 import type { Autor, Seccion } from "@/lib/foro/tipos"
@@ -14,7 +15,7 @@ export const BotonPublicar = ({ seccion, className = "" }: { seccion?: string; c
     className={`inline-flex items-center justify-center gap-2 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px] ${className}`}
   >
     <Ico n="mas" size={16} />
-    Publicar
+    <TS>Publicar</TS>
   </LocalizedClientLink>
 )
 
@@ -32,7 +33,7 @@ export const Buscador = ({ locale, valor = "", seccion }: { locale: string; valo
     />
     {seccion && <input type="hidden" name="seccion" value={seccion} />}
     <button type="submit" className="px-4 py-3 text-[14px] font-semibold text-[#B34D07] hover:bg-[#FDEEE1]">
-      Buscar
+      <TS>Buscar</TS>
     </button>
   </form>
 )
@@ -57,23 +58,23 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
   <aside className="flex flex-col gap-5">
     {!sesion ? (
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-        <strong className="text-[15.5px] text-[#1B1B18]">Únete a la comunidad CNC de México</strong>
+        <strong className="text-[15.5px] text-[#1B1B18]"><TS>Únete a la comunidad CNC de México</TS></strong>
         <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">
-          Pregunta, muestra tus trabajos y date a conocer con tu perfil de taller, proveedor o profesional. Es gratis.
+          <TS>Pregunta, muestra tus trabajos y date a conocer con tu perfil de taller, proveedor o profesional. Es gratis.</TS>
         </p>
         <LocalizedClientLink href="/register" className="text-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-          Crear cuenta gratis
+          <TS>Crear cuenta gratis</TS>
         </LocalizedClientLink>
         <LocalizedClientLink href="/login" className="text-center text-[14px] font-semibold text-[#B34D07] hover:underline">
-          Ya tengo cuenta
+          <TS>Ya tengo cuenta</TS>
         </LocalizedClientLink>
       </div>
     ) : !sesion.perfil ? (
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-        <strong className="text-[15.5px] text-[#1B1B18]">Crea tu perfil del foro</strong>
-        <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Elige si eres taller, proveedor, profesional o aficionado y agrega tus redes.</p>
+        <strong className="text-[15.5px] text-[#1B1B18]"><TS>Crea tu perfil del foro</TS></strong>
+        <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><TS>Elige si eres taller, proveedor, profesional o aficionado y agrega tus redes.</TS></p>
         <LocalizedClientLink href="/foro-cnc/mi-perfil" className="text-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">
-          Crear perfil
+          <TS>Crear perfil</TS>
         </LocalizedClientLink>
       </div>
     ) : (
@@ -83,10 +84,10 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
           <LocalizedClientLink href={urlPerfil(sesion.perfil.usuario)} className="block font-semibold text-[14.5px] text-[#1B1B18] truncate hover:text-[#B34D07]">
             {sesion.perfil.nombre}
           </LocalizedClientLink>
-          <span className="text-[12.5px] text-[#6B6A63]">{sesion.perfil.reputacion} pts</span>
+          <span className="text-[12.5px] text-[#6B6A63]">{sesion.perfil.reputacion} <TS>pts</TS></span>
         </div>
         <LocalizedClientLink href="/foro-cnc/mi-perfil" className="text-[13px] font-semibold text-[#B34D07] hover:underline">
-          Editar
+          <TS>Editar</TS>
         </LocalizedClientLink>
       </div>
     )}
@@ -96,31 +97,31 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
         href="/foro-cnc/blog"
         className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#14683F] bg-[#EEF6EE] hover:bg-[#E0F0E4]"
       >
-        <span>Blog y guías</span>
+        <span><TS>Blog y guías</TS></span>
         <span aria-hidden="true">→</span>
       </LocalizedClientLink>
       <LocalizedClientLink
         href="/foro-cnc/red"
         className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#142033] bg-[#EEF1F6] hover:bg-[#E2E7EF]"
       >
-        <span>Mi red</span>
+        <span><TS>Mi red</TS></span>
         <span aria-hidden="true">→</span>
       </LocalizedClientLink>
       <LocalizedClientLink
         href="/foro-cnc/empleos"
         className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
       >
-        <span>Empleos y proyectos</span>
+        <span><TS>Empleos y proyectos</TS></span>
         <span aria-hidden="true">→</span>
       </LocalizedClientLink>
       <LocalizedClientLink
         href="/foro-cnc/profesionales"
         className="flex items-center justify-between gap-2 px-3 py-2 mb-1 rounded-[8px] text-[14px] font-semibold text-[#3B46A6] bg-[#EDEFFC] hover:bg-[#E1E4FA]"
       >
-        <span>Profesionales CNC</span>
+        <span><TS>Profesionales CNC</TS></span>
         <span aria-hidden="true">→</span>
       </LocalizedClientLink>
-      <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Secciones</span>
+      <span className="block px-3 pt-2 pb-1 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Secciones</TS></span>
       <ul className="m-0 p-0 list-none">
         {secciones.map((s) => (
           <li key={s.slug}>
@@ -147,8 +148,8 @@ export const Lateral = ({ secciones, actual, sesion, destacados, semana = [] }: 
       href="/calculadora-cnc"
       className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]"
     >
-      <strong className="text-[14.5px]">¿Prisa? Usa la Calculadora CNC</strong>
-      <span className="text-[13px] text-[#C9D2E0]">Velocidades, avances, tiempos y costos de tu máquina al instante.</span>
+      <strong className="text-[14.5px]"><TS>¿Prisa? Usa la Calculadora CNC</TS></strong>
+      <span className="text-[13px] text-[#C9D2E0]"><TS>Velocidades, avances, tiempos y costos de tu máquina al instante.</TS></span>
     </LocalizedClientLink>
   </aside>
 )

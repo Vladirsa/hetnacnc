@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import { pedirPlanoCorreo } from "@/lib/planos/acciones"
@@ -58,33 +59,33 @@ export default function DescargaPlano({ slug, nombre, dxfs }: { slug: string; no
   if (listo) {
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5 print:hidden">
-        <p className="m-0 text-[15px] font-bold text-[#142033]">Tu plano: {nombre}</p>
+        <p className="m-0 text-[15px] font-bold text-[#142033]"><T>Tu plano:</T> {nombre}</p>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => window.print()} className={`${boton} bg-[#142033] text-white`}>Guardar en PDF</button>
+          <button type="button" onClick={() => window.print()} className={`${boton} bg-[#142033] text-white`}><T>Guardar en PDF</T></button>
           {dxfs.map((d) => (
             <button key={d.nombre} type="button" onClick={() => bajar(d)} className={`${boton} border border-[#142033] text-[#142033]`}>
-              DXF · {d.nombre}
+              <T>DXF ·</T> {d.nombre}
             </button>
           ))}
         </div>
-        <p className="m-0 text-[13px] text-[#6B6A63]">El DXF trae las piezas ya acomodadas en hojas de 2440 × 1220 mm, una capa por letra de la lista de corte.</p>
+        <p className="m-0 text-[13px] text-[#6B6A63]"><T>El DXF trae las piezas ya acomodadas en hojas de 2440 × 1220 mm, una capa por letra de la lista de corte.</T></p>
       </div>
     )
   }
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5 print:hidden">
-      <p className="m-0 text-[16px] font-bold text-[#142033]">Bájalo gratis: PDF y DXF para router CNC</p>
-      <p className="m-0 text-[13px] text-[#6B6A63]">Te mandamos la liga a tu correo y aquí mismo se abren las descargas.</p>
+      <p className="m-0 text-[16px] font-bold text-[#142033]"><T>Bájalo gratis: PDF y DXF para router CNC</T></p>
+      <p className="m-0 text-[13px] text-[#6B6A63]"><T>Te mandamos la liga a tu correo y aquí mismo se abren las descargas.</T></p>
       <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" className="rounded-[10px] border border-[#D9D5CA] px-4 py-3 text-[15px]" />
       <input type="text" tabIndex={-1} autoComplete="off" value={trampa} onChange={(e) => setTrampa(e.target.value)} className="hidden" aria-hidden="true" />
       <label className="flex items-start gap-2 text-[13px] text-[#40403A]">
         <input type="checkbox" required checked={acepta} onChange={(e) => setAcepta(e.target.checked)} className="mt-0.5" />
-        <span>Mándame este plano a mi correo. Leí el <a href="/mx/aviso-de-privacidad" className="text-[#B34D07] underline">aviso de privacidad</a>.</span>
+        <span><T>Mándame este plano a mi correo. Leí el</T> <a href="/mx/aviso-de-privacidad" className="text-[#B34D07] underline"><T>aviso de privacidad</T></a>.</span>
       </label>
       <label className="flex items-start gap-2 text-[13px] text-[#40403A]">
         <input type="checkbox" checked={promos} onChange={(e) => setPromos(e.target.checked)} className="mt-0.5" />
-        <span>También quiero recibir planos nuevos y novedades de HETNA (te das de baja cuando quieras).</span>
+        <span><T>También quiero recibir planos nuevos y novedades de HETNA (te das de baja cuando quieras).</T></span>
       </label>
       {error && <p className="m-0 text-[13px] font-semibold text-[#B42318]">{error}</p>}
       <button type="submit" disabled={enviando} className={`${boton} justify-center bg-[#FF6A1A] text-white disabled:opacity-60`}>

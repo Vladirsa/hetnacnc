@@ -6,6 +6,7 @@
 // la tienda (/<país>/categories?query=...).
 //
 // Accesible: combobox con lista (flechas, Enter, Escape) y anuncios ARIA.
+import { T } from "@/components/hetna/i18n/Idioma"
 import clsx from "clsx"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useId, useRef, useState } from "react"
@@ -165,7 +166,7 @@ export const NavbarSearch = ({ className }: Props) => {
               ) : (
                 <span className="h-8 w-8 shrink-0 rounded bg-[#F4F1EA]" aria-hidden="true" />
               )}
-              <span className="min-w-0 flex-1 truncate text-[14px] text-[#1B1B18]">{s.texto}</span>
+              <span className="min-w-0 flex-1 truncate text-[14px] text-[#1B1B18]"><T>{s.texto}</T></span>
               <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#8A887F]">{ETIQUETA[s.tipo]}</span>
             </li>
           ))}
@@ -178,7 +179,7 @@ export const NavbarSearch = ({ className }: Props) => {
             }}
             className="cursor-pointer border-t border-[#E7E4DC] px-3 py-2 text-[13.5px] font-semibold text-[#B34D07]"
           >
-            Buscar “{texto.trim()}” en la tienda
+            <T>Buscar “</T>{texto.trim()}<T>” en la tienda</T>
           </li>
         </ul>
       )}

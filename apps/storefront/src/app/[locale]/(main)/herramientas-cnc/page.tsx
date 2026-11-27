@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -12,7 +14,7 @@ import { PROGRAMAS } from "@/lib/seo/programas"
 // /laboratorio-cam; aquí sólo se enlazan al final.
 const SITIO = "https://hetnacnc.com"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   // Título ≤ 60 y descripción ≤ 155 caracteres: lo que Google muestra sin cortar
   // La búsqueda "calculadora de avance y RPM" la contesta /calculadora-cnc; ésta
   // es la página general de herramientas (calculadora + cotizador para talleres).
@@ -147,12 +149,12 @@ export default function HerramientasCnc() {
         <div className="mx-auto max-w-[1240px]">
           <nav aria-label="Ruta" className="flex flex-wrap gap-1.5 text-[13px] text-white/50">
             <LocalizedClientLink href="/" className="hover:text-white">
-              Inicio
+              <TS>Inicio</TS>
             </LocalizedClientLink>
             <span>/</span>
-            <span className="text-white/80">Calculadora y cotizador CNC</span>
+            <span className="text-white/80"><TS>Calculadora y cotizador CNC</TS></span>
           </nav>
-          <h1 className="sr-only">Calculadora CNC y cotizador para talleres</h1>
+          <h1 className="sr-only"><TS>Calculadora CNC y cotizador para talleres</TS></h1>
           <div className="mt-8">
             <SliderHerramientas />
           </div>
@@ -163,13 +165,13 @@ export default function HerramientasCnc() {
       <section id="calculadora" className="scroll-mt-28 px-4 py-14 lg:px-10 lg:py-20">
         <div className="mx-auto grid max-w-[1240px] items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           <div>
-            <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#B34D07]">1 · Calculadora CNC profesional · gratis</span>
+            <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#B34D07]"><TS>1 · Calculadora CNC profesional · gratis</TS></span>
             <h2 className="m-0 mt-2 text-[28px] font-extrabold leading-tight text-[#1B1B18] lg:text-[38px]">
-              Los parámetros correctos antes de cortar
+              <TS>Los parámetros correctos antes de cortar</TS>
             </h2>
             <p className="m-0 mt-3 text-[16px] leading-relaxed text-[#4A4943]">
-              No es sólo RPM y avance: revisa que tu máquina aguante, te avisa cuando algo va a salir mal y te da consejos para
-              cada material. Para máquinas caseras y de taller.
+              <TS>No es sólo RPM y avance: revisa que tu máquina aguante, te avisa cuando algo va a salir mal y te da consejos para
+              cada material. Para máquinas caseras y de taller.</TS>
             </p>
             <ul className="m-0 mt-6 grid list-none gap-3 p-0 sm:grid-cols-2">
               {PROCESOS_CALC.map(([t, d]) => (
@@ -184,7 +186,7 @@ export default function HerramientasCnc() {
                 href="/calculadora-cnc"
                 className="rounded-[12px] bg-[#C2560A] px-6 py-3.5 text-[15.5px] font-extrabold text-white hover:bg-[#A84A08]"
               >
-                Abrir la calculadora →
+                <TS>Abrir la calculadora →</TS>
               </LocalizedClientLink>
             </div>
           </div>
@@ -200,14 +202,14 @@ export default function HerramientasCnc() {
         <div id="cotizar" className="mx-auto mt-20 max-w-[1240px] scroll-mt-28 rounded-[20px] bg-[#142033] p-6 text-white lg:p-8">
           <div className="flex flex-wrap items-center justify-between gap-5">
             <div className="max-w-[620px]">
-              <h3 className="m-0 text-[22px] font-extrabold lg:text-[26px]">¿Cuánto cuesta tu pieza? Calcúlalo al momento</h3>
+              <h3 className="m-0 text-[22px] font-extrabold lg:text-[26px]"><TS>¿Cuánto cuesta tu pieza? Calcúlalo al momento</TS></h3>
               <p className="m-0 mt-1.5 text-[14.5px] leading-relaxed text-white/70">
-                Calculadoras de precio gratis por proceso. Si quieres precios reales, sube tu archivo y recibe cotizaciones de
-                talleres de todo México.
+                <TS>Calculadoras de precio gratis por proceso. Si quieres precios reales, sube tu archivo y recibe cotizaciones de
+                talleres de todo México.</TS>
               </p>
             </div>
             <LocalizedClientLink href="/cotizar" className="rounded-[10px] bg-[#FFC53D] px-5 py-3 text-[15px] font-extrabold text-[#142033] hover:brightness-105">
-              Cotizar mi pieza →
+              <TS>Cotizar mi pieza →</TS>
             </LocalizedClientLink>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -233,11 +235,11 @@ export default function HerramientasCnc() {
             <Telefono src="/img/herramientas/cotizador-whatsapp.jpg" alt="App HETNA Cotizador enviando por WhatsApp" className="mt-16 hidden md:block" />
           </div>
           <div className="order-1 lg:order-2">
-            <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#34D399]">2 · App HETNA Cotizador para talleres</span>
-            <h2 className="m-0 mt-2 text-[28px] font-extrabold leading-tight lg:text-[38px]">Cotiza en segundos, no en horas</h2>
+            <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#34D399]"><TS>2 · App HETNA Cotizador para talleres</TS></span>
+            <h2 className="m-0 mt-2 text-[28px] font-extrabold leading-tight lg:text-[38px]"><TS>Cotiza en segundos, no en horas</TS></h2>
             <p className="m-0 mt-3 text-[16px] leading-relaxed text-white/70">
-              Tu cliente te manda el archivo por WhatsApp y en menos de un minuto le respondes con el precio, el PDF y tu marca.
-              Con tus costos y tu utilidad, desde el celular.
+              <TS>Tu cliente te manda el archivo por WhatsApp y en menos de un minuto le respondes con el precio, el PDF y tu marca.
+              Con tus costos y tu utilidad, desde el celular.</TS>
             </p>
             <ul className="m-0 mt-6 grid list-none gap-3 p-0 sm:grid-cols-2">
               {VENTAJAS_APP.map(([t, d]) => (
@@ -255,13 +257,13 @@ export default function HerramientasCnc() {
                 href="/servicios/cotizador-cnc"
                 className="rounded-[12px] bg-[#19B374] px-6 py-3.5 text-[15.5px] font-extrabold text-white hover:brightness-110"
               >
-                Conocer el cotizador →
+                <TS>Conocer el cotizador →</TS>
               </LocalizedClientLink>
               <LocalizedClientLink
                 href="/servicios/cotizador-cnc#planes"
                 className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15.5px] font-bold text-white hover:bg-white/10"
               >
-                Ver planes
+                <TS>Ver planes</TS>
               </LocalizedClientLink>
             </div>
           </div>
@@ -272,19 +274,19 @@ export default function HerramientasCnc() {
       <section className="px-4 py-14 lg:px-10">
         <div className="mx-auto grid max-w-[1240px] gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <div>
-            <h2 className="m-0 text-[26px] font-extrabold leading-tight text-[#1B1B18]">Preguntas frecuentes</h2>
+            <h2 className="m-0 text-[26px] font-extrabold leading-tight text-[#1B1B18]"><TS>Preguntas frecuentes</TS></h2>
             <p className="m-0 mt-3 text-[15px] leading-relaxed text-[#4A4943]">
-              ¿Buscas otra cosa?{" "}
+              <TS>¿Buscas otra cosa?</TS>{" "}
               <LocalizedClientLink href="/disenar" className="font-semibold text-[#B34D07] hover:underline">
-                Diseñar en 3D y 2D
+                <TS>Diseñar en 3D y 2D</TS>
               </LocalizedClientLink>
               ,{" "}
               <LocalizedClientLink href="/laboratorio-cam" className="font-semibold text-[#B34D07] hover:underline">
-                DXF a G-code
+                <TS>DXF a G-code</TS>
               </LocalizedClientLink>{" "}
               o{" "}
               <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#B34D07] hover:underline">
-                que un taller te la fabrique
+                <TS>que un taller te la fabrique</TS>
               </LocalizedClientLink>
               .
             </p>
@@ -306,7 +308,7 @@ export default function HerramientasCnc() {
       {/* Programas de diseño y CAM (páginas para buscadores) */}
       <section className="px-4 pb-14 lg:px-10">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="m-0 text-[22px] font-extrabold text-[#1B1B18]">Programas para muebles y CNC</h2>
+          <h2 className="m-0 text-[22px] font-extrabold text-[#1B1B18]"><TS>Programas para muebles y CNC</TS></h2>
           <ul className="m-0 mt-4 grid gap-2.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {PROGRAMAS.map((x) => (
               <li key={x.slug} className="list-none">
@@ -320,4 +322,9 @@ export default function HerramientasCnc() {
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

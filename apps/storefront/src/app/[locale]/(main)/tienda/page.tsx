@@ -1,6 +1,8 @@
 // /mx/tienda — "¿Qué necesitas hoy?": la entrada a todo lo que se compra,
 // se contrata o se cotiza en HETNA. Conteos y precios salen de la base en el
 // momento (lib/hetna/tienda.ts); nada escrito a mano.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import "@/components/hetna/tienda/fuentes-tienda.css"
@@ -14,7 +16,7 @@ import { migas } from "@/lib/hetna/schema"
 
 export const revalidate = 60
 
-export async function generateMetadata(): Promise<Metadata> {
+async function generateMetadataEs(): Promise<Metadata> {
   return {
     title: "Tienda CNC: diseños DXF, servicios CAM y fabricación a medida",
     description:
@@ -37,27 +39,27 @@ export default async function TiendaPage({ params }: { params: Promise<{ locale:
           <ol className="flex items-center gap-2">
             <li>
               <LocalizedClientLink href="/" className="hover:text-[#1E2329] hover:underline">
-                Inicio
+                <TS>Inicio</TS>
               </LocalizedClientLink>
             </li>
             <li aria-hidden="true">/</li>
             <li aria-current="page" className="font-semibold text-[#1E2329]">
-              Tienda
+              <TS>Tienda</TS>
             </li>
           </ol>
         </nav>
 
         <header className="mt-4">
-          <h1 className="fuente-condensada text-[44px] font-bold uppercase leading-[0.9] sm:text-[64px]">¿Qué necesitas hoy?</h1>
+          <h1 className="fuente-condensada text-[44px] font-bold uppercase leading-[0.9] sm:text-[64px]"><TS>¿Qué necesitas hoy?</TS></h1>
           <ul className="mt-4 grid gap-2 text-[15px] text-[#3A414B] sm:grid-cols-3 sm:gap-4">
             <li className="border-l-4 border-[#1E2329] pl-3">
-              <b className="text-[#1E2329]">Comprar un diseño listo.</b> Pagas y descargas el archivo al momento.
+              <b className="text-[#1E2329]"><TS>Comprar un diseño listo.</TS></b> <TS>Pagas y descargas el archivo al momento.</TS>
             </li>
             <li className="border-l-4 border-[#1E2329] pl-3">
-              <b className="text-[#1E2329]">Pedir un servicio.</b> Un especialista programa o revisa tu trabajo CAM.
+              <b className="text-[#1E2329]"><TS>Pedir un servicio.</TS></b> <TS>Un especialista programa o revisa tu trabajo CAM.</TS>
             </li>
             <li className="border-l-4 border-[#E85D04] pl-3">
-              <b className="text-[#1E2329]">Fabricar a medida.</b> Cotizas tu pieza y los talleres te mandan su precio.
+              <b className="text-[#1E2329]"><TS>Fabricar a medida.</TS></b> <TS>Cotizas tu pieza y los talleres te mandan su precio.</TS>
             </li>
           </ul>
         </header>
@@ -66,4 +68,9 @@ export default async function TiendaPage({ params }: { params: Promise<{ locale:
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

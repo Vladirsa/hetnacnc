@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 
@@ -35,7 +36,7 @@ export default async function RootLayout({
   if (!APP_ID || !user || !user.id || !user.email)
     return (
       <>
-        <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]">Saltar al contenido</a>
+        <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]"><TS>Saltar al contenido</TS></a>
         <HetnaHeader locale={locale} />
         <span id="contenido" tabIndex={-1} />
         {children}
@@ -52,7 +53,7 @@ export default async function RootLayout({
       userName={userName}
       userEmail={user.email}
     >
-      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]">Saltar al contenido</a>
+      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-[#142033] focus:text-white focus:px-4 focus:py-2 focus:rounded-[8px]"><TS>Saltar al contenido</TS></a>
         <HetnaHeader locale={locale} />
         <span id="contenido" tabIndex={-1} />
       {children}

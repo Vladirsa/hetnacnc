@@ -3,6 +3,7 @@
 // Formulario para distribuidores: la solicitud queda dentro de HETNA (panel →
 // Referidos y distribuidores) y el código se le manda por correo. No sale a
 // WhatsApp ni a ningún canal de fuera.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 const campo = "w-full rounded-xl border border-[#E7E4DC] bg-white px-4 py-3 text-[15px] text-[#142033] outline-none focus:border-[#C2560A]"
@@ -17,8 +18,8 @@ export function FormDistribuidor() {
     return (
       <div className="rounded-2xl border border-[#BFE3CC] bg-[#E6F4EA] p-6 text-center">
         <p className="text-3xl">✅</p>
-        <p className="mt-2 text-lg font-bold text-[#0F7A4A]">¡Recibimos tu solicitud!</p>
-        <p className="mt-1 text-sm text-[#40403A]">Te mandamos tu código y tu página propia a <b>{f.correo}</b> en cuanto la revisemos.</p>
+        <p className="mt-2 text-lg font-bold text-[#0F7A4A]"><T>¡Recibimos tu solicitud!</T></p>
+        <p className="mt-1 text-sm text-[#40403A]"><T>Te mandamos tu código y tu página propia a</T> <b>{f.correo}</b> <T>en cuanto la revisemos.</T></p>
       </div>
     )
   }
@@ -61,7 +62,7 @@ export function FormDistribuidor() {
       <button disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110 disabled:opacity-60">
         {estado === "enviando" ? "Enviando…" : "Quiero mi código de distribuidor"}
       </button>
-      <p className="text-center text-[12px] text-[#7A776E]">Usamos tus datos sólo para darte de alta como distribuidor HETNA.</p>
+      <p className="text-center text-[12px] text-[#7A776E]"><T>Usamos tus datos sólo para darte de alta como distribuidor HETNA.</T></p>
     </form>
   )
 }

@@ -4,6 +4,7 @@
 // sobrepeso (alto, largo y ancho con cinta métrica y el paquete en la
 // báscula, siempre con la guía visible), más la del contenido y extras. Se
 // suben al bucket privado y quedan guardadas por si pasa algún incidente.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { type EvidenciaResumen, type TipoEvidencia, guardarEvidencia, verEvidencia } from "@/lib/envios/cotizar"
@@ -57,12 +58,12 @@ export function EvidenciaEnvio({ folio, inicial }: { folio: string; inicial: Evi
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="m-0 text-sm font-bold text-[#142033]">
-          Evidencia del paquete{" "}
-          <span className={obligatorias === 4 ? "text-[#1E7B3A]" : "text-[#B3261E]"}>({obligatorias} de 4 obligatorias)</span>
+          <T>Evidencia del paquete</T>{" "}
+          <span className={obligatorias === 4 ? "text-[#1E7B3A]" : "text-[#B3261E]"}>({obligatorias} <T>de 4 obligatorias)</T></span>
         </p>
         {ev.length > 0 && (
           <button type="button" onClick={ver} className="text-sm font-semibold text-[#C2560A] hover:underline">
-            Ver mis fotos
+            <T>Ver mis fotos</T>
           </button>
         )}
       </div>
@@ -79,22 +80,22 @@ export function EvidenciaEnvio({ folio, inicial }: { folio: string; inicial: Evi
             >
               <span className="text-sm font-bold text-[#142033]">
                 {hecho ? "✓ " : ""}
-                {titulo}
+                <T>{titulo}</T>
               </span>
-              <span className="text-[#6B675C]">{ayuda}</span>
+              <span className="text-[#6B675C]"><T>{ayuda}</T></span>
               {subiendo?.tipo === tipo ? (
-                <span className="font-semibold text-[#C2560A]">Subiendo… {subiendo.pct}%</span>
+                <span className="font-semibold text-[#C2560A]"><T>Subiendo…</T> {subiendo.pct}%</span>
               ) : hecho ? (
                 <span className="text-[#1E7B3A]">
-                  {fecha(hecho.subido)} · cambiar
+                  {fecha(hecho.subido)} <T>· cambiar</T>
                   {liga && (
                     <a href={liga} target="_blank" rel="noopener noreferrer" className="ml-1 underline" onClick={(e) => e.stopPropagation()}>
-                      abrir
+                      <T>abrir</T>
                     </a>
                   )}
                 </span>
               ) : (
-                <span className="font-semibold text-[#C2560A]">+ Subir foto</span>
+                <span className="font-semibold text-[#C2560A]"><T>+ Subir foto</T></span>
               )}
               <input
                 type="file"
@@ -109,7 +110,7 @@ export function EvidenciaEnvio({ folio, inicial }: { folio: string; inicial: Evi
         })}
       </div>
       <label className="self-start cursor-pointer text-sm font-semibold text-[#C2560A] hover:underline">
-        + Agregar otra foto {extras.length > 0 ? `(${extras.length})` : ""}
+        <T>+ Agregar otra foto</T> {extras.length > 0 ? `(${extras.length})` : ""}
         <input type="file" accept="image/*" className="sr-only" disabled={Boolean(subiendo)} onChange={(e) => subir("extra", e.target.files?.[0])} />
       </label>
       {error && <p className="m-0 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}

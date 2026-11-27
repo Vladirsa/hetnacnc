@@ -2,6 +2,7 @@
 
 // Licitaciones 3.0 (Fase 1): en la liga privada del cliente, quién pidió ver
 // sus planos (aprobar o rechazar) e invitar talleres a su licitación.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -42,20 +43,20 @@ export default function AccesosSolicitud({ token, s }: { token: string; s: Vista
 
   return (
     <section id="accesos" className="scroll-mt-24 rounded-2xl border border-[#E7E4DC] bg-white p-5">
-      <h2 className="text-lg font-extrabold text-[#142033]">🔒 Privacidad de tu solicitud</h2>
+      <h2 className="text-lg font-extrabold text-[#142033]"><T>🔒 Privacidad de tu solicitud</T></h2>
       <p className="mt-1 text-sm text-[#40403A]">{MODALIDAD[s.modalidad || "publica"]}.{s.difundir_redes ? " Autorizaste difundir un resumen sin datos sensibles en redes." : ""}</p>
 
       {(s as { privacidad?: { nda?: string } }).privacidad?.nda === "requerido" && (
         <div className="mt-4 rounded-xl bg-[#FFF9F4] p-3">
-          <h3 className="text-sm font-bold text-[#142033]">🔏 Acuerdo de confidencialidad</h3>
+          <h3 className="text-sm font-bold text-[#142033]"><T>🔏 Acuerdo de confidencialidad</T></h3>
           {(s.ndas || []).length === 0 ? (
-            <p className="mt-1 text-sm text-[#40403A]">Ningún taller lo ha aceptado todavía. Sin aceptarlo, no ven tu descripción, planos ni fotos, ni pueden cotizar.</p>
+            <p className="mt-1 text-sm text-[#40403A]"><T>Ningún taller lo ha aceptado todavía. Sin aceptarlo, no ven tu descripción, planos ni fotos, ni pueden cotizar.</T></p>
           ) : (
             <ul className="mt-1 grid gap-1 text-sm text-[#40403A]">
               {(s.ndas || []).map((n) => (
                 <li key={n.taller + n.aceptado_en}>
-                  <b>{n.taller}</b> lo aceptó el {new Date(n.aceptado_en).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}{" "}
-                  <span className="text-[#6B675C]">(versión {n.version})</span>
+                  <b>{n.taller}</b> <T>lo aceptó el</T> {new Date(n.aceptado_en).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" })}{" "}
+                  <span className="text-[#6B675C]"><T>(versión</T> {n.version})</span>
                 </li>
               ))}
             </ul>
@@ -65,21 +66,21 @@ export default function AccesosSolicitud({ token, s }: { token: string; s: Vista
 
       {accesos.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-sm font-bold text-[#142033]">Talleres que piden ver tus planos</h3>
+          <h3 className="text-sm font-bold text-[#142033]"><T>Talleres que piden ver tus planos</T></h3>
           <ul className="mt-2 grid gap-2">
             {accesos.map((a) => (
               <li key={a.seller_id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E7E4DC] p-3 text-sm">
                 <span>
                   <b>{a.taller}</b>
-                  {a.mensaje && <span className="block text-[13px] text-[#6B675C]">“{a.mensaje}”</span>}
+                  {a.mensaje && <span className="block text-[13px] text-[#6B675C]">“<T>{a.mensaje}</T>”</span>}
                 </span>
                 {a.estado === "pendiente" ? (
                   <span className="flex gap-2">
                     <button type="button" disabled={pendiente} onClick={() => decidir(a.seller_id, "aprobar")} className="rounded-lg bg-[#1E7A52] px-3 py-1.5 font-semibold text-white disabled:opacity-60">
-                      Aprobar
+                      <T>Aprobar</T>
                     </button>
                     <button type="button" disabled={pendiente} onClick={() => decidir(a.seller_id, "rechazar")} className="rounded-lg border border-[#E7E4DC] px-3 py-1.5 font-semibold text-[#40403A] disabled:opacity-60">
-                      Rechazar
+                      <T>Rechazar</T>
                     </button>
                   </span>
                 ) : (
@@ -95,14 +96,14 @@ export default function AccesosSolicitud({ token, s }: { token: string; s: Vista
 
       {invitados.length > 0 && (
         <p className="mt-4 text-sm text-[#40403A]">
-          <b>Invitados:</b> {invitados.map((i) => i.taller).join(", ")}
+          <b><T>Invitados:</T></b> {invitados.map((i) => i.taller).join(", ")}
         </p>
       )}
 
       {abierta && (
         <div className="mt-4">
           <label htmlFor="invitar" className="block text-sm font-bold text-[#142033]">
-            Invitar talleres
+            <T>Invitar talleres</T>
           </label>
           <div className="mt-1.5 flex flex-wrap gap-2">
             <input
@@ -113,13 +114,13 @@ export default function AccesosSolicitud({ token, s }: { token: string; s: Vista
               className="min-w-0 flex-1 rounded-xl border border-[#E7E4DC] px-3 py-2 text-sm outline-none focus:border-[#C2560A]"
             />
             <button type="button" disabled={pendiente || !talleres.trim()} onClick={invitar} className="rounded-xl bg-[#C2560A] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
-              Invitar
+              <T>Invitar</T>
             </button>
           </div>
-          <span className="mt-1 block text-xs text-[#6B675C]">Es el final de la liga de su tienda: hetnacnc.com/mx/talleres/<b>nombre</b>.</span>
+          <span className="mt-1 block text-xs text-[#6B675C]"><T>Es el final de la liga de su tienda: hetnacnc.com/mx/talleres/</T><b><T>nombre</T></b>.</span>
         </div>
       )}
-      {nota && <p className="mt-2 text-sm text-[#40403A]">{nota}</p>}
+      {nota && <p className="mt-2 text-sm text-[#40403A]"><T>{nota}</T></p>}
     </section>
   )
 }

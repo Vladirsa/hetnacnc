@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { FC, useState } from 'react';
 
 import { zodResolver } from '@/lib/helpers/zod-resolver';
@@ -190,7 +191,7 @@ const Form: FC<Props> = ({ regions, handleClose }) => {
           className="w-full"
           data-testid="address-form-submit-button"
         >
-          Guardar dirección
+          <T>Guardar dirección</T>
         </Button>
       </div>
     </form>

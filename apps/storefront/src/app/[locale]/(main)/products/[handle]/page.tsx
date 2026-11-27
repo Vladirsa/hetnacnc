@@ -1,9 +1,10 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { ProductDetailsPage } from "@/components/sections/ProductDetailsPage/ProductDetailsPage"
 import { listProducts } from "@/lib/data/products"
 import { generateProductMetadata } from "@/lib/helpers/seo"
 import type { Metadata } from "next"
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ handle: string; locale: string }>
@@ -30,4 +31,9 @@ export default async function ProductPage({
       <ProductDetailsPage handle={handle} locale={locale} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

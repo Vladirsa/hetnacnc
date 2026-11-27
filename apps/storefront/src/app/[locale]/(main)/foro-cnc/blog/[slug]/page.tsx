@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { enlacesPorTema } from "@/lib/hetna/enlaces-tema"
 import { IMAGEN_OG } from "@/lib/helpers/seo"
@@ -19,7 +21,7 @@ export const revalidate = 300
 
 type Props = { params: Promise<{ slug: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const r = await articuloBlog(slug)
   if (!r) return { title: { absolute: "Artículo no encontrado | Foro CNC México" }, robots: { index: false } }
@@ -110,16 +112,16 @@ export default async function ArticuloBlog({ params }: Props) {
 
           <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <span>
-              <span className="block font-bold text-[#1B1B18]">¿Te quedó una duda?</span>
+              <span className="block font-bold text-[#1B1B18]"><TS>¿Te quedó una duda?</TS></span>
               <span className="text-[14px] text-[#55544D]">
-                Pregúntala en el foro{seccion ? ` de ${seccion.nombre}` : ""}: talleres y makers de México te ayudan.
+                <TS>Pregúntala en el foro</TS>{seccion ? ` de ${seccion.nombre}` : ""}<TS>: talleres y makers de México te ayudan.</TS>
               </span>
             </span>
             <LocalizedClientLink
               href={seccion ? `/foro-cnc/nuevo?seccion=${seccion.slug}` : "/foro-cnc/nuevo"}
               className="shrink-0 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
             >
-              Hacer una pregunta
+              <TS>Hacer una pregunta</TS>
             </LocalizedClientLink>
           </section>
         </div>
@@ -127,23 +129,23 @@ export default async function ArticuloBlog({ params }: Props) {
         <aside className={`flex flex-col gap-4 ${LATERAL_FIJO}`}>
           {talleres && (
             <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
-              <strong className="text-[14.5px]">Talleres de {talleres.proceso}</strong>
-              <span className="text-[13px] text-[#C9D2E0]">Ve quién hace esto cerca de ti y pídele cotización.</span>
+              <strong className="text-[14.5px]"><TS>Talleres de</TS> {talleres.proceso}</strong>
+              <span className="text-[13px] text-[#C9D2E0]"><TS>Ve quién hace esto cerca de ti y pídele cotización.</TS></span>
             </LocalizedClientLink>
           )}
           {paraTi.length > 0 && (
             <div className="bg-[#FDEEE1] rounded-[14px] p-4 flex flex-col gap-2">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#B34D07]">Herramientas y productos</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[#B34D07]"><TS>Herramientas y productos</TS></span>
               {paraTi.map((e) => (
                 <LocalizedClientLink key={e.href} href={e.href} className="text-[14px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                  {e.texto} →
+                  <TS>{e.texto}</TS> →
                 </LocalizedClientLink>
               ))}
             </div>
           )}
           {relacionados.length > 0 && (
             <div className="flex flex-col gap-2.5">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">Sigue leyendo</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Sigue leyendo</TS></span>
               {relacionados.map((x) => (
                 <TarjetaArticulo key={x.id} a={x} compacta />
               ))}
@@ -151,12 +153,17 @@ export default async function ArticuloBlog({ params }: Props) {
           )}
           {seccion && (
             <LocalizedClientLink href={`/foro-cnc/${seccion.slug}`} className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 hover:border-[#C2560A]">
-              <strong className="block text-[14px] text-[#1B1B18]">Preguntas de {seccion.nombre}</strong>
-              <span className="text-[13px] text-[#6B6A63]">Lo que la comunidad está resolviendo ahora.</span>
+              <strong className="block text-[14px] text-[#1B1B18]"><TS>Preguntas de</TS> {seccion.nombre}</strong>
+              <span className="text-[13px] text-[#6B6A63]"><TS>Lo que la comunidad está resolviendo ahora.</TS></span>
             </LocalizedClientLink>
           )}
         </aside>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

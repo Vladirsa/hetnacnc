@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
@@ -231,19 +232,19 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
   if (estado.paso === "resultado") {
     return (
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-4">
-        <p className="m-0 text-[13px] font-semibold uppercase tracking-wide text-[#6B6A63]">Tu estimado</p>
+        <p className="m-0 text-[13px] font-semibold uppercase tracking-wide text-[#6B6A63]"><T>Tu estimado</T></p>
         <p className="m-0 text-[32px] font-bold text-[#1B1B18]">
           {formatoMXN(estado.min)} – {formatoMXN(estado.max)}
         </p>
         <p className="m-0 text-[13px] text-[#6B6A63]">
-          Precio aproximado, más IVA. Te mandamos este estimado a tu correo también.
+          <T>Precio aproximado, más IVA. Te mandamos este estimado a tu correo también.</T>
         </p>
         {estado.volumenAlto && (
           <div className="bg-[#FDEEE1] border border-[#F2A65A] rounded-[10px] p-4 flex flex-col gap-1.5">
-            <p className="m-0 text-[14px] font-bold text-[#B34D07]">¿Pedido recurrente de alto volumen?</p>
+            <p className="m-0 text-[14px] font-bold text-[#B34D07]"><T>¿Pedido recurrente de alto volumen?</T></p>
             <p className="m-0 text-[13.5px] text-[#1B1B18]">
-              Con ese volumen, puede convenirte más tener tu propia máquina en vez de maquilar cada mes.
-              Pregúntanos por nuestras máquinas CNC disponibles.
+              <T>Con ese volumen, puede convenirte más tener tu propia máquina en vez de maquilar cada mes.
+              Pregúntanos por nuestras máquinas CNC disponibles.</T>
             </p>
           </div>
         )}
@@ -253,7 +254,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           onClick={pedirFormal}
           className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
         >
-          Pedir precio formal a talleres
+          <T>Pedir precio formal a talleres</T>
         </button>
         <a
           href={estado.whatsappUrl}
@@ -261,7 +262,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           rel="noreferrer"
           className="inline-flex items-center justify-center border border-[#E7E4DC] text-[#1B1B18] font-semibold px-5 py-3 rounded-[10px] text-[15px] hover:border-[#C2560A]"
         >
-          Preguntar por WhatsApp
+          <T>Preguntar por WhatsApp</T>
         </a>
       </div>
     )
@@ -274,11 +275,11 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       action={enviar}
       className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-4"
     >
-      <p className="m-0 text-[15px] font-bold text-[#1B1B18]">Calcula tu precio de {tituloServicio}</p>
+      <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><T>Calcula tu precio de</T> {tituloServicio}</p>
 
       <div className="flex flex-col gap-2 rounded-[10px] border border-dashed border-[#C9C4B8] bg-[#FAF9F6] p-3">
         <label className="flex cursor-pointer flex-col gap-1 text-[13.5px] font-medium text-[#1B1B18]">
-          ¿Tienes el archivo de tu pieza? Súbelo para verla y tomar sus medidas (opcional)
+          <T>¿Tienes el archivo de tu pieza? Súbelo para verla y tomar sus medidas (opcional)</T>
           <input
             type="file"
             accept=".dxf,.svg,.stl,.obj,.step,.stp"
@@ -286,12 +287,12 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
             className="text-[13px] font-normal text-[#4A4943] file:mr-3 file:rounded-[8px] file:border-0 file:bg-[#142033] file:px-3 file:py-2 file:text-[13px] file:font-semibold file:text-white"
           />
         </label>
-        <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL, OBJ o STEP (lámina con dobleces). Se lee en tu navegador: no se sube ni se guarda.</span>
+        <span className="text-[12px] text-[#6B6A63]"><T>DXF, SVG, STL, OBJ o STEP (lámina con dobleces). Se lee en tu navegador: no se sube ni se guarda.</T></span>
         {pieza && (
           <>
             <VisorCad geo={pieza.geo} alto={260} />
             <span className="text-[12px] text-[#6B6A63]">
-              {pieza.nombre}: llené las medidas con las de tu pieza. Revísalas y cámbialas si hace falta.
+              {pieza.nombre}<T>: llené las medidas con las de tu pieza. Revísalas y cámbialas si hace falta.</T>
             </span>
           </>
         )}
@@ -303,7 +304,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       </div>
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-        Material
+        <T>Material</T>
         <select name="material" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]">
           {materiales.map((m) => (
             <option key={m} value={m}>{m}</option>
@@ -313,25 +314,25 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
 
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          Ancho (cm)
+          <T>Ancho (cm)</T>
           <input name="ancho" type="number" min={1} step="0.1" required value={medidas.ancho} onChange={(e) => setMedidas({ ...medidas, ancho: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          Alto (cm)
+          <T>Alto (cm)</T>
           <input name="largo" type="number" min={1} step="0.1" required value={medidas.largo} onChange={(e) => setMedidas({ ...medidas, largo: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       </div>
 
       {pideAlto && (
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          Profundidad (cm)
+          <T>Profundidad (cm)</T>
           <input name="alto" type="number" min={0.1} step="0.1" required value={medidas.alto} onChange={(e) => setMedidas({ ...medidas, alto: e.target.value })} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
         </label>
       )}
 
       {opcion && (
         <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-          {opcion.etiqueta}
+          <T>{opcion.etiqueta}</T>
           <select name={opcion.campo} defaultValue={opcion.inicial} className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]">
             {opcion.valores.map((v) => (
               <option key={v} value={v}>{v}</option>
@@ -342,43 +343,43 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
 
       {acabados.length > 0 && (
         <fieldset className="flex flex-col gap-1.5">
-          <legend className="text-[13.5px] font-medium text-[#1B1B18]">Acabados (opcional)</legend>
+          <legend className="text-[13.5px] font-medium text-[#1B1B18]"><T>Acabados (opcional)</T></legend>
           {acabados.map((a) => (
             <label key={a.clave} className="flex items-center gap-2 text-[13.5px] text-[#40403A]">
               <input type="checkbox" name="acabados" value={a.clave} className="accent-[#C2560A]" />
               <span>
-                {a.nombre} <span className="text-[#6B6A63]">· +${a.tarifa.toLocaleString("es-MX")} por pieza</span>
+                {a.nombre} <span className="text-[#6B6A63]">· +${a.tarifa.toLocaleString("es-MX")} <T>por pieza</T></span>
               </span>
             </label>
           ))}
-          <span className="text-[11.5px] text-[#7A776E]">Precio de referencia de los talleres que lo hacen; el final va en su propuesta.</span>
+          <span className="text-[11.5px] text-[#7A776E]"><T>Precio de referencia de los talleres que lo hacen; el final va en su propuesta.</T></span>
         </fieldset>
       )}
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-        Cantidad de piezas
+        <T>Cantidad de piezas</T>
         <input name="cantidad" type="number" min={1} step="1" defaultValue={1} required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
       <PanelPrecioVivo p={vivo} calculando={calculandoVivo} hojas={hojas} />
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-        ¿Lo necesitas seguido? Piezas al mes aprox. (opcional)
+        <T>¿Lo necesitas seguido? Piezas al mes aprox. (opcional)</T>
         <input name="piezas_mes" type="number" min={0} step="1" className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-        Tu correo
+        <T>Tu correo</T>
         <input name="email" type="email" required className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
-        Nombre (opcional)
+        <T>Nombre (opcional)</T>
         <input name="nombre" type="text" className="border border-[#E7E4DC] rounded-[8px] px-3 py-2.5 text-[14px]" />
       </label>
 
       {estado.paso === "error" && (
-        <p className="m-0 text-[13.5px] text-[#B34D07]">{estado.mensaje}</p>
+        <p className="m-0 text-[13.5px] text-[#B34D07]"><T>{estado.mensaje}</T></p>
       )}
 
       <button
@@ -399,17 +400,17 @@ function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; cal
   return (
     <div className={`rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-4 flex flex-col gap-3 transition-opacity ${calculando ? "opacity-60" : ""}`} aria-live="polite">
       <div>
-        <p className="m-0 text-[12px] font-semibold uppercase tracking-wide text-[#8A3D06]">Precio estimado al momento</p>
+        <p className="m-0 text-[12px] font-semibold uppercase tracking-wide text-[#8A3D06]"><T>Precio estimado al momento</T></p>
         <p className="m-0 text-[26px] font-extrabold text-[#1B1B18] leading-tight">
-          {pesos(p.minimo)} – {pesos(p.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]">+ IVA</span>
+          {pesos(p.minimo)} – {pesos(p.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]"><T>+ IVA</T></span>
         </p>
         <p className="m-0 text-[12.5px] text-[#6B6A63]">
-          Precio típico {pesos(p.recomendado)} + IVA ({pesos(p.iva)}) = <b className="text-[#1B1B18]">{pesos(p.total)}</b>
+          <T>Precio típico</T> {pesos(p.recomendado)} <T>+ IVA (</T>{pesos(p.iva)}) = <b className="text-[#1B1B18]">{pesos(p.total)}</b>
         </p>
       </div>
       {p.calculo.length > 0 && (
         <div>
-          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]">Cómo se calcula</p>
+          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]"><T>Cómo se calcula</T></p>
           <ul className="m-0 mt-1 pl-4 text-[12.5px] text-[#40403A] list-disc flex flex-col gap-0.5">
             {p.calculo.map((l) => (
               <li key={l}>{l}</li>
@@ -419,12 +420,12 @@ function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; cal
       )}
       {hojas && (
         <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-          <b className="text-[#1B1B18]">Material:</b> {hojas}.
+          <b className="text-[#1B1B18]"><T>Material:</T></b> {hojas}.
         </p>
       )}
       {p.por_volumen.length > 1 && (
         <div>
-          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]">Precio por pieza según la cantidad</p>
+          <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]"><T>Precio por pieza según la cantidad</T></p>
           <table className="mt-1 w-full text-[12.5px] text-[#40403A]">
             <tbody>
               {p.por_volumen.map((v) => (
@@ -439,7 +440,7 @@ function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; cal
         </div>
       )}
       <p className="m-0 text-[11.5px] text-[#7A776E]">
-        Estimado con tarifas de referencia de la red, sin envío. El precio final lo dan los talleres en sus propuestas (material, acabado y envío incluidos o no, según cada uno).
+        <T>Estimado con tarifas de referencia de la red, sin envío. El precio final lo dan los talleres en sus propuestas (material, acabado y envío incluidos o no, según cada uno).</T>
       </p>
     </div>
   )

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -99,15 +100,15 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
     <div className="rounded-2xl border-2 border-[#FFD5B8] bg-white p-4">
       {enFicha ? (
         <>
-          <h2 className="m-0 text-[17px] font-bold text-[#142033]">Talleres que te lo hacen</h2>
-          <p className="mt-0.5 text-[13px] text-[#6B675C]">Talleres de la red con {nombreProcesos(procesos)}. Elige uno y le llega tu solicitud con este producto.</p>
+          <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Talleres que te lo hacen</T></h2>
+          <p className="mt-0.5 text-[13px] text-[#6B675C]"><T>Talleres de la red con</T> {nombreProcesos(procesos)}<T>. Elige uno y le llega tu solicitud con este producto.</T></p>
           <div className="mt-2">
             <TuUbicacion ubicacion={u} ponerCp={ponerCp} aviso={aviso} />
           </div>
         </>
       ) : (
         <>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">Talleres cerca de ti</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]"><T>Talleres cerca de ti</T></p>
           <p className="mt-1 text-[13px] text-[#6B675C]">
             {u ? `Para ${textoUbicacion(u)}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
             {u?.fuente === "ip" && <CreditoIp />}
@@ -117,11 +118,11 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
       {hayTodo && (
         <label className="mt-2 flex cursor-pointer items-center gap-2 text-[13px] text-[#142033]">
           <input type="checkbox" checked={soloTodo} onChange={(e) => setSoloTodo(e.target.checked)} className="accent-[#C2560A]" />
-          Solo <strong>todo incluido</strong>: diseño + corte + entrega
+          <T>Solo</T> <strong><T>todo incluido</T></strong><T>: diseño + corte + entrega</T>
         </label>
       )}
       {!lista.length ? (
-        <p className="mt-3 rounded-xl bg-[#F3F1EA] px-3 py-2 text-[13px] text-[#6B675C]">Ningún taller con todo incluido hace este proceso todavía. Quita el filtro para ver los demás.</p>
+        <p className="mt-3 rounded-xl bg-[#F3F1EA] px-3 py-2 text-[13px] text-[#6B675C]"><T>Ningún taller con todo incluido hace este proceso todavía. Quita el filtro para ver los demás.</T></p>
       ) : (
         <ul className="mt-3 grid gap-2.5">
           {lista.map(({ t, n, precio }) => {
@@ -149,12 +150,12 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {e && <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${e[1]}`}>{e[0]}</span>}
                       {todoIncluido(t.perfil.ofrece) && (
-                        <span className="rounded-full bg-[#FFC53D] px-2 py-0.5 text-[11px] font-bold text-[#142033]">Todo incluido</span>
+                        <span className="rounded-full bg-[#FFC53D] px-2 py-0.5 text-[11px] font-bold text-[#142033]"><T>Todo incluido</T></span>
                       )}
                       {t.perfil.ofrece.map((o) => ETIQUETA_OFRECE[o] && (
                         <span key={o} className="rounded-full bg-[#EEE7FB] px-2 py-0.5 text-[11px] font-bold text-[#6D28D9]">{ETIQUETA_OFRECE[o]}</span>
                       ))}
-                      {t.verificado && <span className="rounded-full bg-[#D9F6E8] px-2 py-0.5 text-[11px] font-bold text-[#0F7A4A]">Verificado</span>}
+                      {t.verificado && <span className="rounded-full bg-[#D9F6E8] px-2 py-0.5 text-[11px] font-bold text-[#0F7A4A]"><T>Verificado</T></span>}
                     </div>
                   </div>
                 </div>
@@ -162,7 +163,7 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
                   href={cotizarCon(t.handle)}
                   className="mt-2.5 block rounded-[10px] border-2 border-[#142033] px-3 py-2 text-center text-[13px] font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
                 >
-                  Cotizar con este taller
+                  <T>Cotizar con este taller</T>
                 </LocalizedClientLink>
               </li>
             )
@@ -174,16 +175,16 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
           {cerca
             ? "No hay uno en tu municipio, pero los de tu estado te lo mandan o lo recoges cerca."
             : `Todavía no hay talleres de ${nombreProcesos(procesos)} en ${u.estado}. Los de arriba te lo mandan por paquetería.`}{" "}
-          También puedes{" "}
+          <T>También puedes</T>{" "}
           <LocalizedClientLink href={`/cotizar${query ? `?${query}` : ""}`} className="font-bold text-[#B34D07] underline">
-            pedir cotización a toda la red
+            <T>pedir cotización a toda la red</T>
           </LocalizedClientLink>{" "}
-          y te contesta quien pueda hacerlo.
+          <T>y te contesta quien pueda hacerlo.</T>
         </div>
       )}
       {hayEstimados && (
         <p className="mt-2 text-[11.5px] text-[#9A978C]">
-          Los estimados salen de las tarifas que publicó cada taller y de las medidas de tu archivo ({pieza?.cantidad} pza{pieza && pieza.cantidad > 1 ? "s" : ""}). El precio formal te llega en su propuesta.
+          <T>Los estimados salen de las tarifas que publicó cada taller y de las medidas de tu archivo (</T>{pieza?.cantidad} <T>pza</T>{pieza && pieza.cantidad > 1 ? "s" : ""}<T>). El precio formal te llega en su propuesta.</T>
         </p>
       )}
     </div>

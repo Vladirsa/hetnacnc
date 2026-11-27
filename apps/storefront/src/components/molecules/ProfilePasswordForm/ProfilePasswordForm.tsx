@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { LabeledInput } from "@/components/cells/LabeledInput/LabeledInput"
@@ -92,17 +93,17 @@ const Form = ({
         level="h1"
         className="uppercase heading-md text-primary text-center"
       >
-        Contraseña actualizada
+        <T>Contraseña actualizada</T>
       </Heading>
       <p className="text-center my-8">
-        Ya puedes iniciar sesión con tu nueva contraseña
+        <T>Ya puedes iniciar sesión con tu nueva contraseña</T>
       </p>
       <LocalizedClientLink href="/login">
         <Button
           className="uppercase py-3 px-6 !font-semibold w-full"
           size="large"
         >
-          Iniciar sesión
+          <T>Iniciar sesión</T>
         </Button>
       </LocalizedClientLink>
     </div>
@@ -115,10 +116,10 @@ const Form = ({
         level="h1"
         className="uppercase heading-md text-primary"
       >
-        Crear nueva contraseña
+        <T>Crear nueva contraseña</T>
       </Heading>
       <p className="text-secondary label-md">
-        Ya casi: escribe tu nueva contraseña dos veces.
+        <T>Ya casi: escribe tu nueva contraseña dos veces.</T>
       </p>
       <LabeledInput
         label="Contraseña"
@@ -136,7 +137,7 @@ const Form = ({
         error={(confirmPasswordError || errors.confirmPassword) as FieldError}
         {...register("confirmPassword")}
       />
-      <Button className="w-full my-4 uppercase">Crear nueva contraseña</Button>
+      <Button className="w-full my-4 uppercase"><T>Crear nueva contraseña</T></Button>
     </form>
   )
 }

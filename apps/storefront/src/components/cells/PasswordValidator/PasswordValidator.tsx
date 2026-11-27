@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from 'react';
 
 import { CheckCircle } from '@medusajs/icons';
@@ -66,7 +67,7 @@ export const PasswordValidator = ({
           newPasswordError['8chars'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> Al menos 8 caracteres
+        <CheckCircle /> <T>Al menos 8 caracteres</T>
       </p>
       <p
         className={cn(
@@ -74,7 +75,7 @@ export const PasswordValidator = ({
           newPasswordError['lower'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> Una minúscula
+        <CheckCircle /> <T>Una minúscula</T>
       </p>
       <p
         className={cn(
@@ -82,7 +83,7 @@ export const PasswordValidator = ({
           newPasswordError['upper'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> Una mayúscula
+        <CheckCircle /> <T>Una mayúscula</T>
       </p>
       <p
         className={cn(
@@ -90,7 +91,7 @@ export const PasswordValidator = ({
           newPasswordError['digit'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> Un número
+        <CheckCircle /> <T>Un número</T>
       </p>
       <p
         className={cn(
@@ -98,7 +99,7 @@ export const PasswordValidator = ({
           newPasswordError['symbol'] ? 'text-red-700' : 'text-green-700'
         )}
       >
-        <CheckCircle /> Un símbolo (por ejemplo _ . ! @ #)
+        <CheckCircle /> <T>Un símbolo (por ejemplo _ . ! @ #)</T>
       </p>
     </Card>
   );

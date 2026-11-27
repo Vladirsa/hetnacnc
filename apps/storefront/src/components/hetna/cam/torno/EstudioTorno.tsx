@@ -10,6 +10,7 @@
 // Etapa 2: vista 3D, estrías, espiral (salomónica) y "Mis diseños", que se
 // guardan en este navegador y se pueden bajar / subir como archivo .json.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
 
@@ -41,7 +42,7 @@ const Visor3DTorno = dynamic(() => import("./Visor3DTorno"), {
   ssr: false,
   loading: () => (
     <div className="flex h-[260px] items-center justify-center rounded-[10px] bg-[#F7F5EF] text-[13px] text-[#6B6A63] sm:h-[320px]">
-      Cargando la vista 3D…
+      <T>Cargando la vista 3D…</T>
     </div>
   ),
 })
@@ -185,7 +186,7 @@ function Numero({
 }) {
   return (
     <label className={etiqueta}>
-      {texto}
+      <T>{texto}</T>
       <input
         type="number"
         inputMode="decimal"
@@ -223,7 +224,7 @@ function Perfil({ segmentos, bloque }: { segmentos: Segmento[]; bloque: number }
   if (!datos) {
     return (
       <div className="flex h-[180px] items-center justify-center rounded-[10px] bg-[#F7F5EF] text-[13px] text-[#6B6A63]">
-        Agrega segmentos con medidas válidas para ver la pieza.
+        <T>Agrega segmentos con medidas válidas para ver la pieza.</T>
       </div>
     )
   }
@@ -254,7 +255,7 @@ function Perfil({ segmentos, bloque }: { segmentos: Segmento[]; bloque: number }
         <line x1={-margen / 2} x2={largo + margen / 2} y1={medio} y2={medio} stroke="#6B6A63" strokeDasharray={`${margen / 3} ${margen / 4}`} strokeWidth={Math.max(0.4, largo / 900)} />
       </svg>
       <figcaption className="mt-2 text-[12px] text-[#6B6A63]">
-        {largo.toFixed(0)} mm de largo · Ø máximo {(rMax * 2).toFixed(1)} mm · bloque de {bloque || 0} mm (línea punteada)
+        {largo.toFixed(0)} <T>mm de largo · Ø máximo</T> {(rMax * 2).toFixed(1)} <T>mm · bloque de</T> {bloque || 0} <T>mm (línea punteada)</T>
       </figcaption>
     </figure>
   )
@@ -584,7 +585,7 @@ export function EstudioTorno() {
       <div className="flex min-w-0 flex-col gap-5">
         <section className={caja}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[17px] font-bold text-[#1B1B18]">Tu pieza</h2>
+            <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Tu pieza</T></h2>
             <div className="flex flex-wrap gap-1.5">
               {EJEMPLOS.map((e, i) => (
                 <button
@@ -614,7 +615,7 @@ export function EstudioTorno() {
             {vista === "3d" ? (
               <>
                 <Visor3DTorno segmentos={segmentos} tallados={tallados} anchoFresa={toolDiameterMm} bloque={stockWidthMm} encuadre={encuadre} />
-                <p className="mt-2 text-[12px] text-[#6B6A63]">Arrastra para girar, pellizca o usa la rueda para acercar.</p>
+                <p className="mt-2 text-[12px] text-[#6B6A63]"><T>Arrastra para girar, pellizca o usa la rueda para acercar.</T></p>
               </>
             ) : (
               <Perfil segmentos={segmentos} bloque={stockWidthMm} />
@@ -623,9 +624,9 @@ export function EstudioTorno() {
         </section>
 
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Segmentos</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Segmentos</T></h2>
           <p className="mt-1 text-[13px] text-[#6B6A63]">
-            De un extremo al otro, en milímetros. El radio es la mitad del diámetro.
+            <T>De un extremo al otro, en milímetros. El radio es la mitad del diámetro.</T>
           </p>
           <div className="mt-3 flex flex-col gap-2.5">
             {segmentos.map((s, i) => (
@@ -634,7 +635,7 @@ export function EstudioTorno() {
                 className="grid grid-cols-2 items-end gap-2 rounded-[10px] border border-[#E7E4DC] p-3 sm:grid-cols-[1.4fr_repeat(4,1fr)_auto]"
               >
                 <label className={`${etiqueta} col-span-2 sm:col-span-1`}>
-                  {i + 1}. Forma
+                  {i + 1}<T>. Forma</T>
                   <select
                     className={campo}
                     value={s.tipo}
@@ -680,14 +681,14 @@ export function EstudioTorno() {
             onClick={agregarSegmento}
             className="mt-3 rounded-[10px] border border-dashed border-[#C2560A] px-4 py-2 text-[14px] font-semibold text-[#B34D07] hover:bg-[#FFF8EC]"
           >
-            + Agregar segmento
+            <T>+ Agregar segmento</T>
           </button>
         </section>
 
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Tallados</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Tallados</T></h2>
           <p className="mt-1 text-[13px] text-[#6B6A63]">
-            Se cortan al final, con la misma fresa. Para canales redondos usa fresa de punta de bola.
+            <T>Se cortan al final, con la misma fresa. Para canales redondos usa fresa de punta de bola.</T>
           </p>
 
           <div className="mt-3 rounded-[10px] border border-[#E7E4DC] p-3">
@@ -698,7 +699,7 @@ export function EstudioTorno() {
                 onChange={(e) => cambiarEstrias({ activo: e.target.checked })}
                 className="h-4 w-4 accent-[#C2560A]"
               />
-              Estrías (canales a lo largo)
+              <T>Estrías (canales a lo largo)</T>
             </label>
             {estrias.activo && (
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -718,7 +719,7 @@ export function EstudioTorno() {
                 onChange={(e) => cambiarEspiral({ activo: e.target.checked })}
                 className="h-4 w-4 accent-[#C2560A]"
               />
-              Espiral (salomónica)
+              <T>Espiral (salomónica)</T>
             </label>
             {espiral.activo && (
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -728,7 +729,7 @@ export function EstudioTorno() {
                 <Numero texto="Desde (mm)" valor={espiral.yDesde} min={0} onChange={(n) => cambiarEspiral({ yDesde: n })} />
                 <Numero texto="Hasta (mm)" valor={espiral.yHasta} min={0} onChange={(n) => cambiarEspiral({ yHasta: n })} />
                 <label className={etiqueta}>
-                  Sentido
+                  <T>Sentido</T>
                   <select
                     className={campo}
                     value={espiral.sentido}
@@ -754,7 +755,7 @@ export function EstudioTorno() {
 
         {(gcode !== null || error || avisos.length > 0) && (
           <section className={caja}>
-            <h2 className="text-[17px] font-bold text-[#1B1B18]">Resultado</h2>
+            <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Resultado</T></h2>
             {error && (
               <p className="mt-3 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[14px] text-[#9B1C1C]">{error}</p>
             )}
@@ -800,7 +801,7 @@ export function EstudioTorno() {
           aplicar={aplicarDiseno}
         />
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Mis diseños en este navegador</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Mis diseños en este navegador</T></h2>
           <div className="mt-3 flex gap-2">
             <input
               className="w-full rounded-[8px] border border-[#E7E4DC] bg-white px-2.5 py-2 text-[14px] text-[#1B1B18] focus:border-[#C2560A] focus:outline-none"
@@ -814,7 +815,7 @@ export function EstudioTorno() {
               onClick={guardarDiseno}
               className="shrink-0 rounded-[8px] bg-[#1B1B18] px-3 text-[13px] font-semibold text-white hover:bg-black"
             >
-              Guardar
+              <T>Guardar</T>
             </button>
           </div>
           {avisoDiseno && <p className="mt-2 text-[12px] text-[#16794F]">{avisoDiseno}</p>}
@@ -831,7 +832,7 @@ export function EstudioTorno() {
                     aria-label={`Borrar ${d.nombre}`}
                     className="text-[12px] text-[#9B1C1C]"
                   >
-                    Borrar
+                    <T>Borrar</T>
                   </button>
                 </li>
               ))}
@@ -839,10 +840,10 @@ export function EstudioTorno() {
           )}
           <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
             <button type="button" onClick={bajarDiseno} className="rounded-[8px] border border-[#E7E4DC] px-3 py-1.5 font-semibold text-[#4A4943] hover:border-[#C2560A]">
-              Bajar archivo
+              <T>Bajar archivo</T>
             </button>
             <label className="cursor-pointer rounded-[8px] border border-[#E7E4DC] px-3 py-1.5 font-semibold text-[#4A4943] hover:border-[#C2560A]">
-              Abrir archivo
+              <T>Abrir archivo</T>
               <input
                 type="file"
                 accept=".json,application/json"
@@ -855,15 +856,15 @@ export function EstudioTorno() {
             </label>
           </div>
           <p className="mt-2 text-[11.5px] leading-snug text-[#6B6A63]">
-            Se guardan en este navegador. Para usarlos en otra computadora, baja el archivo y ábrelo allá.
+            <T>Se guardan en este navegador. Para usarlos en otra computadora, baja el archivo y ábrelo allá.</T>
           </p>
         </section>
 
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Material y máquina</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Material y máquina</T></h2>
           <div className="mt-3 flex flex-col gap-3">
             <label className={etiqueta}>
-              Material
+              <T>Material</T>
               <select className={campo} value={material} onChange={(e) => setMaterial(e.target.value)}>
                 {MATERIALES.map((m) => (
                   <option key={m.valor} value={m.valor}>
@@ -879,7 +880,7 @@ export function EstudioTorno() {
             </div>
             <Numero texto="Retiro seguro en Z (mm)" valor={safeZClearanceMm} min={1} onChange={setSafeZClearanceMm} />
             <label className={etiqueta}>
-              Origen del recorrido
+              <T>Origen del recorrido</T>
               <select
                 className={campo}
                 value={origenPunto}
@@ -890,7 +891,7 @@ export function EstudioTorno() {
               </select>
             </label>
             <label className={etiqueta}>
-              Eje a lo largo de la pieza
+              <T>Eje a lo largo de la pieza</T>
               <select
                 className={campo}
                 value={ejeLargo}
@@ -904,7 +905,7 @@ export function EstudioTorno() {
               </select>
             </label>
             <label className={etiqueta}>
-              Avance
+              <T>Avance</T>
               <select
                 className={campo}
                 value={avance}
@@ -921,11 +922,11 @@ export function EstudioTorno() {
         </section>
 
         <section className={caja}>
-          <h2 className="text-[17px] font-bold text-[#1B1B18]">Fresa y RPM</h2>
+          <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Fresa y RPM</T></h2>
           <div className="mt-3 flex flex-col gap-3">
             {fresasBase.length > 0 && (
               <label className={etiqueta}>
-                Tomar de mi base de herramientas
+                <T>Tomar de mi base de herramientas</T>
                 <select
                   className={campo}
                   value=""
@@ -953,18 +954,18 @@ export function EstudioTorno() {
             )}
             <Numero texto="Diámetro de la fresa (mm)" valor={toolDiameterMm} min={1} onChange={setToolDiameterMm} />
             <label className={etiqueta}>
-              Punta de la fresa
+              <T>Punta de la fresa</T>
               <select className={campo} value={tipoFresa} onChange={(e) => setTipoFresa(e.target.value === "bola" ? "bola" : "plana")}>
                 <option value="plana">Plana (recta)</option>
                 <option value="bola">De bola (punta redonda)</option>
               </select>
             </label>
             <p className="text-[12px] leading-snug text-[#6B6A63]">
-              El programa separa la fresa de los escalones según su ancho y su punta, para no cortar de más.
+              <T>El programa separa la fresa de los escalones según su ancho y su punta, para no cortar de más.</T>
             </p>
             <Numero texto="Avance de referencia (mm/min)" valor={feed} min={0} onChange={setFeed} />
             <p className="text-[12px] leading-snug text-[#6B6A63]">
-              RPM de la <strong>pieza</strong> (el eje A), no de la fresa:
+              <T>RPM de la</T> <strong><T>pieza</T></strong> <T>(el eje A), no de la fresa:</T>
             </p>
             <div className="grid grid-cols-3 gap-2">
               <Numero texto="Escuadrado" valor={rpmCilindrado} min={1} onChange={setRpmCilindrado} />
@@ -984,9 +985,9 @@ export function EstudioTorno() {
         </button>
 
         <p className="rounded-[10px] border border-[#F0D9B5] bg-[#FFF8EC] px-3 py-2.5 text-[12px] leading-relaxed text-[#7A4A06]">
-          Ejes: A gira la pieza, {ejeLargo} recorre el largo y Z es el radio de corte, con Z0 en el centro
+          <T>Ejes: A gira la pieza,</T> {ejeLargo} <T>recorre el largo y Z es el radio de corte, con Z0 en el centro
           del eje rotativo. En Mach3 revisa que el eje A esté habilitado, sin límites de giro y con
-          &quot;Rot 360 rollover&quot; apagado. Prueba el programa primero en aire o con material de descarte.
+          &quot;Rot 360 rollover&quot; apagado. Prueba el programa primero en aire o con material de descarte.</T>
         </p>
       </aside>
     </div>

@@ -3,6 +3,7 @@
 // Letras 3D para impresora 3D (modo de la herramienta Letras 3D): de pie con
 // base, para colgar (barrenos ocultos + plantilla de montaje en PDF) o huecas
 // para LED. El motor está en lib/generador/letras3dImpresion.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -123,7 +124,7 @@ export function LetrasImpresion3D({ selector }: Props) {
     <div className="flex flex-col gap-4">
       {selector}
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Texto</Etiqueta>
+        <Etiqueta><T>Texto</T></Etiqueta>
         <input
           value={texto}
           onChange={(e) => setTexto(e.target.value.slice(0, MAX_TEXTO))}
@@ -131,7 +132,7 @@ export function LetrasImpresion3D({ selector }: Props) {
         />
       </label>
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Tipografía</Etiqueta>
+        <Etiqueta><T>Tipografía</T></Etiqueta>
         <select
           value={fuenteId}
           onChange={(e) => setFuenteId(e.target.value)}
@@ -162,7 +163,7 @@ export function LetrasImpresion3D({ selector }: Props) {
             </button>
           ))}
         </div>
-        <span className="text-[11.5px] text-[#8A97AB]">{estiloActual?.detalle}</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>{estiloActual?.detalle}</T></span>
       </Seccion>
 
       <div className="grid grid-cols-2 gap-2">
@@ -180,7 +181,7 @@ export function LetrasImpresion3D({ selector }: Props) {
       <PanelColores mc={mc} />
       {listo && (
         <span className="text-[12px] text-[#F2D29B]">
-          {r1(r!.ancho)} × {r1(r!.alto)} mm · {r!.piezas} {r!.piezas === 1 ? "pieza" : "piezas"} · unos {gramos} g de PLA
+          {r1(r!.ancho)} × {r1(r!.alto)} <T>mm ·</T> {r!.piezas} {r!.piezas === 1 ? "pieza" : "piezas"} <T>· unos</T> {gramos} <T>g de PLA</T>
         </span>
       )}
       {errorFuente && <Aviso tipo="error">{errorFuente}</Aviso>}
@@ -189,12 +190,12 @@ export function LetrasImpresion3D({ selector }: Props) {
           {e}
         </Aviso>
       ))}
-      {!r && fuente && <Aviso tipo="error">No se pudo armar ese texto con esta tipografía. Prueba con otra.</Aviso>}
+      {!r && fuente && <Aviso tipo="error"><T>No se pudo armar ese texto con esta tipografía. Prueba con otra.</T></Aviso>}
     </div>
   )
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Escribe un texto para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Escribe un texto para generar los archivos.</T></p>
   ) : (
     <div className="flex max-w-[760px] flex-col gap-4">
       <TarjetaExport
@@ -208,7 +209,7 @@ export function LetrasImpresion3D({ selector }: Props) {
         }
       >
         <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, stl(), "model/stl")}>
-          STL
+          <T>STL</T>
         </Boton>
       </TarjetaExport>
 
@@ -228,8 +229,8 @@ export function LetrasImpresion3D({ selector }: Props) {
       )}
 
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-        <span className="text-[15px] font-bold">¿No tienes impresora?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA te las imprime y te las envía.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes impresora?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA te las imprime y te las envía.</T></span>
         <Boton
           tipo="primario"
           onClick={() => {
@@ -241,7 +242,7 @@ export function LetrasImpresion3D({ selector }: Props) {
             if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
           }}
         >
-          Pedir que me las impriman
+          <T>Pedir que me las impriman</T>
         </Boton>
       </div>
       {aviso && <Aviso tipo="error">{aviso}</Aviso>}
@@ -260,7 +261,7 @@ export function LetrasImpresion3D({ selector }: Props) {
       panel={panel}
       exportacion={exportacion}
       avisos={listo ? r!.avisos : []}
-      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} mm · {estiloActual?.nombre}</span> : null}
+      barra={listo ? <span>· {r1(r!.ancho)} × {r1(r!.alto)} <T>mm ·</T> {estiloActual?.nombre}</span> : null}
     />
   )
 }

@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { FormCreador } from "@/components/hetna/creador/FormCreador"
@@ -6,7 +8,7 @@ import { FormCreador } from "@/components/hetna/creador/FormCreador"
 // de CNC reciben su código y su página; su audiencia gana días de HETNA Taller
 // y ellos ganan por cada taller que llega a pagar. Se administra en
 // Panel → App → Creadores (packages/api/src/lib/creadores.ts).
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/creadores" },
   title: { absolute: "Programa de creadores CNC: tu código y tu página en HETNA" },
   description:
@@ -32,13 +34,13 @@ export default function CreadoresPage() {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1100px] px-4 py-14 lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Programa de creadores HETNA</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">¿Enseñas CNC? Tu audiencia gana y tú también</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Programa de creadores HETNA</TS></p>
+          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>¿Enseñas CNC? Tu audiencia gana y tú también</TS></h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">
-            Para quienes hacen videos, cursos o comunidad de router, láser, plasma o impresión 3D: un código propio que regala días de HETNA Taller a tus seguidores y te premia por cada taller que contrata.
+            <TS>Para quienes hacen videos, cursos o comunidad de router, láser, plasma o impresión 3D: un código propio que regala días de HETNA Taller a tus seguidores y te premia por cada taller que contrata.</TS>
           </p>
           <a href="#unirme" className="mt-6 inline-block rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white no-underline hover:brightness-110">
-            Quiero mi código
+            <TS>Quiero mi código</TS>
           </a>
         </div>
       </section>
@@ -54,7 +56,7 @@ export default function CreadoresPage() {
           ))}
         </div>
 
-        <h2 className="mt-12 text-2xl font-extrabold text-[#142033]">Cómo funciona</h2>
+        <h2 className="mt-12 text-2xl font-extrabold text-[#142033]"><TS>Cómo funciona</TS></h2>
         <ol className="mt-4 grid gap-3 sm:grid-cols-2">
           {PASOS.map((p, i) => (
             <li key={p} className="flex gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
@@ -65,11 +67,16 @@ export default function CreadoresPage() {
         </ol>
 
         <div id="unirme" className="mx-auto mt-12 max-w-2xl rounded-3xl border border-[#E7E4DC] bg-white p-6 sm:p-8">
-          <h2 className="text-2xl font-extrabold text-[#142033]">Únete al programa</h2>
-          <p className="mb-4 mt-1 text-sm text-[#6B675C]">Sin costo. Aceptamos canales de cualquier tamaño que hablen de CNC, carpintería, herrería, letreros o impresión 3D.</p>
+          <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Únete al programa</TS></h2>
+          <p className="mb-4 mt-1 text-sm text-[#6B675C]"><TS>Sin costo. Aceptamos canales de cualquier tamaño que hablen de CNC, carpintería, herrería, letreros o impresión 3D.</TS></p>
           <FormCreador />
         </div>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

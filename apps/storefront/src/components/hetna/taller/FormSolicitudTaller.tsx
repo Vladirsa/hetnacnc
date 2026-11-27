@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { EVENTO as EVENTO_UBICACION } from "@/lib/ubicacion/useUbicacion"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
@@ -394,18 +395,18 @@ export default function FormSolicitudTaller({
     return (
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-8 text-center">
         <p className="text-2xl">✓</p>
-        <h3 className="mt-2 text-xl font-extrabold text-[#142033]">Recibimos tu solicitud</h3>
-        {folio && <p className="mt-1 font-semibold text-[#C2560A]">Folio {folio}</p>}
+        <h3 className="mt-2 text-xl font-extrabold text-[#142033]"><T>Recibimos tu solicitud</T></h3>
+        {folio && <p className="mt-1 font-semibold text-[#C2560A]"><T>Folio</T> {folio}</p>}
         {afiliacion && <TarjetaAfiliacion afiliacion={afiliacion} />}
         <p className="mx-auto mt-2 max-w-md text-[#6B675C]">
-          Te enviamos un correo con una liga privada. Ahí verás las propuestas
-          {nombreTaller ? ` de ${nombreTaller}` : " de los talleres"} conforme lleguen, las comparas y eliges la que más te convenga.
+          <T>Te enviamos un correo con una liga privada. Ahí verás las propuestas</T>
+          {nombreTaller ? ` de ${nombreTaller}` : " de los talleres"} <T>conforme lleguen, las comparas y eliges la que más te convenga.</T>
         </p>
-        <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-[#17633A]">Te respondemos en {PLAZO_PRIMERA_RESPUESTA}.</p>
+        <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-[#17633A]"><T>Te respondemos en</T> {PLAZO_PRIMERA_RESPUESTA}.</p>
         <ol className="mx-auto mt-5 grid max-w-md gap-2 text-left text-sm text-[#40403A]">
-          <li><strong className="text-[#142033]">1.</strong> Los talleres que hacen ese trabajo la reciben y te mandan precio y tiempo.</li>
-          <li><strong className="text-[#142033]">2.</strong> Si a un taller le falta un dato, te escribimos por correo o WhatsApp.</li>
-          <li><strong className="text-[#142033]">3.</strong> Eliges, pagas dentro de HETNA y el taller empieza a producir.</li>
+          <li><strong className="text-[#142033]">1.</strong> <T>Los talleres que hacen ese trabajo la reciben y te mandan precio y tiempo.</T></li>
+          <li><strong className="text-[#142033]">2.</strong> <T>Si a un taller le falta un dato, te escribimos por correo o WhatsApp.</T></li>
+          <li><strong className="text-[#142033]">3.</strong> <T>Eliges, pagas dentro de HETNA y el taller empieza a producir.</T></li>
         </ol>
         <a
           href={ligaWhatsApp(
@@ -415,9 +416,9 @@ export default function FormSolicitudTaller({
           rel="noreferrer"
           className="mt-6 inline-flex items-center justify-center rounded-xl bg-[#1FA855] px-5 py-3 text-sm font-semibold text-white hover:brightness-110"
         >
-          Darle seguimiento por WhatsApp
+          <T>Darle seguimiento por WhatsApp</T>
         </a>
-        <p className="mt-2 text-xs text-[#6B675C]">Opcional: tu solicitud ya quedó registrada con todos sus datos.</p>
+        <p className="mt-2 text-xs text-[#6B675C]"><T>Opcional: tu solicitud ya quedó registrada con todos sus datos.</T></p>
       </div>
     )
   }
@@ -431,29 +432,29 @@ export default function FormSolicitudTaller({
     <form onSubmit={enviar} className="grid gap-7 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-7">
       {nombreTaller && (
         <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
-          Cotizando con <strong className="text-[#142033]">{nombreTaller}</strong>
+          <T>Cotizando con</T> <strong className="text-[#142033]">{nombreTaller}</strong>
         </p>
       )}
       {prellenado?.desde === "producto" && !prellenado.archivos?.length && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
-          <strong className="text-[#0F7A4A]">Diseño de la tienda:</strong> {prellenado.pieza}
+          <strong className="text-[#0F7A4A]"><T>Diseño de la tienda:</T></strong> {prellenado.pieza}
           {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
-          {prellenado.material ? ` · ${prellenado.material}` : ""}. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
-          incluirá en su propuesta. Revisa la cantidad, pon tu ciudad y envía.
+          {prellenado.material ? ` · ${prellenado.material}` : ""}<T>. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
+          incluirá en su propuesta. Revisa la cantidad, pon tu ciudad y envía.</T>
         </div>
       )}
       {prellenado && !(prellenado.desde === "producto" && !prellenado.archivos?.length) && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
           <strong className="text-[#0F7A4A]">{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</strong> {prellenado.pieza}
           {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
-          {prellenado.material ? ` · ${prellenado.material}` : ""}. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual {prellenado.archivos?.length ? "lo subiste" : "lo generaste"}.
+          {prellenado.material ? ` · ${prellenado.material}` : ""}<T>. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual</T> {prellenado.archivos?.length ? "lo subiste" : "lo generaste"}.
         </div>
       )}
 
       {/* 1. Qué necesitas */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>1</span> ¿Qué tipo de proyecto es?
+          <span className={NUM}>1</span> <T>¿Qué tipo de proyecto es?</T>
         </legend>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {NECESIDADES.map((n) => (
@@ -465,7 +466,7 @@ export default function FormSolicitudTaller({
               className={chip(necesidad === n.valor)}
             >
               <span className="block text-sm font-bold text-[#142033]">{n.valor}</span>
-              <span className="block text-xs text-[#6B675C]">{n.detalle}</span>
+              <span className="block text-xs text-[#6B675C]"><T>{n.detalle}</T></span>
             </button>
           ))}
         </div>
@@ -474,7 +475,7 @@ export default function FormSolicitudTaller({
       {/* 2. Archivo */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>2</span> ¿Tienes archivo o diseño?
+          <span className={NUM}>2</span> <T>¿Tienes archivo o diseño?</T>
         </legend>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {TIENE_ARCHIVO.map((t) => (
@@ -486,7 +487,7 @@ export default function FormSolicitudTaller({
               className={chip(tieneArchivo === t.valor)}
             >
               <span className="block text-sm font-bold text-[#142033]">{t.valor}</span>
-              <span className="block text-xs text-[#6B675C]">{t.detalle}</span>
+              <span className="block text-xs text-[#6B675C]"><T>{t.detalle}</T></span>
             </button>
           ))}
         </div>
@@ -495,8 +496,8 @@ export default function FormSolicitudTaller({
 
         {opcionArchivo && !opcionArchivo.pideArchivo && (
           <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
-            Sin problema. Descríbela lo mejor que puedas abajo (para qué sirve, medidas, dónde va).
-            Los talleres que también diseñan te cotizan el diseño junto con la fabricación.
+            <T>Sin problema. Descríbela lo mejor que puedas abajo (para qué sirve, medidas, dónde va).
+            Los talleres que también diseñan te cotizan el diseño junto con la fabricación.</T>
           </p>
         )}
 
@@ -511,11 +512,11 @@ export default function FormSolicitudTaller({
               }}
               className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D9D5CA] bg-[#FAF9F6] px-4 py-6 text-center hover:border-[#C2560A]"
             >
-              <span className="text-sm font-bold text-[#142033]">Sube tu archivo o fotos</span>
+              <span className="text-sm font-bold text-[#142033]"><T>Sube tu archivo o fotos</T></span>
               <span className="text-xs text-[#6B675C]">
-                DXF, DWG, SVG, AI, PDF, STL, STEP, fotos o ZIP · hasta {MAX_ARCHIVOS} archivos de {MAX_MB_ARCHIVO} MB
+                <T>DXF, DWG, SVG, AI, PDF, STL, STEP, fotos o ZIP · hasta</T> {MAX_ARCHIVOS} <T>archivos de</T> {MAX_MB_ARCHIVO} <T>MB</T>
               </span>
-              <span className="mt-2 rounded-lg bg-[#142033] px-4 py-2 text-xs font-semibold text-white">Elegir archivos</span>
+              <span className="mt-2 rounded-lg bg-[#142033] px-4 py-2 text-xs font-semibold text-white"><T>Elegir archivos</T></span>
             </label>
             <input
               ref={entrada}
@@ -536,7 +537,7 @@ export default function FormSolicitudTaller({
                       {a.error ? (
                         <span className="block text-xs text-[#B3261E]">{a.error}</span>
                       ) : a.subido ? (
-                        <span className="block text-xs text-[#2E7D32]">Listo · {pesoLegible(a.tamano)}</span>
+                        <span className="block text-xs text-[#2E7D32]"><T>Listo ·</T> {pesoLegible(a.tamano)}</span>
                       ) : (
                         <span className="mt-1 block h-1.5 overflow-hidden rounded bg-[#E7E4DC]">
                           <span className="block h-full bg-[#C2560A] transition-all" style={{ width: `${a.avance}%` }} />
@@ -567,13 +568,13 @@ export default function FormSolicitudTaller({
                       </button>
                     )}
                     <button type="button" onClick={() => quitar(a.id)} className="text-xs font-semibold text-[#6B675C] hover:text-[#B3261E]">
-                      Quitar
+                      <T>Quitar</T>
                     </button>
                     </div>
                     {a.cad && a.verCad && !a.error && (
                       <div className="px-3 pb-3">
                         <VisorCad geo={a.cad} alto={240} />
-                        <p className="mt-1 text-xs text-[#6B675C]">Revisa que sea la pieza correcta: así la verá el taller al cotizar.</p>
+                        <p className="mt-1 text-xs text-[#6B675C]"><T>Revisa que sea la pieza correcta: así la verá el taller al cotizar.</T></p>
                         <div className="mt-2">
                           <RevisionArchivo geo={a.cad} proceso={procesoDe(procesoElegido())} />
                         </div>
@@ -584,9 +585,9 @@ export default function FormSolicitudTaller({
               </ul>
             )}
             <p className="text-xs text-[#6B675C]">
-              Tus archivos se guardan en un almacenamiento privado: los descargan sólo los talleres que pueden cotizar tu trabajo,
-              según los permisos que elijas, y en tu solicitud ves quién los descargó. Se borran {DIAS_CONSERVACION_ARCHIVOS} días
-              después de que se cierra.
+              <T>Tus archivos se guardan en un almacenamiento privado: los descargan sólo los talleres que pueden cotizar tu trabajo,
+              según los permisos que elijas, y en tu solicitud ves quién los descargó. Se borran</T> {DIAS_CONSERVACION_ARCHIVOS} <T>días
+              después de que se cierra.</T>
             </p>
           </div>
         )}
@@ -595,11 +596,11 @@ export default function FormSolicitudTaller({
       {/* 3. Detalles */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>3</span> Detalles de la pieza
+          <span className={NUM}>3</span> <T>Detalles de la pieza</T>
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={ETIQUETA} htmlFor="descripcion">Comentarios: describe tu pieza o proyecto *</label>
+            <label className={ETIQUETA} htmlFor="descripcion"><T>Comentarios: describe tu pieza o proyecto *</T></label>
             <textarea
               id="descripcion"
               name="descripcion"
@@ -621,19 +622,19 @@ export default function FormSolicitudTaller({
             />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="material">Material</label>
+            <label className={ETIQUETA} htmlFor="material"><T>Material</T></label>
             <input id="material" name="material" className={CAMPO} placeholder="MDF 6 mm, acrílico, acero, aluminio…" defaultValue={prellenado?.material} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="cantidad">Cantidad</label>
+            <label className={ETIQUETA} htmlFor="cantidad"><T>Cantidad</T></label>
             <input ref={cantidadRef} id="cantidad" name="cantidad" className={CAMPO} placeholder="Ej. 1 pieza, 50 piezas" defaultValue={prellenado ? prellenado.cantidad || "1 pieza" : undefined} onChange={(e) => avisarPieza(e.target.value)} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="medidas">Medidas aproximadas</label>
+            <label className={ETIQUETA} htmlFor="medidas"><T>Medidas aproximadas</T></label>
             <input ref={medidasRef} id="medidas" name="medidas" className={CAMPO} placeholder="Ej. 30 x 20 cm, espesor 6 mm" defaultValue={prellenado?.medidas} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="acabado">Acabado</label>
+            <label className={ETIQUETA} htmlFor="acabado"><T>Acabado</T></label>
             <select id="acabado" name="acabado" className={CAMPO} defaultValue="">
               <option value="">Selecciona</option>
               {ACABADOS.map((a) => (
@@ -642,7 +643,7 @@ export default function FormSolicitudTaller({
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="tolerancia">Tolerancia</label>
+            <label className={ETIQUETA} htmlFor="tolerancia"><T>Tolerancia</T></label>
             <select id="tolerancia" name="tolerancia" className={CAMPO} defaultValue="">
               <option value="">Selecciona</option>
               {TOLERANCIAS.map((t) => (
@@ -651,11 +652,11 @@ export default function FormSolicitudTaller({
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="fecha">¿Para cuándo lo necesitas?</label>
+            <label className={ETIQUETA} htmlFor="fecha"><T>¿Para cuándo lo necesitas?</T></label>
             <input id="fecha" name="fecha" type="date" className={CAMPO} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="servicio">Proceso (si lo sabes)</label>
+            <label className={ETIQUETA} htmlFor="servicio"><T>Proceso (si lo sabes)</T></label>
             <select
               id="servicio"
               name="servicio"
@@ -669,7 +670,7 @@ export default function FormSolicitudTaller({
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="frecuencia">¿Cada cuánto lo necesitas?</label>
+            <label className={ETIQUETA} htmlFor="frecuencia"><T>¿Cada cuánto lo necesitas?</T></label>
             <select id="frecuencia" name="frecuencia" className={CAMPO} defaultValue="">
               <option value="">Selecciona</option>
               <option>Una sola vez</option>
@@ -678,11 +679,11 @@ export default function FormSolicitudTaller({
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="presupuesto">Presupuesto aproximado (opcional)</label>
+            <label className={ETIQUETA} htmlFor="presupuesto"><T>Presupuesto aproximado (opcional)</T></label>
             <input id="presupuesto" name="presupuesto" className={CAMPO} placeholder="Ej. $3,000 MXN" />
           </div>
           <div className="sm:col-span-2">
-            <label className={ETIQUETA} htmlFor="archivo_url">¿Tus archivos están en la nube? Pega la liga (opcional)</label>
+            <label className={ETIQUETA} htmlFor="archivo_url"><T>¿Tus archivos están en la nube? Pega la liga (opcional)</T></label>
             <input
               id="archivo_url"
               name="archivo_url"
@@ -697,13 +698,13 @@ export default function FormSolicitudTaller({
               <label className="flex items-start gap-2 text-sm text-[#40403A]">
                 <input type="checkbox" name="hetna_elige" value="1" className="mt-1 accent-[#C2560A]" onChange={(e) => setEligeHetna(e.target.checked)} />
                 <span>
-                  <b className="text-[#142033]">Que HETNA elija por mí.</b> Cuando lleguen propuestas, te mandamos la que mejor equilibra precio, tiempo y
-                  cumplimiento del taller. Tú sólo confirmas y pagas.
+                  <b className="text-[#142033]"><T>Que HETNA elija por mí.</T></b> <T>Cuando lleguen propuestas, te mandamos la que mejor equilibra precio, tiempo y
+                  cumplimiento del taller. Tú sólo confirmas y pagas.</T>
                 </span>
               </label>
               {eligeHetna && (
                 <div className="mt-2 pl-6">
-                  <label className={ETIQUETA} htmlFor="tope_precio">Lo más que quieres pagar (opcional, los talleres no lo ven)</label>
+                  <label className={ETIQUETA} htmlFor="tope_precio"><T>Lo más que quieres pagar (opcional, los talleres no lo ven)</T></label>
                   <input id="tope_precio" name="tope_precio" inputMode="numeric" className={CAMPO} placeholder="Ej. 3000" />
                 </div>
               )}
@@ -711,7 +712,7 @@ export default function FormSolicitudTaller({
           )}
           {/* Empresas (estrategia 2.4): orden de compra y factura con los datos de Mi empresa */}
           <div>
-            <label className={ETIQUETA} htmlFor="orden_compra">Orden de compra (opcional)</label>
+            <label className={ETIQUETA} htmlFor="orden_compra"><T>Orden de compra (opcional)</T></label>
             <input id="orden_compra" name="orden_compra" className={CAMPO} maxLength={60} placeholder="Ej. OC-2026-0154" />
           </div>
           {conSesion && (
@@ -719,8 +720,8 @@ export default function FormSolicitudTaller({
               <label className="flex items-start gap-2 text-sm text-[#40403A]">
                 <input type="checkbox" name="con_factura" value="1" className="mt-1 accent-[#C2560A]" />
                 <span>
-                  Necesito factura (CFDI) con los datos de{" "}
-                  <a href="/mx/user/empresa" target="_blank" className="font-semibold text-[#C2560A] underline">Mi empresa</a>
+                  <T>Necesito factura (CFDI) con los datos de</T>{" "}
+                  <a href="/mx/user/empresa" target="_blank" className="font-semibold text-[#C2560A] underline"><T>Mi empresa</T></a>
                 </span>
               </label>
             </div>
@@ -731,20 +732,20 @@ export default function FormSolicitudTaller({
       {/* 4. Entrega y contacto */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>4</span> Entrega y contacto
+          <span className={NUM}>4</span> <T>Entrega y contacto</T>
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={ETIQUETA} htmlFor="cp">Código postal de entrega</label>
+            <label className={ETIQUETA} htmlFor="cp"><T>Código postal de entrega</T></label>
             <input id="cp" name="cp" className={CAMPO} inputMode="numeric" placeholder="5 dígitos" value={cp} onChange={(e) => cambiarCp(e.target.value)} autoComplete="postal-code" />
             <span className="mt-1 block text-xs text-[#6B675C]">{avisoCp || "Con él te mostramos los talleres más cercanos."}</span>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="ciudad">Ciudad de entrega</label>
+            <label className={ETIQUETA} htmlFor="ciudad"><T>Ciudad de entrega</T></label>
             <input id="ciudad" name="ciudad" className={CAMPO} autoComplete="address-level2" value={ciudad} onChange={(e) => setCiudad(e.target.value)} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="estado_mx">Estado</label>
+            <label className={ETIQUETA} htmlFor="estado_mx"><T>Estado</T></label>
             <select id="estado_mx" name="estado_mx" className={CAMPO} value={estadoMx} onChange={(e) => setEstadoMx(e.target.value)}>
               <option value="">Selecciona</option>
               {ESTADOS.map((x) => (
@@ -753,34 +754,34 @@ export default function FormSolicitudTaller({
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="acepta_envio">¿Aceptas envío por paquetería?</label>
+            <label className={ETIQUETA} htmlFor="acepta_envio"><T>¿Aceptas envío por paquetería?</T></label>
             <select id="acepta_envio" name="acepta_envio" className={CAMPO} defaultValue="Sí">
               <option>Sí</option>
               <option value="No">No, prefiero recoger o que me lo entreguen</option>
             </select>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="nombre">Tu nombre</label>
+            <label className={ETIQUETA} htmlFor="nombre"><T>Tu nombre</T></label>
             <input id="nombre" name="nombre" className={CAMPO} autoComplete="name" />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="empresa">Empresa (opcional)</label>
+            <label className={ETIQUETA} htmlFor="empresa"><T>Empresa (opcional)</T></label>
             <input id="empresa" name="empresa" className={CAMPO} autoComplete="organization" />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="email">Correo *</label>
+            <label className={ETIQUETA} htmlFor="email"><T>Correo *</T></label>
             <input id="email" name="email" type="email" required className={CAMPO} autoComplete="email" />
-            <span className="mt-1 block text-xs text-[#6B675C]">Ahí te llega la liga para ver y comparar propuestas.</span>
+            <span className="mt-1 block text-xs text-[#6B675C]"><T>Ahí te llega la liga para ver y comparar propuestas.</T></span>
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="whatsapp">WhatsApp</label>
+            <label className={ETIQUETA} htmlFor="whatsapp"><T>WhatsApp</T></label>
             <input id="whatsapp" name="whatsapp" type="tel" className={CAMPO} autoComplete="tel" placeholder="10 dígitos" />
-            <span className="mt-1 block text-xs text-[#6B675C]">Para avisarte más rápido si falta algún dato.</span>
+            <span className="mt-1 block text-xs text-[#6B675C]"><T>Para avisarte más rápido si falta algún dato.</T></span>
           </div>
           {taller && (
             <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
               <input type="checkbox" name="abierta" value="1" checked={abiertaOtros} onChange={(e) => setAbiertaOtros(e.target.checked)} className="mt-1 accent-[#C2560A]" />
-              También quiero recibir propuestas de otros talleres de la red para comparar.
+              <T>También quiero recibir propuestas de otros talleres de la red para comparar.</T>
             </label>
           )}
           {!conSesion && (
@@ -792,8 +793,8 @@ export default function FormSolicitudTaller({
                 className="mt-1 accent-[#C2560A]"
               />
               <span>
-                <b className="text-[#142033]">Crear mi cuenta gratis con estos datos</b> y recibir mi número de afiliado HETNA,
-                más <b>$100 de descuento</b> en mi primera compra. Sólo tendré que elegir mi contraseña.
+                <b className="text-[#142033]"><T>Crear mi cuenta gratis con estos datos</T></b> <T>y recibir mi número de afiliado HETNA,
+                más</T> <b><T>$100 de descuento</T></b> <T>en mi primera compra. Sólo tendré que elegir mi contraseña.</T>
               </span>
             </label>
           )}
@@ -804,7 +805,7 @@ export default function FormSolicitudTaller({
       {/* 5. Privacidad (Licitaciones 3.0) */}
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>5</span> Privacidad: tú decides qué se ve
+          <span className={NUM}>5</span> <T>Privacidad: tú decides qué se ve</T>
         </legend>
         <div className="mt-3">
           <PrivacidadSolicitud dirigida={!!taller && !abiertaOtros} estado={estadoMx} />
@@ -826,10 +827,10 @@ export default function FormSolicitudTaller({
                 : "Enviar y recibir propuestas"}
         </button>
         <span className="text-xs text-[#6B675C]">
-          Es gratis y sin compromiso. Tu correo y WhatsApp sólo los ve HETNA: los talleres reciben lo que tú permitas en el paso 5, nunca tus datos sin tu autorización.
+          <T>Es gratis y sin compromiso. Tu correo y WhatsApp sólo los ve HETNA: los talleres reciben lo que tú permitas en el paso 5, nunca tus datos sin tu autorización.</T>
         </span>
       </div>
-      {estado === "error" && <p className="text-sm text-[#B3261E]">{mensaje}</p>}
+      {estado === "error" && <p className="text-sm text-[#B3261E]"><T>{mensaje}</T></p>}
     </form>
   )
 }

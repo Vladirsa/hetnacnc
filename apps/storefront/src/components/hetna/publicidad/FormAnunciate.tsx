@@ -8,6 +8,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Imagen } from "@/components/hetna/ImagenSegura"
 
 import { useMemo, useState } from "react"
@@ -134,17 +135,17 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
 
   return (
     <form onSubmit={enviar} className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-6 flex flex-col gap-5" id="comprar">
-      <h2 className={paso}>1. ¿Quién se anuncia?</h2>
+      <h2 className={paso}><T>1. ¿Quién se anuncia?</T></h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Tipo de anunciante">
         {(Object.keys(TIPOS_ANUNCIANTE) as TipoAnunciante[]).map((t) => (
           <button type="button" role="radio" aria-checked={tipo === t} key={t} onClick={() => setTipo(t)} className={opcion(tipo === t)}>
             <span className="font-bold text-[15px] text-[#1B1B18]">{TIPOS_ANUNCIANTE[t].nombre}</span>
-            <span className="text-[13px] text-[#6B6A63]">{TIPOS_ANUNCIANTE[t].ayuda}</span>
+            <span className="text-[13px] text-[#6B6A63]"><T>{TIPOS_ANUNCIANTE[t].ayuda}</T></span>
           </button>
         ))}
       </div>
 
-      <h2 className={paso}>2. Elige tu espacio</h2>
+      <h2 className={paso}><T>2. Elige tu espacio</T></h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Espacio">
         {espacios.map((e) => (
           <button
@@ -163,22 +164,22 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
             <span className="font-bold text-[15px] text-[#1B1B18]">{nombreCorto(e.nombre)}</span>
             <span className="text-[13px] leading-snug text-[#44433D]">{e.donde}</span>
             <span className="text-[12.5px] text-[#6B6A63]">
-              Medidas: {e.medidas} · {e.vistasMes ? `≈ ${miles(e.vistasMes)} vistas al mes` : "espacio nuevo"}
+              <T>Medidas:</T> {e.medidas} · {e.vistasMes ? `≈ ${miles(e.vistasMes)} vistas al mes` : "espacio nuevo"}
             </span>
-            <span className="text-[15px] font-bold text-[#B34D07]">desde {pesos(calcularMonto(e.id, 7))} / semana</span>
+            <span className="text-[15px] font-bold text-[#B34D07]"><T>desde</T> {pesos(calcularMonto(e.id, 7))} <T>/ semana</T></span>
           </button>
         ))}
       </div>
 
-      <h2 className={paso}>3. ¿Cómo quieres pagar?</h2>
+      <h2 className={paso}><T>3. ¿Cómo quieres pagar?</T></h2>
       <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Forma de pago">
         <button type="button" role="radio" aria-checked={modalidad === "periodo"} onClick={() => setModalidad("periodo")} className={opcion(modalidad === "periodo")}>
-          <span className="font-bold text-[15px] text-[#1B1B18]">Por tiempo</span>
-          <span className="text-[13px] text-[#6B6A63]">Tu anuncio sale los días que elijas.</span>
+          <span className="font-bold text-[15px] text-[#1B1B18]"><T>Por tiempo</T></span>
+          <span className="text-[13px] text-[#6B6A63]"><T>Tu anuncio sale los días que elijas.</T></span>
         </button>
         <button type="button" role="radio" aria-checked={modalidad === "vistas"} onClick={() => setModalidad("vistas")} className={opcion(modalidad === "vistas")}>
-          <span className="font-bold text-[15px] text-[#1B1B18]">Por vistas</span>
-          <span className="text-[13px] text-[#6B6A63]">Pagas un paquete y sale hasta cumplirlo, tarde lo que tarde.</span>
+          <span className="font-bold text-[15px] text-[#1B1B18]"><T>Por vistas</T></span>
+          <span className="text-[13px] text-[#6B6A63]"><T>Pagas un paquete y sale hasta cumplirlo, tarde lo que tarde.</T></span>
         </button>
       </div>
 
@@ -191,9 +192,9 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
               onClick={() => setDias(p.dias)}
               className={`min-h-[44px] px-3 py-2.5 rounded-[10px] border text-left ${dias === p.dias ? "bg-[#C2560A] border-[#C2560A] text-white" : "bg-white border-[#E0DCD2] text-[#44433D]"}`}
             >
-              <span className="block text-[14.5px] font-bold">{p.etiqueta}</span>
+              <span className="block text-[14.5px] font-bold"><T>{p.etiqueta}</T></span>
               <span className="block text-[13px]">{pesos(calcularMonto(espacio.id, p.dias))}</span>
-              {p.nota && <span className={`block text-[11.5px] ${dias === p.dias ? "text-white/85" : "text-[#6B6A63]"}`}>{p.nota}</span>}
+              {p.nota && <span className={`block text-[11.5px] ${dias === p.dias ? "text-white/85" : "text-[#6B6A63]"}`}><T>{p.nota}</T></span>}
             </button>
           ))}
         </div>
@@ -207,18 +208,18 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
                 onClick={() => setVistas(v)}
                 className={`min-h-[44px] px-3 py-2.5 rounded-[10px] border text-left ${vistas === v ? "bg-[#C2560A] border-[#C2560A] text-white" : "bg-white border-[#E0DCD2] text-[#44433D]"}`}
               >
-                <span className="block text-[14.5px] font-bold">{miles(v)} vistas</span>
+                <span className="block text-[14.5px] font-bold">{miles(v)} <T>vistas</T></span>
                 <span className="block text-[13px]">{pesos(montoVistas(espacio.id, v))}</span>
               </button>
             ))}
           </div>
           <p className="m-0 text-[13px] text-[#44433D]">
-            {pesos(espacio.milVistas)} por cada 1,000 vistas. {cuantoTarda(vistas, espacio.vistasMes)} Si tarda más, tu anuncio sigue saliendo sin costo hasta cumplir.
+            {pesos(espacio.milVistas)} <T>por cada 1,000 vistas.</T> {cuantoTarda(vistas, espacio.vistasMes)} <T>Si tarda más, tu anuncio sigue saliendo sin costo hasta cumplir.</T>
           </p>
         </div>
       )}
 
-      <h2 className={paso}>4. Tu anuncio</h2>
+      <h2 className={paso}><T>4. Tu anuncio</T></h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input name="anunciante" required maxLength={120} placeholder={tipo === "cnc" ? "Nombre de tu taller o empresa" : "Nombre de tu marca o empresa"} className={campo} />
         <input name="nombre" maxLength={120} placeholder="Tu nombre" className={campo} />
@@ -247,7 +248,7 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
 
       <div className="flex flex-col gap-2">
         <label className="text-[14px] font-semibold text-[#1B1B18]" htmlFor="archivo-anuncio">
-          Imagen ({espacio.medidas})
+          <T>Imagen (</T>{espacio.medidas})
         </label>
         <input id="archivo-anuncio" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => elegirArchivo(e.target.files?.[0])} className="text-[14px]" />
         {errorImg && <p className="m-0 text-[13.5px] text-[#A42A2A]">{errorImg}</p>}
@@ -257,14 +258,14 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
       <label className="flex items-start gap-2 text-[13.5px] text-[#44433D]">
         <input type="checkbox" name="aceptar" className="mt-1" />
         <span>
-          Entiendo que HETNA revisa cada anuncio antes de publicarlo (normalmente en 24 horas) y puede rechazar los que sean engañosos, ofensivos, de productos
-          prohibidos o, en el caso de talleres y proveedores CNC, los que lleven fuera de HETNA. Si no se aprueba, se reembolsa completo.
+          <T>Entiendo que HETNA revisa cada anuncio antes de publicarlo (normalmente en 24 horas) y puede rechazar los que sean engañosos, ofensivos, de productos
+          prohibidos o, en el caso de talleres y proveedores CNC, los que lleven fuera de HETNA. Si no se aprueba, se reembolsa completo.</T>
         </span>
       </label>
 
       <div className="flex items-center justify-between gap-4 flex-wrap border-t border-[#F0EDE6] pt-4">
         <div className="flex flex-col">
-          <span className="text-[13px] text-[#6B6A63]">Total a pagar</span>
+          <span className="text-[13px] text-[#6B6A63]"><T>Total a pagar</T></span>
           <span className="text-[26px] font-bold text-[#1B1B18]">{pesos(total)}</span>
           <span className="text-[12.5px] text-[#6B6A63]">
             {modalidad === "vistas" ? `${miles(vistas)} vistas en ${nombreCorto(espacio.nombre)}` : `${dias} días en ${nombreCorto(espacio.nombre)}`}

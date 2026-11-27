@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -118,7 +119,7 @@ export const MonedaSelector = ({
 
   return (
     <label className="flex items-center gap-1">
-      <span className="sr-only">Moneda</span>
+      <span className="sr-only"><T>Moneda</T></span>
       <select
         value={actual}
         disabled={cambiando}
