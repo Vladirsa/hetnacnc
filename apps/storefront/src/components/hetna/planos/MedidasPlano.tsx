@@ -3,6 +3,7 @@
 // "Modifica las medidas" de un plano: el cliente escribe ancho, fondo y alto y
 // la página se vuelve a dibujar con esas medidas (?ancho=&fondo=&alto=). Los
 // espesores del triplay no cambian: sólo se estiran los huecos (lib/planos/medidas.ts).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -35,19 +36,19 @@ export default function MedidasPlano({ original, actual, ajustado = false }: { o
         ir(v)
       }}
     >
-      <p className="m-0 text-[15px] font-bold text-[#142033]">Modifica las medidas</p>
+      <p className="m-0 text-[15px] font-bold text-[#142033]"><T>Modifica las medidas</T></p>
       <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">
-        Cambia el ancho, fondo o alto (en mm) y se recalculan el dibujo, la lista de corte, el acomodo, el DXF y el precio. El triplay conserva su grosor. Entre {Math.round(LIMITE.min * 100)} % y {Math.round(LIMITE.max * 100)} % de la medida original.
+        <T>Cambia el ancho, fondo o alto (en mm) y se recalculan el dibujo, la lista de corte, el acomodo, el DXF y el precio. El triplay conserva su grosor. Entre</T> {Math.round(LIMITE.min * 100)} % y {Math.round(LIMITE.max * 100)} <T>% de la medida original.</T>
       </p>
       {ajustado ? (
         <p className="m-0 mt-2 rounded-md bg-[#FFF4E5] px-3 py-2 text-[13px] text-[#8A4B00]">
-          Con esas medidas algunas piezas ya no caben en una hoja de triplay de 2440 × 1220 mm. Lo dejamos en la medida más grande que sí cabe: {actual.ancho} × {actual.fondo} × {actual.alto} mm.
+          <T>Con esas medidas algunas piezas ya no caben en una hoja de triplay de 2440 × 1220 mm. Lo dejamos en la medida más grande que sí cabe:</T> {actual.ancho} × {actual.fondo} × {actual.alto} <T>mm.</T>
         </p>
       ) : null}
       <div className="mt-3 grid grid-cols-3 gap-2 sm:max-w-[520px]">
         {(["ancho", "fondo", "alto"] as const).map((k) => (
           <label key={k} className="block text-[12.5px] font-semibold capitalize text-[#1E2329]">
-            {k} (mm)
+            {k} <T>(mm)</T>
             <input
               type="number"
               inputMode="numeric"
@@ -67,7 +68,7 @@ export default function MedidasPlano({ original, actual, ajustado = false }: { o
         </button>
         {cambiado ? (
           <button type="button" onClick={() => { setV(original); ir(null) }} className="text-[14px] font-semibold text-[#B34D07]">
-            Volver a las originales ({original.ancho} × {original.fondo} × {original.alto})
+            <T>Volver a las originales (</T>{original.ancho} × {original.fondo} × {original.alto})
           </button>
         ) : null}
       </div>
