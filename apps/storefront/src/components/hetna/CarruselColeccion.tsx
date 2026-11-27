@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import Image from "@/lib/imagenes/Imagen"
 import { promediosDeProductos } from "@/lib/resenas/acciones"
 
@@ -83,17 +84,17 @@ export default async function CarruselColeccion(props: Props) {
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-[24px] md:text-[32px] font-extrabold leading-tight text-[#142033]">
-              {titulo}
+              <TS>{titulo}</TS>
             </h2>
             {subtitulo && (
-              <p className="mt-1 text-[14px] md:text-[15px] text-[#6B6A63]">{subtitulo}</p>
+              <p className="mt-1 text-[14px] md:text-[15px] text-[#6B6A63]"><TS>{subtitulo}</TS></p>
             )}
           </div>
           <LocalizedClientLink
             href={"/collections/" + handle}
             className="shrink-0 text-[13.5px] font-bold text-[#B34D07] hover:underline"
           >
-            Ver todo →
+            <TS>Ver todo →</TS>
           </LocalizedClientLink>
         </div>
         <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3">
