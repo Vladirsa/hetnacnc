@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { convertToLocale } from "@/lib/helpers/money"
 import type { Pack } from "@/lib/packs/acciones"
 
@@ -56,7 +57,7 @@ export const AvisoPack = ({ packs }: { packs: Pack[] }) => {
         ))}
       </ul>
       <p className="mt-2 text-[11px] text-[#7A5A8A]">
-        Se aplica solo en tu carrito. No hay que escribir ningún código.
+        <T>Se aplica solo en tu carrito. No hay que escribir ningún código.</T>
       </p>
     </div>
   )
