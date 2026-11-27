@@ -1,4 +1,5 @@
 // Piezas de interfaz del HETNA Panel (servidor; sin estado)
+import { TS } from "@/i18n/TS"
 export const Tarjeta = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <section className={`rounded-2xl border border-[#E7E4DC] bg-white p-4 ${className}`}>{children}</section>
 )
@@ -10,7 +11,7 @@ export const Titulo = ({ children, extra }: { children: React.ReactNode; extra?:
 )
 export const Kpi = ({ etiqueta, valor, antes, sufijo }: { etiqueta: string; valor: string; antes?: string; sufijo?: string }) => (
   <div className="rounded-xl bg-[#F8F7F2] p-3">
-    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B675C]">{etiqueta}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B675C]"><TS>{etiqueta}</TS></p>
     <p className="mt-1 text-[22px] font-black leading-none text-[#142033]">{valor}{sufijo && <span className="text-sm font-semibold text-[#6B675C]"> {sufijo}</span>}</p>
     {antes && <p className="mt-1 text-[11px] text-[#6B675C]">{antes}</p>}
   </div>
