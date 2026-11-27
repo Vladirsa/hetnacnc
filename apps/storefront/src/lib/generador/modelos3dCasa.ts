@@ -89,6 +89,42 @@ export const MODELOS_CASA_ORGANIZAR: Modelo3D[] = [
     },
   },
   {
+    id: "gridfinity-porta-brocas",
+    nombre: "Porta brocas y fresas Gridfinity",
+    texto: "Bloque Gridfinity con barrenos para brocas, fresas o desarmadores: encaja en la base junto a tus otras cajas.",
+    categoria: "organizar",
+    claves: "gridfinity porta brocas fresas end mill desarmadores puntas bin organizador taller cnc",
+    params: [
+      { k: "x", nombre: "Casillas a lo ancho", def: 2, min: 1, max: 6, unidad: "" },
+      { k: "y", nombre: "Casillas a lo fondo", def: 1, min: 1, max: 6, unidad: "" },
+      { k: "alto", nombre: "Alto (unidades de 7 mm)", def: 4, min: 3, max: 12, unidad: "" },
+      { k: "diametro", nombre: "Diámetro de la broca o zanco", def: 6.35, min: 1, max: 20, paso: 0.05 },
+      { k: "separacion", nombre: "Separación entre centros", def: 14, min: 4, max: 40 },
+      { k: "profundidad", nombre: "Profundidad del barreno", def: 18, min: 4, max: 70 },
+    ],
+    construir: (p, k) => {
+      const nx = Math.round(p.x), ny = Math.round(p.y), G = 42, H = Math.round(p.alto) * 7, PIE = 4.75
+      const W = nx * G - 0.5, F = ny * G - 0.5
+      const pies: S[] = []
+      for (let i = 0; i < nx; i++)
+        for (let j = 0; j < ny; j++) {
+          const cx = i * G + G / 2 - 0.25, cy = j * G + G / 2 - 0.25
+          pies.push(k.envolver(losa(k, 35.6, 0.8, 0, cx, cy), losa(k, 37.2, 1.6, 0.8, cx, cy)))
+          pies.push(k.envolver(losa(k, 37.2, 1.6, 0.8, cx, cy), losa(k, 37.2, 1.6, 2.6, cx, cy)))
+          pies.push(k.envolver(losa(k, 37.2, 1.6, 2.6, cx, cy), losa(k, 41.5, 3.75, PIE, cx, cy)))
+        }
+      const bloque = k.unir(...pies, k.bloque(W, F, H - PIE, 0, 0, PIE, 3.75))
+      // barrenos en cuadrícula, centrados, dejando 3 mm de orilla y 1.5 mm de piso
+      const sep = Math.max(p.separacion, p.diametro + 2)
+      const cols = Math.max(1, Math.floor((W - 6 - p.diametro) / sep) + 1), filas = Math.max(1, Math.floor((F - 6 - p.diametro) / sep) + 1)
+      const prof = Math.min(p.profundidad, H - PIE - 1.5)
+      const x0 = (W - (cols - 1) * sep) / 2, y0 = (F - (filas - 1) * sep) / 2
+      const barrenos: S[] = []
+      for (let i = 0; i < cols; i++) for (let j = 0; j < filas; j++) barrenos.push(k.cil(p.diametro + 0.3, prof + 1, x0 + i * sep, y0 + j * sep, H - prof))
+      return k.restar(bloque, ...barrenos)
+    },
+  },
+  {
     id: "cadena-portacables",
     nombre: "Cadena portacables",
     texto: "Eslabones que se abrochan entre sí para guiar cables y mangueras de tu CNC o impresora. Salen varios por impresión.",

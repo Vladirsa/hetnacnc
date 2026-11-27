@@ -10,13 +10,14 @@
 // Todo en milímetros; las piezas quedan apoyadas en Z = 0, listas para la cama.
 
 import { MODELOS_CASA_ORGANIZAR } from "./modelos3dCasa"
+import { MODELOS_FABRICACION } from "./modelos3dFabricacion"
 import { cargarManifold } from "./partir3d"
 
 type Wasm = any
 type S = any // un sólido de manifold
 
 export type ParamModelo = { k: string; nombre: string; def: number; min: number; max: number; paso?: number; unidad?: string }
-export type CategoriaModelo = "taller" | "organizar" | "casa"
+export type CategoriaModelo = "taller" | "electronica" | "carpinteria" | "organizar" | "casa" | "eventos"
 
 /** Herramientas para armar las piezas (todas en mm, ángulos en grados). */
 export type Kit = {
@@ -52,8 +53,11 @@ export type Modelo3D = {
 
 export const CATEGORIAS: { id: CategoriaModelo; nombre: string }[] = [
   { id: "taller", nombre: "Para el taller" },
+  { id: "electronica", nombre: "Electrónica" },
+  { id: "carpinteria", nombre: "Carpintería" },
   { id: "organizar", nombre: "Organizar" },
   { id: "casa", nombre: "Casa y oficina" },
+  { id: "eventos", nombre: "Trofeos y eventos" },
 ]
 
 const SEG = 48 // segmentos de los cilindros: suave sin hacer el STL pesado
@@ -562,7 +566,7 @@ export const MODELOS: Modelo3D[] = [
     id: "guia-espiga",
     nombre: "Guía para barrenos de espiga",
     texto: "Plantilla con tope para barrenar espigas (dowels) centradas en el canto del tablero.",
-    categoria: "taller",
+    categoria: "carpinteria",
     claves: "guia espiga dowel jig barrenar canto tablero carpinteria melamina",
     params: [
       { k: "tablero", nombre: "Espesor del tablero", def: 18, min: 9, max: 40 },
@@ -802,7 +806,7 @@ export const MODELOS: Modelo3D[] = [
     id: "caja-electronica",
     nombre: "Caja para tarjeta electrónica",
     texto: "Caja con postes para atornillar Arduino, ESP32, Raspberry o tu tarjeta, con ventilación y salida de cables.",
-    categoria: "taller",
+    categoria: "electronica",
     claves: "caja electronica arduino esp32 raspberry tarjeta pcb gabinete postes",
     params: [
       { k: "largo", nombre: "Largo de la tarjeta", def: 69, min: 20, max: 200 },
@@ -1008,6 +1012,7 @@ export const MODELOS: Modelo3D[] = [
   },
   // (Gridfinity, cadena portacables, florero y pantalla: en modelos3dCasa.ts)
   ...MODELOS_CASA_ORGANIZAR,
+  ...MODELOS_FABRICACION,
 ]
 
 export const modeloPorId = (id: string) => MODELOS.find((m) => m.id === id)
