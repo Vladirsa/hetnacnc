@@ -19,15 +19,15 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
           <TS>Dirección de envío</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
-          {order.shipping_address?.first_name}{" "}
-          {order.shipping_address?.last_name}
+          <TS>{order.shipping_address?.first_name}</TS><TS>{" "}</TS>
+          <TS>{order.shipping_address?.last_name}</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
-          {order.shipping_address?.address_1}{" "}
-          {order.shipping_address?.address_2}
+          <TS>{order.shipping_address?.address_1}</TS><TS>{" "}</TS>
+          <TS>{order.shipping_address?.address_2}</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
-          {order.shipping_address?.postal_code}, {order.shipping_address?.city}
+          <TS>{order.shipping_address?.postal_code}</TS>, <TS>{order.shipping_address?.city}</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
           {order.shipping_address?.country_code?.toUpperCase()}
@@ -39,9 +39,9 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
           <TS>Contacto</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
-          {order.shipping_address?.phone}
+          <TS>{order.shipping_address?.phone}</TS>
         </Text>
-        <Text className="txt-medium text-ui-fg-subtle">{order.email}</Text>
+        <Text className="txt-medium text-ui-fg-subtle"><TS>{order.email}</TS></Text>
       </div>
 
       <div className="mt-4" data-testid="shipping-method-summary">
@@ -49,7 +49,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
           <TS>Método de envío</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
-          {(order as any).shipping_methods[0]?.name} (
+          <TS>{(order as any).shipping_methods[0]?.name}</TS> (
           {convertToLocale({
             amount: order.shipping_methods?.[0].total ?? 0,
             currency_code: order.currency_code,
@@ -71,7 +71,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
                   className="txt-medium text-ui-fg-subtle"
                   data-testid="payment-method"
                 >
-                  {paymentInfoMap[payment.provider_id].title}
+                  <TS>{paymentInfoMap[payment.provider_id].title}</TS>
                 </Text>
               </div>
             </div>
