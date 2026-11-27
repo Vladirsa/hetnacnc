@@ -3,6 +3,7 @@
 // Botón "Preguntar al taller": abre una cajita para escribir el primer mensaje.
 // Si la persona no ha iniciado sesión, le pide entrar primero.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
@@ -65,7 +66,7 @@ export default function BotonPreguntarTaller({
           "inline-flex h-12 items-center justify-center rounded-lg border-2 border-[#C2560A] px-5 text-base font-semibold text-[#C2560A] hover:bg-[#C2560A] hover:text-white"
         }
       >
-        {etiqueta}
+        <T>{etiqueta}</T>
       </button>
 
       {abierto && (
@@ -76,14 +77,14 @@ export default function BotonPreguntarTaller({
             role="dialog"
             aria-label={`Escribir a ${tallerNombre}`}
           >
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Escribir a {tallerNombre}</h2>
-            {productoTitulo && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sobre: {productoTitulo}</p>}
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white"><T>Escribir a</T> {tallerNombre}</h2>
+            {productoTitulo && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400"><T>Sobre:</T> {productoTitulo}</p>}
 
             {sinSesion ? (
               <div className="mt-4 space-y-3">
-                <p className="text-sm text-gray-700 dark:text-gray-200">Para escribir al taller primero inicia sesión o crea tu cuenta (es gratis y toma un minuto).</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200"><T>Para escribir al taller primero inicia sesión o crea tu cuenta (es gratis y toma un minuto).</T></p>
                 <Link href={`/${locale}/user`} className="flex h-12 items-center justify-center rounded-lg bg-[#C2560A] text-base font-semibold text-white">
-                  Iniciar sesión
+                  <T>Iniciar sesión</T>
                 </Link>
               </div>
             ) : (
@@ -102,10 +103,10 @@ export default function BotonPreguntarTaller({
                     {error}
                   </p>
                 )}
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">No compartas teléfonos, correos ni redes sociales: el chat los bloquea para protegerte.</p>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400"><T>No compartas teléfonos, correos ni redes sociales: el chat los bloquea para protegerte.</T></p>
                 <div className="mt-3 flex gap-2">
                   <button type="button" onClick={() => setAbierto(false)} className="h-12 flex-1 rounded-lg border border-gray-300 text-base text-gray-700 dark:border-gray-600 dark:text-gray-200">
-                    Cancelar
+                    <T>Cancelar</T>
                   </button>
                   <button
                     type="button"
