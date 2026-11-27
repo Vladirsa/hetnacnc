@@ -104,19 +104,19 @@ const TarjetaEstudioGrande = ({
       aria-hidden="true"
     />
     <span className="relative text-[13px] font-extrabold uppercase tracking-[0.14em]" style={{ color: acento }}>
-      <TS>HETNA</TS> {ESTUDIOS[e].nombre}
+      <TS>HETNA</TS> <TS>{ESTUDIOS[e].nombre}</TS>
     </span>
     <span className="relative mt-2 text-[24px] font-extrabold leading-tight text-white lg:text-[28px]"><TS>{titulo}</TS></span>
     <span className="relative mt-2 text-[14.5px] leading-relaxed text-white/65"><TS>{texto}</TS></span>
     <span className="relative mt-4 flex flex-wrap gap-1.5">
       {puntos.map((p) => (
         <span key={p} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[12px] font-semibold text-white/75">
-          {p}
+          <TS>{p}</TS>
         </span>
       ))}
     </span>
     <span className="relative mt-6 inline-flex self-start rounded-[10px] px-5 py-3 text-[15px] font-extrabold text-white" style={{ background: acento }}>
-      <TS>Abrir</TS> {ESTUDIOS[e].nombre} →
+      <TS>Abrir</TS> <TS>{ESTUDIOS[e].nombre}</TS> →
     </span>
   </LocalizedClientLink>
 )
@@ -199,7 +199,7 @@ export default function DisenarInicio() {
             ].map(([n, t]) => (
               <div key={t} className="rounded-[14px] border border-white/10 bg-white/[0.03] px-4 py-3">
                 <dt className="text-[20px] font-extrabold text-white">{n}</dt>
-                <dd className="m-0 text-[13px] text-white/55">{t}</dd>
+                <dd className="m-0 text-[13px] text-white/55"><TS>{t}</TS></dd>
               </div>
             ))}
           </dl>
@@ -265,8 +265,8 @@ export default function DisenarInicio() {
                     <ServicioIcono nombre={s.icono} size={26} />
                   </span>
                   <span>
-                    <span className="block text-[16px] font-bold text-[#1B1B18] group-hover:text-[#B34D07]">{s.t}</span>
-                    <span className="mt-1 block text-[13.5px] leading-relaxed text-[#4A4943]">{s.d}</span>
+                    <span className="block text-[16px] font-bold text-[#1B1B18] group-hover:text-[#B34D07]"><TS>{s.t}</TS></span>
+                    <span className="mt-1 block text-[13.5px] leading-relaxed text-[#4A4943]"><TS>{s.d}</TS></span>
                   </span>
                 </LocalizedClientLink>
               </li>
@@ -285,8 +285,8 @@ export default function DisenarInicio() {
                 <span className="text-[36px] font-extrabold leading-none" style={{ color: c }}>
                   {n}
                 </span>
-                <p className="m-0 mt-1.5 text-[16px] font-bold text-[#1B1B18]">{t}</p>
-                <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-[#4A4943]">{d}</p>
+                <p className="m-0 mt-1.5 text-[16px] font-bold text-[#1B1B18]"><TS>{t}</TS></p>
+                <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-[#4A4943]"><TS>{d}</TS></p>
               </li>
             ))}
           </ol>
@@ -304,7 +304,7 @@ export default function DisenarInicio() {
                     href={s.href}
                     className="rounded-full border border-white/30 px-3.5 py-1.5 text-[13px] font-semibold hover:bg-white hover:text-[#142033]"
                   >
-                    {s.nombre}
+                    <TS>{s.nombre}</TS>
                   </LocalizedClientLink>
                 ))}
               </div>
@@ -321,8 +321,8 @@ export default function DisenarInicio() {
             <h2 className="m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18]"><TS>Diseño CNC en línea, gratis y en español</TS></h2>
             <p className="mt-3">
               <TS>Con</TS> <strong><TS>HETNA 3D Studio</TS></strong> <TS>conviertes una</TS> <strong><TS>imagen a 3D</TS></strong> <TS>con inteligencia artificial: subes la
-              foto de una figura, una pieza o un producto y recibes el modelo con textura en GLB y en</TS>{" "}
-              <strong><TS>STL para impresión 3D</TS></strong> <TS>o router. También haces</TS> <strong><TS>letras 3D</TS></strong> <TS>para anuncios luminosos,</TS>{" "}
+              foto de una figura, una pieza o un producto y recibes el modelo con textura en GLB y en</TS><TS>{" "}</TS>
+              <strong><TS>STL para impresión 3D</TS></strong> <TS>o router. También haces</TS> <strong><TS>letras 3D</TS></strong> <TS>para anuncios luminosos,</TS><TS>{" "}</TS>
               <strong><TS>llaveros con nombre</TS></strong>, <strong><TS>litofanías</TS></strong> <TS>y extruyes cualquier SVG o DXF a STL.</TS>
             </p>
             <p className="mt-3">
@@ -340,10 +340,10 @@ export default function DisenarInicio() {
               {FAQ.map((f) => (
                 <details key={f.p} className="group px-4 py-3.5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-bold text-[#1B1B18]">
-                    {f.p}
+                    <TS>{f.p}</TS>
                     <span className="text-[18px] text-[#B34D07] transition group-open:rotate-45">+</span>
                   </summary>
-                  <p className="m-0 mt-2 text-[14px] leading-relaxed text-[#4A4943]">{f.r}</p>
+                  <p className="m-0 mt-2 text-[14px] leading-relaxed text-[#4A4943]"><TS>{f.r}</TS></p>
                 </details>
               ))}
             </div>
