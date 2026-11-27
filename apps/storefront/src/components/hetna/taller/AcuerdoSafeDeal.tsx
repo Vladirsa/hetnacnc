@@ -3,6 +3,7 @@
 // Licitaciones 3.0 — Fase 4: conversación privada con el taller elegido,
 // HETNA SafeDeal (acuerdo opcional, recomendado) y HETNA Sign (firma con
 // código por correo). La lógica vive en packages/api/src/lib/safedeal.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { accionAcuerdo, mandarMensaje, verAcuerdo, verMensajes, type MensajeSol } from "@/lib/cotizar/solicitud-taller"
@@ -40,16 +41,16 @@ function Conversacion({ token, taller, oculto }: { token: string; taller: string
   }
   return (
     <section className={caja}>
-      <h2 className="text-lg font-extrabold text-[#142033]">Conversación con {taller}</h2>
+      <h2 className="text-lg font-extrabold text-[#142033]"><T>Conversación con</T> {taller}</h2>
       <p className="mt-1 text-sm text-[#6B675C]">
-        Aclaren detalles, ajusten condiciones y den seguimiento aquí. {oculto && "Por tu seguridad, correos, teléfonos y ligas se ocultan hasta que compartas tu contacto o firmen el acuerdo."}
+        <T>Aclaren detalles, ajusten condiciones y den seguimiento aquí.</T> {oculto && "Por tu seguridad, correos, teléfonos y ligas se ocultan hasta que compartas tu contacto o firmen el acuerdo."}
       </p>
       <div className="mt-3 max-h-80 space-y-2 overflow-y-auto rounded-xl bg-[#FAF9F6] p-3">
-        {lista.length === 0 && <p className="text-sm text-[#8A867B]">Todavía no hay mensajes. Salúdalo y confirma los detalles de tu trabajo.</p>}
+        {lista.length === 0 && <p className="text-sm text-[#8A867B]"><T>Todavía no hay mensajes. Salúdalo y confirma los detalles de tu trabajo.</T></p>}
         {lista.map((m) => (
           <div key={m.id} className={`flex ${m.mio ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.mio ? "bg-[#142033] text-white" : "border border-[#E7E4DC] bg-white text-[#142033]"}`}>
-              <p className="whitespace-pre-wrap">{m.texto}</p>
+              <p className="whitespace-pre-wrap"><T>{m.texto}</T></p>
               <p className={`mt-1 text-[11px] ${m.mio ? "text-white/60" : "text-[#8A867B]"}`}>{fecha(m.fecha)}</p>
             </div>
           </div>
@@ -114,22 +115,22 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
 
       <section className={caja}>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-extrabold text-[#142033]">🤝 Acuerdo HETNA SafeDeal</h2>
-          <span className="rounded-full bg-[#F3F1EA] px-2.5 py-0.5 text-xs font-semibold text-[#6B675C]">Opcional</span>
-          {firmado && <span className="rounded-full bg-[#E6F4EA] px-2.5 py-0.5 text-xs font-bold text-[#1E7B3A]">Firmado por ambos</span>}
+          <h2 className="text-lg font-extrabold text-[#142033]"><T>🤝 Acuerdo HETNA SafeDeal</T></h2>
+          <span className="rounded-full bg-[#F3F1EA] px-2.5 py-0.5 text-xs font-semibold text-[#6B675C]"><T>Opcional</T></span>
+          {firmado && <span className="rounded-full bg-[#E6F4EA] px-2.5 py-0.5 text-xs font-bold text-[#1E7B3A]"><T>Firmado por ambos</T></span>}
         </div>
 
         {!firmado && (
           <div className="mt-3 rounded-xl border border-[#F2C98F] bg-[#FFF8EE] p-3 text-sm text-[#40403A]">
-            <b>⚠️ Recomendado para el bienestar de los dos.</b> Un acuerdo por escrito protege tus pagos y tus planos, y al taller le da certeza sobre lo que
-            debe entregar: precio, fechas, calidad, garantía y confidencialidad. Se firma aquí mismo con un código que llega a tu correo, sin imprimir nada.
+            <b><T>⚠️ Recomendado para el bienestar de los dos.</T></b> <T>Un acuerdo por escrito protege tus pagos y tus planos, y al taller le da certeza sobre lo que
+            debe entregar: precio, fechas, calidad, garantía y confidencialidad. Se firma aquí mismo con un código que llega a tu correo, sin imprimir nada.</T>
           </div>
         )}
-        {a.leyenda && <p className="mt-2 text-xs font-semibold text-[#C2560A]">{a.leyenda}</p>}
+        {a.leyenda && <p className="mt-2 text-xs font-semibold text-[#C2560A]"><T>{a.leyenda}</T></p>}
 
         {a.contactos_liberados && a.contacto_otro && (
           <div className="mt-3 rounded-xl bg-[#EEF6F0] p-3 text-sm text-[#142033]">
-            <b>Contacto del taller:</b>{" "}
+            <b><T>Contacto del taller:</T></b>{" "}
             {[a.contacto_otro.nombre, a.contacto_otro.email, a.contacto_otro.telefono && `Tel. ${a.contacto_otro.telefono}`, a.contacto_otro.whatsapp && `WhatsApp ${a.contacto_otro.whatsapp}`]
               .filter(Boolean)
               .join(" · ")}
@@ -141,22 +142,22 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
           <div className="mt-4 grid gap-3">
             {!k && !editando ? (
               <button type="button" className={btn + " justify-self-start"} onClick={() => setEditando(true)}>
-                Preparar el acuerdo
+                <T>Preparar el acuerdo</T>
               </button>
             ) : (
               <>
-                <p className="text-sm text-[#6B675C]">Lo llenamos con los datos de la propuesta. Ajusta lo que haga falta; el taller lo revisa y lo aprueba.</p>
+                <p className="text-sm text-[#6B675C]"><T>Lo llenamos con los datos de la propuesta. Ajusta lo que haga falta; el taller lo revisa y lo aprueba.</T></p>
                 {a.apartados.map((ap: { clave: string; titulo: string }, i: number) => (
                   <label key={ap.clave} className="text-sm">
                     <span className="mb-1 block font-semibold text-[#142033]">
-                      {i + 1}. {ap.titulo}
+                      {i + 1}. <T>{ap.titulo}</T>
                     </span>
                     <textarea rows={3} className={input} value={cond[ap.clave] || ""} onChange={(e) => setCond((c) => ({ ...c, [ap.clave]: e.target.value }))} maxLength={3000} />
                   </label>
                 ))}
                 <details className="text-xs text-[#6B675C]">
                   <summary className="cursor-pointer font-semibold">
-                  Cláusula fija: papel de HETNA ({a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
+                  <T>Cláusula fija: papel de HETNA (</T>{a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
                 </summary>
                   <p className="mt-1">{a.clausula_hetna}</p>
                 </details>
@@ -165,7 +166,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                     {k ? "Guardar cambios" : "Proponer al taller"}
                   </button>
                   <button type="button" className={btn2} onClick={() => { setEditando(false); setCond(k?.condiciones || a.sugerencia || {}) }}>
-                    Cancelar
+                    <T>Cancelar</T>
                   </button>
                 </div>
               </>
@@ -177,14 +178,14 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
         {k?.estado === "borrador" && !editando && (
           <div className="mt-4 grid gap-3">
             <p className="text-sm text-[#40403A]">
-              Versión {k.version} · Cliente: {k.aprobo_cliente ? "✓ aprobó" : "pendiente"} · Taller: {k.aprobo_taller ? "✓ aprobó" : "pendiente"}
-              {k.editado_por && <span className="text-[#8A867B]"> · último cambio: {k.editado_por === "cliente" ? "tú" : "el taller"}</span>}
+              <T>Versión</T> {k.version} <T>· Cliente:</T> {k.aprobo_cliente ? "✓ aprobó" : "pendiente"} <T>· Taller:</T> {k.aprobo_taller ? "✓ aprobó" : "pendiente"}
+              {k.editado_por && <span className="text-[#8A867B]"> <T>· último cambio:</T> {k.editado_por === "cliente" ? "tú" : "el taller"}</span>}
             </p>
             <dl className="grid gap-2 rounded-xl bg-[#FAF9F6] p-3 text-sm">
               {a.apartados.map((ap: { clave: string; titulo: string }, i: number) => (
                 <div key={ap.clave}>
                   <dt className="font-semibold text-[#142033]">
-                    {i + 1}. {ap.titulo}
+                    {i + 1}. <T>{ap.titulo}</T>
                   </dt>
                   <dd className="whitespace-pre-wrap text-[#40403A]">{k.condiciones?.[ap.clave] || "—"}</dd>
                 </div>
@@ -192,23 +193,23 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
             </dl>
             <details className="text-xs text-[#6B675C]">
               <summary className="cursor-pointer font-semibold">
-                Papel de HETNA ({a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
+                <T>Papel de HETNA (</T>{a.modalidad === "conecta" ? "le pagas directo al taller" : "pagas por medio de HETNA"})
               </summary>
               <p className="mt-1">{a.clausula_hetna}</p>
             </details>
             {k.pendientes?.length > 0 && (
               <p className="rounded-lg bg-[#FFF7ED] px-3 py-2 text-sm text-[#7C2D12]">
-                Antes de aprobar, completen lo que dice «indicar» o «por definir» en: {k.pendientes.join(", ")}. Usa «Proponer cambios».
+                <T>Antes de aprobar, completen lo que dice «indicar» o «por definir» en:</T> {k.pendientes.join(", ")}<T>. Usa «Proponer cambios».</T>
               </p>
             )}
             <div className="flex flex-wrap gap-2">
               {!k.yo_aprobe && (
                 <button type="button" className={btn} disabled={ocupado || k.pendientes?.length > 0} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}>
-                  ✓ Apruebo estas condiciones
+                  <T>✓ Apruebo estas condiciones</T>
                 </button>
               )}
               <button type="button" className={btn2} onClick={() => setEditando(true)}>
-                Proponer cambios
+                <T>Proponer cambios</T>
               </button>
             </div>
           </div>
@@ -218,28 +219,28 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
         {k?.estado === "listo" && (
           <div className="mt-4 grid gap-3">
             <p className="text-sm text-[#40403A]">
-              Las dos partes aprobaron la versión {k.version}. El contrato quedó bloqueado:{" "}
+              <T>Las dos partes aprobaron la versión</T> {k.version}<T>. El contrato quedó bloqueado:</T>{" "}
               <a className="font-semibold text-[#C2560A] underline" href={pdf("contrato")}>
-                descarga y revisa el PDF
+                <T>descarga y revisa el PDF</T>
               </a>
               .
             </p>
-            <p className="break-all text-xs text-[#8A867B]">Huella SHA-256: {k.sha256}</p>
-            <p className="text-sm text-[#40403A]">Firmas: {k.firmas.length ? k.firmas.map((f: any) => `${f.parte === "cliente" ? "Cliente" : "Taller"} (${f.nombre})`).join(", ") : "ninguna todavía"}</p>
+            <p className="break-all text-xs text-[#8A867B]"><T>Huella SHA-256:</T> {k.sha256}</p>
+            <p className="text-sm text-[#40403A]"><T>Firmas:</T> {k.firmas.length ? k.firmas.map((f: any) => `${f.parte === "cliente" ? "Cliente" : "Taller"} (${f.nombre})`).join(", ") : "ninguna todavía"}</p>
             {!k.yo_firme ? (
               <div className="grid gap-2 rounded-xl border border-[#E7E4DC] p-3 sm:grid-cols-2">
                 <input className={input} placeholder="Tu nombre completo" value={firma.nombre} onChange={(e) => setFirma({ ...firma, nombre: e.target.value })} />
                 <input className={input} placeholder="Empresa que representas (opcional)" value={firma.representacion} onChange={(e) => setFirma({ ...firma, representacion: e.target.value })} />
                 <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
                   <input type="checkbox" className="mt-1 accent-[#C2560A]" checked={firma.acepto} onChange={(e) => setFirma({ ...firma, acepto: e.target.checked })} />
-                  Leí el contrato (versión {k.version}) y acepto firmarlo electrónicamente.
+                  <T>Leí el contrato (versión</T> {k.version}<T>) y acepto firmarlo electrónicamente.</T>
                 </label>
                 {/* Revisión jurídica (pregunta 24): autorización expresa, con los datos que se comparten */}
                 <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
                   <input type="checkbox" className="mt-1 accent-[#C2560A]" checked={firma.autorizo_contacto} onChange={(e) => setFirma({ ...firma, autorizo_contacto: e.target.checked })} data-testid="autorizo-contacto" />
                   {a.autorizacion_contacto}
                 </label>
-                <p className="text-xs text-[#6B675C] sm:col-span-2">Al firmar las dos partes, te mandamos a tu correo una copia del contrato y de la constancia de firmas.</p>
+                <p className="text-xs text-[#6B675C] sm:col-span-2"><T>Al firmar las dos partes, te mandamos a tu correo una copia del contrato y de la constancia de firmas.</T></p>
                 {!codigoEnviado ? (
                   <button
                     type="button"
@@ -250,7 +251,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                       if (r) setCodigoEnviado(r.correo || "tu correo")
                     }}
                   >
-                    Enviarme el código para firmar
+                    <T>Enviarme el código para firmar</T>
                   </button>
                 ) : (
                   <>
@@ -261,13 +262,13 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
                       disabled={ocupado || firma.codigo.length !== 6 || !firma.acepto || !firma.autorizo_contacto}
                       onClick={() => hacer({ accion: "firmar", ...firma, sha256: k.sha256 }, "¡Firmaste! Te avisamos cuando firme el taller.")}
                     >
-                      Firmar contrato
+                      <T>Firmar contrato</T>
                     </button>
                   </>
                 )}
               </div>
             ) : (
-              <p className="text-sm font-semibold text-[#1E7B3A]">✓ Ya firmaste. Falta la firma del taller.</p>
+              <p className="text-sm font-semibold text-[#1E7B3A]"><T>✓ Ya firmaste. Falta la firma del taller.</T></p>
             )}
             <button
               type="button"
@@ -275,7 +276,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
               disabled={ocupado}
               onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Se creó una versión nueva: haz tus cambios y ambos vuelven a aprobar y firmar.")}
             >
-              Cambiar condiciones (crea una versión nueva)
+              <T>Cambiar condiciones (crea una versión nueva)</T>
             </button>
           </div>
         )}
@@ -284,18 +285,18 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
         {firmado && (
           <div className="mt-4 grid gap-2 text-sm text-[#40403A]">
             <p>
-              Firmado el {fecha(k.firmado_en)} por {k.firmas.map((f: any) => f.nombre).join(" y ")}. Ninguna parte, ni HETNA, puede modificar esta versión.
+              <T>Firmado el</T> {fecha(k.firmado_en)} <T>por</T> {k.firmas.map((f: any) => f.nombre).join(" y ")}<T>. Ninguna parte, ni HETNA, puede modificar esta versión.</T>
             </p>
-            <p className="break-all text-xs text-[#8A867B]">Huella SHA-256: {k.sha256}</p>
+            <p className="break-all text-xs text-[#8A867B]"><T>Huella SHA-256:</T> {k.sha256}</p>
             <div className="flex flex-wrap gap-2">
               <a className={btn} href={pdf("contrato", k.version)}>
-                Descargar contrato
+                <T>Descargar contrato</T>
               </a>
               <a className={btn2} href={pdf("constancia", k.version)}>
-                Constancia de firmas
+                <T>Constancia de firmas</T>
               </a>
               <button type="button" className={btn2} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Se creó una versión nueva para modificar.")}>
-                Modificar (versión nueva)
+                <T>Modificar (versión nueva)</T>
               </button>
             </div>
           </div>
@@ -303,7 +304,7 @@ export default function AcuerdoSafeDeal({ token }: { token: string }) {
 
         {a.firmados?.length > 1 && (
           <p className="mt-3 text-xs text-[#6B675C]">
-            Versiones firmadas:{" "}
+            <T>Versiones firmadas:</T>{" "}
             {a.firmados.map((f: any) => (
               <a key={f.id} className="mr-2 underline" href={pdf("contrato", f.version)}>
                 v{f.version}
