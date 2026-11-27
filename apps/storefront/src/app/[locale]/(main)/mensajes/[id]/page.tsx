@@ -27,9 +27,9 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         <TS>← Mis mensajes</TS>
       </Link>
       <h1 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
-        <Link href={`/${locale}/talleres/${conv.tallerHandle}`}>{conv.tallerNombre}</Link>
+        <Link href={`/${locale}/talleres/${conv.tallerHandle}`}><TS>{conv.tallerNombre}</TS></Link>
       </h1>
-      {conv.productoTitulo && <p className="mb-3 text-sm text-gray-500"><TS>Sobre:</TS> {conv.productoTitulo}</p>}
+      {conv.productoTitulo && <p className="mb-3 text-sm text-gray-500"><TS>Sobre:</TS> <TS>{conv.productoTitulo}</TS></p>}
       <ChatVentana yo="cliente" conversacionId={conv.id} inicial={mensajes} cerrada={conv.estado === "cerrada"} />
     </main>
   )
