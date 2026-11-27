@@ -212,8 +212,8 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
                 </button>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                <T>¿Quieres una foto en el rompecabezas? Prepárala en</T>{" "}
-                <LocalizedClientLink href="/disenar/grabado-foto" className="font-semibold text-[#B34D07] hover:underline"><T>Foto para grabado láser</T></LocalizedClientLink>{" "}
+                <T>¿Quieres una foto en el rompecabezas? Prepárala en</T><T>{" "}</T>
+                <LocalizedClientLink href="/disenar/grabado-foto" className="font-semibold text-[#B34D07] hover:underline"><T>Foto para grabado láser</T></LocalizedClientLink><T>{" "}</T>
                 <T>al mismo tamaño de la placa, graba primero y corta después con este archivo. Recomendado: MDF o triplay de 3 mm; en LightBurn pon la capa CORTE a cortar y deja el marco y la base en capas aparte.</T>
               </p>
             </>
