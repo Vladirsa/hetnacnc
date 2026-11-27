@@ -7,7 +7,7 @@ const CANAL = 't.me/HetNa_CnC';
 const SITIO = 'https://hetnacnc.com/mx';
 const esc = (s) => String(s == null ? '' : s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');
 // Diseños pausados (archivo dañado o en revisión): no se comparten
-const PAUSADOS = ['HDF-20261026-095553'];
+const PAUSADOS = ['HDF-20261026-095553', 'HDF-20261026-094617'];
 
 const usados = {};
 for (const it of $('Ya compartidos').all()) {
@@ -26,7 +26,13 @@ function elegir(lista, claveDe) {
   return x;
 }
 
-const disenos = $('Diseños publicados').all().map((i) => i.json)
+// Sólo las fichas que de verdad están en la tienda (el nodo «Comprobar ficha» pide cada
+// una; la tabla tiene diseños que ya se borraron o se pasaron a borrador y dan 404)
+const fichas = $('Comprobar ficha').all();
+const disenos = $('Diseños publicados').all()
+  .map((i, n) => ({ d: i.json, ok: Number(((fichas[n] || {}).json || {}).statusCode || 0) === 200 }))
+  .filter((x) => x.ok)
+  .map((x) => x.d)
   .filter((d) => d.slug_ia && (d.titulo_comercial_ia || d.titulo_original) && PAUSADOS.indexOf(d.sku) < 0);
 const claveD = (d) => 'd:' + d.sku;
 const titulo = (d) => String(d.titulo_comercial_ia || d.titulo_original).split(' — ')[0];
