@@ -46,18 +46,18 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
     <div className="flex flex-col gap-2 rounded-[10px] border border-[#2A3546] bg-[#111821] p-2.5 text-[12.5px] text-[#C9D2E0]">
       <div className="flex items-center justify-between gap-2">
         <span>
-          <T>Tus créditos:</T>{" "}
-          <b className="text-[15px] text-white">{saldo === undefined ? "…" : sinSesion ? "—" : saldo.ilimitado ? "∞" : saldo.saldo}</b>
+          <T>Tus créditos:</T><T>{" "}</T>
+          <b className="text-[15px] text-white"><T>{saldo === undefined ? "…" : sinSesion ? "—" : saldo.ilimitado ? "∞" : saldo.saldo}</T></b>
         </span>
         <span className="text-right">
-          <T>Este diseño:</T> <b className="text-white">{pagado ? "pagado" : textoCreditos(costo)}</b>
+          <T>Este diseño:</T> <b className="text-white"><T>{pagado ? "pagado" : textoCreditos(costo)}</T></b>
         </span>
       </div>
       {sinSesion ? (
         <span className="text-[12px] text-[#8A97AB]">
           <Link href={`/${locale}/login`} className="font-semibold text-[#FFB27A] underline">
             <T>Crea tu cuenta gratis</T>
-          </Link>{" "}
+          </Link><T>{" "}</T>
           <T>y recibe</T> {CREDITOS_BIENVENIDA} <T>créditos de regalo para bajar tus primeros diseños.</T>
         </span>
       ) : (
@@ -65,7 +65,7 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
           {!pagado && saldo && !alcanza && <span className="text-[12px] text-[#F6D58E]"><T>Te faltan</T> {textoCreditos(costo - saldo.saldo)} <T>para bajar este diseño.</T></span>}
           <div className="flex gap-1.5">
             <button type="button" onClick={() => setAbierto((x) => !x)} className="flex-1 rounded-[7px] bg-[#1C2431] px-2 py-1.5 font-semibold text-white hover:bg-[#243045]">
-              {abierto ? "Ocultar paquetes" : "Comprar créditos"}
+              <T>{abierto ? "Ocultar paquetes" : "Comprar créditos"}</T>
             </button>
             <Link href={`/${locale}/user/creditos`} className="rounded-[7px] bg-[#1C2431] px-2 py-1.5 font-semibold text-[#C9D2E0] hover:bg-[#243045]">
               <T>Movimientos</T>
@@ -87,7 +87,7 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
                 </span>
                 {cat.proveedores.map((prov) => (
                   <button key={prov} type="button" disabled={!!trabajando} onClick={() => comprar(p, prov)} className="rounded-[6px] bg-[#C2560A] px-2 py-1 text-[11.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
-                    {trabajando === `${p.handle}:${prov}` ? "Abriendo…" : prov === "mercadopago" ? "Mercado Pago" : "PayPal"}
+                    <T>{trabajando === `${p.handle}:${prov}` ? "Abriendo…" : prov === "mercadopago" ? "Mercado Pago" : "PayPal"}</T>
                   </button>
                 ))}
               </div>
@@ -148,7 +148,7 @@ export function MisDisenos({
       <span className="text-[12px] text-[#8A97AB]">
         <Link href={`/${locale}/login`} className="font-semibold text-[#FFB27A] underline">
           <T>Entra a tu cuenta</T>
-        </Link>{" "}
+        </Link><T>{" "}</T>
         <T>para guardar tus diseños y volver a abrirlos después (es gratis).</T>
       </span>
     )
@@ -156,7 +156,7 @@ export function MisDisenos({
     <div className="flex flex-col gap-1.5 text-[12.5px] text-[#C9D2E0]">
       <div className="flex gap-1.5">
         <button type="button" disabled={trabajando} onClick={() => guardar(false)} className="flex-1 rounded-[8px] bg-[#C2560A] px-2 py-1.5 font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
-          {idActual ? "Guardar cambios" : "Guardar este diseño"}
+          <T>{idActual ? "Guardar cambios" : "Guardar este diseño"}</T>
         </button>
         {idActual && (
           <button type="button" disabled={trabajando} onClick={() => guardar(true)} className="rounded-[8px] bg-[#1C2431] px-2 py-1.5 font-semibold hover:bg-[#243045] disabled:opacity-50">
@@ -187,8 +187,8 @@ export function MisDisenos({
               >
                 <span className="block truncate font-semibold text-white">{d.nombre}</span>
                 <span className="block truncate text-[11px] text-[#8A97AB]">
-                  {d.herramienta === "cocina" ? "Cocina" : d.herramienta === "moldura" ? "Moldura" : "Mueble"} · {new Date(d.actualizado).toLocaleDateString("es-MX")}
-                  {d.resumen ? ` · ${d.resumen}` : ""}
+                  <T>{d.herramienta === "cocina" ? "Cocina" : d.herramienta === "moldura" ? "Moldura" : "Mueble"}</T> · {new Date(d.actualizado).toLocaleDateString("es-MX")}
+                  <T>{d.resumen ? ` · ${d.resumen}` : ""}</T>
                 </span>
               </button>
               <button
