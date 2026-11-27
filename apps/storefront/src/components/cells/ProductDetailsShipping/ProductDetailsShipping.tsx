@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { ProductPageAccordion } from '@/components/molecules/ProductPageAccordion/ProductPageAccordion'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import { EMPRESA } from '@/lib/hetna/empresa';
@@ -12,35 +13,35 @@ export const ProductDetailsShipping = () => {
       <div className="product-details">
         <ul>
           <li>
-            Envío a todo México. El costo y los días de entrega se calculan con tu
+            <TS>Envío a todo México. El costo y los días de entrega se calculan con tu
             dirección, antes de pagar. Los archivos digitales se entregan en cuanto se
-            confirma el pago.
+            confirma el pago.</TS>
           </li>
           <li>
             {/* Mismo tiempo que en Google Merchant Center (Envíos y devoluciones) */}
             {`Entrega estimada: ${EMPRESA.entregaTotal} días hábiles (${EMPRESA.entregaPreparacion} días para que el taller prepare tu pedido y ${EMPRESA.entregaTransporte} días de paquetería).`}
           </li>
           <li>
-            {EMPRESA.diasDevolucion} días naturales para devolver un producto físico sin
+            {EMPRESA.diasDevolucion} <TS>días naturales para devolver un producto físico sin
             uso. Si llegó dañado, incompleto o distinto, el envío de regreso no te
-            cuesta.{' '}
+            cuesta.</TS>{' '}
             <LocalizedClientLink href="/devoluciones">
-              Ver la política completa
+              <TS>Ver la política completa</TS>
             </LocalizedClientLink>
             .
           </li>
           <li>
-            Archivos digitales: no tienen devolución una vez entregados, salvo que el
+            <TS>Archivos digitales: no tienen devolución una vez entregados, salvo que el
             archivo no corresponda a lo anunciado (otro diseño, dañado o que no abre).
-            En ese caso lo revisamos y te lo cambiamos o te devolvemos tu dinero.
+            En ese caso lo revisamos y te lo cambiamos o te devolvemos tu dinero.</TS>
           </li>
           <li>
             {/* Antes aquí decía "escríbenos por WhatsApp". Se cambió por el chat de
                 la plataforma: es donde queda registro de lo acordado si después hay
                 una aclaración o una devolución. */}
-            ¿Algo no salió bien? Escríbele al taller con el botón de arriba, o a
-            nosotros desde{' '}
-            <LocalizedClientLink href="/contacto">Contacto</LocalizedClientLink>.
+            <TS>¿Algo no salió bien? Escríbele al taller con el botón de arriba, o a
+            nosotros desde</TS>{' '}
+            <LocalizedClientLink href="/contacto"><TS>Contacto</TS></LocalizedClientLink>.
           </li>
         </ul>
       </div>
