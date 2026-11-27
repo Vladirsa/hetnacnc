@@ -31,7 +31,7 @@ const TEMAS: Record<
 }
 
 const quita = (t: string) =>
-  t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
+  t.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim()
 
 const Chip = ({ c }: { c: Cat }) => (
   <LocalizedClientLink
