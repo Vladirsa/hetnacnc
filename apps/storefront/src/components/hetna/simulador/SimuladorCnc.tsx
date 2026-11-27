@@ -234,7 +234,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
     <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
       {/* Programa */}
       <section className="flex min-w-0 flex-col gap-3">
-        {aviso}
+        <T>{aviso}</T>
         <div className={`rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3 ${aviso ? "hidden" : ""}`}>
           <label className="text-[12px] font-semibold text-[#8A97AB]"><T>Ejercicio</T></label>
           <select className={CAMPO} value={ejemploId} onChange={(e) => cargarEjemplo(e.target.value)}>
@@ -243,7 +243,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
               <option key={e.id} value={e.id}>{e.nombre}</option>
             ))}
           </select>
-          {ejemplo && <p className="m-0 mt-2 text-[12.5px] text-[#C9CED6]">{ejemplo.explicacion}</p>}
+          {ejemplo && <p className="m-0 mt-2 text-[12.5px] text-[#C9CED6]"><T>{ejemplo.explicacion}</T></p>}
         </div>
 
         <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
@@ -262,7 +262,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
               {resultado.lineas.map((t, i) => (
                 <div key={i} data-l={i + 1} className={`flex gap-2 px-2 ${i + 1 === linea ? "bg-[#F07A1A]/25 text-white" : lineaConError.has(i + 1) ? "bg-[#B3261E]/25 text-[#FFB4AB]" : "text-[#C9CED6]"}`}>
                   <span className="w-8 shrink-0 select-none text-right text-[#5B6779]">{i + 1}</span>
-                  <span className="whitespace-pre">{t || " "}</span>
+                  <span className="whitespace-pre"><T>{t || " "}</T></span>
                 </div>
               ))}
             </div>
@@ -286,14 +286,14 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
         </div>
 
         <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
-          <span className="text-[13px] font-bold text-white"><T>Alarmas y avisos (</T>{resultado.alarmas.length})</span>
+          <span className="text-[13px] font-bold text-white"><T>Alarmas y avisos (</T><T>{resultado.alarmas.length}</T>)</span>
           {resultado.alarmas.length === 0 ? (
             <p className="m-0 mt-1 text-[12.5px] text-[#7BE0A3]"><T>✓ Sin errores. El programa está listo para correr.</T></p>
           ) : (
             <ul className="m-0 mt-1 list-none space-y-1 p-0">
               {resultado.alarmas.map((a, i) => (
                 <li key={i} className={`text-[12.5px] ${a.nivel === "error" ? "text-[#FFB4AB]" : "text-[#F2C94C]"}`}>
-                  <b><T>Línea</T> {a.linea}:</b> <T>{a.mensaje}</T>
+                  <b><T>Línea</T> <T>{a.linea}</T>:</b> <T>{a.mensaje}</T>
                 </li>
               ))}
             </ul>
@@ -305,7 +305,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
       <section className="flex min-w-0 flex-col gap-3">
         <Vista3D material={material} fresa={fresa} bloque={bloque} version={version} movimientos={resultado.movimientos} herramienta={herramienta} trayectoria={trayectoria} />
 
-        {alarmaActiva && <div className="rounded-[10px] border border-[#B3261E] bg-[#B3261E]/20 px-3 py-2 text-[13px] font-semibold text-[#FFB4AB]">{alarmaActiva}</div>}
+        {alarmaActiva && <div className="rounded-[10px] border border-[#B3261E] bg-[#B3261E]/20 px-3 py-2 text-[13px] font-semibold text-[#FFB4AB]"><T>{alarmaActiva}</T></div>}
         {estado === "terminado" && !alarmaActiva && (
           <div className="rounded-[10px] border border-[#1E7B3A] bg-[#1E7B3A]/20 px-3 py-2 text-[13px] font-semibold text-[#7BE0A3]">
             <T>Programa terminado. Material quitado:</T> {bloque.volumenQuitado().toFixed(1)} <T>cm³.</T>
@@ -319,7 +319,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
               <button type="button" onClick={pausar} className={`${BTN} bg-[#F2C94C] text-[#1B1B18]`}><T>⏸ Pausa</T></button>
             ) : (
               <button type="button" onClick={ciclo} disabled={!resultado.movimientos.length} className={`${BTN} bg-[#1E9E52] text-white`}>
-                ▶ {estado === "pausa" ? "Continuar" : "Ciclo de inicio"}
+                ▶ <T>{estado === "pausa" ? "Continuar" : "Ciclo de inicio"}</T>
               </button>
             )}
             <button type="button" onClick={alFinal} disabled={!resultado.movimientos.length} className={`${BTN} bg-white/10 text-white`}><T>⏭ Ver resultado</T></button>
@@ -344,16 +344,16 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
             <span className="text-[#8A97AB]">X <b className="text-white">{f3(herramienta.x)}</b></span>
             <span className="text-[#8A97AB]">Y <b className="text-white">{f3(herramienta.y)}</b></span>
             <span className="text-[#8A97AB]">Z <b className="text-white">{f3(herramienta.z)}</b></span>
-            <span className="text-[#8A97AB]">F <b className="text-white">{m && m.tipo === "corte" ? Math.round(m.f) : "—"}</b></span>
+            <span className="text-[#8A97AB]">F <b className="text-white"><T>{m && m.tipo === "corte" ? Math.round(m.f) : "—"}</T></b></span>
             <span className="text-[#8A97AB]">S <b className="text-white">{m ? m.s : 0}</b></span>
-            <span className="text-[#8A97AB]"><T>Husillo</T> <b className={m?.husillo ? "text-[#7BE0A3]" : "text-white"}>{m?.husillo ? "ON" : "OFF"}</b></span>
+            <span className="text-[#8A97AB]"><T>Husillo</T> <b className={m?.husillo ? "text-[#7BE0A3]" : "text-white"}><T>{m?.husillo ? "ON" : "OFF"}</T></b></span>
           </div>
           <div className="lg:col-span-2">
             <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
               <div className="h-full bg-[#F07A1A]" style={{ width: `${Math.round(progreso * 100)}%` }} />
             </div>
             <p className="m-0 mt-1 text-[12px] text-[#8A97AB]">
-              <T>Línea</T> {linea || "—"} · {Math.round(progreso * 100)}<T>% · Tiempo estimado del programa:</T> {minutos(resultado.tiempoMin)}
+              <T>Línea</T> <T>{linea || "—"}</T> · {Math.round(progreso * 100)}<T>% · Tiempo estimado del programa:</T> {minutos(resultado.tiempoMin)}
             </p>
           </div>
         </div>
@@ -365,7 +365,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
             <div className="mt-1 grid grid-cols-3 gap-2">
               {(["ancho", "largo", "alto"] as const).map((k) => (
                 <label key={k} className="text-[11.5px] text-[#8A97AB]">
-                  {k === "ancho" ? "Ancho X" : k === "largo" ? "Largo Y" : "Espesor Z"}
+                  <T>{k === "ancho" ? "Ancho X" : k === "largo" ? "Largo Y" : "Espesor Z"}</T>
                   <input type="number" min={1} className={CAMPO} value={material[k]} onChange={(e) => numMaterial(k, e.target.value)} />
                 </label>
               ))}
