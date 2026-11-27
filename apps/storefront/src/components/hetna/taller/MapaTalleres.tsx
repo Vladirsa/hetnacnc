@@ -431,7 +431,7 @@ export default function MapaTalleres({
         )}
         {totalPaises > 0 && (
           <span className="text-[#6B675C]">
-            {" "}<T>· En otros</T> {enPaises.length} <T>países:</T> {totalPaises}{" "}
+            <T>{" "}</T><T>· En otros</T> {enPaises.length} <T>países:</T> {totalPaises}<T>{" "}</T>
             <button
               type="button"
               onClick={() =>
