@@ -39,7 +39,7 @@ export function QuitarPerfil({ slug }: { slug: string }) {
       }}
       className="text-sm font-semibold text-[#6B675C] underline underline-offset-2 hover:text-[#142033] disabled:opacity-50"
     >
-      {estado === "error" ? "No se pudo enviar. Escríbenos a contacto@hetnacnc.com" : "¿Es tu empresa y no quieres aparecer? Quitar este perfil"}
+      <T>{estado === "error" ? "No se pudo enviar. Escríbenos a contacto@hetnacnc.com" : "¿Es tu empresa y no quieres aparecer? Quitar este perfil"}</T>
     </button>
   )
 }
