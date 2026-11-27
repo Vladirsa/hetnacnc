@@ -413,6 +413,28 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "etiquetas-braille",
+    nombre: "Etiquetas en braille",
+    texto: "Placas con el texto en braille español en relieve (y en letras para quien ve). STL para imprimir.",
+    icono: "llavero",
+    acceso: "gratis",
+    titulo: "Etiquetas en braille para imprimir en 3D gratis (STL)",
+    descripcion:
+      "Escribe el texto y descarga gratis la placa en braille español con los puntos a la medida estándar: signo de mayúscula, de número, acentos y ñ, con el texto en letras arriba si quieres. Para baños, puertas, elevadores, medicinas y frascos. STL o 3MF a dos colores.",
+    meta: "Placas en braille español para imprimir en 3D: puntos a la medida estándar, acentos y ñ, con texto visible. Descarga el STL gratis.",
+  },
+  {
+    slug: "etiquetas-cajas",
+    nombre: "Etiquetas para cajas",
+    texto: "Etiquetas de la medida que quieras (36 × 11 para Gridfinity) con texto ajustado e ícono. Muchas de una vez.",
+    icono: "llavero",
+    acceso: "gratis",
+    titulo: "Etiquetas para cajas organizadoras y Gridfinity gratis (STL y DXF)",
+    descripcion:
+      "Escribe una etiqueta por línea y descárgalas todas: placas de la medida que quieras (36 × 11 mm para Gridfinity, cajones o tornillería) con el texto ajustado y un ícono opcional. STL para imprimir a uno o dos colores, o DXF para láser.",
+    meta: "Etiquetas para cajas organizadoras y Gridfinity: escribe una por línea y baja los STL o el DXF para láser. Gratis.",
+  },
+  {
     slug: ESCANEAR,
     nombre: "Imagen a 3D con IA",
     texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
@@ -475,5 +497,42 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
   },
 }
 
+// Herramientas que son un modo de otra: su pestaña es la de la herramienta que las junta
+// (el catálogo de cajas, /disenar/cajas, también cuenta como "Cajas")
+export const PESTANA_DE_MODO: Record<string, string> = {
+  "organizador-cajon": "caja-con-juntas",
+  // Patrones de corte
+  "patrones-radiales": "celosias",
+  "bisagra-viva": "celosias",
+  "patron-voronoi": "celosias",
+  "celosia-desde-imagen": "celosias",
+  // Letreros y placas
+  "estencil-letras": "letreros",
+  "codigo-qr": "letreros",
+  // Imagen
+  "grabado-foto": "vectorizador",
+  "litofania-relieve": "vectorizador",
+  // Archivos
+  "anidado-piezas": "convertidor",
+  "rebanado-capas": "convertidor",
+  "svg-a-stl": "convertidor",
+  // Decoración
+  "marcos-portarretratos": "relojes",
+  "lamparas-capas": "relojes",
+  "esferas-navidad": "relojes",
+  // Muebles
+  "muebles-ensamble": "despiece-muebles",
+  "muebles-desde-imagen": "despiece-muebles",
+  "molduras-tallados": "despiece-muebles",
+  "costillas-desde-imagen": "despiece-muebles",
+  // Juegos y mecanismos
+  engranes: "rompecabezas",
+  // Llaveros y placas (3D)
+  "etiquetas-braille": "llaveros",
+  "etiquetas-cajas": "llaveros",
+}
+
+export const pestanaDe = (slug: string) => PESTANA_DE_MODO[slug] || slug
+
 export const estudioDe = (slug: string): Estudio =>
-  ESTUDIOS["3d"].herramientas.some((h) => h.slug === slug) ? "3d" : "2d"
+  ESTUDIOS["3d"].herramientas.some((h) => h.slug === pestanaDe(slug)) ? "3d" : "2d"
