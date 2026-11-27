@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { ProductGallery } from "@/components/organisms/ProductGallery/ProductGallery"
 import { ProductDetails, ProductDetallesLargos } from "@/components/organisms/ProductDetails/ProductDetails"
 import { listProducts } from "@/lib/data/products"
@@ -319,7 +320,7 @@ export const ProductDetailsPage = async ({
       <nav aria-label="Migas de pan" className="mb-3 text-[13px] text-[#6B6A63]" data-testid="product-migas">
         <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0">
           <li>
-            <LocalizedClientLink href="/" className="hover:text-[#B34D07] hover:underline">Inicio</LocalizedClientLink>
+            <LocalizedClientLink href="/" className="hover:text-[#B34D07] hover:underline"><TS>Inicio</TS></LocalizedClientLink>
           </li>
           {categoria?.name && categoria?.handle && (
             <li className="flex items-center gap-1">
