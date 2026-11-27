@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useState } from 'react';
 
 import { RadioGroup } from '@headlessui/react';
@@ -182,12 +183,12 @@ const CartPaymentSection = ({
 
           {paidByGiftcard && (
             <div className="flex w-1/3 flex-col">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">Método de pago</Text>
+              <Text className="txt-medium-plus text-ui-fg-base mb-1"><T>Método de pago</T></Text>
               <Text
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method-summary"
               >
-                Tarjeta de regalo
+                <T>Tarjeta de regalo</T>
               </Text>
             </div>
           )}
@@ -217,7 +218,7 @@ const CartPaymentSection = ({
           {cart && paymentReady && activeSession ? (
             <div className="flex w-full items-start gap-x-1">
               <div className="flex w-1/3 flex-col">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">Método de pago</Text>
+                <Text className="txt-medium-plus text-ui-fg-base mb-1"><T>Método de pago</T></Text>
                 <Text
                   className="txt-medium text-ui-fg-subtle"
                   data-testid="payment-method-summary"
@@ -226,7 +227,7 @@ const CartPaymentSection = ({
                 </Text>
               </div>
               <div className="flex w-1/3 flex-col">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">Datos de pago</Text>
+                <Text className="txt-medium-plus text-ui-fg-base mb-1"><T>Datos de pago</T></Text>
                 <div
                   className="txt-medium text-ui-fg-subtle flex items-center gap-2"
                   data-testid="payment-details-summary"
@@ -248,12 +249,12 @@ const CartPaymentSection = ({
             </div>
           ) : paidByGiftcard ? (
             <div className="flex w-1/3 flex-col">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">Método de pago</Text>
+              <Text className="txt-medium-plus text-ui-fg-base mb-1"><T>Método de pago</T></Text>
               <Text
                 className="txt-medium text-ui-fg-subtle"
                 data-testid="payment-method-summary"
               >
-                Tarjeta de regalo
+                <T>Tarjeta de regalo</T>
               </Text>
             </div>
           ) : null}
