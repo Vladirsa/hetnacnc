@@ -112,7 +112,7 @@ export function TiendaVista({
                     filtro === k ? "border-[#1E2329] bg-[#1E2329] text-white" : "border-[#C5CCD3] bg-white text-[#1E2329] hover:border-[#1E2329]"
                   }`}
                 >
-                  {t}
+                  <T>{t}</T>
                   <span className={`fuente-mono text-[13px] ${filtro === k ? "text-[#FFB27A]" : "text-[#5B6370]"}`}>{n}</span>
                 </button>
               ))}
@@ -142,8 +142,8 @@ export function TiendaVista({
               {verTodo && !catalogo.fallo && (
                 <p className="fuente-mono mt-4 text-[13px] leading-relaxed text-[#5B6370]">
                   <T>Total en la tienda:</T> {catalogo.total} <T>{catalogo.total === 1 ? "producto publicado" : "productos publicados"}</T>
-                  {conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}<T>. Los planes del Cotizador y los talleres del
-                  directorio no son productos de la tienda y no entran en la cuenta.</T>{" "}
+                  <T>{conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}</T><T>. Los planes del Cotizador y los talleres del
+                  directorio no son productos de la tienda y no entran en la cuenta.</T><T>{" "}</T>
                   <LocalizedClientLink href="/categories" className="font-semibold text-[#C24E03] underline">
                     <T>Ver todos los productos en una lista</T>
                   </LocalizedClientLink>
@@ -214,7 +214,7 @@ function Foto({ c }: { c: { imagen?: string; patron: string; nombre: string } })
 function Tarjeta({ children, foto }: { children: React.ReactNode; foto: React.ReactNode }) {
   return (
     <article className="flex flex-col rounded-md border border-[#D4D9DF] bg-white">
-      {foto}
+      <T>{foto}</T>
       <div className="flex flex-1 flex-col gap-2 p-4">{children}</div>
     </article>
   )
@@ -243,11 +243,11 @@ function TarjetaCategoria({ c }: { c: CategoriaTienda }) {
       <div>
         <Etiqueta tipo={c.estado} />
       </div>
-      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">{c.nombre}</h3>
+      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>{c.nombre}</T></h3>
       <p className="text-[14px] leading-snug text-[#5B6370]"><T>{c.descripcion}</T></p>
       <Cifras izq={textoConteo(c.conteo, c.estado)} der={textoDesde(c.desde)} />
       <LocalizedClientLink href={`/tienda/${c.clave}`} className={`${BTN} mt-2 w-full`}>
-        {ACCION[c.clave]}
+        <T>{ACCION[c.clave]}</T>
       </LocalizedClientLink>
     </Tarjeta>
   )
@@ -259,7 +259,7 @@ function TarjetaProxima({ c }: { c: CategoriaTienda }) {
       <div>
         <Etiqueta tipo="proximamente" />
       </div>
-      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]">{c.nombre}</h3>
+      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>{c.nombre}</T></h3>
       <p className="text-[14px] leading-snug text-[#5B6370]"><T>{c.descripcion}</T></p>
       <Cifras izq="0 productos" der="Aún sin productos" />
       <div className="mt-2">
@@ -286,7 +286,7 @@ function TarjetaCotizador({ planes }: { planes: { nombre: string; precio: string
       <div className="fuente-mono mt-auto grid grid-cols-2 gap-1 border-t border-dashed border-[#D4D9DF] pt-3 text-[13px] text-[#1E2329]">
         {planes.map((p) => (
           <span key={p.nombre}>
-            {p.nombre} <b>{p.precio}</b>
+            <T>{p.nombre}</T> <b>{p.precio}</b>
             <span className="text-[#5B6370]"><T>/mes</T></span>
           </span>
         ))}
@@ -306,9 +306,9 @@ function TarjetaTalleres({ activos, verificados }: { activos: number; verificado
       </div>
       <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>Talleres CNC</T></h3>
       <p className="text-[14px] leading-snug text-[#5B6370]">
-        {activos === 0
+        <T>{activos === 0
           ? "Todavía no hay talleres activos. ¿Tienes uno? Sé el primero: registrarte es gratis."
-          : `Talleres que ya reciben pedidos en HETNA. ¿Tienes un taller? Regístralo gratis.`}
+          : `Talleres que ya reciben pedidos en HETNA. ¿Tienes un taller? Regístralo gratis.`}</T>
       </p>
       <Cifras
         izq={`${activos} ${activos === 1 ? "taller activo" : "talleres activos"}`}
@@ -346,7 +346,7 @@ function Procesos({ procesos }: { procesos: Proceso[] }) {
               <Image src={p.imagen} alt="" fill sizes="(min-width: 1024px) 18vw, 112px" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col justify-center gap-1 p-3">
-              <span className="fuente-condensada text-[20px] font-bold uppercase leading-none text-[#1E2329]">{p.nombre}</span>
+              <span className="fuente-condensada text-[20px] font-bold uppercase leading-none text-[#1E2329]"><T>{p.nombre}</T></span>
               <span className="text-[13px] leading-snug text-[#5B6370]"><T>{p.texto}</T></span>
               <span className="mt-1 text-[13px] font-semibold text-[#C24E03] group-hover:underline"><T>Cotizar →</T></span>
             </div>
@@ -407,7 +407,7 @@ function Resultados({
   return (
     <section className="mt-5" aria-live="polite">
       <p className="fuente-mono text-[14px] text-[#5B6370]">
-        {r.productos.length} <T>{r.productos.length === 1 ? "producto" : "productos"}</T> <T>para «</T>{termino}»
+        <T>{r.productos.length}</T> <T>{r.productos.length === 1 ? "producto" : "productos"}</T> <T>para «</T><T>{termino}</T>»
       </p>
 
       {r.productos.length > 0 && (
@@ -422,7 +422,7 @@ function Resultados({
                   <Etiqueta tipo={etiquetaDe(p)} />
                   <p className="mt-1 line-clamp-2 text-[14px] font-semibold leading-snug text-[#1E2329]"><T>{p.titulo}</T></p>
                   <p className="fuente-mono mt-1 text-[14px] font-semibold text-[#1E2329]">
-                    {p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}
+                    <T>{p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}</T>
                   </p>
                 </div>
               </LocalizedClientLink>
@@ -435,7 +435,7 @@ function Resultados({
         <div className="mt-4 flex flex-wrap gap-2">
           {r.categorias.map((c) => (
             <LocalizedClientLink key={c.clave} href={`/tienda/${c.clave}`} className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[#C5CCD3] bg-white px-3 text-[14px] font-semibold text-[#1E2329] hover:border-[#1E2329]">
-              {c.nombre}
+              <T>{c.nombre}</T>
               <span className="fuente-mono text-[12px] font-normal text-[#5B6370]"><T>{c.conteo ? textoConteo(c.conteo, c.estado) : "Próximamente"}</T></span>
             </LocalizedClientLink>
           ))}
@@ -449,13 +449,13 @@ function Resultados({
 
       {nada && (
         <div className="mt-4 rounded-md border-2 border-dashed border-[#E85D04] bg-white p-5 sm:p-6">
-          <h3 className="fuente-condensada text-[26px] font-bold uppercase leading-none text-[#1E2329]"><T>Todavía no vendemos «</T>{termino}»</h3>
+          <h3 className="fuente-condensada text-[26px] font-bold uppercase leading-none text-[#1E2329]"><T>Todavía no vendemos «</T><T>{termino}</T>»</h3>
           <p className="mt-2 max-w-xl text-[15px] text-[#5B6370]">
             <T>Pero te lo podemos conseguir: cotízalo y los talleres de HETNA te mandan su precio. Ya llevamos escrito lo que buscaste.</T>
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <LocalizedClientLink href={cotizarHref({ descripcion: termino, origen: "tienda-busqueda" })} onClick={cotizar} className={BTN}>
-              <T>Cotizar «</T>{termino.length > 28 ? `${termino.slice(0, 26)}…` : termino}»
+              <T>Cotizar «</T><T>{termino.length > 28 ? `${termino.slice(0, 26)}…` : termino}</T>»
             </LocalizedClientLink>
             <button type="button" onClick={alLimpiar} className={BTN2}>
               <T>Ver todas las categorías</T>
