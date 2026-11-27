@@ -7,4 +7,9 @@ export const storeHetnaSocialMiddlewares: MiddlewareRoute[] = [
     matcher: "/store/hetna-social/completar",
     middlewares: [authenticate("customer", ["bearer"], { allowUnregistered: true })],
   },
+  {
+    method: ["POST"],
+    matcher: "/store/hetna-social/taller",
+    middlewares: [authenticate("member", ["bearer"], { allowUnregistered: true })],
+  },
 ]

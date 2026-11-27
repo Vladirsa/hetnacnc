@@ -186,3 +186,44 @@ export function nombreDePerfil(m: { name?: string; given_name?: string; family_n
   const partes = txt(m.name).split(/\s+/).filter(Boolean)
   return { first_name: (partes[0] || "").slice(0, 80), last_name: partes.slice(1).join(" ").slice(0, 80) }
 }
+
+// ---------------------------------------------------------------------
+// Talleres (panel de vendedor, actor "member")
+// ---------------------------------------------------------------------
+
+/**
+ * Correo comprobado de una identidad: el de correo y contraseña es con el que se
+ * registró; el de una red, el que dio la red. Nunca lo que mande el navegador. Pura.
+ */
+export function correoDeIdentidad(pis: { provider: string; entity_id?: string; user_metadata?: Record<string, any> | null }[] | undefined) {
+  const lista = pis || []
+  const ep = lista.find((p) => p.provider === "emailpass")
+  const social = lista.find((p) => (PROVEEDORES_SOCIALES as readonly string[]).includes(p.provider))
+  const bruto = ep ? ep.entity_id : social?.user_metadata?.email
+  const email = String(bruto || "").trim().toLowerCase()
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : ""
+}
+
+export type DecisionTaller =
+  | { accion: "entrar"; member_id: string }
+  | { accion: "vincular"; member_id: string }
+  | { accion: "nueva" }
+  | { accion: "rechazar"; motivo: string }
+
+/**
+ * Entrada de un taller con Google, Facebook o LinkedIn. Pura.
+ *   - la identidad ya tiene miembro: entra
+ *   - hay un miembro con ese correo: se une sólo si la red verificó el correo
+ *     (Facebook no lo dice: nunca se une sola)
+ *   - no hay: taller nuevo (el alta usa el correo de la red, ver blindarAltaTaller)
+ */
+export function decidirTaller(d: { proveedor: string; email: string; verificado: boolean; miembroDeLaIdentidad: string | null; miembroConEseCorreo: string | null }): DecisionTaller {
+  const red = d.proveedor === "google" ? "Google" : d.proveedor === "facebook" ? "Facebook" : "LinkedIn"
+  if (d.miembroDeLaIdentidad) return { accion: "entrar", member_id: d.miembroDeLaIdentidad }
+  if (!d.email) return { accion: "rechazar", motivo: `Tu cuenta de ${red} no comparte tu correo. Entra o regístrate con correo y contraseña.` }
+  if (d.miembroConEseCorreo) {
+    if (!d.verificado) return { accion: "rechazar", motivo: `Ya hay un taller con ${d.email}. Entra con tu correo y contraseña (o usa «¿Olvidaste tu contraseña?»).` }
+    return { accion: "vincular", member_id: d.miembroConEseCorreo }
+  }
+  return { accion: "nueva" }
+}

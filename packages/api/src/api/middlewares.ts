@@ -31,6 +31,7 @@ import { storeVendedoresMiddlewares } from "./store/proteger-vendedores";
 import { storeTextoPersonalizadoMiddlewares } from "./store/carts/texto-personalizado";
 import { storeHetnaPedidosMiddlewares } from "./store/hetna-pedidos/middlewares";
 import { vendorAltaMiddlewares } from "./vendor/hetna-alta/middlewares";
+import { vendorAltaCuentaMiddlewares } from "./vendor/hetna-alta-cuenta/middlewares";
 import { adminSubirDisenosMiddlewares } from "./admin/hetna-subir-disenos/middlewares";
 import { storeCuponesMiddlewares } from "./store/hetna-cupones/middlewares";
 import { corsAppMiddlewares } from "./api/cors-app";
@@ -148,6 +149,7 @@ export default defineMiddlewares({
         ...vendorPaquetesMiddlewares,
         ...vendorProductoProtegidoMiddlewares,
         ...vendorAltaMiddlewares,
+        ...vendorAltaCuentaMiddlewares,
         ...storeSolicitudArchivosMiddlewares,
         // Factura del pedido (PDF + XML del CFDI) desde el panel del taller
         {

@@ -156,7 +156,7 @@ module.exports = withMercur({
       authMethodsPerActor: {
         customer: ['emailpass', ...redesActivas],
         seller: ['emailpass'],
-        member: ['emailpass'],
+        member: ['emailpass', ...redesActivas],
         user: ['emailpass'],
       },
       jwtSecret: secretoSesion("JWT_SECRET"),

@@ -9,7 +9,7 @@ import { revalidateTag } from "next/cache"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
-import { COOKIE_ESTADO, COOKIE_VOLVER, SITIO_PUBLICO, esRedSocial } from "@/lib/auth/social"
+import { COOKIE_ESTADO, COOKIE_PARA, COOKIE_VOLVER, PANEL_TALLER, SITIO_PUBLICO, esRedSocial } from "@/lib/auth/social"
 import { getCacheTag } from "@/lib/data/cookies"
 import { reenviarConfirmacion, transferCart } from "@/lib/data/customer"
 import { eventoSocial } from "@/lib/hetna/social-evento"
@@ -24,16 +24,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ red:
   const estadoGuardado = tarro.get(COOKIE_ESTADO)?.value || ""
   const volver = destinoSeguro(tarro.get(COOKIE_VOLVER)?.value, "/user")
   const q = req.nextUrl.searchParams
+  const taller = tarro.get(COOKIE_PARA)?.value === "taller"
   const limpiar = (res: NextResponse) => {
     res.cookies.delete(COOKIE_ESTADO)
     res.cookies.delete(COOKIE_VOLVER)
+    res.cookies.delete(COOKIE_PARA)
     return res
   }
-  const alLogin = (msg: string) => limpiar(NextResponse.redirect(new URL(`/login?social=${encodeURIComponent(msg)}`, SITIO_PUBLICO)))
+  const login = taller ? `${PANEL_TALLER}/login` : "/login"
+  const alLogin = (msg: string) => limpiar(NextResponse.redirect(new URL(`${login}?social=${encodeURIComponent(msg)}`, SITIO_PUBLICO)))
 
   if (!esRedSocial(red)) return alLogin("Esa forma de entrar no existe.")
   if (q.get("error")) return alLogin("Cancelaste la entrada o la red no dio permiso. Puedes intentarlo otra vez.")
   if (!estadoGuardado || q.get("state") !== estadoGuardado) return alLogin("La sesión expiró o se abrió en otro navegador. Vuelve a intentarlo.")
+
+  // Taller: nada de la tienda (carrito, sesión de cliente, recomendaciones)
+  if (taller) return limpiar(await regresoTaller(red, q, alLogin))
 
   try {
     // 2. Identidad de la red
@@ -82,6 +88,44 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ red:
     await transferCart().catch(() => undefined)
     revalidateTag(await getCacheTag("customers"))
     return limpiar(NextResponse.redirect(new URL(volver, SITIO_PUBLICO)))
+  } catch {
+    return alLogin("No se pudo conectar con la red social. Intenta de nuevo.")
+  }
+}
+
+// Entrada al panel de vendedor. El panel abre su propia sesión en su página
+// /seller/entrar-red con el token (va en el "#": no llega a ningún servidor ni log).
+async function regresoTaller(red: string, q: URLSearchParams, alLogin: (msg: string) => NextResponse): Promise<NextResponse> {
+  try {
+    const r = await fetch(`${BACKEND}/auth/member/${red}/callback?${q.toString()}`, { cache: "no-store" })
+    const d = (await r.json().catch(() => ({}))) as { token?: string }
+    if (!r.ok || !d.token) return alLogin("No se pudo comprobar tu cuenta de la red social. Intenta de nuevo.")
+
+    const c = await fetch(`${BACKEND}/store/hetna-social/taller`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${d.token}`, "x-publishable-api-key": LLAVE, "Content-Type": "application/json" },
+      body: "{}",
+      cache: "no-store",
+    })
+    const dc = (await c.json().catch(() => ({}))) as { accion?: string; email?: string; first_name?: string; last_name?: string; message?: string }
+    if (!c.ok) return alLogin(dc.message || "No se pudo terminar la entrada. Intenta de nuevo.")
+
+    let token = d.token
+    if (dc.accion === "vincular") {
+      // El token debe traer el miembro recién unido
+      const t = await fetch(`${BACKEND}/auth/token/refresh`, { method: "POST", headers: { Authorization: `Bearer ${d.token}` }, cache: "no-store" })
+      const dt = (await t.json().catch(() => ({}))) as { token?: string }
+      if (!t.ok || !dt.token) return alLogin("No se pudo abrir tu sesión. Intenta de nuevo.")
+      token = dt.token
+    }
+    const h = new URLSearchParams({ t: token })
+    if (dc.accion === "nueva") {
+      h.set("n", "1")
+      if (dc.email) h.set("e", dc.email)
+      if (dc.first_name) h.set("fn", dc.first_name)
+      if (dc.last_name) h.set("ln", dc.last_name)
+    }
+    return NextResponse.redirect(new URL(`${PANEL_TALLER}/entrar-red#${h.toString()}`, SITIO_PUBLICO))
   } catch {
     return alLogin("No se pudo conectar con la red social. Intenta de nuevo.")
   }
