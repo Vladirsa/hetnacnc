@@ -49,6 +49,27 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     }
   })
 
+  // El anuncio del mes «HETNA CNC en números» (lib/metricas-extranjeros): una vez en cada grupo
+  const metricas = (await knex(T_POST)
+    .where({ fuente: "metricas" })
+    .where("created_at", ">=", knex.raw("now() - interval '7 days'"))
+    .orderBy("created_at", "desc")
+    .first("id", "titulo", "texto_base", "medios", "url_destino", "created_at")
+    .catch(() => null)) as any
+  if (metricas) {
+    const texto = String(metricas.texto_base || "").replace(/\{\{liga\}\}/g, metricas.url_destino || "")
+    anuncios.push({
+      id: metricas.id,
+      tipo: "metricas",
+      titulo: texto.split("\n").find((l) => l.trim()) || metricas.titulo,
+      texto,
+      imagen: (json(metricas.medios) || []).find((m: any) => m?.url && m.tipo !== "video")?.url || null,
+      liga: metricas.url_destino,
+      publicado: metricas.created_at,
+      cierra: null,
+    })
+  }
+
   res.setHeader("Cache-Control", "public, max-age=300")
   if (req.query.formato === "texto") {
     res.setHeader("Content-Type", "text/plain; charset=utf-8")
