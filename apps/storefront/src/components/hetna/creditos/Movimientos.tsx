@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import type { Movimiento } from "@/lib/creditos/acciones"
 import { fechaSegura } from "@/lib/helpers/fecha-segura"
 
@@ -12,12 +13,12 @@ const FECHA = new Intl.DateTimeFormat("es-MX", {
 
 export const Movimientos = ({ movimientos }: { movimientos: Movimiento[] }) => (
   <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-    <h3 className="text-[14px] font-bold text-[#1B1B18]">Movimientos</h3>
+    <h3 className="text-[14px] font-bold text-[#1B1B18]"><TS>Movimientos</TS></h3>
 
     {movimientos.length === 0 ? (
       <p className="mt-2 text-[13px] leading-relaxed text-[#6B6A63]">
-        Todavía no hay movimientos. Aquí van a aparecer tus compras de créditos y lo que
-        gastes en las herramientas.
+        <TS>Todavía no hay movimientos. Aquí van a aparecer tus compras de créditos y lo que
+        gastes en las herramientas.</TS>
       </p>
     ) : (
       <ul className="mt-2 flex flex-col divide-y divide-[#EDEAE2]">
