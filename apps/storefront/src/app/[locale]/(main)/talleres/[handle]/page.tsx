@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { metaEnIdioma } from "@/i18n/servidor"
 import { TS } from "@/i18n/TS"
 import { textoCapacidad } from "@/lib/hetna/capacidad-libre"
 import { resenasDeTaller, type ResenaTaller } from "@/lib/hetna/resenas-taller"
@@ -40,7 +41,7 @@ const PESTANAS = [
 ] as const
 type Pestana = (typeof PESTANAS)[number][0]
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { handle } = await params
   const t = await tallerPorHandle(handle)
   if (!t) return {}
@@ -572,4 +573,9 @@ function Cumplimiento({ m }: { m: Medido }) {
       </p>
     </section>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
