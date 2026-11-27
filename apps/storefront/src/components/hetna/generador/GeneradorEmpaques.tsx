@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
@@ -319,7 +320,7 @@ export function GeneradorEmpaques() {
                     className={`w-full flex items-center justify-between px-3 py-2 text-[13px] font-bold ${abierto ? "bg-[#142033] text-white" : "bg-[#FAF9F6] text-[#1B1B18]"}`}
                   >
                     <span>{g} <span className={`font-normal ${abierto ? "text-white/70" : "text-[#6B6A63]"}`}>({lista.length})</span></span>
-                    <span aria-hidden="true">{abierto ? "−" : "+"}</span>
+                    <span aria-hidden="true"><Tr>{abierto ? "−" : "+"}</Tr></span>
                   </button>
                   {abierto && (
                     <div className="grid grid-cols-3 gap-1.5 p-2">
@@ -352,7 +353,7 @@ export function GeneradorEmpaques() {
             <div className="flex gap-2">
               {(["mm", "cm", "in"] as Unidad[]).map((u) => (
                 <Opcion key={u} activa={unidad === u} onClick={() => cambiarUnidad(u)}>
-                  {u === "in" ? "pulgadas" : u}
+                  <Tr>{u === "in" ? "pulgadas" : u}</Tr>
                 </Opcion>
               ))}
             </div>
@@ -379,7 +380,7 @@ export function GeneradorEmpaques() {
           {def.campos.includes("conBase") && (
             <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
               <input type="checkbox" checked={conBase} onChange={(e) => setConBase(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-              {ETIQUETAS[forma].conBase || "Con base"} <T>(pestañas y tapa redonda)</T>
+              <Tr>{ETIQUETAS[forma].conBase || "Con base"}</Tr> <T>(pestañas y tapa redonda)</T>
             </label>
           )}
 
@@ -511,7 +512,7 @@ export function GeneradorEmpaques() {
                   {hoja && !medidaHoja && <span><T>Hoja necesaria:</T> {r1(hoja.ancho)} × {r1(hoja.alto)} <T>mm</T></span>}
                   {medidaHoja && hojas.length > 0 && (
                     <span>
-                      {hojas.length === 1 ? "1 hoja" : `${hojas.length} hojas`} {nombreHoja} <T>de</T> {r1(medidaHoja.w)} × {r1(medidaHoja.h)} <T>mm · aprovechamiento</T> {usoHojas}%
+                      <Tr>{hojas.length === 1 ? "1 hoja" : `${hojas.length} hojas`}</Tr> {nombreHoja} <T>de</T> {r1(medidaHoja.w)} × {r1(medidaHoja.h)} <T>mm · aprovechamiento</T> {usoHojas}%
                     </span>
                   )}
                 </div>
@@ -519,12 +520,12 @@ export function GeneradorEmpaques() {
 
               {acomodo.noCaben.length > 0 && (
                 <p className="m-0 text-[13.5px] text-[#8A1C1C] bg-[#FDECEC] border border-[#F2B8B5] rounded-[12px] px-4 py-3">
-                  <T>No cabe en la hoja</T> {nombreHoja} <T>ni girándola:</T> {acomodo.noCaben.join(", ")}<T>. Elige una hoja más grande, baja las medidas o usa &quot;Ajustar al dibujo&quot;.</T>
+                  <T>No cabe en la hoja</T> {nombreHoja} <T>ni girándola:</T> <Tr>{acomodo.noCaben.join(", ")}</Tr><T>. Elige una hoja más grande, baja las medidas o usa &quot;Ajustar al dibujo&quot;.</T>
                 </p>
               )}
               {sinPerforar > 0 && (
                 <p className="m-0 text-[13.5px] text-[#5A3A12] bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] px-4 py-3">
-                  {sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`} <T>para</T> {r1(dob.corte)} <T>mm de corte y</T> {r1(dob.puente)} <T>mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.</T>
+                  <Tr>{sinPerforar === 1 ? "1 doblez es muy corto" : `${sinPerforar} dobleces son muy cortos`}</Tr> <T>para</T> {r1(dob.corte)} <T>mm de corte y</T> {r1(dob.puente)} <T>mm de puente, y quedan sin perforar. Baja las medidas del perforado o márcalos a mano.</T>
                 </p>
               )}
               {r.avisos.length > 0 && (
@@ -590,18 +591,18 @@ export function GeneradorEmpaques() {
                   onClick={imprimirMosaico}
                   className="bg-white border border-[#142033] text-[#142033] font-semibold px-3 py-1.5 rounded-[8px] text-[14px]"
                 >
-                  <T>Imprimir en mosaico</T>{mosaico ? ` (${mosaico.paginas.length} ${mosaico.paginas.length === 1 ? "página" : "páginas"} + mapa)` : ""}
+                  <T>Imprimir en mosaico</T><Tr>{mosaico ? ` (${mosaico.paginas.length} ${mosaico.paginas.length === 1 ? "página" : "páginas"} + mapa)` : ""}</Tr>
                 </button>
                 <span className="basis-full text-[12px] text-[#6B6A63]">
                   <T>Parte la plantilla en hojas</T> {papel.nombre} <T>que se recortan y se pegan encimadas 10 mm, con un mapa para armarlas.</T>
                 </span>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                {dob.modo === "perforado"
+                <Tr>{dob.modo === "perforado"
                   ? "En el DXF y el SVG, la capa CORTE (rojo) es el contorno y la capa PERFORADO (magenta) son los cortes cortos de los dobleces. Las dos se cortan; puedes darle a PERFORADO otra velocidad o potencia."
                   : dob.modo === "marcar"
                     ? "En el DXF y el SVG, la capa CORTE (rojo) es la línea de corte y la capa DOBLEZ (azul) se marca o se graba a baja potencia. En plotter (Cricut, Silhouette) usa DOBLEZ como línea de marcado."
-                    : "El archivo sólo trae la capa CORTE (rojo), sin líneas de doblez."}
+                    : "El archivo sólo trae la capa CORTE (rojo), sin líneas de doblez."}</Tr>
               </p>
             </>
           )}
