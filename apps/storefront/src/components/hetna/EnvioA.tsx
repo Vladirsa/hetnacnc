@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -49,10 +50,10 @@ export const EnvioA = ({
       </svg>
       <span className="flex flex-col leading-tight">
         <span className="text-[12px] text-[#6B6A63] max-w-[140px] truncate">
-          {arriba}
+          <TS>{arriba}</TS>
         </span>
         <span className="text-[14px] font-semibold text-[#1B1B18]">
-          {abajo}
+          <TS>{abajo}</TS>
         </span>
       </span>
     </LocalizedClientLink>
