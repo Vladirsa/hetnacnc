@@ -413,6 +413,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "organizador-herramientas",
+    nombre: "Organizador de herramientas desde foto",
+    texto: "Toma una foto de tus herramientas sobre una hoja y te damos el inserto con la silueta de cada una.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Organizador de herramientas desde una foto: inserto de espuma o MDF gratis (DXF y STL)",
+    descripcion:
+      "Pon tus herramientas sobre una hoja carta o A4, toma una foto desde arriba y te damos el inserto con la silueta exacta de cada una, con holgura y hueco para los dedos: DXF para cortar espuma o MDF en láser o router, y STL para imprimirlo. La foto no sale de tu equipo.",
+    meta: "Inserto para tu caja de herramientas desde una foto: silueta exacta con holgura, en DXF para espuma o MDF y STL para imprimir. Gratis.",
+  },
+  {
     slug: "reloj-palabras",
     nombre: "Reloj de palabras",
     texto: "Reloj que escribe la hora con letras que se iluminan: frente calado, rejilla y fondo para LEDs.",
@@ -580,6 +591,7 @@ export const PESTANA_DE_MODO: Record<string, string> = {
   // Imagen
   "grabado-foto": "vectorizador",
   "litofania-relieve": "vectorizador",
+  "organizador-herramientas": "vectorizador",
   // Archivos
   "anidado-piezas": "convertidor",
   "rebanado-capas": "convertidor",

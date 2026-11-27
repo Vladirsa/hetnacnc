@@ -11,7 +11,7 @@ const GeneradorLetrerosPlacas = dynamic(() => import("@/components/hetna/generad
 // Imagen (vectorizador + grabado + relieve) y Archivos (convertidor + anidado + rebanado + SVG a STL)
 const GeneradorImagen = dynamic(() => import("@/components/hetna/generador/GeneradorImagen").then((m) => m.GeneradorImagen))
 const GeneradorArchivos = dynamic(() => import("@/components/hetna/generador/GeneradorArchivos").then((m) => m.GeneradorArchivos))
-const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve"> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve" }
+const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve" | "organizador"> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve", "organizador-herramientas": "organizador" }
 const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir" | "pruebas" | "lamina"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir", "pruebas-maquina": "pruebas", "desarrollo-lamina": "lamina" }
 // relojes, marcos y lámparas: Decoración
 const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
