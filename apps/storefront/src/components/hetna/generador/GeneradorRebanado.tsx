@@ -88,7 +88,17 @@ export function GeneradorRebanado({ cabecera }: { cabecera?: React.ReactNode }) 
             { id: "costillas", nombre: "Costillas separadas" },
           ]}
           valor={modo}
-          cambiar={setModo}
+          cambiar={(m) => {
+            setModo(m)
+            // Medidas de mueble al pasar a costillas (si siguen las de maqueta), y de regreso
+            if (m === "costillas") {
+              if (altura === "150") setAltura("450")
+              if (espesor === "6") setEspesor("15")
+            } else {
+              if (altura === "450") setAltura("150")
+              if (espesor === "15") setEspesor("6")
+            }
+          }}
         />
         <p className="m-0 text-[11.5px] text-[#8A97AB]">
           {costillas
