@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import { HttpTypes } from "@medusajs/types"
 import { htmlSeguro } from "@/lib/seguridad/html-seguro"
@@ -43,7 +44,7 @@ export const SellerHeading = ({
             <p className="m-0 mt-1 text-[14px] text-[#6B6A63] flex flex-wrap gap-x-3 gap-y-1">
               {s.handle && <span>@{s.handle}</span>}
               {ubicacion && <span>📍 {ubicacion}</span>}
-              {desde && <span>En HETNA desde {desde}</span>}
+              {desde && <span><TS>En HETNA desde</TS> {desde}</span>}
             </p>
           </div>
           <div className="md:pb-1">
@@ -54,7 +55,7 @@ export const SellerHeading = ({
                 href="/login"
                 className="inline-flex items-center justify-center bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 h-10 rounded-full text-[14px]"
               >
-                Inicia sesión para contactar
+                <TS>Inicia sesión para contactar</TS>
               </LocalizedClientLink>
             )}
           </div>
