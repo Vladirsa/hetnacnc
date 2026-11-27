@@ -100,7 +100,7 @@ export function contornosHerramientas(gris: Uint8Array, w: number, h: number, px
   const m = new Uint8Array(w * h)
   for (let y = orilla; y < h - orilla; y++) for (let x = orilla; x < w - orilla; x++) m[y * w + x] = gris[y * w + x] < u ? 1 : 0
   return curvasDeMascara(m, w, h, { tolerancia: 0.8, manchas: Math.max(30, 25 * pxmm * pxmm), suave: true })
-    .map((c) => aplanar(c, 0.5).map(([x, y]) => [x / pxmm, (h - y) / pxmm] as P))
+    .map((c) => aplanar(c, 0.5).map(([x, y]) => [x / pxmm, (h + y) / pxmm] as P)) // el trazado ya da Y hacia arriba (negativa)
     .filter((p) => p.length >= 3)
 }
 

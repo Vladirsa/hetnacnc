@@ -1,5 +1,7 @@
 // Ayudantes para contornos (P[][]: polígonos cerrados en mm) que comparten los
 // motores de placas, letreros, pruebas, reloj y organizador.
+import ClipperLib from "clipper-lib"
+
 import { extruir } from "@/lib/generador/extruir"
 import type { P } from "@/lib/generador/vectores"
 
@@ -46,4 +48,18 @@ export function extruirEn(pts: P[][], alto: number, z0 = 0): number[] {
   const t = extruir({ trazos: pts.map((q) => ({ pts: q, cerrado: true, capa: "X" })), avisos: [], unidades: "mm" }, { alto, base: 0, margenBase: 0, redondearBase: 0, espejo: false }).malla.tris
   if (z0) for (let i = 2; i < t.length; i += 3) t[i] += z0
   return t
+}
+
+/** Los contornos recortados al rectángulo [x0,x1]×[y0,y1] (con sus huecos). */
+export function recortarARect(c: P[][], x0: number, y0: number, x1: number, y1: number): P[][] {
+  const ESC = 1000
+  const aC = (p: P[]) => p.map(([x, y]) => ({ X: Math.round(x * ESC), Y: Math.round(y * ESC) }))
+  const cl = new ClipperLib.Clipper()
+  const s = c.filter((p) => p.length >= 3).map(aC)
+  if (!s.length) return []
+  cl.AddPaths(s, ClipperLib.PolyType.ptSubject, true)
+  cl.AddPaths([aC(rectPts(x0, y0, x1, y1))], ClipperLib.PolyType.ptClip, true)
+  const sol: { X: number; Y: number }[][] = []
+  cl.Execute(ClipperLib.ClipType.ctIntersection, sol, ClipperLib.PolyFillType.pftEvenOdd, ClipperLib.PolyFillType.pftNonZero)
+  return sol.filter((p) => p.length >= 3).map((p) => p.map((q) => [q.X / ESC, q.Y / ESC] as P))
 }

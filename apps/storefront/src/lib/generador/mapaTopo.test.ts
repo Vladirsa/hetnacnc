@@ -27,5 +27,12 @@ test("un cerro: una pieza por capa, cada vez más chica", () => {
   const areas = cortes.map((t) => area(t.pts))
   for (let i = 1; i < areas.length; i++) assert.ok(areas[i] < areas[i - 1], "cada capa más chica")
   assert.equal(r.dibujo.trazos.filter((t) => t.capa === "marcar").length, 5)
+  // un cerro cortado por la orilla: ninguna capa se sale de la base
+  const e2 = new Float32Array(w * h)
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) e2[y * w + x] = 1000 * Math.exp(-((x - 75) ** 2 + (y - 30) ** 2) / 600)
+  const r2 = piezasMapa(e2, w, h, { capas: 6, ancho: 200, hoja: { ancho: 600, alto: 400 }, invertir: false })
+  assert.equal(r2.noCaben, 0)
+  const caja = (ts: { pts: number[][] }[]) => { const xs = ts.flatMap((t) => t.pts.map((q) => q[0])), ys = ts.flatMap((t) => t.pts.map((q) => q[1])); return [Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)] }
+  for (const t of r2.dibujo.trazos.filter((t) => t.capa === "corte")) { const [cw, ch] = caja([t]); assert.ok(cw <= 200 + 1e-6 && ch <= 150 + 1e-6, `pieza de ${cw} × ${ch}`) }
   assert.match(piezasMapa(new Float32Array(w * h), w, h, { capas: 5, ancho: 200, hoja: { ancho: 600, alto: 400 }, invertir: false }).errores[0], /plano/)
 })
