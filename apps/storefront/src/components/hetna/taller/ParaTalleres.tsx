@@ -117,7 +117,7 @@ export function PreguntasTaller({ todas = false }: { todas?: boolean }) {
               name: q.p,
               acceptedAnswer: { '@type': 'Answer', text: q.r }
             }))
-          }).replace(/</g, '\\<')
+          }).replace(/</g, '\\u003c')
         }}
       />
     </section>
