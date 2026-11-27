@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import NotFound from "@/app/not-found"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
@@ -14,7 +15,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { Suspense } from "react"
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ handle: string; locale: string }>
@@ -107,3 +108,8 @@ const SingleCollectionsPage = async ({
 }
 
 export default SingleCollectionsPage
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
+}
