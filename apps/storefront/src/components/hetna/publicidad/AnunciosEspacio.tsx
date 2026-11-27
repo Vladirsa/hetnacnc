@@ -63,7 +63,7 @@ export default async function AnunciosEspacio({
       </span>
       <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F2B98C]"><TS>Espacio disponible</TS></span>
-        <span className="text-[16px] font-bold leading-snug">{frase}</span>
+        <span className="text-[16px] font-bold leading-snug"><TS>{frase}</TS></span>
         <span className="text-[12.5px] leading-snug text-white/75">
           <TS>Lo ven quienes buscan fabricación CNC · desde</TS> {pesos(calcularMonto(espacio, 7))} <TS>por semana</TS>
         </span>
