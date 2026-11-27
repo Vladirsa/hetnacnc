@@ -253,7 +253,7 @@ const Contador = ({ etiqueta, valor, cambiar }: { etiqueta: string; valor: numbe
       <button type="button" aria-label={`Menos: ${etiqueta}`} onClick={() => cambiar(Math.max(1, valor - 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
         −
       </button>
-      <span className="flex-1 text-center text-[14px] font-semibold text-white">{valor}</span>
+      <span className="flex-1 text-center text-[14px] font-semibold text-white"><T>{valor}</T></span>
       <button type="button" aria-label={`Más: ${etiqueta}`} onClick={() => cambiar(Math.min(12, valor + 1))} className="px-3 py-2 text-[16px] text-[#C9D2E0] hover:text-white">
         +
       </button>
@@ -589,7 +589,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
               <svg viewBox="0 0 40 40" className="h-9 w-9" fill="none" stroke={tipo === t.id ? "#F28A3C" : "#8A97AB"} strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
                 {ICONOS[t.id]}
               </svg>
-              {t.nombre}
+              <T>{t.nombre}</T>
             </button>
           ))}
         </div>
@@ -605,7 +605,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
               <svg viewBox="0 0 40 40" className="h-7 w-7" fill="none" stroke="#8A97AB" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
                 {t.icono}
               </svg>
-              {t.nombre}
+              <T>{t.nombre}</T>
             </LocalizedClientLink>
           ))}
           <LocalizedClientLink
@@ -627,7 +627,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
                 modelo === m.id ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045] hover:text-white"
               }`}
             >
-              {m.nombre}
+              <T>{m.nombre}</T>
             </button>
           ))}
         </div>
@@ -656,7 +656,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         {EJES.map((e) => (
           <div key={e.id} className="grid grid-cols-[52px_1fr_84px] items-center gap-2">
             <span className="text-[12.5px] font-semibold text-[#C9D2E0]">
-              {e.nombre} <span style={{ color: e.color }}>{e.id.toUpperCase()}</span>
+              <T>{e.nombre}</T> <span style={{ color: e.color }}>{e.id.toUpperCase()}</span>
             </span>
             <input
               type="range"
@@ -678,7 +678,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
                 aria-label={e.nombre}
                 className="w-full min-w-0 bg-transparent py-1.5 pl-2 text-right text-[14px] font-semibold text-white outline-none"
               />
-              <span className="pl-1 pr-2 text-[11px] text-[#8A97AB]">{unidad}</span>
+              <span className="pl-1 pr-2 text-[11px] text-[#8A97AB]"><T>{unidad}</T></span>
             </label>
           </div>
         ))}
@@ -692,7 +692,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
         {listo && (
           <dl className="m-0 grid grid-cols-2 gap-x-3 gap-y-1 rounded-[10px] bg-[#C2560A]/10 px-3 py-2 text-[12px]">
             <dt className="text-[#8A97AB]"><T>Volumen interior</T></dt>
-            <dd className="m-0 text-right font-semibold text-[#F2D29B]">{volumen < 1 ? `${Math.round(volumen * 1000)} ml` : `${volumen.toFixed(2)} L`}</dd>
+            <dd className="m-0 text-right font-semibold text-[#F2D29B]"><T>{volumen < 1 ? `${Math.round(volumen * 1000)} ml` : `${volumen.toFixed(2)} L`}</T></dd>
             <dt className="text-[#8A97AB]"><T>Exterior</T></dt>
             <dd className="m-0 text-right font-semibold text-white">
               {r1(r.armado.ancho)} × {r1(r.armado.fondo)} × {r1(r.armado.alto)} <T>mm</T>
@@ -702,7 +702,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
               {r1(r.interior.ancho)} × {r1(r.interior.fondo)} × {r1(r.interior.alto)} <T>mm</T>
             </dd>
             <dt className="text-[#8A97AB]"><T>Hoja</T></dt>
-            <dd className="m-0 text-right font-semibold text-white">{hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"}</dd>
+            <dd className="m-0 text-right font-semibold text-white"><T>{hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"}</T></dd>
           </dl>
         )}
       </Paso>
@@ -748,7 +748,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       <section className="flex flex-col gap-1.5 px-1">
         <div className="flex items-center justify-between">
           <span className="text-[12.5px] font-semibold text-[#C9D2E0]"><T>Ver cómo se arma</T></span>
-          <span className="text-[12px] font-semibold text-[#F28A3C]">{despiece === 0 ? "Armada" : `${despiece}%`}</span>
+          <span className="text-[12px] font-semibold text-[#F28A3C]"><T>{despiece === 0 ? "Armada" : `${despiece}%`}</T></span>
         </div>
         <input type="range" min={0} max={100} value={despiece} onChange={(e) => setDespiece(Number(e.target.value))} aria-label="Separar las piezas en la vista 3D" style={{ accentColor: "#F28A3C" }} />
       </section>
@@ -790,11 +790,11 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
 
       {r.errores.map((e) => (
         <Aviso key={e} tipo="error">
-          {e}
+          <T>{e}</T>
         </Aviso>
       ))}
       {r.avisos.map((a) => (
-        <Aviso key={a}>{a}</Aviso>
+        <Aviso key={a}><T>{a}</T></Aviso>
       ))}
       {maquina === "router" && numero(fresa) * k > 0 && listo && (
         <Aviso tipo="ok"><T>El archivo ya trae el alivio de esquina (&quot;dogbone&quot;) para tu fresa de</T> {r1(numero(fresa) * k)} <T>mm.</T></Aviso>
@@ -827,14 +827,14 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
           />
         </div>
       )}
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </>
   )
 
   const diseno2d = (
     <div className="flex h-full flex-col gap-3 p-3 lg:p-4">
       {!listo ? (
-        <p className="m-0 text-[14px] text-[#F6B8AE]">{r.errores[0] || "Revisa las medidas del panel."}</p>
+        <p className="m-0 text-[14px] text-[#F6B8AE]"><T>{r.errores[0] || "Revisa las medidas del panel."}</T></p>
       ) : (
         <>
           <div className="hidden sm:block">
@@ -848,7 +848,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
             />
           </div>
           <p className="m-0 text-[12px] text-[#C9D2E0] sm:hidden">
-            <T>Hoja</T> {hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"} · {r.piezas.length} <T>piezas ·</T> {areaMaterial(r.piezas).toFixed(3)} m²
+            <T>Hoja</T> <T>{hoja ? `${r1(hoja.ancho)} × ${r1(hoja.alto)} mm` : "-"}</T> · <T>{r.piezas.length}</T> <T>piezas ·</T> {areaMaterial(r.piezas).toFixed(3)} m²
           </p>
           <div
             className="min-h-[200px] flex-1 rounded-[10px] bg-[#0F151E] p-3 [&>svg]:h-full [&>svg]:max-h-[560px] [&>svg]:w-full"
@@ -922,7 +922,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
 
       <div className="overflow-hidden rounded-[14px] text-[#1B1B18]">
         <CajaSolido piezas={r.piezas} espesor={esp} exterior={ext} nombreArchivo={nombreArchivo} />
@@ -963,7 +963,7 @@ export function GeneradorCaja({ tipoInicial }: { tipoInicial?: TipoCaja }) {
       barra={
         listo ? (
           <span>
-            · {nombreTipo} · {r.piezas.length} <T>piezas ·</T> {r1(esp)} <T>mm · dedo</T> {r1(r.dedoUsado)} <T>mm</T>
+            · <T>{nombreTipo}</T> · <T>{r.piezas.length}</T> <T>piezas ·</T> {r1(esp)} <T>mm · dedo</T> {r1(r.dedoUsado)} <T>mm</T>
           </span>
         ) : null
       }
