@@ -70,7 +70,7 @@ export default function GaleriaProducto({ imagenes, titulo }: { imagenes: Img[];
             width={800}
             height={800}
             quality={85}
-            sizes="(min-width: 1024px) 42vw, 100vw"
+            sizes="(min-width: 1024px) 42vw, 70vw"
             className="mx-auto h-auto max-h-[300px] w-full object-contain sm:max-h-[420px] lg:max-h-[480px]"
           />
           <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">

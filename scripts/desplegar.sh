@@ -491,16 +491,22 @@ if [ "${DESPLIEGUE_CALENTAR:-1}" != "0" ]; then
     pagina="$(mktemp)"
     codigo="$(curl -s -o "$pagina" -w '%{http_code}' --max-time 30 -A 'Mozilla/5.0 (hetna-calentar)' -H "Cookie: $galleta" "$url" 2>/dev/null || true)"
     if [ "$codigo" = "200" ]; then ok=$((ok + 1)); else mal=$((mal + 1)); echo "   ✗ $codigo $url"; fi
-    # En el inicio y las categorías también se piden las primeras fotos, para
-    # que el servidor las deje optimizadas antes de que llegue un visitante.
-    case "$url" in */mx|*/categories*)
-      grep -oE '/_next/image\?url=[^" ,]+' "$pagina" 2>/dev/null | sed 's/&amp;/\&/g' | sort -u | head -12 | while read -r foto; do
-        curl -s -o /dev/null --max-time 20 -H 'Accept: image/avif,image/webp,*/*' "$SITIO$foto" 2>/dev/null || true
-      done || true ;;
-    esac
     rm -f "$pagina"
   done
   if [ "$mal" -gt 0 ]; then verde "   ✓ $ok páginas en caché ($mal con error)"; else verde "   ✓ $ok páginas en caché"; fi
+fi
+
+# --- 8. Fotos optimizadas ---
+#
+# La primera vez que alguien ve una foto en un ancho, el servidor la convierte a
+# AVIF (~1.2 s por foto). scripts/calentar-fotos.mjs pide, de cada ficha y
+# categoría, justo los anchos que escogen un celular y una computadora, para que
+# el visitante ya las encuentre hechas. Va en segundo plano (tarda unos minutos
+# la primera vez; después sólo hace las fotos nuevas). DESPLIEGUE_FOTOS=0 lo salta.
+if [ "${DESPLIEGUE_FOTOS:-1}" != "0" ]; then
+  if command -v bun >/dev/null 2>&1; then JS=bun; else JS=node; fi
+  nohup "$JS" scripts/calentar-fotos.mjs "$SITIO" > /tmp/hetna-calentar-fotos.log 2>&1 &
+  verde "   ✓ optimizando fotos en segundo plano (resultado en /tmp/hetna-calentar-fotos.log)"
 fi
 
 paso "Listo"

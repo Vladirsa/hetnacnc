@@ -66,7 +66,7 @@ export function ProductosCompactos({
                       src={p.thumbnail}
                       alt={p.title || "Producto"}
                       fill
-                      sizes={angosta ? "(min-width: 1024px) 190px, 33vw" : "(min-width: 1024px) 140px, (min-width: 768px) 16vw, 33vw"}
+                      sizes={angosta ? "(min-width: 1024px) 190px, 30vw" : "(min-width: 1024px) 140px, (min-width: 768px) 16vw, 30vw"}
                       className="object-cover transition-transform group-hover:scale-[1.03]"
                     />
                   ) : null}
