@@ -413,6 +413,28 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "reloj-palabras",
+    nombre: "Reloj de palabras",
+    texto: "Reloj que escribe la hora con letras que se iluminan: frente calado, rejilla y fondo para LEDs.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Reloj de palabras en español para láser gratis (DXF)",
+    descripcion:
+      "Haz un reloj de palabras que dice la hora en español (\"SON LAS TRES Y CUARTO\"): te damos el frente con las letras caladas en letra esténcil, la rejilla que separa la luz de cada letra y el fondo para los LEDs, más la tabla de qué LED prender con cada palabra. Descarga gratis el DXF, SVG o PDF.",
+    meta: "Reloj de palabras en español para corte láser: frente con letras caladas, rejilla y fondo para LEDs, y la tabla de LEDs. Gratis.",
+  },
+  {
+    slug: "mapa-topografico",
+    nombre: "Mapa topográfico por capas",
+    texto: "Montañas, volcanes y barrancas reales en capas de MDF o acrílico para apilar.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Mapa topográfico por capas para láser gratis (DXF)",
+    descripcion:
+      "Escoge un lugar (Pico de Orizaba, Popocatépetl, Barranca del Cobre…) o pon sus coordenadas y te damos las capas del relieve real para cortar en láser y apilar, cada una con la silueta de la siguiente rayada para pegarlas en su lugar. Acomodadas en tus hojas. Descarga gratis el DXF, SVG o PDF.",
+    meta: "Mapas topográficos 3D por capas de lugares reales de México para corte láser: escoge el lugar y baja las capas en DXF. Gratis.",
+  },
+  {
     slug: "pruebas-maquina",
     nombre: "Pruebas de kerf y material",
     texto: "Mide el kerf de tu láser, encuentra el ajuste de tus ranuras y la mejor potencia × velocidad para cada material.",
@@ -568,6 +590,8 @@ export const PESTANA_DE_MODO: Record<string, string> = {
   "marcos-portarretratos": "relojes",
   "lamparas-capas": "relojes",
   "esferas-navidad": "relojes",
+  "reloj-palabras": "relojes",
+  "mapa-topografico": "relojes",
   // Muebles
   "muebles-ensamble": "despiece-muebles",
   "muebles-desde-imagen": "despiece-muebles",

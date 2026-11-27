@@ -15,7 +15,7 @@ const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve"> = { vect
 const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir" | "pruebas" | "lamina"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir", "pruebas-maquina": "pruebas", "desarrollo-lamina": "lamina" }
 // relojes, marcos y lámparas: Decoración
 const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
-const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara" | "esfera"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara", "esferas-navidad": "esfera" }
+const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara" | "esfera" | "palabras" | "mapa"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara", "esferas-navidad": "esfera", "reloj-palabras": "palabras", "mapa-topografico": "mapa" }
 // rompecabezas y engranes: Juegos y mecanismos
 const GeneradorJuegos = dynamic(() => import("@/components/hetna/generador/GeneradorJuegos").then((m) => m.GeneradorJuegos))
 const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas: "rompecabezas", engranes: "engranes" }

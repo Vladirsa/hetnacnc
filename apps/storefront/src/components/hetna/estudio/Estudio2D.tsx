@@ -24,7 +24,8 @@ import { dibujoDXF, dibujoSVG, type Dibujo } from "@/lib/generador/vectores"
 import { capaFinal } from "@/lib/generador/capas"
 import { BotonesCam } from "@/components/hetna/generador/BotonesCam"
 
-const COLORES: Record<string, string> = { corte: "#FF7A2E", grabado: "#5FA8F5", interior: "#FFB067", doblez: "#5FA8F5", hoja: "#3A4658", guia: "#3A4658", texto: "#9BE3B8" }
+// marcar: línea de guía que se raya (no se corta), p. ej. dónde va la capa de arriba en el mapa topográfico
+const COLORES: Record<string, string> = { corte: "#FF7A2E", grabado: "#5FA8F5", interior: "#FFB067", doblez: "#5FA8F5", marcar: "#9BE3B8", hoja: "#3A4658", guia: "#3A4658", texto: "#9BE3B8" }
 
 function descargar(nombre: string, contenido: string, tipo: string) {
   const url = URL.createObjectURL(new Blob([contenido], { type: tipo }))
@@ -194,7 +195,7 @@ export function Estudio2D({
         .filter((t) => !(t.capa === "grabado" && t.cerrado))
         .map((t, i) => {
           const col = COLORES[t.capa] || (t.capa === "ETIQUETA" ? "#9BE3B8" : t.capa.startsWith("RANURA") ? "#F5C451" : t.capa.startsWith("BARRENO") ? (t.capa.includes("_ABAJO") ? "#B58CFF" : "#5FA8F5") : t.capa.startsWith("CANTO") ? "#9BE3B8" : COLORES.corte)
-          return <path key={i} d={camino(t.pts, t.cerrado)} fill="none" stroke={col} strokeWidth={t.capa === "hoja" ? 1 : 1.3} vectorEffect="non-scaling-stroke" strokeDasharray={t.capa === "doblez" || t.capa === "guia" ? "6 4" : undefined} />
+          return <path key={i} d={camino(t.pts, t.cerrado)} fill="none" stroke={col} strokeWidth={t.capa === "hoja" ? 1 : 1.3} vectorEffect="non-scaling-stroke" strokeDasharray={t.capa === "doblez" || t.capa === "guia" || t.capa === "marcar" ? "6 4" : undefined} />
         }),
     ]
     return { W, H, paths }
