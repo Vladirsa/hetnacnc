@@ -117,11 +117,15 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
               ? "Manda tu precio y tiempo de entrega. Si el cliente te elige, te paga directo a tu Mercado Pago o PayPal (o por HETNA si no los conectas)."
               : "Este ya cerró, pero cada semana llegan trabajos nuevos. Regístrate gratis y te avisamos."}
           </p>
-          <a
-            href="/seller/solicitudes"
+          {/* Quien llega desde el anuncio en redes casi nunca tiene cuenta: primero el registro */}
+          <LocalizedClientLink
+            href="/talleres/unete"
             className="mt-4 inline-block rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:brightness-110"
           >
-            {abierta ? "Cotizar este trabajo" : "Ver trabajos en mi panel"}
+            {abierta ? "Regístrate gratis y cotiza" : "Regístrate gratis"}
+          </LocalizedClientLink>
+          <a href="/seller/solicitudes" className="mt-3 block text-sm font-semibold text-white/85 underline hover:text-white">
+            {abierta ? "¿Ya tienes cuenta? Cotizar este trabajo" : "¿Ya tienes cuenta? Ver trabajos en mi panel"}
           </a>
         </section>
         <section className="rounded-2xl border border-[#E7E4DC] bg-[#FBFAF6] p-6">

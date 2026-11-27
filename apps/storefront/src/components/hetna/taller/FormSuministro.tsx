@@ -55,7 +55,7 @@ export default function FormSuministro() {
       modalidad: v("modalidad"),
       solo_verificados: v("solo_verificados") === "1",
       privacidad: v("privacidad"),
-      difundir_redes: v("difundir_redes") === "1",
+      difundir_redes: v("difundir_redes") !== "0",
       invitados: v("invitados"),
       sitio_web: v("sitio_web"),
     })
