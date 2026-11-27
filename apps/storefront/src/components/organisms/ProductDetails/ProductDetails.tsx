@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { ProductDetailsFooter } from "@/components/cells/ProductDetailsFooter/ProductDetailsFooter"
 import { ProductDetailsHeader } from "@/components/cells/ProductDetailsHeader/ProductDetailsHeader"
 import { ProductDetailsSeller } from "@/components/cells/ProductDetailsSeller/ProductDetailsSeller"
@@ -118,12 +119,12 @@ export const ProductDetails = async ({ product, locale, offers = [], vistas = 0,
 
       {typeof product.metadata?.curso_slug === "string" && (
         <div className="bg-[#FDEEE1] border border-[#F2C98F] rounded-[12px] px-4 py-3 text-[14px] text-[#5A3A12]">
-          <strong>Curso de la Academia HETNA.</strong> Al pagar quedas inscrito y lo ves en línea desde tu cuenta.{" "}
+          <strong><TS>Curso de la Academia HETNA.</TS></strong> <TS>Al pagar quedas inscrito y lo ves en línea desde tu cuenta.</TS>{" "}
           <LocalizedClientLink
             href={`/aprendizaje-cnc/cursos/${product.metadata.curso_slug}`}
             className="font-semibold text-[#B34D07] underline"
           >
-            Ver temario y lecciones gratis
+            <TS>Ver temario y lecciones gratis</TS>
           </LocalizedClientLink>
         </div>
       )}
