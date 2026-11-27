@@ -2,6 +2,7 @@
 
 // Organizadores de cajón (2D Studio): separadores a la medida del cajón que
 // se encastran a media madera, con muescas para meter los dedos.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, CampoTexto, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -77,9 +78,9 @@ export function GeneradorOrganizador() {
             </button>
           ))}
         </div>
-        <span className="text-[12.5px] text-[#C9D2E0]">A lo ancho</span>
+        <span className="text-[12.5px] text-[#C9D2E0]"><T>A lo ancho</T></span>
         <CampoTexto valor={columnas} cambiar={setColumnas} max={60} placeholder="1, 1, 2" />
-        <span className="text-[12.5px] text-[#C9D2E0]">A lo fondo</span>
+        <span className="text-[12.5px] text-[#C9D2E0]"><T>A lo fondo</T></span>
         <CampoTexto valor={filas} cambiar={setFilas} max={60} placeholder="1, 1" />
       </Seccion>
       <Seccion titulo="Armado">
