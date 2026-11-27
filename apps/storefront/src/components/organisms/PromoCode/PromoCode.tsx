@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { Button } from '@/components/atoms/Button/Button'
@@ -85,7 +86,7 @@ export const PromoCode = ({ cart, defaultOpen = false }: { cart: any; defaultOpe
       >
         <div className="flex items-center gap-2">
           <DiscountIcon size={20} />
-          <h4 className="label-md">¿Tienes un código de promoción?</h4>
+          <h4 className="label-md"><T>¿Tienes un código de promoción?</T></h4>
         </div>
         <CollapseIcon
           size={20}
@@ -127,12 +128,12 @@ export const PromoCode = ({ cart, defaultOpen = false }: { cart: any; defaultOpe
                 className="mt-2 h-12"
                 variant="filled"
               >
-                APLICAR
+                <T>APLICAR</T>
               </Button>
             </div>
             {/* Cupón de primera compra (packages/api/src/lib/cupones.ts) */}
             <p className="mt-2 text-sm text-secondary">
-              ¿Primera compra? Usa <b>BIENVENIDA</b>: $100 de descuento en compras de $800 o más (con tu cuenta iniciada).
+              <T>¿Primera compra? Usa</T> <b><T>BIENVENIDA</T></b><T>: $100 de descuento en compras de $800 o más (con tu cuenta iniciada).</T>
             </p>
             </>
           ) : (
