@@ -9,6 +9,7 @@
 // backend. Se usa fetch directo y no el cliente tipado por lo mismo que las
 // pantallas de envíos y precios por cantidad: son rutas propias de HETNA que
 // no pasan por el codegen de Mercur.
+import { T, traducir } from "../../lib/idioma"
 import { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
@@ -38,6 +39,8 @@ const Tablero = (props: { width?: number; height?: number }) => (
 
 export const config: RouteConfig = {
   label: "Inicio",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Tablero,
   rank: 1,
 }
@@ -247,9 +250,9 @@ function Tarjeta({
 }) {
   return (
     <div style={S.card}>
-      <p style={S.etiqueta}>{etiqueta}</p>
-      <p style={S.cifra}>{valor}</p>
-      {pie && <p style={S.pie}>{pie}</p>}
+      <p style={S.etiqueta}><T>{etiqueta}</T></p>
+      <p style={S.cifra}><T>{valor}</T></p>
+      {pie && <p style={S.pie}><T>{pie}</T></p>}
     </div>
   )
 }
@@ -291,9 +294,9 @@ function Ventas30({ dias, moneda }: { dias: RespuestaTablero["ventas"]["por_dia"
           marginTop: 6,
         }}
       >
-        <span>hace {dias.length} días</span>
-        <span>máximo del día: {pesos(tope, moneda)}</span>
-        <span>hoy</span>
+        <span><T>hace</T> <T>{dias.length}</T> <T>días</T></span>
+        <span><T>máximo del día:</T> {pesos(tope, moneda)}</span>
+        <span><T>hoy</T></span>
       </div>
     </div>
   )
@@ -338,16 +341,16 @@ function MetaDelMes({
     <div style={S.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
         <div>
-          <h2 style={S.h2}>Tu meta de {nombreDelMes(datos.mes)}</h2>
+          <h2 style={S.h2}><T>Tu meta de</T> {nombreDelMes(datos.mes)}</h2>
           <p style={S.nota}>
-            {objetivo > 0
+            <T>{objetivo > 0
               ? `Llevas ${pesos(llevado, datos.moneda)} de ${pesos(objetivo, datos.moneda)}.`
-              : "Ponte una meta de venta para el mes y aquí ves qué tanto llevas."}
+              : "Ponte una meta de venta para el mes y aquí ves qué tanto llevas."}</T>
           </p>
         </div>
         {!editando && (
           <button type="button" style={S.btnPlano} onClick={() => setEditando(true)}>
-            {objetivo > 0 ? "Cambiar meta" : "Poner meta"}
+            <T>{objetivo > 0 ? "Cambiar meta" : "Poner meta"}</T>
           </button>
         )}
       </div>
@@ -358,9 +361,9 @@ function MetaDelMes({
             <div style={{ ...S.barraDentro, width: `${avance * 100}%` }} />
           </div>
           <p style={S.pie}>
-            {avance >= 1
+            <T>{avance >= 1
               ? "Meta cumplida. Ponte una más alta el mes que entra."
-              : `Te faltan ${pesos(falta, datos.moneda)} · ${(avance * 100).toFixed(0)}% recorrido`}
+              : `Te faltan ${pesos(falta, datos.moneda)} · ${(avance * 100).toFixed(0)}% recorrido`}</T>
           </p>
         </>
       )}
@@ -377,7 +380,7 @@ function MetaDelMes({
             onChange={(e) => setValor(e.target.value)}
           />
           <button type="button" style={S.btn} onClick={guardar} disabled={guardando}>
-            {guardando ? "Guardando..." : "Guardar"}
+            <T>{guardando ? "Guardando..." : "Guardar"}</T>
           </button>
           <button
             type="button"
@@ -388,11 +391,11 @@ function MetaDelMes({
               setValor(String(objetivo || ""))
             }}
           >
-            Cancelar
+            <T>Cancelar</T>
           </button>
         </div>
       )}
-      {error && <p style={S.err}>{error}</p>}
+      {error && <p style={S.err}><T>{error}</T></p>}
     </div>
   )
 }
@@ -416,24 +419,24 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
 
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>Tu lugar entre los talleres</h2>
+      <h2 style={S.h2}><T>Tu lugar entre los talleres</T></h2>
       <p style={S.nota}>
-        {foroCuenta
+        <T>{foroCuenta
           ? "Se mezcla lo que vendes, lo que aportas en el foro y cómo te califican. Vender no es lo único que sube."
-          : "Se mezcla lo que vendes y cómo te califican. Cuando abra el Foro CNC, lo que aportes ahí también va a contar."}
+          : "Se mezcla lo que vendes y cómo te califican. Cuando abra el Foro CNC, lo que aportes ahí también va a contar."}</T>
       </p>
 
       {ranking.posicion ? (
         <p style={S.cifra}>
-          #{ranking.posicion}{" "}
+          #<T>{ranking.posicion}</T><T>{" "}</T>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#6B675C" }}>
-            de {ranking.total_talleres} talleres
+            <T>de</T> <T>{ranking.total_talleres}</T> <T>talleres</T>
           </span>
         </p>
       ) : (
         <p style={S.vacio}>
-          Todavía no hay con quién compararte. En cuanto haya más talleres con movimiento, aquí
-          aparece tu lugar.
+          <T>Todavía no hay con quién compararte. En cuanto haya más talleres con movimiento, aquí
+          aparece tu lugar.</T>
         </p>
       )}
 
@@ -441,9 +444,9 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
         {partes.map((parte) => (
           <div key={parte.nombre} style={{ marginBottom: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5 }}>
-              <span style={{ fontWeight: 600 }}>{parte.nombre}</span>
+              <span style={{ fontWeight: 600 }}><T>{parte.nombre}</T></span>
               <span style={{ color: "#6B675C" }}>
-                {parte.puntos.toFixed(1)} de {parte.tope}
+                {parte.puntos.toFixed(1)} <T>de</T> <T>{parte.tope}</T>
               </span>
             </div>
             <div style={{ ...S.barraFuera, height: 8, marginTop: 3 }}>
@@ -458,7 +461,7 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
         ))}
       </div>
       <p style={S.pie}>
-        Puntuación total: {ranking.puntuacion.toFixed(1)} de {topeTotal}
+        <T>Puntuación total:</T> {ranking.puntuacion.toFixed(1)} <T>de</T> <T>{topeTotal}</T>
       </p>
     </div>
   )
@@ -467,29 +470,29 @@ function Ranking({ datos }: { datos: RespuestaTablero }) {
 function Descuentos({ datos }: { datos: RespuestaTablero }) {
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>Te ven y no te compran</h2>
+      <h2 style={S.h2}><T>Te ven y no te compran</T></h2>
       <p style={S.nota}>
-        Productos con visitas suficientes para opinar y casi ninguna venta. Aquí es donde te está
-        costando el precio o la ficha.
+        <T>Productos con visitas suficientes para opinar y casi ninguna venta. Aquí es donde te está
+        costando el precio o la ficha.</T>
       </p>
 
       {datos.descuentos.length === 0 && (
         <p style={S.vacio}>
-          Nada por ahora. Cuando algún producto junte visitas sin vender, aparece aquí.
+          <T>Nada por ahora. Cuando algún producto junte visitas sin vender, aparece aquí.</T>
         </p>
       )}
 
       {datos.descuentos.map((p) => (
         <div key={p.producto_id} style={S.fila}>
           <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}>{p.titulo}</p>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}><T>{p.titulo}</T></p>
             <p style={S.pie}>
-              {p.vistas} visita{p.vistas === 1 ? "" : "s"} ·{" "}
-              {p.razon === "sin_ventas"
+              <T>{p.vistas}</T> <T>visita</T><T>{p.vistas === 1 ? "" : "s"}</T> ·<T>{" "}</T>
+              <T>{p.razon === "sin_ventas"
                 ? "ninguna venta"
                 : `${p.unidades_vendidas} vendida${p.unidades_vendidas === 1 ? "" : "s"} (${porcentaje(
                     p.conversion
-                  )})`}
+                  )})`}</T>
               {p.precio_actual !== null && ` · hoy a ${pesos(p.precio_actual, datos.moneda)}`}
             </p>
           </div>
@@ -501,14 +504,14 @@ function Descuentos({ datos }: { datos: RespuestaTablero }) {
               whiteSpace: "nowrap",
             }}
           >
-            {p.razon === "sin_ventas" ? "Bájale el precio" : "Revísalo"}
+            <T>{p.razon === "sin_ventas" ? "Bájale el precio" : "Revísalo"}</T>
           </span>
         </div>
       ))}
 
       {datos.descuentos.length > 0 && (
         <p style={S.pie}>
-          Para ponerles precio por cantidad, ve a <strong>Precios por cantidad</strong> en el menú.
+          <T>Para ponerles precio por cantidad, ve a</T> <strong><T>Precios por cantidad</T></strong> <T>en el menú.</T>
         </p>
       )}
     </div>
@@ -533,27 +536,27 @@ function PorEnviar({ datos }: { datos: RespuestaTablero }) {
   return (
     <div style={tarde ? { ...S.card, border: "1px solid #E8B4A8" } : S.card}>
       <h2 style={S.h2}>
-        Pedidos por enviar{" "}
+        <T>Pedidos por enviar</T><T>{" "}</T>
         {lista.length > 0 && (
           <span style={{ ...S.pildora, background: tarde ? "#FDEDE8" : "#EEF4FB", color: tarde ? "#9B3225" : "#2B4C7E" }}>
-            {lista.length}
+            <T>{lista.length}</T>
           </span>
         )}
       </h2>
       <p style={S.nota}>
-        Pagados y sin guía. Envía antes de 48 h: es lo que más cuida tu calificación.
+        <T>Pagados y sin guía. Envía antes de 48 h: es lo que más cuida tu calificación.</T>
       </p>
-      {lista.length === 0 && <p style={S.ok}>Todo enviado. Vas al día.</p>}
+      {lista.length === 0 && <p style={S.ok}><T>Todo enviado. Vas al día.</T></p>}
       {lista.slice(0, 8).map((p) => (
         <div key={p.order_id} style={S.fila}>
           <div style={{ minWidth: 0 }}>
             <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}>
               <Link to={`/orders/${p.order_id}`} style={{ color: "inherit" }}>
-                Pedido #{p.display_id ?? "—"}
-              </Link>{" "}
+                <T>Pedido #</T><T>{p.display_id ?? "—"}</T>
+              </Link><T>{" "}</T>
               · {pesos(p.total, datos.moneda)}
             </p>
-            <p style={S.pie}>{p.piezas}</p>
+            <p style={S.pie}><T>{p.piezas}</T></p>
           </div>
           <span
             style={{
@@ -563,11 +566,11 @@ function PorEnviar({ datos }: { datos: RespuestaTablero }) {
               color: p.tarde ? "#9B3225" : "#6B675C",
             }}
           >
-            {p.tarde ? `Tarde · ${horasATexto(p.horas)}` : `hace ${horasATexto(p.horas)}`}
+            <T>{p.tarde ? `Tarde · ${horasATexto(p.horas)}` : `hace ${horasATexto(p.horas)}`}</T>
           </span>
         </div>
       ))}
-      {lista.length > 8 && <p style={S.pie}>Y {lista.length - 8} más en Pedidos.</p>}
+      {lista.length > 8 && <p style={S.pie}>Y {lista.length - 8} <T>más en Pedidos.</T></p>}
     </div>
   )
 }
@@ -581,13 +584,13 @@ const ETIQUETA_STOCK = {
 function Existencias({ datos }: { datos: RespuestaTablero }) {
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>Existencias</h2>
+      <h2 style={S.h2}><T>Existencias</T></h2>
       <p style={S.nota}>
-        Lo agotado no se puede comprar, y vender lo que no tienes termina en cancelación. Calculado
-        con lo que vendiste en los últimos 30 días.
+        <T>Lo agotado no se puede comprar, y vender lo que no tienes termina en cancelación. Calculado
+        con lo que vendiste en los últimos 30 días.</T>
       </p>
       {datos.stock.length === 0 && (
-        <p style={S.ok}>Nada por resurtir. (Los productos que fabricas bajo pedido no aparecen aquí.)</p>
+        <p style={S.ok}><T>Nada por resurtir. (Los productos que fabricas bajo pedido no aparecen aquí.)</T></p>
       )}
       {datos.stock.map((p) => {
         const e = ETIQUETA_STOCK[p.nivel]
@@ -596,17 +599,17 @@ function Existencias({ datos }: { datos: RespuestaTablero }) {
             <div style={{ minWidth: 0 }}>
               <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5 }}>
                 <Link to={`/products/${p.producto_id}`} style={{ color: "inherit" }}>
-                  {p.titulo}
+                  <T>{p.titulo}</T>
                 </Link>
               </p>
               <p style={S.pie}>
-                {p.disponibles} disponible{p.disponibles === 1 ? "" : "s"}
-                {p.dias_restantes !== null && p.disponibles > 0
+                <T>{p.disponibles}</T> <T>disponible</T><T>{p.disponibles === 1 ? "" : "s"}</T>
+                <T>{p.dias_restantes !== null && p.disponibles > 0
                   ? ` · te alcanza para unos ${p.dias_restantes} día${p.dias_restantes === 1 ? "" : "s"}`
-                  : ""}
+                  : ""}</T>
               </p>
             </div>
-            <span style={{ ...S.pildora, whiteSpace: "nowrap", background: e.fondo, color: e.color }}>{e.texto}</span>
+            <span style={{ ...S.pildora, whiteSpace: "nowrap", background: e.fondo, color: e.color }}><T>{e.texto}</T></span>
           </div>
         )
       })}
@@ -626,20 +629,20 @@ function Reputacion({ datos }: { datos: RespuestaTablero }) {
   const s = SEMAFORO[r.semaforo]
   const cifra = (etiqueta: string, valor: string, pie?: string) => (
     <div>
-      <p style={S.etiqueta}>{etiqueta}</p>
-      <p style={S.cifraChica}>{valor}</p>
-      {pie && <p style={S.pie}>{pie}</p>}
+      <p style={S.etiqueta}><T>{etiqueta}</T></p>
+      <p style={S.cifraChica}><T>{valor}</T></p>
+      {pie && <p style={S.pie}><T>{pie}</T></p>}
     </div>
   )
   return (
     <div style={S.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h2 style={S.h2}>Tu reputación como vendedor</h2>
-        <span style={{ ...S.pildora, background: s.fondo, color: s.color }}>{s.texto}</span>
+        <h2 style={S.h2}><T>Tu reputación como vendedor</T></h2>
+        <span style={{ ...S.pildora, background: s.fondo, color: s.color }}><T>{s.texto}</T></span>
       </div>
       <p style={S.nota}>
-        Últimos {r.dias} días. Es lo que hace que un cliente vuelva a comprarte, y lo que HETNA revisa
-        para destacar talleres.
+        <T>Últimos</T> <T>{r.dias}</T> <T>días. Es lo que hace que un cliente vuelva a comprarte, y lo que HETNA revisa
+        para destacar talleres.</T>
       </p>
       {r.pedidos > 0 && (
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
@@ -661,10 +664,10 @@ function Reputacion({ datos }: { datos: RespuestaTablero }) {
       )}
       {r.consejos.map((c) => (
         <p key={c} style={{ ...S.pie, fontSize: 12.5, color: "#4A463D" }}>
-          • {c}
+          • <T>{c}</T>
         </p>
       ))}
-      {r.pedidos > 0 && r.consejos.length === 0 && <p style={S.ok}>Sin pendientes. Sigue así.</p>}
+      {r.pedidos > 0 && r.consejos.length === 0 && <p style={S.ok}><T>Sin pendientes. Sigue así.</T></p>}
     </div>
   )
 }
@@ -682,13 +685,13 @@ function Lista({
 }) {
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>{titulo}</h2>
-      <p style={S.nota}>{nota}</p>
-      {filas.length === 0 && <p style={S.vacio}>{vacio}</p>}
+      <h2 style={S.h2}><T>{titulo}</T></h2>
+      <p style={S.nota}><T>{nota}</T></p>
+      {filas.length === 0 && <p style={S.vacio}><T>{vacio}</T></p>}
       {filas.map((f) => (
         <div key={f.clave} style={S.fila}>
-          <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, minWidth: 0 }}>{f.nombre}</p>
-          <p style={{ ...S.pie, margin: 0, whiteSpace: "nowrap" }}>{f.detalle}</p>
+          <p style={{ margin: 0, fontWeight: 600, fontSize: 13.5, minWidth: 0 }}><T>{f.nombre}</T></p>
+          <p style={{ ...S.pie, margin: 0, whiteSpace: "nowrap" }}><T>{f.detalle}</T></p>
         </div>
       ))}
     </div>
@@ -700,44 +703,44 @@ function Foro({ datos }: { datos: RespuestaTablero }) {
 
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>Tu actividad en el foro</h2>
+      <h2 style={S.h2}><T>Tu actividad en el foro</T></h2>
       <p style={S.nota}>
-        Contestar dudas te sube en el ranking y te trae clientes que te buscan por nombre.
+        <T>Contestar dudas te sube en el ranking y te trae clientes que te buscan por nombre.</T>
       </p>
 
       {f.motivo === "sin_configurar" && (
-        <p style={S.vacio}>El foro no está conectado a este panel todavía.</p>
+        <p style={S.vacio}><T>El foro no está conectado a este panel todavía.</T></p>
       )}
       {f.motivo === "sin_abrir" && (
         <p style={S.vacio}>
-          El Foro CNC todavía no abre. Cuando abra, lo que contestes ahí cuenta para tu
-          ranking.
+          <T>El Foro CNC todavía no abre. Cuando abra, lo que contestes ahí cuenta para tu
+          ranking.</T>
         </p>
       )}
       {f.motivo === "error" && (
-        <p style={S.vacio}>No se pudo leer el foro en este momento. Vuelve a cargar más tarde.</p>
+        <p style={S.vacio}><T>No se pudo leer el foro en este momento. Vuelve a cargar más tarde.</T></p>
       )}
       {f.motivo === "sin_perfil" && (
         <p style={S.vacio}>
-          Todavía no tienes perfil en el foro. Crearlo es gratis y es la forma más barata de que te
-          conozcan.
+          <T>Todavía no tienes perfil en el foro. Crearlo es gratis y es la forma más barata de que te
+          conozcan.</T>
         </p>
       )}
 
       {f.disponible && !f.motivo && (
         <>
           <p style={S.cifraChica}>
-            {f.reputacion} <span style={{ fontSize: 13, fontWeight: 600, color: "#6B675C" }}>de reputación</span>
+            <T>{f.reputacion}</T> <span style={{ fontSize: 13, fontWeight: 600, color: "#6B675C" }}><T>de reputación</T></span>
           </p>
           <p style={S.pie}>
-            {f.usuario ? `@${f.usuario} · ` : ""}
-            {f.temas} tema{f.temas === 1 ? "" : "s"} · {f.respuestas} respuesta
-            {f.respuestas === 1 ? "" : "s"} · {f.votos_recibidos} voto
-            {f.votos_recibidos === 1 ? "" : "s"} a favor
+            <T>{f.usuario ? `@${f.usuario} · ` : ""}</T>
+            <T>{f.temas}</T> <T>tema</T><T>{f.temas === 1 ? "" : "s"}</T> · <T>{f.respuestas}</T> <T>respuesta</T>
+            <T>{f.respuestas === 1 ? "" : "s"}</T> · <T>{f.votos_recibidos}</T> <T>voto</T>
+            <T>{f.votos_recibidos === 1 ? "" : "s"}</T> <T>a favor</T>
           </p>
           {f.mejores_respuestas > 0 && (
             <p style={S.ok}>
-              {f.mejores_respuestas} de tus respuestas quedaron como la mejor del tema.
+              <T>{f.mejores_respuestas}</T> <T>de tus respuestas quedaron como la mejor del tema.</T>
             </p>
           )}
         </>
@@ -802,20 +805,20 @@ function AvisoAlta({ onEstado }: { onEstado?: (a: EstadoAlta | null) => void }) 
       }}
     >
       <p style={{ ...S.h2, color: sinCorreo ? "#8A5A00" : "#1F4E79" }}>
-        {sinCorreo ? "Confirma tu correo para continuar" : "Tu tienda está en revisión"}
+        <T>{sinCorreo ? "Confirma tu correo para continuar" : "Tu tienda está en revisión"}</T>
       </p>
-      <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>{alta.mensaje}</p>
+      <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}><T>{alta.mensaje}</T></p>
       {sinCorreo && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
           <button type="button" style={S.btn} disabled={enviando} onClick={() => void reenviar()}>
-            {enviando ? "Enviando..." : "Reenviar la liga"}
+            <T>{enviando ? "Enviando..." : "Reenviar la liga"}</T>
           </button>
-          {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
+          {nota && <span style={{ fontSize: 13 }}><T>{nota}</T></span>}
         </div>
       )}
       {!sinCorreo && (
         <p style={{ ...S.nota, margin: "8px 0 0" }}>
-          Mientras tanto puedes completar tu perfil y pedir la insignia de taller verificado.
+          <T>Mientras tanto puedes completar tu perfil y pedir la insignia de taller verificado.</T>
         </p>
       )}
     </div>
@@ -872,17 +875,17 @@ function InvitaTaller() {
   return (
     <div style={{ ...S.card, background: "#EEF2FB", borderColor: "#C9DBF0" }}>
       <p style={{ ...S.h2, color: "#1a3a5c" }}>
-        {d.embajador ? "🤝 Eres Taller embajador" : "🤝 Invita a otro taller"}
+        <T>{d.embajador ? "🤝 Eres Taller embajador" : "🤝 Invita a otro taller"}</T>
       </p>
       <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
-        {d.embajador
+        <T>{d.embajador
           ? "Gracias por traer talleres de confianza. Tu perfil lleva la insignia y sales entre los primeros del directorio."
-          : `Cuando un taller que invites quede activo y publique, recibes la insignia de Taller embajador y sales entre los primeros del directorio. Entre más talleres, más clientes llegan a todos.`}
+          : `Cuando un taller que invites quede activo y publique, recibes la insignia de Taller embajador y sales entre los primeros del directorio. Entre más talleres, más clientes llegan a todos.`}</T>
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <input readOnly value={d.liga} style={{ ...S.input, flex: "1 1 260px", minWidth: 0 }} onFocus={(e) => e.currentTarget.select()} />
         <button type="button" style={S.btn} onClick={() => void copiar()}>
-          {copiado ? "¡Copiada!" : "Copiar liga"}
+          <T>{copiado ? "¡Copiada!" : "Copiar liga"}</T>
         </button>
         <a
           style={{ ...S.btn, background: "#1E7B3A", textDecoration: "none", display: "inline-block" }}
@@ -890,18 +893,18 @@ function InvitaTaller() {
           target="_blank"
           rel="noreferrer"
         >
-          Mandar por WhatsApp
+          <T>Mandar por WhatsApp</T>
         </a>
       </div>
       {d.invitados.length > 0 && (
         <div style={{ marginTop: 12 }}>
           <p style={S.etiqueta}>
-            Talleres que invitaste: {d.invitados.length} ({activos} {activos === 1 ? "activo" : "activos"})
+            <T>Talleres que invitaste:</T> <T>{d.invitados.length}</T> (<T>{activos}</T> <T>{activos === 1 ? "activo" : "activos"}</T>)
           </p>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
             {d.invitados.slice(0, 10).map((i, n) => (
               <li key={n}>
-                {i.nombre}: <span style={{ color: i.activo ? "#1E7B3A" : "#6B675C" }}>{i.estado}</span>
+                <T>{i.nombre}</T>: <span style={{ color: i.activo ? "#1E7B3A" : "#6B675C" }}><T>{i.estado}</T></span>
               </li>
             ))}
           </ul>
@@ -943,9 +946,9 @@ function ComparadorProveedores() {
 
   return (
     <div style={{ ...S.card }}>
-      <p style={S.h2}>🔧 ¿Buscas una máquina, refacción o herramienta?</p>
+      <p style={S.h2}><T>🔧 ¿Buscas una máquina, refacción o herramienta?</T></p>
       <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
-        Escribe qué necesitas y te comparamos hasta 3 opciones (precio, envío y garantía), primero en HETNA y luego con distribuidores.
+        <T>Escribe qué necesitas y te comparamos hasta 3 opciones (precio, envío y garantía), primero en HETNA y luego con distribuidores.</T>
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <input
@@ -954,24 +957,24 @@ function ComparadorProveedores() {
           onKeyDown={(e) => {
             if (e.key === "Enter" && consulta.trim().length >= 3 && !cargando) void buscar()
           }}
-          placeholder="Ej.: husillo 2.2 kW enfriado por agua, fresa compresión 1/4, láser de fibra 1500 W"
+          placeholder={traducir("Ej.: husillo 2.2 kW enfriado por agua, fresa compresión 1/4, láser de fibra 1500 W")}
           style={{ ...S.input, flex: "1 1 300px", minWidth: 0 }}
         />
         <button type="button" style={{ ...S.btn, opacity: cargando || consulta.trim().length < 3 ? 0.5 : 1 }} disabled={cargando || consulta.trim().length < 3} onClick={() => void buscar()}>
-          {cargando ? "Buscando (≈1 min)…" : "Comparar"}
+          <T>{cargando ? "Buscando (≈1 min)…" : "Comparar"}</T>
         </button>
       </div>
-      {error && <p style={{ color: "#B42318", fontSize: 13, margin: "8px 0 0" }}>{error}</p>}
+      {error && <p style={{ color: "#B42318", fontSize: 13, margin: "8px 0 0" }}><T>{error}</T></p>}
       {r && (
         <div style={{ marginTop: 12 }}>
           {r.en_hetna.length > 0 && (
             <p style={{ margin: "0 0 8px", fontSize: 14 }}>
-              <b>En HETNA:</b>{" "}
+              <b><T>En HETNA:</T></b><T>{" "}</T>
               {r.en_hetna.slice(0, 3).map((p, i) => (
                 <span key={p.liga}>
                   {i > 0 && " · "}
                   <a href={p.liga} target="_blank" rel="noreferrer">
-                    {p.nombre}
+                    <T>{p.nombre}</T>
                   </a>
                 </span>
               ))}
@@ -980,21 +983,21 @@ function ComparadorProveedores() {
           {r.opciones.map((o) => (
             <div key={o.url} style={{ borderTop: "1px solid #E7E4DC", padding: "8px 0", fontSize: 14 }}>
               <p style={{ margin: 0, fontWeight: 700 }}>
-                {o.proveedor} <span style={{ fontWeight: 400, color: "#6B675C" }}>({o.pais})</span>
+                <T>{o.proveedor}</T> <span style={{ fontWeight: 400, color: "#6B675C" }}>(<T>{o.pais}</T>)</span>
               </p>
-              <p style={{ margin: "2px 0" }}>{o.producto}</p>
+              <p style={{ margin: "2px 0" }}><T>{o.producto}</T></p>
               <p style={{ margin: "2px 0", color: "#40403A" }}>
-                💲 {o.precio} · 🚚 {o.envio} · 🛡 {o.garantia}
+                💲 {o.precio} · 🚚 <T>{o.envio}</T> · 🛡 <T>{o.garantia}</T>
               </p>
-              <p style={{ margin: "2px 0", color: "#6B675C", fontSize: 13 }}>{o.nota}</p>
+              <p style={{ margin: "2px 0", color: "#6B675C", fontSize: 13 }}><T>{o.nota}</T></p>
               <a href={o.url} target="_blank" rel="noreferrer nofollow" style={{ fontSize: 13 }}>
-                Ver en su página ↗
+                <T>Ver en su página ↗</T>
               </a>
             </div>
           ))}
-          {!r.opciones.length && !r.en_hetna.length && <p style={{ fontSize: 14 }}>No encontré opciones claras. Prueba con otras palabras o la marca y el modelo.</p>}
-          {r.consejo && <p style={{ margin: "8px 0 0", fontSize: 14, background: "#F7F5F0", padding: 10, borderRadius: 8 }}>💡 {r.consejo}</p>}
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6B675C" }}>Precios tomados de las páginas de cada proveedor; confírmalos antes de comprar.</p>
+          {!r.opciones.length && !r.en_hetna.length && <p style={{ fontSize: 14 }}><T>No encontré opciones claras. Prueba con otras palabras o la marca y el modelo.</T></p>}
+          {r.consejo && <p style={{ margin: "8px 0 0", fontSize: 14, background: "#F7F5F0", padding: 10, borderRadius: 8 }}>💡 <T>{r.consejo}</T></p>}
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6B675C" }}><T>Precios tomados de las páginas de cada proveedor; confírmalos antes de comprar.</T></p>
         </div>
       )}
     </div>
@@ -1037,24 +1040,24 @@ function SugerenciasSeo() {
   if (!lista.length && !hecho) return null
   return (
     <div style={{ ...S.card, background: "#F3F8F1", borderColor: "#CFE2C8" }}>
-      <p style={S.h2}>🔎 Que te encuentren en Google</p>
+      <p style={S.h2}><T>🔎 Que te encuentren en Google</T></p>
       <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
-        Revisamos lo que la gente escribe en Google y te sugerimos un mejor título para tus productos. La dirección de tu producto no cambia.
+        <T>Revisamos lo que la gente escribe en Google y te sugerimos un mejor título para tus productos. La dirección de tu producto no cambia.</T>
       </p>
-      {hecho > 0 && <p style={{ margin: "0 0 10px", fontSize: 14, color: "#1E7B3A", fontWeight: 600 }}>✓ {hecho} título(s) actualizado(s).</p>}
+      {hecho > 0 && <p style={{ margin: "0 0 10px", fontSize: 14, color: "#1E7B3A", fontWeight: 600 }}>✓ <T>{hecho}</T> <T>título(s) actualizado(s).</T></p>}
       {lista.slice(0, 5).map((x) => (
         <div key={x.id} style={{ borderTop: "1px solid #DDE8D8", padding: "10px 0" }}>
-          <p style={{ ...S.etiqueta, margin: 0 }}>Ahora: {x.titulo}</p>
-          <p style={{ margin: "4px 0", fontSize: 15, fontWeight: 700 }}>Sugerido: {x.sugerencia.titulo_visible}</p>
+          <p style={{ ...S.etiqueta, margin: 0 }}><T>Ahora:</T> <T>{x.titulo}</T></p>
+          <p style={{ margin: "4px 0", fontSize: 15, fontWeight: 700 }}><T>Sugerido:</T> <T>{x.sugerencia.titulo_visible}</T></p>
           <p style={{ margin: "0 0 6px", fontSize: 13, color: "#55534C" }}>
-            Se busca como «{x.sugerencia.keyword_principal}». {x.sugerencia.motivo}
+            <T>Se busca como «</T><T>{x.sugerencia.keyword_principal}</T>». <T>{x.sugerencia.motivo}</T>
           </p>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" style={S.btn} disabled={ocupado === x.id} onClick={() => void responder(x.id, "aceptar")}>
-              Usar este título
+              <T>Usar este título</T>
             </button>
             <button type="button" style={{ ...S.btn, background: "#fff", color: "#55534C", border: "1px solid #D9D6CC" }} disabled={ocupado === x.id} onClick={() => void responder(x.id, "descartar")}>
-              No, gracias
+              <T>No, gracias</T>
             </button>
           </div>
         </div>
@@ -1094,24 +1097,24 @@ function QueMejorarias() {
   if (estado === "listo")
     return (
       <div style={{ ...S.card, background: "#F1F8F2", borderColor: "#CFE6D3" }}>
-        <p style={{ ...S.h2, color: "#1E7B3A" }}>¡Gracias! Ya lo recibimos.</p>
-        <p style={{ margin: "4px 0 0", fontSize: 14 }}>Lo lee directamente el equipo de HETNA. Si es una idea, te avisamos cuando la tengamos lista.</p>
+        <p style={{ ...S.h2, color: "#1E7B3A" }}><T>¡Gracias! Ya lo recibimos.</T></p>
+        <p style={{ margin: "4px 0 0", fontSize: 14 }}><T>Lo lee directamente el equipo de HETNA. Si es una idea, te avisamos cuando la tengamos lista.</T></p>
       </div>
     )
 
   return (
     <div style={{ ...S.card, background: "#FBF7EE", borderColor: "#EADFC4" }}>
-      <p style={S.h2}>💡 ¿Qué mejorarías de HETNA?</p>
+      <p style={S.h2}><T>💡 ¿Qué mejorarías de HETNA?</T></p>
       <p style={{ margin: "4px 0 10px", fontSize: 14, lineHeight: 1.5 }}>
-        Estamos construyendo la plataforma con los talleres. Dinos qué te falta, qué no te gusta o qué te gustaría que inventáramos.
+        <T>Estamos construyendo la plataforma con los talleres. Dinos qué te falta, qué no te gusta o qué te gustaría que inventáramos.</T>
       </p>
       {!abierto ? (
         <button type="button" style={S.btn} onClick={() => setAbierto(true)}>
-          Dar mi opinión
+          <T>Dar mi opinión</T>
         </button>
       ) : (
         <>
-          <p style={{ ...S.etiqueta, marginBottom: 6 }}>Del 0 al 10, ¿recomendarías HETNA a otro taller? (opcional)</p>
+          <p style={{ ...S.etiqueta, marginBottom: 6 }}><T>Del 0 al 10, ¿recomendarías HETNA a otro taller? (opcional)</T></p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 4, maxWidth: 460 }}>
             {Array.from({ length: 11 }, (_, n) => (
               <button
@@ -1137,17 +1140,17 @@ function QueMejorarias() {
             onChange={(e) => setComentario(e.target.value)}
             maxLength={2000}
             rows={4}
-            placeholder="Ej.: quiero recibir las solicitudes de mi ciudad por WhatsApp, o poder subir varios productos a la vez…"
+            placeholder={traducir("Ej.: quiero recibir las solicitudes de mi ciudad por WhatsApp, o poder subir varios productos a la vez…")}
             style={{ ...S.input, width: "100%", marginTop: 10, fontFamily: "inherit", boxSizing: "border-box" }}
           />
-          {error && <p style={{ color: "#B42318", fontSize: 13, margin: "6px 0 0" }}>{error}</p>}
+          {error && <p style={{ color: "#B42318", fontSize: 13, margin: "6px 0 0" }}><T>{error}</T></p>}
           <button
             type="button"
             style={{ ...S.btn, marginTop: 8, opacity: estado === "enviando" || (puntaje === null && comentario.trim().length < 3) ? 0.5 : 1 }}
             disabled={estado === "enviando" || (puntaje === null && comentario.trim().length < 3)}
             onClick={() => void enviar()}
           >
-            {estado === "enviando" ? "Enviando…" : "Enviar"}
+            <T>{estado === "enviando" ? "Enviando…" : "Enviar"}</T>
           </button>
         </>
       )}
@@ -1255,26 +1258,26 @@ function AvisosCelular() {
   const activo = estado === "activo"
   return (
     <div style={{ ...S.card, background: activo ? "#EEF8F2" : "#FFF8EE", borderColor: activo ? "#BFE3CF" : "#F2C98F" }}>
-      <p style={S.h2}>{activo ? "🔔 Avisos activados en este dispositivo" : "🔔 Recibe tus pedidos en el celular"}</p>
+      <p style={S.h2}><T>{activo ? "🔔 Avisos activados en este dispositivo" : "🔔 Recibe tus pedidos en el celular"}</T></p>
       <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>
-        {estado === "ios"
+        <T>{estado === "ios"
           ? "En iPhone, abre hetnacnc.com/seller en Safari, toca Compartir y luego \"Agregar a inicio\". Entra desde ese icono y activa los avisos."
           : estado === "bloqueado"
             ? "Bloqueaste los avisos en este navegador. Actívalos en los ajustes del sitio (el candado junto a la dirección)."
-            : "Te avisamos al momento de pedidos nuevos, solicitudes de fabricación, cuando ganas una y cuando un cliente te responde. Responder rápido te da más ventas."}
+            : "Te avisamos al momento de pedidos nuevos, solicitudes de fabricación, cuando ganas una y cuando un cliente te responde. Responder rápido te da más ventas."}</T>
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
         {(estado === "inactivo" || estado === "activando") && (
           <button type="button" style={S.btn} disabled={estado === "activando"} onClick={() => void activar()}>
-            {estado === "activando" ? "Activando..." : "Activar avisos"}
+            <T>{estado === "activando" ? "Activando..." : "Activar avisos"}</T>
           </button>
         )}
         {activo && (
           <button type="button" style={{ background: "none", border: "none", textDecoration: "underline", cursor: "pointer", fontSize: 13 }} onClick={() => void desactivar()}>
-            Desactivar
+            <T>Desactivar</T>
           </button>
         )}
-        {nota && <span style={{ fontSize: 13 }}>{nota}</span>}
+        {nota && <span style={{ fontSize: 13 }}><T>{nota}</T></span>}
       </div>
     </div>
   )
@@ -1285,20 +1288,20 @@ function AvisosCelular() {
 function PrimerProducto() {
   return (
     <div role="status" style={{ ...S.card, background: "#FFF3E8", borderColor: "#F5C8A0" }}>
-      <p style={{ ...S.h2, color: "#A84A08" }}>Publica tu primer producto en 2 minutos</p>
+      <p style={{ ...S.h2, color: "#A84A08" }}><T>Publica tu primer producto en 2 minutos</T></p>
       <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.5 }}>
-        Tu tienda ya está lista, pero los clientes todavía no encuentran nada tuyo. Sube una foto, ponle precio y
+        <T>Tu tienda ya está lista, pero los clientes todavía no encuentran nada tuyo. Sube una foto, ponle precio y
         listo: HETNA lo anuncia en Google, en el catálogo y en los correos de novedades, sin costo. Sólo pagas comisión
-        cuando vendes.
+        cuando vendes.</T>
       </p>
       <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
-        <li>Piezas, refacciones, fresas, materiales o trabajos que ya fabricas.</li>
-        <li>Archivos (DXF, STL, G-code), cursos y libros en PDF también cuentan.</li>
-        <li>Con 3 productos o más, tu tienda sale mejor posicionada.</li>
+        <li><T>Piezas, refacciones, fresas, materiales o trabajos que ya fabricas.</T></li>
+        <li><T>Archivos (DXF, STL, G-code), cursos y libros en PDF también cuentan.</T></li>
+        <li><T>Con 3 productos o más, tu tienda sale mejor posicionada.</T></li>
       </ul>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
         <Link to="/publicar" style={{ ...S.btn, textDecoration: "none", display: "inline-block" }}>
-          Publicar mi primer producto
+          <T>Publicar mi primer producto</T>
         </Link>
       </div>
     </div>
@@ -1321,23 +1324,23 @@ function Tarifas() {
   if (!grupos?.length) return null
   return (
     <div style={S.card}>
-      <h2 style={S.h2}>Precios y comisiones de HETNA</h2>
+      <h2 style={S.h2}><T>Precios y comisiones de HETNA</T></h2>
       <p style={S.nota}>
-        Lo que cuesta cada servicio. Es la misma lista de los{" "}
+        <T>Lo que cuesta cada servicio. Es la misma lista de los</T><T>{" "}</T>
         <a href="https://hetnacnc.com/mx/terminos-vendedores#tarifas" target="_blank" rel="noreferrer" style={{ color: "#B34D07" }}>
-          Términos para vendedores
+          <T>Términos para vendedores</T>
         </a>
         .
       </p>
       {grupos.map((g) => (
         <details key={g.id} style={{ borderTop: "1px solid #F1EEE7", padding: "8px 0" }}>
-          <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 14 }}>{g.titulo}</summary>
-          {g.texto && <p style={{ ...S.nota, margin: "6px 0 4px" }}>{g.texto}</p>}
+          <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 14 }}><T>{g.titulo}</T></summary>
+          {g.texto && <p style={{ ...S.nota, margin: "6px 0 4px" }}><T>{g.texto}</T></p>}
           {g.filas.map((f) => (
             <div key={f.concepto} style={S.fila}>
               <span style={{ fontSize: 13.5 }}>
-                {f.concepto}
-                {f.nota && <span style={{ display: "block", color: "#8A857A", fontSize: 12 }}>{f.nota}</span>}
+                <T>{f.concepto}</T>
+                {f.nota && <span style={{ display: "block", color: "#8A857A", fontSize: 12 }}><T>{f.nota}</T></span>}
               </span>
               <strong style={{ fontSize: 13.5, whiteSpace: "nowrap" }}>{f.precio}</strong>
             </div>
@@ -1392,7 +1395,7 @@ export default function TableroPage() {
   if (cargando && !datos) {
     return (
       <div style={S.page}>
-        <p style={S.sub}>Cargando tu tablero...</p>
+        <p style={S.sub}><T>Cargando tu tablero...</T></p>
       </div>
     )
   }
@@ -1400,7 +1403,7 @@ export default function TableroPage() {
   if (error && !datos) {
     return (
       <div style={S.page}>
-        <p style={S.err}>{error}</p>
+        <p style={S.err}><T>{error}</T></p>
         <button
           type="button"
           style={S.btn}
@@ -1409,7 +1412,7 @@ export default function TableroPage() {
             void cargar()
           }}
         >
-          Reintentar
+          <T>Reintentar</T>
         </button>
       </div>
     )
@@ -1436,8 +1439,8 @@ export default function TableroPage() {
       <ComparadorProveedores />
       <QueMejorarias />
 
-      <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}>Tu taller en {nombreDelMes(datos.mes)}</h2>
-      <p style={S.sub}>Las gráficas y los conteos son de los últimos {v.ventana_dias} días.</p>
+      <h2 style={{ ...S.h2, fontSize: 17, margin: "8px 0 2px" }}><T>Tu taller en</T> {nombreDelMes(datos.mes)}</h2>
+      <p style={S.sub}><T>Las gráficas y los conteos son de los últimos</T> <T>{v.ventana_dias}</T> <T>días.</T></p>
 
       <MetaDelMes datos={datos} onGuardar={guardarMeta} />
 
@@ -1495,8 +1498,8 @@ export default function TableroPage() {
       </div>
 
       <div style={S.card}>
-        <h2 style={S.h2}>Lo que vendiste día por día</h2>
-        <p style={S.nota}>Pasa el cursor sobre una barra para ver el día.</p>
+        <h2 style={S.h2}><T>Lo que vendiste día por día</T></h2>
+        <p style={S.nota}><T>Pasa el cursor sobre una barra para ver el día.</T></p>
         <Ventas30 dias={v.por_dia} moneda={datos.moneda} />
       </div>
 
