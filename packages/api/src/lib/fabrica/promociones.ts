@@ -147,6 +147,42 @@ export const HERRAMIENTAS: Herramienta[] = [
     en: { nombre: "Living hinge", gancho: "MDF that bends", frases: ["Pick the radius and angle", "It calculates the cut zone", "Round boxes, lamps and notebooks"], cta: "Make it free", texto: "Make MDF or plywood bend: pick the curve radius and angle and it calculates the cut zone for boxes with round corners, lamps and notebook covers. Download the DXF, SVG or PDF for free in HETNA 2D Studio." },
   },
   {
+    clave: "mapa_topo", nombre: "Mapa topográfico por capas", ruta: "/mx/disenar/mapa-topografico", imagen: IMG2D("mapa-topografico.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "Tu montaña favorita en capas", frases: ["Pico de Orizaba, Popocatépetl, Barranca del Cobre…", "Relieve real, capa por capa", "DXF, SVG o PDF para láser"], cta: "Hazlo gratis",
+    texto: "Escoge un lugar de México (Pico de Orizaba, Popocatépetl, Nevado de Toluca, Barranca del Cobre…) o pega sus coordenadas y salen las capas del relieve real para cortar en MDF o acrílico y apilar; cada capa trae rayada la silueta de la siguiente para pegarla en su lugar. Descarga DXF, SVG o PDF gratis en HETNA 2D Studio.",
+    en: { nombre: "Layered topographic map", gancho: "Your favorite mountain in layers", frases: ["Real terrain, layer by layer", "Each layer marks where the next one goes", "DXF, SVG or PDF for laser"], cta: "Make it free", texto: "Pick a place (or paste its coordinates) and get the real terrain as layers to laser cut in MDF or acrylic and stack; each layer has the outline of the next one scored so you glue it in place. Download the DXF, SVG or PDF for free in HETNA 2D Studio." },
+  },
+  {
+    clave: "reloj_palabras", nombre: "Reloj de palabras", ruta: "/mx/disenar/reloj-palabras", imagen: IMG2D("reloj-palabras.jpg"), tema: "laser", publico: "clientes_particulares",
+    gancho: "Un reloj que escribe la hora", frases: ["«SON LAS TRES Y CUARTO»", "Frente, rejilla y fondo para LEDs", "Con la tabla de qué LED prender"], cta: "Hazlo gratis",
+    texto: "Un reloj que dice la hora en español cada 5 minutos con letras que se iluminan: sale el frente con las letras caladas en letra esténcil, la rejilla que separa la luz de cada letra y el fondo para los LEDs, más la tabla de qué LED prender con cada palabra. DXF, SVG o PDF gratis en HETNA 2D Studio.",
+    en: { nombre: "Word clock", gancho: "A clock that spells the time", frases: ["Spanish words, every 5 minutes", "Front, grid and LED back panel", "Plus the LED wiring table"], cta: "Make it free", texto: "A clock that spells the time in Spanish every 5 minutes with letters that light up: you get the front with stencil letters cut out, the grid that keeps each letter's light apart and the back panel for the LEDs, plus the table of which LED to turn on for each word. Free DXF, SVG or PDF in HETNA 2D Studio." },
+  },
+  {
+    clave: "placa_redonda", nombre: "Letrero redondo con monograma", ruta: "/mx/disenar/placa-redonda", imagen: IMG2D("placa-redonda.jpg"), tema: "router", publico: "clientes_particulares",
+    gancho: "El letrero redondo de tu negocio", frases: ["Texto en arco arriba y abajo", "Monograma al centro", "DXF para láser o router"], cta: "Diséñalo gratis",
+    texto: "Haz un letrero redondo para tu negocio, tu casa o un evento: texto en arco arriba y abajo (los dos se leen al derecho), iniciales o monograma al centro, aro en la orilla y adornos a los lados. Descarga el DXF, SVG o PDF para láser o router CNC gratis en HETNA 2D Studio.",
+    en: { nombre: "Round sign with monogram", gancho: "A round sign for your business", frases: ["Arched text top and bottom", "Monogram in the center", "DXF for laser or router"], cta: "Design it free", texto: "Make a round sign for your business, home or event: arched text at the top and bottom (both read upright), initials or a monogram in the center, a rim and side ornaments. Download the DXF, SVG or PDF for laser or CNC router for free in HETNA 2D Studio." },
+  },
+  {
+    clave: "incrustaciones", nombre: "Incrustaciones (inlay)", ruta: "/mx/disenar/incrustaciones", imagen: IMG2D("incrustaciones.jpg"), tema: "router", publico: "talleres",
+    gancho: "Incrustaciones que sí encajan", frases: ["Bolsillo y pieza compensados por tu fresa", "De un texto o tu SVG/DXF", "Con holgura para el pegamento"], cta: "Úsala gratis",
+    texto: "De un texto o tu dibujo (SVG o DXF) salen el bolsillo para vaciar en la madera base y la pieza que entra, compensados por el radio de tu fresa (1/16, 1/8 o 1/4 de pulgada) y con holgura para el pegamento. Para letreros y tablas con madera de contraste o acrílico. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Inlay maker", gancho: "Inlays that actually fit", frases: ["Pocket and insert compensated for your bit", "From text or your SVG/DXF", "With glue clearance"], cta: "Use it free", texto: "From text or your own drawing (SVG or DXF) you get the pocket to clear in the base wood and the piece that goes in, compensated for your bit radius (1/16, 1/8 or 1/4 inch) and with clearance for glue. For signs and boards with contrasting wood or acrylic. Free in HETNA 2D Studio." },
+  },
+  {
+    clave: "pruebas_maquina", nombre: "Pruebas de kerf y material", ruta: "/mx/disenar/pruebas-maquina", imagen: IMG2D("pruebas-maquina.jpg"), tema: "laser", publico: "talleres",
+    gancho: "Calibra tu láser en un corte", frases: ["Mide tu kerf con 10 tiras", "Encuentra la ranura que ajusta justo", "Matriz de potencia × velocidad para LightBurn"], cta: "Úsala gratis",
+    texto: "Tres pruebas para calibrar tu máquina: medir el kerf (ancho de corte) con un marco de 10 tiras, encontrar la ranura que ajusta justo con tu material y una matriz de potencia × velocidad con un color de capa de LightBurn por cuadro. SVG, DXF o PDF gratis en HETNA 2D Studio.",
+    en: { nombre: "Kerf and material tests", gancho: "Calibrate your laser in one cut", frases: ["Measure your kerf with 10 strips", "Find the slot that fits just right", "Power × speed grid for LightBurn"], cta: "Use it free", texto: "Three tests to calibrate your machine: measure the kerf (cut width) with a 10-strip frame, find the slot that fits your material just right, and a power × speed grid with one LightBurn layer color per square. Free SVG, DXF or PDF in HETNA 2D Studio." },
+  },
+  {
+    clave: "desarrollo_lamina", nombre: "Desarrollo de lámina", ruta: "/mx/disenar/desarrollo-lamina", imagen: IMG2D("desarrollo-lamina.jpg"), tema: "lamina", publico: "talleres",
+    gancho: "Plantillas de pailería al instante", frases: ["Cono y reducción", "Cuadrado a redondo", "Boca de pescado para tubos"], cta: "Úsala gratis",
+    texto: "Pon las medidas y sale la plantilla plana en DXF para plasma o láser: cono y reducción en una o varias partes, transición de cuadrado o rectángulo a redondo con líneas de doblez, y boca de pescado para unir tubos a cualquier ángulo, tomando en cuenta el espesor de la lámina. Gratis en HETNA 2D Studio.",
+    en: { nombre: "Sheet metal layouts", gancho: "Sheet metal patterns in seconds", frases: ["Cones and reducers", "Square to round", "Pipe saddle (fishmouth)"], cta: "Use it free", texto: "Enter the dimensions and get the flat pattern as DXF for plasma or laser: cone and reducer in one or several parts, square or rectangle to round transition with bend lines, and fishmouth to join pipes at any angle, accounting for sheet thickness. Free in HETNA 2D Studio." },
+  },
+  {
     clave: "disenar", nombre: "Estudio de diseño", ruta: "/mx/disenar", imagen: null, tema: "router", publico: "clientes_particulares",
     gancho: "Diseña para CNC gratis", frases: ["De imagen a 3D", "Cajas, vectores y piezas 2D", "Listo para cortar o imprimir"], cta: "Diseña gratis en HETNA",
     texto: "HETNA 3D Studio y 2D Studio: pasa una imagen a 3D, arma cajas, vectoriza y prepara tus piezas para cortar o imprimir. Gratis en el navegador.",
@@ -387,7 +423,7 @@ export const DEL_3D = ["imagen_3d", "litofania", "svg_stl", "letras_3d", "llaver
  * HETNA 2D Studio: van con "las demás" (el sábado, sólo México). Así no le quitan
  * turnos a imagen a 3D (lo que se cobra) y sus imágenes en español no salen en EE.UU.
  */
-export const DEL_2D = ["celosia_imagen", "costillas", "voronoi", "caja_juntas", "mandalas", "bisagra_viva"]
+export const DEL_2D = ["celosia_imagen", "costillas", "voronoi", "caja_juntas", "mandalas", "bisagra_viva", "mapa_topo", "reloj_palabras", "placa_redonda", "incrustaciones", "pruebas_maquina", "desarrollo_lamina"]
 
 /**
  * Qué herramienta sale cada día (0 = domingo):
