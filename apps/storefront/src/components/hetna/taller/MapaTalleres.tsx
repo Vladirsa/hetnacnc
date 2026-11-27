@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import "leaflet/dist/leaflet.css"
 
@@ -424,13 +425,13 @@ export default function MapaTalleres({
       {/* Auditoría de mejoras, tarea 5: talleres activos y empresas por unirse
           se cuentan aparte, nunca sumados */}
       <p className="mt-3 text-center text-[14.5px] text-[#142033]" data-testid="conteo-red">
-        <strong>Talleres activos en HETNA: {totales.verificado + totales.fundador + totales.comunidad}</strong>
+        <strong><T>Talleres activos en HETNA:</T> {totales.verificado + totales.fundador + totales.comunidad}</strong>
         {totales.por_unirse > 0 && (
-          <span className="text-[#6B675C]"> · Empresas por unirse (todavía sin cuenta): {totales.por_unirse}</span>
+          <span className="text-[#6B675C]"> <T>· Empresas por unirse (todavía sin cuenta):</T> {totales.por_unirse}</span>
         )}
         {totalPaises > 0 && (
           <span className="text-[#6B675C]">
-            {" "}· En otros {enPaises.length} países: {totalPaises}{" "}
+            {" "}<T>· En otros</T> {enPaises.length} <T>países:</T> {totalPaises}{" "}
             <button
               type="button"
               onClick={() =>
@@ -442,7 +443,7 @@ export default function MapaTalleres({
               }
               className="font-semibold text-[#C2560A] underline"
             >
-              verlos en el mapa
+              <T>verlos en el mapa</T>
             </button>
           </span>
         )}
@@ -488,9 +489,9 @@ export default function MapaTalleres({
         </ul>
       )}
       <p className="mt-2 text-xs text-[#6B675C]">
-        El mapa muestra cuántos hay por estado y municipio, nunca la dirección. La cotización y el contacto se hacen dentro de HETNA.
+        <T>El mapa muestra cuántos hay por estado y municipio, nunca la dirección. La cotización y el contacto se hacen dentro de HETNA.</T>
         {totales.por_unirse > 0 && (
-          <> «Empresas por unirse» son negocios CNC con datos públicos que todavía no tienen cuenta en HETNA.</>
+          <> <T>«Empresas por unirse» son negocios CNC con datos públicos que todavía no tienen cuenta en HETNA.</T></>
         )}
       </p>
     </div>
