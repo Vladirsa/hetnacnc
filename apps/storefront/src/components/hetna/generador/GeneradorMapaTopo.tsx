@@ -7,6 +7,8 @@ import { useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
+import { contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
+import { largoCorte } from "@/lib/generador/geo2d"
 import { CREDITO, LUGARES, alturaTerrarium, piezasMapa, planMosaicos } from "@/lib/generador/mapaTopo"
 
 const HOJAS = [
@@ -84,6 +86,13 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
   }
   const r = useMemo(() => (alturas ? piezasMapa(alturas.alt, alturas.w, alturas.h, { capas: numero(capas) || 10, ancho: numero(ancho) || 300, hoja: HOJAS[hoja], invertir }) : null), [alturas, capas, ancho, hoja, invertir])
 
+  // precio aprox.: corte en láser de MDF de 3 mm, por hoja de material (la guía rayada no se cobra aparte)
+  const corte = useMemo(() => (r && !r.errores.length ? r.dibujo.trazos.filter((t) => t.capa === "corte") : []), [r])
+  const pedidoPrecio =
+    r && r.hojas > 0 && corte.length
+      ? { ...precioMDF("laser", 3), anchoMm: HOJAS[hoja].ancho - 20, largoMm: HOJAS[hoja].alto - 20, cantidad: r.hojas, unidad: "hojas" as const, corte_mm: largoCorte(corte) / r.hojas, perforaciones: Math.round(corte.length / r.hojas) }
+      : undefined
+
   const panel = (
     <div className="flex flex-col gap-4">
       {cabecera}
@@ -141,6 +150,8 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       archivo={`mapa-topografico-${numero(lat).toFixed(2)}_${numero(lon).toFixed(2)}`}
       pieza={`Mapa topográfico de ${numero(ancho) || 300} mm en ${numero(capas) || 10} capas`}
       material="MDF o acrílico de 3 mm"
+      precio={pedidoPrecio}
+      cotizar={r && !r.errores.length ? { ...contextoMDF("laser", 3), nota: `Mapa topográfico de ${numero(ancho) || 300} mm: ${r.niveles.length + 1} piezas (base y capas) en ${r.hojas} hojas, con la silueta de la capa de encima rayada.` } : undefined}
       vacio="Escoge un lugar y carga el terreno."
     />
   )

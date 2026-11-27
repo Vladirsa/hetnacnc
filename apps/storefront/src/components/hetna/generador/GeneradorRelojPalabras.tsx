@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react"
 
 import { Boton, CampoNum, Seccion, descargar, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
+import { contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
+import { largoCorte } from "@/lib/generador/geo2d"
 import { CUADRICULA, celdasDe, hacerRelojPalabras, palabrasDeLaHora } from "@/lib/generador/relojPalabras"
 
 import { useFuente } from "./useFuente"
@@ -49,6 +51,11 @@ export function GeneradorRelojPalabras({ cabecera }: { cabecera?: React.ReactNod
     </div>
   )
 
+  // precio aprox.: 3 placas de L × L en láser (MDF de 3 mm de referencia; la rejilla gruesa sube un poco)
+  const L = r.alto
+  const corte = r.dibujo.trazos.filter((t) => t.capa === "corte")
+  const pedidoPrecio = texto && corte.length ? { ...precioMDF("laser", 3), anchoMm: L, largoMm: L, cantidad: 3, corte_mm: largoCorte(corte) / 3, perforaciones: Math.round(corte.length / 3) } : undefined
+
   return (
     <Estudio2D
       titulo="Reloj de palabras"
@@ -66,6 +73,8 @@ export function GeneradorRelojPalabras({ cabecera }: { cabecera?: React.ReactNod
       archivo={`reloj-palabras-${Math.round(numero(lado) || 300)}mm-hetna`}
       pieza={`Reloj de palabras de ${Math.round(numero(lado) || 300)} mm (frente, rejilla y fondo)`}
       material="MDF de 3 mm (frente y fondo) y de 6 a 9 mm (rejilla)"
+      precio={pedidoPrecio}
+      cotizar={pedidoPrecio ? { ...contextoMDF("laser", 3), nota: `Reloj de palabras de ${Math.round(L)} mm: 3 placas (frente con letras caladas, rejilla de 6 a 9 mm y fondo). Sin electrónica.` } : undefined}
       vacio="Cargando la letra…"
     />
   )
