@@ -316,7 +316,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
             <rect x="3" y="4" width="18" height="16" rx="2" />
             <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
           </svg>
-          <span className="text-[14px] font-semibold">{nombre ? `${nombre} (cambiar)` : "Sube tu imagen"}</span>
+          <span className="text-[14px] font-semibold"><T>{nombre ? `${nombre} (cambiar)` : "Sube tu imagen"}</T></span>
           <span className="text-[11.5px] text-[#8A97AB]"><T>JPG, PNG o WebP · hasta 20 MB · o pégala con Ctrl+V</T></span>
           <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
@@ -351,7 +351,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
             ))}
           </div>
           <span className="text-[12.5px] text-[#8A97AB]" aria-live="polite">
-            {procesando ? "Vectorizando…" : res ? `${cuenta.contornos} contornos · ${cuenta.nodos} nodos · ${res.capas.length} ${res.capas.length === 1 ? "color" : "colores"}` : ""}
+            <T>{procesando ? "Vectorizando…" : res ? `${cuenta.contornos} contornos · ${cuenta.nodos} nodos · ${res.capas.length} ${res.capas.length === 1 ? "color" : "colores"}` : ""}</T>
           </span>
         </div>
 
