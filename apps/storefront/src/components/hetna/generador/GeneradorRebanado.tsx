@@ -3,6 +3,7 @@
 // Rebanado en capas (2D Studio): convierte un modelo 3D en capas para cortar
 // y pegar. Sube STL u OBJ; las capas salen numeradas, con barrenos de
 // alineación y acomodadas en tus hojas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { Aviso, CampoNum, Interruptor, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -66,7 +67,7 @@ export function GeneradorRebanado({ cabecera }: { cabecera?: React.ReactNode }) 
         className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[12px] border-2 border-dashed border-[#2B3648] p-4 text-center hover:border-[#C2560A] hover:bg-[#C2560A]/5"
       >
         <span className="text-[14px] font-semibold">{nombre ? `${nombre} (cambiar)` : "Sube tu modelo 3D"}</span>
-        <span className="text-[11.5px] text-[#8A97AB]">STL u OBJ · hasta 40 MB</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>STL u OBJ · hasta 40 MB</T></span>
         <input type="file" accept=".stl,.obj" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
       </label>
       {error && <Aviso tipo="error">{error}</Aviso>}
