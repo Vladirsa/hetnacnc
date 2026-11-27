@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { isStripe } from "@/lib/constants"
 import { paymentInfoMap } from "@/lib/pagos"
 import { convertToLocale } from "@/lib/helpers/money"
@@ -15,7 +16,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
     <div className="border rounded-sm p-4">
       <div>
         <Text className="txt-medium-plus text-ui-fg-base mb-1 font-bold">
-          Dirección de envío
+          <TS>Dirección de envío</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
           {order.shipping_address?.first_name}{" "}
@@ -35,7 +36,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
 
       <div className="mt-4" data-testid="shipping-contact-summary">
         <Text className="txt-medium-plus text-ui-fg-base mb-1 font-bold">
-          Contacto
+          <TS>Contacto</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
           {order.shipping_address?.phone}
@@ -45,7 +46,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
 
       <div className="mt-4" data-testid="shipping-method-summary">
         <Text className="txt-medium-plus text-ui-fg-base mb-1 font-bold">
-          Método de envío
+          <TS>Método de envío</TS>
         </Text>
         <Text className="txt-medium text-ui-fg-subtle">
           {(order as any).shipping_methods[0]?.name} (
@@ -60,7 +61,7 @@ const OrderShipping = ({ order }: ShippingDetailsProps) => {
       </div>
       <div className="mt-4">
         <Text className="txt-medium-plus text-ui-fg-base mb-1 font-bold">
-          Método de pago
+          <TS>Método de pago</TS>
         </Text>
         <div>
           {payment && (
