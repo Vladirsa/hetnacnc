@@ -16,7 +16,7 @@ const Contexto = createContext<Idioma>("es")
 const Proveedor = Contexto.Provider as unknown as (p: { value: Idioma; children: ReactNode }) => any
 
 let carga: Promise<ReturnType<typeof crearT>> | null = null
-const cargarT = () => (carga ??= import("@/i18n/en").then((m) => crearT(m.EN, m.REGLAS)))
+const cargarT = () => (carga ??= import("@/i18n/diccionario").then((m) => crearT(m.EN, m.REGLAS)))
 
 export function IdiomaProvider({ idioma, children }: { idioma: Idioma; children: ReactNode }) {
   // Empieza a bajar el diccionario desde el primer render (no hasta el primer <T>)
