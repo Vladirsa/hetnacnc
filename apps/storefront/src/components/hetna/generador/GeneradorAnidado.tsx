@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
@@ -45,7 +46,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
       {sufijo && <span className="pr-3 text-[13px] text-[#9A978C]">{sufijo}</span>}
@@ -116,10 +117,10 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Anidado de piezas en hojas</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Anidado de piezas en hojas</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Sube tus piezas en DXF o SVG, di cuántas de cada una y el tamaño de tu hoja, y te acomodamos todo para desperdiciar lo menos posible. Descarga el DXF listo para láser, router o plasma. Todo en tu navegador.
+          <T>Sube tus piezas en DXF o SVG, di cuántas de cada una y el tamaño de tu hoja, y te acomodamos todo para desperdiciar lo menos posible. Descarga el DXF listo para láser, router o plasma. Todo en tu navegador.</T>
         </p>
       </section>
 
@@ -132,24 +133,24 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
             className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center"
           >
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">Sube tus piezas (DXF o SVG)</span>
-            <span className="text-[12px] text-[#6B6A63]">Puedes subir varios archivos a la vez</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>Sube tus piezas (DXF o SVG)</T></span>
+            <span className="text-[12px] text-[#6B6A63]"><T>Puedes subir varios archivos a la vez</T></span>
             <input type="file" multiple accept=".dxf,.svg" className="hidden" onChange={(e) => abrir(e.target.files)} />
           </label>
           <label className="flex items-center gap-2 text-[13.5px] text-[#1B1B18]">
             <input type="checkbox" checked={separarContornos} onChange={(e) => setSepararContornos(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-            Si un archivo trae varias piezas, separarlas
+            <T>Si un archivo trae varias piezas, separarlas</T>
           </label>
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
 
           {piezas.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Piezas y cantidades</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Piezas y cantidades</T></span>
               {piezas.map((p) => (
                 <div key={p.id} className="flex items-center gap-2 rounded-[10px] border border-[#E7E4DC] px-2.5 py-1.5">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-semibold text-[#1B1B18]">{p.nombre}</span>
-                    <span className="block text-[11.5px] text-[#6B6A63]">{r1(p.ancho)} × {r1(p.alto)} mm</span>
+                    <span className="block text-[11.5px] text-[#6B6A63]">{r1(p.ancho)} × {r1(p.alto)} <T>mm</T></span>
                   </span>
                   <input
                     type="number"
@@ -159,16 +160,16 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
                     className="w-16 h-9 rounded-[8px] border border-[#D9D5C9] px-2 text-center text-[14px] text-[#1B1B18]"
                     aria-label={`Cantidad de ${p.nombre}`}
                   />
-                  <button type="button" onClick={() => setPiezas((xs) => xs.filter((x) => x.id !== p.id))} className="text-[12px] font-semibold text-[#6B675C] hover:text-[#B3261E]">Quitar</button>
+                  <button type="button" onClick={() => setPiezas((xs) => xs.filter((x) => x.id !== p.id))} className="text-[12px] font-semibold text-[#6B675C] hover:text-[#B3261E]"><T>Quitar</T></button>
                 </div>
               ))}
             </div>
           )}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Hoja de material</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Hoja de material</T></span>
             <div className="flex flex-wrap gap-1.5">
-              {HOJAS.map((h, i) => <Opcion key={h.etiqueta} activa={hojaIdx === i && String(h.ancho) === anchoHoja && String(h.alto) === altoHoja} onClick={() => elegirHoja(i)}>{h.etiqueta}</Opcion>)}
+              {HOJAS.map((h, i) => <Opcion key={h.etiqueta} activa={hojaIdx === i && String(h.ancho) === anchoHoja && String(h.alto) === altoHoja} onClick={() => elegirHoja(i)}><T>{h.etiqueta}</T></Opcion>)}
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Campo etiqueta="Ancho de la hoja" valor={anchoHoja} cambiar={setAnchoHoja} />
@@ -181,19 +182,19 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
           </div>
           <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
             <input type="checkbox" checked={girar} onChange={(e) => setGirar(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-            Permitir girar las piezas 90° (desactívalo si el material tiene veta)
+            <T>Permitir girar las piezas 90° (desactívalo si el material tiene veta)</T>
           </label>
         </section>
 
         <section className="flex flex-col gap-4 min-w-0">
           {!piezas.length && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14px] text-[#6B6A63] flex flex-col gap-2">
-              <p className="m-0 font-semibold text-[#1B1B18]">Cómo funciona</p>
+              <p className="m-0 font-semibold text-[#1B1B18]"><T>Cómo funciona</T></p>
               <ul className="m-0 pl-5 flex flex-col gap-1">
-                <li>Sube un archivo por pieza, o uno con varias piezas: las separamos solas.</li>
-                <li>Escribe cuántas quieres de cada una y elige la hoja (láser, MDF, melamina, lámina).</li>
-                <li>La separación es el espacio entre piezas: pon tu kerf más un margen de seguridad (2 a 4 mm en láser, el diámetro de la fresa más 2 mm en router).</li>
-                <li>Descarga el DXF con todas las hojas: capa HOJA con el contorno y capa CORTE con las piezas.</li>
+                <li><T>Sube un archivo por pieza, o uno con varias piezas: las separamos solas.</T></li>
+                <li><T>Escribe cuántas quieres de cada una y elige la hoja (láser, MDF, melamina, lámina).</T></li>
+                <li><T>La separación es el espacio entre piezas: pon tu kerf más un margen de seguridad (2 a 4 mm en láser, el diámetro de la fresa más 2 mm en router).</T></li>
+                <li><T>Descarga el DXF con todas las hojas: capa HOJA con el contorno y capa CORTE con las piezas.</T></li>
               </ul>
             </div>
           )}
@@ -215,7 +216,7 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
               </dl>
               {r.noCaben.length > 0 && (
                 <ul className="m-0 pl-5 text-[13.5px] text-[#8A1C1C] bg-[#FDECEC] border border-[#F2B8B5] rounded-[12px] py-3 pr-4">
-                  {r.noCaben.map((a) => <li key={a}>No cabe en la hoja: {a}</li>)}
+                  {r.noCaben.map((a) => <li key={a}><T>No cabe en la hoja:</T> {a}</li>)}
                 </ul>
               )}
 
@@ -223,7 +224,7 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
                 <>
                   {r.hojas.length > 1 && (
                     <div className="flex flex-wrap gap-2">
-                      {r.hojas.map((h, i) => <Opcion key={i} activa={hojaVista === i} onClick={() => setHojaVista(i)}>Hoja {i + 1} · {h.colocaciones.length} pzas</Opcion>)}
+                      {r.hojas.map((h, i) => <Opcion key={i} activa={hojaVista === i} onClick={() => setHojaVista(i)}><T>Hoja</T> {i + 1} · {h.colocaciones.length} <T>pzas</T></Opcion>)}
                     </div>
                   )}
                   <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-4">
@@ -247,7 +248,7 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
                     className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                    Ver precio al instante en el Cotizador
+                    <T>Ver precio al instante en el Cotizador</T>
                   </button>
                   <button
                     type="button"
@@ -255,20 +256,20 @@ export function GeneradorAnidado({ cabecera }: { cabecera?: React.ReactNode }) {
                     className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                    Fabrícamelo: que un taller las corte
+                    <T>Fabrícamelo: que un taller las corte</T>
                   </button>
                   <BotonesCam nombre={nombre} dxf={() => dibujoDXF(dibujoTodo!)} />
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
                   <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => descargar(`${nombre}.dxf`, dibujoDXF(dibujoTodo!), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                      Descargar DXF
+                      <T>Descargar DXF</T>
                     </button>
                     <button type="button" onClick={() => descargar(`${nombre}.svg`, dibujoSVG(dibujoTodo!, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                      Descargar SVG
+                      <T>Descargar SVG</T>
                     </button>
                   </div>
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                    El acomodo usa el rectángulo que envuelve a cada pieza (con giro de 90° si lo permites). Las hojas van una junto a otra en el DXF, en capas HOJA y CORTE.
+                    <T>El acomodo usa el rectángulo que envuelve a cada pieza (con giro de 90° si lo permites). Las hojas van una junto a otra en el DXF, en capas HOJA y CORTE.</T>
                   </p>
                 </>
               )}
