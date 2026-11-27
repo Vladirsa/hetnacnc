@@ -2,6 +2,7 @@
 // Los datos y los conteos salen de lib/hetna/explorar.ts; aquí sólo se dibuja.
 // Todos los filtros son enlaces normales: la página llega completa desde el
 // servidor, se puede compartir filtrada y funciona aunque no cargue JavaScript.
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { ProductCard } from "@/components/organisms/ProductCard/ProductCard"
 import { ProductsPagination } from "@/components/organisms/ProductsPagination/ProductsPagination"
@@ -47,7 +48,7 @@ function GrupoFiltro({ g, sp, base }: { g: Grupo; sp: URLSearchParams; base: str
   return (
     <details open className="group border-b border-[#EEF0F2] py-3.5" data-testid={`filtro-${g.clave}`}>
       <summary className="flex cursor-pointer list-none items-center justify-between text-[12.5px] font-extrabold uppercase tracking-[0.06em] text-[#142033] [&::-webkit-details-marker]:hidden">
-        {g.titulo}
+        <TS>{g.titulo}</TS>
         <span aria-hidden className="text-[#8A8F96] group-open:hidden">+</span>
         <span aria-hidden className="hidden text-[#8A8F96] group-open:inline">–</span>
       </summary>
@@ -55,7 +56,7 @@ function GrupoFiltro({ g, sp, base }: { g: Grupo; sp: URLSearchParams; base: str
       {!pocas && (
         <details className="mt-1">
           <summary className="cursor-pointer list-none px-1 text-[13px] font-bold text-[#B34D07] hover:underline [&::-webkit-details-marker]:hidden">
-            Ver {visibles.length - MAX_OPCIONES} más
+            <TS>Ver</TS> {visibles.length - MAX_OPCIONES} <TS>más</TS>
           </summary>
           {lista(visibles.slice(MAX_OPCIONES))}
         </details>
@@ -69,7 +70,7 @@ function FiltroPrecio({ sp, accion }: { sp: URLSearchParams; accion: string }) {
   const ocultos = [...sp.entries()].filter(([k]) => !["min_price", "max_price", "page"].includes(k))
   return (
     <div className="border-b border-[#EEF0F2] py-3.5">
-      <p className="text-[12.5px] font-extrabold uppercase tracking-[0.06em] text-[#142033]">Precio</p>
+      <p className="text-[12.5px] font-extrabold uppercase tracking-[0.06em] text-[#142033]"><TS>Precio</TS></p>
       <form method="get" action={accion} className="mt-2.5 flex items-center gap-2">
         {ocultos.map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
@@ -91,7 +92,7 @@ function FiltroPrecio({ sp, accion }: { sp: URLSearchParams; accion: string }) {
           className="h-9 w-full min-w-0 rounded-lg border border-[#D4D9DF] bg-white px-2.5 text-[13.5px]"
         />
         <button type="submit" className="h-9 shrink-0 rounded-lg bg-[#142033] px-3 text-[13px] font-bold text-white">
-          Ir
+          <TS>Ir</TS>
         </button>
       </form>
     </div>
@@ -119,12 +120,12 @@ function TarjetaTaller({ t }: { t: Taller }) {
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-[15px] font-bold leading-snug text-[#142033]">{t.nombre}</span>
-          {t.verificado && <span className="rounded-full bg-[#E8F5EC] px-2 py-0.5 text-[11px] font-bold text-[#1E7A3C]">✓ Verificado</span>}
+          {t.verificado && <span className="rounded-full bg-[#E8F5EC] px-2 py-0.5 text-[11px] font-bold text-[#1E7A3C]"><TS>✓ Verificado</TS></span>}
         </span>
         {lugar && <span className="mt-0.5 block text-[13px] text-[#6B6A63]">📍 {lugar}</span>}
         {maquinas.length > 0 && <span className="mt-1.5 block text-[12.5px] leading-snug text-[#40403A]">{maquinas.slice(0, 4).join(" · ")}</span>}
       </span>
-      <span aria-hidden className="shrink-0 self-center text-[13px] font-bold text-[#B34D07]">Ver ›</span>
+      <span aria-hidden className="shrink-0 self-center text-[13px] font-bold text-[#B34D07]"><TS>Ver ›</TS></span>
     </LocalizedClientLink>
   )
 }
@@ -171,7 +172,7 @@ export function Explorar({
             >
               {sp.get("disponible") === "1" ? "✓" : ""}
             </span>
-            Sólo con existencia
+            <TS>Sólo con existencia</TS>
           </LocalizedClientLink>
         </div>
       )}
@@ -180,12 +181,12 @@ export function Explorar({
 
   return (
     <div data-testid="explorar">
-      <p className="mt-2 max-w-[75ch] text-[15px] leading-relaxed text-[#40403A]">{info.intro}</p>
+      <p className="mt-2 max-w-[75ch] text-[15px] leading-relaxed text-[#40403A]"><TS>{info.intro}</TS></p>
       {query && (
         <p className="mt-2 text-[14px] text-[#40403A]">
-          Resultados de «<strong className="text-[#142033]">{query}</strong>» ·{" "}
+          <TS>Resultados de «</TS><strong className="text-[#142033]">{query}</strong>» ·{" "}
           <LocalizedClientLink href={base} className="font-bold text-[#B34D07] underline">
-            Quitar búsqueda
+            <TS>Quitar búsqueda</TS>
           </LocalizedClientLink>
         </p>
       )}
@@ -244,7 +245,7 @@ export function Explorar({
                     sp.get("max_price") === "0" ? "border-[#142033] bg-[#142033] text-white" : "border-[#D4D9DF] bg-white text-[#1E2329] hover:border-[#142033]"
                   }`}
                 >
-                  Gratis{sp.get("max_price") === "0" ? " ✕" : ""}
+                  <TS>Gratis</TS>{sp.get("max_price") === "0" ? " ✕" : ""}
                 </LocalizedClientLink>
               </li>
             )}
@@ -256,10 +257,10 @@ export function Explorar({
         {hayGrupos && (
           <PanelFiltros activos={r.activos.length} total={r.total} unidad={unidad[1]}>
             <div className="flex items-center justify-between">
-              <span className="text-[16px] font-bold text-[#142033]">Filtros</span>
+              <span className="text-[16px] font-bold text-[#142033]"><TS>Filtros</TS></span>
               {r.activos.length > 0 && (
                 <LocalizedClientLink href={`${base}${sinFiltros(sp)}`} scroll={false} className="text-[13px] font-bold text-[#B34D07] underline">
-                  Limpiar
+                  <TS>Limpiar</TS>
                 </LocalizedClientLink>
               )}
             </div>
@@ -281,7 +282,7 @@ export function Explorar({
               </LocalizedClientLink>
             ))}
             <span className="text-[13px] text-[#6B6A63]" data-testid="explorar-total">
-              <strong className="text-[#142033]">{r.total}</strong> {r.total === 1 ? unidad[0] : unidad[1]}
+              <strong className="text-[#142033]">{r.total}</strong> <TS>{r.total === 1 ? unidad[0] : unidad[1]}</TS>
             </span>
             {r.pestana !== "talleres" && (
               <div className="ml-auto">
@@ -301,9 +302,9 @@ export function Explorar({
               </ul>
             ) : (
               <p className="rounded-xl border border-dashed border-[#C5CCD3] bg-white p-6 text-center text-[14.5px] text-[#40403A]">
-                Ningún taller cumple esos filtros.{" "}
+                <TS>Ningún taller cumple esos filtros.</TS>{" "}
                 <LocalizedClientLink href={`${base}${sinFiltros(sp)}`} className="font-bold text-[#B34D07] underline">
-                  Ver todos
+                  <TS>Ver todos</TS>
                 </LocalizedClientLink>
               </p>
             )
@@ -325,8 +326,8 @@ export function Explorar({
               y a quien busca un taller cerca */}
           {r.pestana === "talleres" && estados.length > 0 && (
             <nav aria-label="Talleres CNC por estado" className="mt-8 rounded-2xl border border-[#E2E5E9] bg-white p-5">
-              <h2 className="m-0 text-[16px] font-extrabold text-[#142033]">Talleres CNC por estado</h2>
-              <p className="m-0 mt-1 text-[13px] text-[#6B6A63]">Talleres de HETNA y empresas del directorio en cada estado, con qué servicios hacen.</p>
+              <h2 className="m-0 text-[16px] font-extrabold text-[#142033]"><TS>Talleres CNC por estado</TS></h2>
+              <p className="m-0 mt-1 text-[13px] text-[#6B6A63]"><TS>Talleres de HETNA y empresas del directorio en cada estado, con qué servicios hacen.</TS></p>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {estados.map((e) => (
                   <li key={e.ruta}>
