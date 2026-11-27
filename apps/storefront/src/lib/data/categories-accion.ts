@@ -1,10 +1,10 @@
 'use server';
 
-// Puerta para componentes de cliente (p. ej. el carrito vacío): lib/data/categories
-// lee el idioma con next/headers y no puede importarse desde el navegador.
+// Para componentes de cliente (p. ej. el carrito vacío): categories.ts usa el
+// idioma del servidor (next/headers), así que no puede ir al navegador. Esta
+// acción de servidor lo llama del lado del servidor.
 import { listCategories } from './categories';
 
-export async function listarCategoriasAccion() {
-  const { categories } = await listCategories();
-  return categories ?? [];
+export async function listCategoriesAccion() {
+  return listCategories();
 }
