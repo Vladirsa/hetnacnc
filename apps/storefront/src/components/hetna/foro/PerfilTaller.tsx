@@ -1,6 +1,7 @@
 // Secciones del perfil de taller (tipo LinkedIn) que se dibujan en el servidor:
 // máquinas, materiales con espesores, portafolio de trabajos y zonas que atiende.
 // Todo es opcional: si una lista viene vacía, la sección no sale.
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from "@/components/hetna/ImagenSegura"
 import {
   type Equipo,
@@ -83,7 +84,7 @@ export function PortafolioTrabajos({ trabajos }: { trabajos: Trabajo[] }) {
             </div>
           )}
           <div className="flex flex-col gap-1 p-3">
-            <p className="m-0 text-[15px] font-bold text-[#1B1B18]">{t.titulo}</p>
+            <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>{t.titulo}</TS></p>
             {(t.material || t.espesor || t.maquina) && (
               <p className="m-0 text-[13px] text-[#6B6A63]">
                 {[t.material && MATERIALES_TALLER[t.material], etiquetaEspesor(t.material, t.espesor), t.maquina && TIPOS_MAQUINA[t.maquina]]
@@ -91,7 +92,7 @@ export function PortafolioTrabajos({ trabajos }: { trabajos: Trabajo[] }) {
                   .join(" · ")}
               </p>
             )}
-            {t.detalle && <p className="m-0 whitespace-pre-line text-[14px] leading-relaxed text-[#23231F]">{t.detalle}</p>}
+            {t.detalle && <p className="m-0 whitespace-pre-line text-[14px] leading-relaxed text-[#23231F]"><TS>{t.detalle}</TS></p>}
           </div>
         </li>
       ))}
