@@ -355,7 +355,7 @@ export function AbajoDescarga({
                 "@context": "https://schema.org",
                 "@type": "FAQPage",
                 mainEntity: preguntas.map((q) => ({ "@type": "Question", name: q.pregunta, acceptedAnswer: { "@type": "Answer", text: q.respuesta } })),
-              }).replace(/</g, "\\\\u003c"),
+              }).replace(/</g, "\\u003c"),
             }}
           />
           <h2 id="titulo-faq" className="fuente-condensada m-0 text-[26px] font-bold uppercase leading-none text-[#1E2329]">
