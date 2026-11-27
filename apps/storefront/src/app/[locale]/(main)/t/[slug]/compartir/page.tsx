@@ -27,7 +27,7 @@ export default async function CompartirPage({ params }: Props) {
   return (
     <main className="container max-w-[860px] py-6 md:py-10">
       <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><TS>Tu cotizador en línea</TS></p>
-      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Comparte el cotizador de</TS> {t.nombre}</h1>
+      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Comparte el cotizador de</TS> <TS>{t.nombre}</TS></h1>
       <p className="mt-2 text-[#40403A]">
         <TS>Cada cliente que cotiza aquí te llega a la app con sus medidas, su archivo revisado y su precio estimado. Entre más lugares tenga tu liga, más solicitudes recibes.</TS>
       </p>
