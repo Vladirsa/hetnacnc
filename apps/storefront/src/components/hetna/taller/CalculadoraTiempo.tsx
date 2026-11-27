@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { APP_TALLER, PLANES_APP } from "@/lib/hetna/app-taller"
@@ -17,7 +18,7 @@ const pesos = (n: number) => `$${Math.round(n).toLocaleString("es-MX")}`
 function Campo({ etiqueta, valor, onCambio, min, max, paso, sufijo }: { etiqueta: string; valor: number; onCambio: (n: number) => void; min: number; max: number; paso: number; sufijo: string }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-semibold text-[#40403A]">{etiqueta}</span>
+      <span className="text-[13px] font-semibold text-[#40403A]"><T>{etiqueta}</T></span>
       <div className="flex items-center gap-3">
         <input type="range" min={min} max={max} step={paso} value={valor} onChange={(e) => onCambio(Number(e.target.value))} className="flex-1 accent-[#FF6A1A]" />
         <span className="flex items-center gap-1">
@@ -50,8 +51,8 @@ export function CalculadoraTiempo() {
   return (
     <section id="calculadora" className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">¿Cuánto pierdes cotizando a mano?</h2>
-        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Mueve los números a lo que pasa en tu taller. El cálculo es tuyo, con tus datos.</p>
+        <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>¿Cuánto pierdes cotizando a mano?</T></h2>
+        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><T>Mueve los números a lo que pasa en tu taller. El cálculo es tuyo, con tus datos.</T></p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-4">
@@ -61,23 +62,23 @@ export function CalculadoraTiempo() {
           <Campo etiqueta="Lo que vale una hora de tu tiempo" valor={valorHora} onCambio={setValorHora} min={50} max={1000} paso={10} sufijo="pesos" />
         </div>
         <div className="bg-[#142033] text-white rounded-[14px] p-5 flex flex-col gap-3">
-          <p className="m-0 text-[13px] text-[#B9C3D3]">Cada mes se te van cotizando a mano</p>
-          <p className="m-0 font-display text-[40px] font-extrabold leading-none">{horasMes.toLocaleString("es-MX", { maximumFractionDigits: 1 })} horas</p>
+          <p className="m-0 text-[13px] text-[#B9C3D3]"><T>Cada mes se te van cotizando a mano</T></p>
+          <p className="m-0 font-display text-[40px] font-extrabold leading-none">{horasMes.toLocaleString("es-MX", { maximumFractionDigits: 1 })} <T>horas</T></p>
           <p className="m-0 text-[15px]">
-            que valen <b className="text-[#FF8A47] text-[22px]">{pesos(dineroMes)}</b> al mes de tu tiempo.
+            <T>que valen</T> <b className="text-[#FF8A47] text-[22px]">{pesos(dineroMes)}</b> <T>al mes de tu tiempo.</T>
           </p>
           <div className="border-t border-[#2A3A55] pt-3 text-[14px] text-[#D5DCE7]">
             {dineroMes > precioTaller ? (
               <>
-                El plan <b className="text-white">Taller</b> cuesta <b className="text-white">{pesos(precioTaller)} al mes</b>: tu tiempo ahorrado vale{" "}
-                <b className="text-white">{veces.toLocaleString("es-MX", { maximumFractionDigits: 1 })} veces</b> eso.
+                <T>El plan</T> <b className="text-white"><T>Taller</T></b> <T>cuesta</T> <b className="text-white">{pesos(precioTaller)} <T>al mes</T></b><T>: tu tiempo ahorrado vale</T>{" "}
+                <b className="text-white">{veces.toLocaleString("es-MX", { maximumFractionDigits: 1 })} <T>veces</T></b> <T>eso.</T>
               </>
             ) : (
-              <>Con tan pocas cotizaciones, el plan <b className="text-white">Gratis</b> (5 al mes) te puede bastar. Empieza ahí sin pagar nada.</>
+              <><T>Con tan pocas cotizaciones, el plan</T> <b className="text-white"><T>Gratis</T></b> <T>(5 al mes) te puede bastar. Empieza ahí sin pagar nada.</T></>
             )}
           </div>
           <a href={APP_TALLER.registro} className="mt-auto text-center bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold px-5 py-3 rounded-[10px] text-[15px]">
-            Probar 14 días gratis, sin tarjeta
+            <T>Probar 14 días gratis, sin tarjeta</T>
           </a>
         </div>
       </div>
