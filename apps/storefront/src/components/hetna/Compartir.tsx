@@ -30,7 +30,7 @@ export default function Compartir({ url, titulo, texto, className = "" }: Props)
           onMouseEnter={undefined}
         >
           <span className="inline-block h-2 w-2 rounded-full align-middle mr-1.5" style={{ background: r.color }} />
-          {r.nombre}
+          <TS>{r.nombre}</TS>
         </a>
       ))}
     </div>
