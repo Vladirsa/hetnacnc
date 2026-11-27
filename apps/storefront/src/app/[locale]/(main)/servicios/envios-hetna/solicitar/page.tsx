@@ -35,7 +35,7 @@ export default async function SolicitarEnvioPage({
     return (
       <main className="mx-auto w-full max-w-[720px] px-4 py-12 text-center">
         <h1 className="text-2xl font-extrabold text-[#142033]"><TS>No encontramos esa cotización</TS></h1>
-        <p className="mt-2 text-[#6B675C]">{cot.error}</p>
+        <p className="mt-2 text-[#6B675C]"><TS>{cot.error}</TS></p>
         <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="mt-6 inline-block rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white">
           <TS>Volver a cotizar</TS>
         </LocalizedClientLink>
@@ -53,14 +53,14 @@ export default async function SolicitarEnvioPage({
       <section className="mt-5 grid gap-3 rounded-2xl bg-[#142033] p-5 text-white sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="text-lg font-extrabold">
-            {o.paqueteria} <span className="font-normal text-white/70">· {o.servicio}</span>
+            <TS>{o.paqueteria}</TS> <span className="font-normal text-white/70">· <TS>{o.servicio}</TS></span>
           </p>
           <p className="text-sm text-white/75">
-            {p.tipo} · {p.largo}×{p.ancho}×{p.alto} <TS>cm ·</TS> {p.peso} <TS>kg</TS>
-            {p.peso_cobrado > p.peso ? ` (se cobra como ${p.peso_cobrado} kg)` : ""} · {o.dias ? `${o.dias} días hábiles` : "tiempo según paquetería"}
+            <TS>{p.tipo}</TS> · <TS>{p.largo}</TS>×<TS>{p.ancho}</TS>×<TS>{p.alto}</TS> <TS>cm ·</TS> <TS>{p.peso}</TS> <TS>kg</TS>
+            <TS>{p.peso_cobrado > p.peso ? ` (se cobra como ${p.peso_cobrado} kg)` : ""}</TS> · <TS>{o.dias ? `${o.dias} días hábiles` : "tiempo según paquetería"}</TS>
           </p>
           <p className="mt-1 text-sm text-white/75">
-            {o.recoleccion ? "Con recolección" : "Sin recolección: llevas el paquete a sucursal"} <TS>· Entrega</TS> {o.entrega_domicilio ? "a domicilio" : "en sucursal"}
+            <TS>{o.recoleccion ? "Con recolección" : "Sin recolección: llevas el paquete a sucursal"}</TS> <TS>· Entrega</TS> <TS>{o.entrega_domicilio ? "a domicilio" : "en sucursal"}</TS>
           </p>
         </div>
         <p className="text-3xl font-extrabold">
@@ -70,7 +70,7 @@ export default async function SolicitarEnvioPage({
 
       {cot.vencida ? (
         <div className="mt-5 rounded-2xl bg-[#FDECEA] p-5 text-[#B3261E]">
-          <TS>Esta cotización ya venció (los precios cambian).</TS>{" "}
+          <TS>Esta cotización ya venció (los precios cambian).</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="font-semibold underline"><TS>Vuelve a cotizar</TS></LocalizedClientLink>.
         </div>
       ) : (
