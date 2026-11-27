@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 import { Divider } from "@/components/atoms/Divider/Divider"
@@ -37,9 +38,9 @@ export const OrderCancel = ({ order }: { order: any }) => {
     <>
       <div className="md:flex justify-between items-center">
         <div className="mb-4 md:mb-0">
-          <h2 className="text-primary label-lg uppercase">Cancelar pedido</h2>
+          <h2 className="text-primary label-lg uppercase"><T>Cancelar pedido</T></h2>
           <p className="text-secondary label-md max-w-sm">
-            Puedes cancelar tu pedido mientras el vendedor no haya empezado a prepararlo.
+            <T>Puedes cancelar tu pedido mientras el vendedor no haya empezado a prepararlo.</T>
 </p>
         </div>
         <Button
@@ -47,7 +48,7 @@ export const OrderCancel = ({ order }: { order: any }) => {
           className="uppercase"
           onClick={() => setOpen(true)}
         >
-          Cancelar
+          <T>Cancelar</T>
         </Button>
       </div>
       {open && (
@@ -144,7 +145,7 @@ export const OrderCancel = ({ order }: { order: any }) => {
             <Divider className="my-4" />
             <div className="px-4">
               <Button className="uppercase w-full" onClick={handleCancel}>
-                Solicitar cancelación
+                <T>Solicitar cancelación</T>
               </Button>
             </div>
           </div>
