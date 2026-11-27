@@ -1,6 +1,8 @@
 // HETNA Panel: app instalable para el dueño y su equipo. Móvil primero.
 // Cada página revisa el rol; aquí va el marco: cabecera, navegación inferior
 // con las páginas que el rol puede ver, y el manifiesto para instalarla.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata, Viewport } from "next"
 import { redirect } from "next/navigation"
 
@@ -9,7 +11,7 @@ import { usuarioPanel } from "@/lib/panel/sesion"
 
 export const dynamic = "force-dynamic"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "HETNA Panel",
   manifest: "/panel-manifest.webmanifest",
   robots: { index: false, follow: false },
@@ -28,11 +30,11 @@ export default async function PanelLayout({ children, params }: { children: Reac
   if (u.rol === "sin_acceso") {
     return (
       <div className="min-h-screen bg-[#142033] p-6 text-white">
-        <h1 className="text-xl font-bold">HETNA Panel</h1>
-        <p className="mt-3 text-sm text-white/80">Tu cuenta ({u.email}) todavía no tiene acceso al panel. Pide al dueño que te asigne un rol en Equipo.</p>
+        <h1 className="text-xl font-bold"><TS>HETNA Panel</TS></h1>
+        <p className="mt-3 text-sm text-white/80"><TS>Tu cuenta (</TS>{u.email}<TS>) todavía no tiene acceso al panel. Pide al dueño que te asigne un rol en Equipo.</TS></p>
         {u.diagnostico && <p className="mt-2 text-xs text-white/50">{u.diagnostico}</p>}
-        <p className="mt-2 text-xs text-white/40">Versión del panel: 3</p>
-        <form action="/api/app/panel/salir" method="post" className="mt-6"><button className="rounded-lg bg-white/10 px-4 py-2 text-sm">Salir</button></form>
+        <p className="mt-2 text-xs text-white/40"><TS>Versión del panel: 3</TS></p>
+        <form action="/api/app/panel/salir" method="post" className="mt-6"><button className="rounded-lg bg-white/10 px-4 py-2 text-sm"><TS>Salir</TS></button></form>
       </div>
     )
   }
@@ -44,11 +46,11 @@ export default async function PanelLayout({ children, params }: { children: Reac
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#C2560A] text-sm font-black">H</span>
             <div>
-              <p className="text-[15px] font-extrabold leading-none">HETNA Panel</p>
+              <p className="text-[15px] font-extrabold leading-none"><TS>HETNA Panel</TS></p>
               <p className="text-[11px] text-white/70">{u.nombre} · {u.rol === "dueno" ? "Dueño" : u.rol}</p>
             </div>
           </div>
-          <form action="/api/app/panel/salir" method="post"><button className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold">Salir</button></form>
+          <form action="/api/app/panel/salir" method="post"><button className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold"><TS>Salir</TS></button></form>
         </div>
       </header>
       <main className="mx-auto max-w-[860px] px-4 py-4">{children}</main>
@@ -63,4 +65,9 @@ export default async function PanelLayout({ children, params }: { children: Reac
       </nav>
     </div>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
