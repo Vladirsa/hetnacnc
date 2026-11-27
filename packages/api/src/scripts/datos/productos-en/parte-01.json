@@ -1,0 +1,222 @@
+[
+ {
+  "id": "prod_01M5QY3E44D3KV9GAQJHFTGG9M",
+  "handle": "posprocesador-personalizado",
+  "es_hash": "91a197f2ed23",
+  "en_title": "Custom Postprocessor for Fusion 360 or Vectric, Built for Your CNC",
+  "en_subtitle": "Mach3, Mach4, LinuxCNC, GRBL, Fanuc, Haas, Siemens, Heidenhain",
+  "en_description": "Postprocessor for Fusion 360 or Vectric built around your kinematics, your controller, and your tool-change and coolant codes.",
+  "en_seo_title": "Custom CNC Postprocessor for Fusion 360 and Vectric",
+  "en_meta_description": "Custom postprocessor for Fusion 360 or Vectric: tailored to your kinematics, your controller, and your tool-change and coolant codes."
+ },
+ {
+  "id": "prod_01M61WA7JQC3HM8B1SH79NT6Y3",
+  "handle": "plantilla-bisagra-europea-35mm-dxf",
+  "es_hash": "458093b35ebf",
+  "en_title": "CNC Template for 35 mm European Hinge, Ready-to-Cut DXF File",
+  "en_subtitle": "DXF drilling template for 35 mm cup hinges. Cup centered 22.5 mm from the edge, screws 45 mm apart on the 9.5 mm line.",
+  "en_description": "<p>Stop marking hinges with a square and pencil. This DXF template carries the standard European cup hinge geometry: a 35 mm bore centered 22.5 mm from the door edge, and two 4 mm guides spaced 45 mm apart on the 9.5 mm line. The straight top edge is the reference: set it flush with the door edge and clamp it through the two slots at the ends, which sit well away from the guides so the clamp stays out of the way. The centerlines go on a separate ENGRAVE layer, so you can engrave them with a V-bit or mark them with a laser without touching the cut outline. Cut it from 6 mm acrylic, 9 mm MDF, or polycarbonate on a CNC router or laser.</p><h3>What's included</h3><ul><li>35 mm cup bore 22.5 mm from the edge</li><li>two 4 mm guides spaced 45 mm apart on the 9.5 mm line</li><li>two clamping slots at the ends</li><li>separate CUT and ENGRAVE layers</li><li>160 x 90 mm</li><li>millimeters, 1:1 scale</li><li>Formats: DXF</li></ul><h3>Frequently asked questions</h3><p><strong>Does it work with any cup hinge?</strong><br>Yes, for the standard 35 mm European hinge with screws spaced 45 mm apart, which is what Blum, Hettich, and most generic brands use.</p><p><strong>What material should I cut it from?</strong><br>6 mm acrylic is the most common because you can see the mark through it. 9 mm MDF and 6 mm polycarbonate also work.</p><p><strong>Does it include the reference lines?</strong><br>Yes, on a separate ENGRAVE layer, so you can engrave them without mixing them in with the cut outline.</p>",
+  "en_seo_title": "CNC Template for 35 mm European Hinge | DXF to Cut",
+  "en_meta_description": "CNC template in DXF for 35 mm European cup hinges. CUT and ENGRAVE layers, 160 x 90 mm. Cut it in acrylic, MDF, or polycarbonate. Download."
+ },
+ {
+  "id": "prod_01M5QY3E44WBDSFBV0PEV56GX2",
+  "handle": "servicio-cam-4-ejes",
+  "es_hash": "0af81ac7ce52",
+  "en_title": "4-Axis Rotary CAM Program: Spiral, Lines, and A-Axis G-code",
+  "en_subtitle": "Columns, legs, and turned parts",
+  "en_description": "Spiral or line toolpaths with the A axis, roughing by levels, and G-code with continuous rotation calculated for your machine.",
+  "en_seo_title": "4-Axis Rotary CAM Program with G-code for Your CNC Machine",
+  "en_meta_description": "4-axis CAM program with A axis: spiral or line toolpaths, roughing by levels, and G-code with continuous rotation calculated for your machine."
+ },
+ {
+  "id": "prod_01M5QY3E44CZQ6XYPQ1WCY0AXY",
+  "handle": "revision-especialista-cam",
+  "es_hash": "437cac66d162",
+  "en_title": "CAM Specialist Review: Toolpaths, Part Zero, and Workholding",
+  "en_subtitle": "A technician reviews your program before you cut",
+  "en_description": "Manual review of toolpaths, limits, part zero, and workholding, with written recommendations.",
+  "en_seo_title": "CAM Specialist Review: Toolpaths and Workholding | HETNA",
+  "en_meta_description": "Manual review of toolpaths, limits, part zero, and workholding by a CAM specialist, with written recommendations. Request it at HETNA CNC."
+ },
+ {
+  "id": "prod_01M5QY3E44QFEZW0CQ2FRT2DFC",
+  "handle": "servicio-cam-3-ejes",
+  "es_hash": "a8ddf61c737c",
+  "en_title": "3-Axis CAM Program for Roughing and Finishing with Simulation and G-code",
+  "en_subtitle": "Reliefs and surfaces from above",
+  "en_description": "3-axis roughing and finishing toolpaths for your machine, with shank and tool holder verification, simulation, and G-code ready for your controller.",
+  "en_seo_title": "3-Axis CAM Program: Roughing, Finishing, G-code | HETNA CNC",
+  "en_meta_description": "3-axis CAM program with roughing and finishing toolpaths, shank and tool holder verification, simulation, and G-code for your controller."
+ },
+ {
+  "id": "prod_01M5QY3E441C0P619BD5BFPPSA",
+  "handle": "servicio-cam-5-ejes",
+  "es_hash": "5f836b305141",
+  "en_title": "5-Axis Simultaneous CAM Program with Automatic Collision Avoidance",
+  "en_subtitle": "Blades, impellers, and sculptures",
+  "en_description": "Continuous tool orientation with automatic collision avoidance, rotary axis limits, and machine coordinates calculated from your pivot or TCP.",
+  "en_seo_title": "5-Axis Simultaneous CAM with Collision Avoidance | HETNA CNC",
+  "en_meta_description": "5-axis simultaneous CAM program with automatic collision avoidance, rotary axis limits, and machine coordinates based on your pivot or TCP."
+ },
+ {
+  "id": "prod_01M61ZQY0F5BTF4JPP0PHEPDGF",
+  "handle": "portavasos-panal-100mm-stl-3mf",
+  "es_hash": "d825ebdeab4d",
+  "en_title": "Honeycomb Coaster 100 mm: STL and 3MF Digital Design for Printing",
+  "en_subtitle": "100 mm coaster with honeycomb relief. STL and 3MF ready, prints without supports in 25 minutes.",
+  "en_description": "<p>A 100 mm diameter coaster with the top face recessed 2.4 mm and studded with raised hexagons. The relief isn't just decorative: it lifts the glass off the surface so condensation drains through the channels instead of sticking, and it gives the glass grip so it won't slide. The edge is chamfered so it's not sharp to the touch. It prints lying flat, with no supports and no raft, in about 25 minutes at a 0.2 mm layer height. The STL and 3MF are both included, meshed to print tolerance. You can also carve it in 3D on hardwood with a ball-nose bit on a router.</p><h3>What's included</h3><ul><li>100 mm diameter x 9 mm tall</li><li>2.4 mm recessed pocket</li><li>1.6 mm raised hexagons</li><li>1.2 mm chamfered edge</li><li>prints without supports</li><li>STL and 3MF included</li><li>mesh at print tolerance</li><li>Formats: STL, 3MF</li></ul><h3>Frequently asked questions</h3><p><strong>Does it need supports?</strong><br>No. It prints lying on the flat face, with no supports or raft.</p><p><strong>How long does it take to print?</strong><br>About 25 minutes at a 0.2 mm layer height and 15% infill.</p><p><strong>Does it work on a router?</strong><br>Yes, the 1.6 mm relief carves well in 3D on hardwood with a ball-nose bit.</p>",
+  "en_seo_title": "Honeycomb Coaster 100 mm STL and 3MF for 3D Printing",
+  "en_meta_description": "Digital design for a 100 mm hexagonal coaster in STL and 3MF. Prints without supports in about 25 min and also works for router carving."
+ },
+ {
+  "id": "prod_01M61ZMV5P0N32Q07BH448KKB1",
+  "handle": "soporte-nema23-step-stl",
+  "es_hash": "ca382717d89c",
+  "en_title": "L-Shaped NEMA 23 Motor Bracket with Adjustment Slots (STEP and STL)",
+  "en_subtitle": "Mounting bracket for NEMA 23 with a 47.14 mm pattern, 39 mm pilot clearance, and tension adjustment slots.",
+  "en_description": "<p>L-shaped bracket for mounting a NEMA 23 motor with a 57 mm flange on a CNC router axis, a converted lathe, or an XY table. The vertical plate has the 47.14 mm NEMA pattern with 5.3 mm holes for M5 screws, plus the central 39 mm clearance that frees the motor's protruding pilot, which is the detail where generic brackets fail. The base has two 22 mm slots that let you slide the motor to tension the belt without taking anything apart, and the two gussets keep the plate from flexing when the motor pulls. The STEP file has the exact geometry for CNC cutting, and the STL lets you print a test fit first to confirm the layout. Cut it from 8 mm 6061 aluminum or 1018 steel.</p><h3>What's included</h3><ul><li>47.14 mm NEMA 23 pattern</li><li>5.3 mm holes for M5</li><li>39 mm pilot clearance</li><li>two 22 mm adjustment slots for M6</li><li>two 34 mm gussets</li><li>8 mm plate</li><li>76 x 62 x 84 mm</li><li>editable STEP and STL included</li><li>Formats: STEP, STL</li></ul><h3>Frequently asked questions</h3><p><strong>Does it work with NEMA 24?</strong><br>No. The 47.14 mm pattern and 39 mm pilot clearance are for NEMA 23. For NEMA 24, message us and we'll generate one for you.</p><p><strong>Can I slide the motor to tension the belt?</strong><br>Yes, the base has two slots with 22 mm of travel for an M6 screw.</p><p><strong>What plate thickness is it?</strong><br>8 mm, for both the vertical plate and the base. The gussets are 7 mm.</p>",
+  "en_seo_title": "L-Shaped NEMA 23 Motor Bracket: STEP and STL Files",
+  "en_meta_description": "L-bracket for NEMA 23 motors with belt-tensioning slots. Download STEP and STL to CNC-cut in 6061 aluminum or 1018 steel, or to 3D print."
+ },
+ {
+  "id": "prod_01M61ZQZ3YSFQMS6WZF9PVBHW7",
+  "handle": "organizador-brocas-1-13mm-stl",
+  "es_hash": "a8d60bb803bf",
+  "en_title": "Drill Bit Organizer STL, 1 to 13 mm, 25 Stepped Slots",
+  "en_subtitle": "Stepped block with 25 slots for 1 to 13 mm drill bits. See at a glance which one is missing.",
+  "en_description": "<p>The jumbled drill bit set in the drawer ends here. This block has 25 slots, one for each size from 1 to 13 mm in half-millimeter steps, arranged in five stepped rows. Because each row rises one step, you can see the whole row from the front and instantly tell which bit is missing. The slots have 0.35 mm of clearance on the diameter, which is what a well-calibrated printer needs for the bit to go in and out without forcing, and the opening is chamfered so it doesn't catch when you insert it. It fits in a standard tool drawer or screws to the shop wall.</p><h3>What's included</h3><ul><li>25 slots from 1 to 13 mm in 0.5 mm steps</li><li>five stepped rows</li><li>0.35 mm clearance on the diameter</li><li>chamfered opening</li><li>22 mm slot depth</li><li>184 x 162 x 72 mm</li><li>Formats: STL</li></ul><h3>Frequently asked questions</h3><p><strong>Do reduced-shank bits fit?</strong><br>Yes. The slots are made to the bit's nominal diameter, so a reduced shank fits loosely.</p><p><strong>How much clearance is there?</strong><br>0.35 mm on the diameter, which is what a calibrated printer needs for the bit to go in without forcing.</p><p><strong>How much material does it use?</strong><br>About 220 g in PLA with 15% infill.</p>",
+  "en_seo_title": "Drill Bit Organizer STL for 3D Printing | 1 to 13 mm",
+  "en_meta_description": "STL drill bit organizer with 25 slots from 1 to 13 mm in 0.5 mm steps. Stepped rows, for drawer or wall. Instant download."
+ },
+ {
+  "id": "prod_01M7RVSQ3DPXW83YBEP93CXVK9",
+  "handle": "tabla-de-pino-en-silueta-de-pino-7fed",
+  "es_hash": "6809c7c4e75b",
+  "en_title": "Pine Board with Pine Tree Silhouette, 25x15 cm, Gift Idea",
+  "en_subtitle": null,
+  "en_description": "<p>Material: Pine</p><p>Dimensions: 25x15 cm</p><p>What's included:</p><p>-</p><p>-</p><p>Best for: Gifts,</p>",
+  "en_seo_title": "Pine Board with Pine Tree Silhouette 25x15 cm | HETNA CNC",
+  "en_meta_description": "Pine board shaped like a pine tree silhouette, 25x15 cm. Great as a gift. Buy it at HETNA CNC, the Mexican CNC marketplace."
+ },
+ {
+  "id": "prod_01M61ZMS3DCZX8QE8ECEKR1WSY",
+  "handle": "celosia-hexagonal-600-dxf-router-cnc",
+  "es_hash": "f127f60cd289",
+  "en_title": "Hexagonal Lattice 600x600 mm in DXF: Tileable Honeycomb Panel for CNC",
+  "en_subtitle": "600 x 600 mm openwork honeycomb panel in DXF. Solid frame, even 10 mm web, and mounting holes ready.",
+  "en_description": "<p>A honeycomb lattice for dividing spaces, dressing up a wall, or closing off a closet. The panel measures 600 x 600 mm and tiles with no seams: put two, four, or nine together and the pattern keeps running. The solid 48 mm perimeter frame keeps it rigid so it won't flex when you screw it down, and the hexagons are never cut in half against the edge. The web between hexagons is an even 10 mm, enough for 12 mm MDF and 15 mm plywood without breaking when handled. It includes four 6.5 mm mounting holes in the corners. A single cut contour, with no duplicate geometry or open lines, ready to go into any CAM software.</p><h3>What's included</h3><ul><li>600 x 600 mm</li><li>48 mm solid frame</li><li>76 mm hexagons, point to point</li><li>10 mm web</li><li>14 mm rounded corners</li><li>four 6.5 mm mounting holes</li><li>tiles seamlessly</li><li>closed contours</li><li>Formats: DXF</li></ul><h3>Frequently asked questions</h3><p><strong>Can I repeat it to make a wall?</strong><br>Yes, the panel is made to tile: the hexagons keep running from one panel to the next.</p><p><strong>What thickness does it handle?</strong><br>It's designed for 9 to 18 mm material. In 12 mm MDF and 15 mm plywood, the 10 mm web stays solid.</p><p><strong>Can I change the size?</strong><br>If you scale it, the web changes too. For a different size with the same web, message us and we'll generate it for you.</p>",
+  "en_seo_title": "Hexagonal Lattice DXF 600x600 mm for CNC Router",
+  "en_meta_description": "Hexagonal honeycomb lattice in DXF, 600 x 600 mm. Tiles seamlessly, for MDF or plywood. Closed contours ready for CAM. Instant download."
+ },
+ {
+  "id": "prod_01M89S5A4BXZT6BFC4TPQ4WN5K",
+  "handle": "rodillo-texturizador-corazones-impreso-3d",
+  "es_hash": "24c8f0f216a6",
+  "en_title": "Heart and Flower Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>For polymer clay, modeling clay, soap, or fondant: leaves a heart-and-flower pattern that wraps around without a seam.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5CPESN9RT6PNDD8M8CJH",
+  "handle": "rodillo-texturizador-hecho-a-mano-impreso-3d",
+  "es_hash": "50bdfb8691e2",
+  "en_title": "“Handmade” Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Mark your soaps, candles, and clay pieces with a “Handmade” message and flowers.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5BRNH6CGME9HFY5N8DR0",
+  "handle": "rodillo-texturizador-copos-navidad-impreso-3d",
+  "es_hash": "997d9680818e",
+  "en_title": "Christmas Snowflake and Star Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Snowflakes and stars for cookies, fondant, and seasonal decorations.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5BA0E261TFQNB6HXS3FK",
+  "handle": "rodillo-texturizador-huellitas-impreso-3d",
+  "es_hash": "f392bb845a0c",
+  "en_title": "Paw Print Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Paw prints and hearts for pet products, dog treats, or clay pieces.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5C8QFXSW79A815EZV52G",
+  "handle": "rodillo-texturizador-rombos-impreso-3d",
+  "es_hash": "d1486b5039bf",
+  "en_title": "Geometric Diamond Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Geometric grid pattern of diamonds for clay, ceramics, and leather.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5AV075Y8Y6M9VWYN7NBR",
+  "handle": "rodillo-texturizador-lunas-estrellas-impreso-3d",
+  "es_hash": "6bc5f8b64b61",
+  "en_title": "Moon and Star Texture Roller",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Pattern of moons, stars, and dots for clay earrings, soaps, and cookies.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5D5E3EJV1QX2Q69HK08C",
+  "handle": "rodillo-texturizador-te-amo-impreso-3d",
+  "es_hash": "ceefed522438",
+  "en_title": "“I Love You” Texture Roller with Hearts",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>For cookies, fondant, and Valentine's Day or anniversary gifts.</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and roll with even pressure. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 42 × 42 × 120 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li><li>12 mm hole: fits the HETNA axle holder (sold separately).</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89V0PP9ZQCAM06D5WY2SVRZ",
+  "handle": "plano-carro-para-tableros",
+  "es_hash": "02d0d1f5aafd",
+  "en_title": "Cart for Sheet Goods and Offcuts",
+  "en_subtitle": "Kit of CNC-cut parts, ready to assemble",
+  "en_description": "<p>Rolling cart for storing sheets of plywood, MDF, and offcuts upright.</p><p>Keeps sheets upright and offcuts sorted by size. Frees up the shop floor and rolls over to the saw.</p><p><b>What you get:</b> the 8 pieces cut on a CNC router from pine plywood and sanded, ready to assemble (1200 × 620 × 1000 mm assembled). Hardware is not included: 4 swivel casters, 3&quot; (2 with brakes); 1 1/2&quot; wood screws (approx. 50); White wood glue.</p><p><b>Assembly:</b> easy level, 3 to 4 h, with the step-by-step plan.</p><p>Want a different size or prefer to cut it yourself? The plan is free, with a cut list and DXF: <a href=\"https://hetnacnc.com/mx/planos/carro-para-tableros\">hetnacnc.com/mx/planos/carro-para-tableros</a></p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5E98D8X98F62EM510Z44",
+  "handle": "soporte-rodillo-texturizador-impreso-3d",
+  "es_hash": "31ce2caec940",
+  "en_title": "Axle Holder for Texture Rollers (Just Swap the Roller)",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>Handle with an axle and C-clip: slide on the roller, lock it, and roll. It works with every roller in this catalog (12 mm hole, 120 mm long).</p><p><strong>How to use:</strong> slide the roller onto the axle, put the C-clip on the tip, and roll. To change designs, remove the clip and swap the roller. Includes 2 clips (one spare).</p><ul><li>Part dimensions: 72 × 162 × 135 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89S5DXDDWTBS1X5MEAGMNW6",
+  "handle": "placa-texturizadora-hecho-a-mano-impresa-3d",
+  "es_hash": "c539638331ad",
+  "en_title": "“Handmade” Texture Plate",
+  "en_subtitle": "3D printing to order",
+  "en_description": "<p>15 × 10 cm plate for marking soaps, clay, or leather with “Handmade.”</p><p><strong>How to use:</strong> flatten the dough or clay (thickness guides keep it even), dust on a little starch or release agent, and press the plate down. The design is mirrored so it reads the right way round on the finished piece.</p><ul><li>Part dimensions: 150 × 100 × 4 mm</li><li>Printed in 3D to order by the shop you choose: material, color, price, and lead time depend on its offer.</li></ul><p><strong>For food</strong> (fondant, cookies): ask for a food-safe material and hand wash it; PLA and ABS are not dishwasher safe.</p><p>Have a 3D printer? Download the file for free and change the text or dimensions in the HETNA tool.</p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ },
+ {
+  "id": "prod_01M89V0P1YQK7TZ997TX8A3AG5",
+  "handle": "plano-banco-de-trabajo-movil",
+  "es_hash": "4772406480f4",
+  "en_title": "Mobile Workbench",
+  "en_subtitle": "Kit of CNC-cut parts, ready to assemble",
+  "en_description": "<p>1.80 m table on wheels with three compartments and shelves for tool storage.</p><p>A solid bench for assembling, sanding, and mounting the miter saw or table saw. It moves on locking casters and stores everything underneath.</p><p><b>What you get:</b> the 10 pieces cut on a CNC router from pine plywood and sanded, ready to assemble (1800 × 750 × 900 mm assembled). Hardware is not included: 4 swivel casters, 3&quot; to 4&quot; (2 with brakes); 1 1/2&quot; wood screws (approx. 80); Screws for the casters; White wood glue.</p><p><b>Assembly:</b> intermediate level, 6 to 8 h, with the step-by-step plan.</p><p>Want a different size or prefer to cut it yourself? The plan is free, with a cut list and DXF: <a href=\"https://hetnacnc.com/mx/planos/banco-de-trabajo-movil\">hetnacnc.com/mx/planos/banco-de-trabajo-movil</a></p>",
+  "en_seo_title": null,
+  "en_meta_description": null
+ }
+]
