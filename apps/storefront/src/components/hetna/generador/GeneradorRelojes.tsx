@@ -67,7 +67,7 @@ export function GeneradorRelojes({ cabecera }: { cabecera?: React.ReactNode }) {
                 aria-pressed={letra === f.id}
                 className={`rounded-[8px] px-2 py-1.5 text-[12.5px] font-semibold ${letra === f.id ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#232D3D]"}`}
               >
-                {f.nombre}
+                <T>{f.nombre}</T>
               </button>
             ))}
           </div>
@@ -99,8 +99,8 @@ export function GeneradorRelojes({ cabecera }: { cabecera?: React.ReactNode }) {
       }
       panel={
         <>
-          {cabecera}
-          {panel}
+          <T>{cabecera}</T>
+          <T>{panel}</T>
         </>
       }
       dibujo={r.dibujo}
