@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { mandarArchivosAFabricar } from "@/lib/generador/aCotizador"
@@ -47,9 +48,9 @@ export function CotizarEscanear({
   return (
     <div className="flex flex-col gap-2">
       <button type="button" onClick={cotizar} className="self-start rounded-[12px] bg-[#C2560A] px-6 py-3 text-[16px] font-bold text-white hover:bg-[#A84A08]">
-        Cotizar fabricación
+        <T>Cotizar fabricación</T>
       </button>
-      <p className="m-0 text-[12.5px] text-[#6B6A63]">Se abre la cotización con {modelo ? `el modelo «${modelo.nombre}» ya cargado` : "los datos de tu pieza"}: prototipo en {proceso.toLowerCase()} y pieza final.</p>
+      <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Se abre la cotización con</T> {modelo ? `el modelo «${modelo.nombre}» ya cargado` : "los datos de tu pieza"}<T>: prototipo en</T> {proceso.toLowerCase()} <T>y pieza final.</T></p>
       {estado && <p className="m-0 text-[13px] text-[#0E2A5C]">{estado}</p>}
     </div>
   )
