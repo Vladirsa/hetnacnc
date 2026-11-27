@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -48,7 +50,7 @@ async function configPrecios(): Promise<ConfigPrecios | null> {
 // la página se arma en cada visita como el resto del sitio (prerenderizada
 // daba 500 en producción).
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
+async function generateMetadataEs({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
   const { slug } = await params
   const borrador = String((await searchParams).borrador || "")
   const pl = await buscarPlano(slug, borrador || undefined)
@@ -164,23 +166,23 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
       <style>{`@media print { @page { size: A4 landscape; margin: 8mm } body * { visibility: hidden } #lamina, #lamina * { visibility: visible } #lamina { position: absolute; inset: 0; } }`}</style>
       <div className="mx-auto w-full max-w-[1180px] px-4 py-6 lg:px-6">
         <div className="mb-4 flex flex-wrap gap-1.5 text-[13px] text-[#6B6A63] print:hidden">
-          <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+          <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
           <span>/</span>
-          <LocalizedClientLink href="/planos" className="hover:text-[#B34D07]">Planos</LocalizedClientLink>
+          <LocalizedClientLink href="/planos" className="hover:text-[#B34D07]"><TS>Planos</TS></LocalizedClientLink>
           <span>/</span>
           <span className="font-medium text-[#1B1B18]">{pl.nombre}</span>
         </div>
 
         {borrador ? (
           <p className="mb-4 rounded-xl border border-[#FFD3B0] bg-[#FFF4E5] px-4 py-3 text-[14px] font-semibold text-[#8A4B00] print:hidden">
-            Vista previa de un borrador: todavía no está publicado. Apruébalo o recházalo en el panel (Planos IA).
+            <TS>Vista previa de un borrador: todavía no está publicado. Apruébalo o recházalo en el panel (Planos IA).</TS>
           </p>
         ) : null}
         <MedidasPlano key={`${m.ancho}-${m.fondo}-${m.alto}`} original={original} actual={m} ajustado={ajustado} />
         <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-[#E7E4DC] bg-white p-3 text-[14px] print:hidden">
-          <span className="font-bold text-[#142033]">Uniones:</span>
-          <a href={ligaUniones(false)} className={`rounded-full px-3 py-1.5 font-semibold ${!ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}>A tope con tornillo</a>
-          <a href={ligaUniones(true)} className={`rounded-full px-3 py-1.5 font-semibold ${ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}>Con ranuras (router CNC)</a>
+          <span className="font-bold text-[#142033]"><TS>Uniones:</TS></span>
+          <a href={ligaUniones(false)} className={`rounded-full px-3 py-1.5 font-semibold ${!ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}><TS>A tope con tornillo</TS></a>
+          <a href={ligaUniones(true)} className={`rounded-full px-3 py-1.5 font-semibold ${ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}><TS>Con ranuras (router CNC)</TS></a>
           <span className="text-[12.5px] text-[#6B6A63]">
             {ranurado
               ? nRanuras
@@ -193,35 +195,35 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
         <article id="lamina" className="overflow-hidden rounded-3xl bg-[#142033] p-5 text-white sm:p-8" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>
           <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-4">
             <div>
-              <p className="m-0 text-[12px] font-bold uppercase tracking-wider text-[#FF9F57]">Plano HETNA CNC · hetnacnc.com/planos</p>
+              <p className="m-0 text-[12px] font-bold uppercase tracking-wider text-[#FF9F57]"><TS>Plano HETNA CNC · hetnacnc.com/planos</TS></p>
               <h1 className="font-display m-0 mt-1 text-[28px] font-bold leading-tight sm:text-[36px]">{pl.nombre}</h1>
-              <p className="m-0 mt-1 max-w-[680px] text-[14px] text-white/80">{pl.descripcion}</p>
+              <p className="m-0 mt-1 max-w-[680px] text-[14px] text-white/80"><TS>{pl.descripcion}</TS></p>
             </div>
             <p className="m-0 text-[13px] text-white/75">
-              {m.ancho} × {m.fondo} × {m.alto} mm · {pl.nivel} · {pl.horas}
+              {m.ancho} × {m.fondo} × {m.alto} <TS>mm ·</TS> {pl.nivel} · {pl.horas}
               {pl.juego ? ` · se cortan ${pl.juego.cantidad} ${pl.juego.nombre}` : ""}
-              {cambiado ? <span className="block text-[#FF9F57]">Medidas modificadas (original: {original.ancho} × {original.fondo} × {original.alto} mm)</span> : null}
+              {cambiado ? <span className="block text-[#FF9F57]"><TS>Medidas modificadas (original:</TS> {original.ancho} × {original.fondo} × {original.alto} <TS>mm)</TS></span> : null}
             </p>
           </header>
 
           <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className={`${caja} bg-[#F6F1E7]`}>
-              <Titulo n="1">Mueble armado</Titulo>
+              <Titulo n="1"><TS>Mueble armado</TS></Titulo>
               <div className="mt-2 rounded-xl bg-[#FAF9F6] p-2" dangerouslySetInnerHTML={{ __html: svgArmado(pl.piezas, `${pl.nombre} armado`, ruedas) }} />
             </div>
             <div className={caja}>
-              <Titulo n="2">Vista explotada</Titulo>
+              <Titulo n="2"><TS>Vista explotada</TS></Titulo>
               <div className="mt-2 rounded-xl bg-[#FAF9F6] p-2" dangerouslySetInnerHTML={{ __html: svgExplotado(pl.piezas, `${pl.nombre} explotado`) }} />
             </div>
           </section>
 
           <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_1fr]">
             <div className={caja}>
-              <Titulo n="3">Lista de corte</Titulo>
+              <Titulo n="3"><TS>Lista de corte</TS></Titulo>
               <div className="mt-2 overflow-x-auto">
                 <table className="w-full min-w-[460px] text-left text-[12.5px]">
                   <thead className="text-[#FF9F57]">
-                    <tr><th className="py-1 pr-2">Pieza</th><th className="pr-2">Descripción</th><th className="pr-2">Cant.</th><th className="pr-2">Largo</th><th className="pr-2">Ancho</th><th className="pr-2">Esp.</th></tr>
+                    <tr><th className="py-1 pr-2"><TS>Pieza</TS></th><th className="pr-2"><TS>Descripción</TS></th><th className="pr-2"><TS>Cant.</TS></th><th className="pr-2"><TS>Largo</TS></th><th className="pr-2"><TS>Ancho</TS></th><th className="pr-2"><TS>Esp.</TS></th></tr>
                   </thead>
                   <tbody>
                     {filas.map((f) => (
@@ -237,16 +239,16 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
                   </tbody>
                 </table>
               </div>
-              <p className="m-0 mt-2 text-[11.5px] text-white/60">Medidas en mm. Material: {[...new Set(filas.map((f) => MATERIALES_PLANO[f.material].nombre))].join(", ")}.</p>
+              <p className="m-0 mt-2 text-[11.5px] text-white/60"><TS>Medidas en mm. Material:</TS> {[...new Set(filas.map((f) => MATERIALES_PLANO[f.material].nombre))].join(", ")}.</p>
             </div>
             <div className={caja}>
-              <Titulo n="4">Acomodo en la hoja</Titulo>
-              <p className="m-0 mt-1 text-[12.5px] text-white/75">{hojas.map((h) => `${h.hojas} ${h.hojas === 1 ? "hoja" : "hojas"} de ${h.nombre}`).join(" · ")} (2440 × 1220 mm)</p>
+              <Titulo n="4"><TS>Acomodo en la hoja</TS></Titulo>
+              <p className="m-0 mt-1 text-[12.5px] text-white/75">{hojas.map((h) => `${h.hojas} ${h.hojas === 1 ? "hoja" : "hojas"} de ${h.nombre}`).join(" · ")} <TS>(2440 × 1220 mm)</TS></p>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {acs.flatMap((a) => a.acomodo.hojas.map((h, i) => (
                   <figure key={`${a.material}-${i}`} className="m-0 rounded-xl bg-[#FAF9F6] p-1.5">
                     <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`, (c) => puntosBarrenos(c, filaDe.get(c.nombre)), (c) => rectsRanuras(c, filaDe.get(c.nombre))) }} />
-                    <figcaption className="text-center text-[11px] text-[#6B6A63]">{a.nombre} · hoja {i + 1}</figcaption>
+                    <figcaption className="text-center text-[11px] text-[#6B6A63]">{a.nombre} <TS>· hoja</TS> {i + 1}</figcaption>
                   </figure>
                 )))}
               </div>
@@ -254,13 +256,13 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           </section>
 
           <section className={`${caja} mt-4`}>
-            <Titulo n="5">Pasos de armado</Titulo>
+            <Titulo n="5"><TS>Pasos de armado</TS></Titulo>
             <ol className="m-0 mt-3 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:grid-cols-5">
               {pl.pasos.map((ps, i) => (
                 <li key={ps.titulo} className="rounded-xl bg-[#FAF9F6] p-2 text-[#142033]">
                   <div dangerouslySetInnerHTML={{ __html: svgPaso(pl.piezas, previas[i], pasos[i], `Paso ${i + 1}: ${ps.titulo}`) }} />
-                  <p className="m-0 mt-1 text-[13px] font-bold">{i + 1}. {ps.titulo}</p>
-                  <p className="m-0 text-[12px] text-[#40403A]">{ps.nota}</p>
+                  <p className="m-0 mt-1 text-[13px] font-bold">{i + 1}. <TS>{ps.titulo}</TS></p>
+                  <p className="m-0 text-[12px] text-[#40403A]"><TS>{ps.nota}</TS></p>
                 </li>
               ))}
             </ol>
@@ -268,7 +270,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
 
           {resumenUniones.length ? (
             <section className={`${caja} mt-4`}>
-              <Titulo n="6">Uniones y tornillería</Titulo>
+              <Titulo n="6"><TS>Uniones y tornillería</TS></Titulo>
               <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-[1fr_260px]">
                 <div>
                   <p className="m-0 text-[13px] text-white/80">
@@ -280,11 +282,11 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
                   <ul className="m-0 mt-2 grid list-disc grid-cols-1 gap-x-6 pl-5 text-[12.5px] text-white/85 sm:grid-cols-2">
                     {resumenUniones.map((u) => (
                       <li key={u.texto}>
-                        {u.texto} <b>×{u.cantidad}</b>
+                        <TS>{u.texto}</TS> <b>×{u.cantidad}</b>
                       </li>
                     ))}
                   </ul>
-                  <p className="m-0 mt-2 text-[11.5px] text-white/60">Unión a tope con pegamento blanco y tornillo. Avellana los barrenos para que la cabeza quede al ras; los clavos o grapas son para respaldos y fondos delgados. Puertas y tapas van con bisagras.</p>
+                  <p className="m-0 mt-2 text-[11.5px] text-white/60"><TS>Unión a tope con pegamento blanco y tornillo. Avellana los barrenos para que la cabeza quede al ras; los clavos o grapas son para respaldos y fondos delgados. Puertas y tapas van con bisagras.</TS></p>
                 </div>
                 <div className="rounded-xl bg-[#FAF9F6] p-2" dangerouslySetInnerHTML={{ __html: DETALLE_TOPE }} />
               </div>
@@ -293,18 +295,18 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
 
           <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className={caja}>
-              <Titulo n="7">Herrajes</Titulo>
+              <Titulo n="7"><TS>Herrajes</TS></Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{herrajes.map((h) => <li key={h}>{h}</li>)}</ul>
             </div>
             <div className={caja}>
-              <Titulo n="8">Herramientas</Titulo>
+              <Titulo n="8"><TS>Herramientas</TS></Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{pl.herramientas.map((h) => <li key={h}>{h}</li>)}</ul>
             </div>
             <div className={caja}>
-              <Titulo n="9">Notas</Titulo>
+              <Titulo n="9"><TS>Notas</TS></Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">
                 {pl.notas.map((h) => <li key={h}>{h}</li>)}
-                <li>Revisa el grosor real de tu triplay antes de cortar.</li>
+                <li><TS>Revisa el grosor real de tu triplay antes de cortar.</TS></li>
               </ul>
             </div>
           </section>
@@ -325,25 +327,30 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 print:hidden">
           <DescargaPlano slug={pl.slug} nombre={`${pl.nombre}${cambiado ? ` ${m.ancho}x${m.fondo}x${m.alto}` : ""}${ranurado ? " con ranuras" : ""}`} dxfs={dxfs} />
           <div className="flex flex-col gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="m-0 text-[16px] font-bold text-[#142033]">¿No tienes router o prefieres que te lo corten?</p>
-            <p className="m-0 text-[14px] text-[#40403A]">Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</p>
+            <p className="m-0 text-[16px] font-bold text-[#142033]"><TS>¿No tienes router o prefieres que te lo corten?</TS></p>
+            <p className="m-0 text-[14px] text-[#40403A]"><TS>Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</TS></p>
             {cot.ok ? (
               <div className="rounded-xl bg-[#F6F1E7] p-3 text-[14px] text-[#142033]">
-                <p className="m-0 font-bold">Kit de piezas cortadas y lijadas{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</p>
-                <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]">aprox. con IVA, más envío</span></p>
+                <p className="m-0 font-bold"><TS>Kit de piezas cortadas y lijadas</TS>{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</p>
+                <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]"><TS>aprox. con IVA, más envío</TS></span></p>
                 <p className="m-0 mt-1 text-[13px] text-[#40403A]">
-                  {cot.piezas} piezas · {cot.hojas} {cot.hojas === 1 ? "hoja" : "hojas"} de triplay · peso con empaque ≈ {cot.pesoKg} kg · fabricación ≈ {cot.diasFabricacion} días hábiles más el envío
+                  {cot.piezas} <TS>piezas ·</TS> {cot.hojas} {cot.hojas === 1 ? "hoja" : "hojas"} <TS>de triplay · peso con empaque ≈</TS> {cot.pesoKg} <TS>kg · fabricación ≈</TS> {cot.diasFabricacion} <TS>días hábiles más el envío</TS>
                 </p>
-                <p className="m-0 mt-1 text-[12px] text-[#6B6A63]">Precio de referencia de router CNC en México; el taller confirma el precio final. No incluye herrajes ni armado.</p>
+                <p className="m-0 mt-1 text-[12px] text-[#6B6A63]"><TS>Precio de referencia de router CNC en México; el taller confirma el precio final. No incluye herrajes ni armado.</TS></p>
               </div>
             ) : null}
             <LocalizedClientLink href="/cotizar" className="inline-flex w-fit items-center rounded-[12px] bg-[#142033] px-5 py-3 text-[15px] font-bold text-white">
-              Pedir que me lo fabriquen
+              <TS>Pedir que me lo fabriquen</TS>
             </LocalizedClientLink>
-            <LocalizedClientLink href="/planos" className="text-[14px] font-semibold text-[#B34D07]">Ver más planos →</LocalizedClientLink>
+            <LocalizedClientLink href="/planos" className="text-[14px] font-semibold text-[#B34D07]"><TS>Ver más planos →</TS></LocalizedClientLink>
           </div>
         </section>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
