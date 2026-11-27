@@ -11,6 +11,7 @@ import type { FormaClasica } from "@/lib/generador/cortadores"
 import type { EstiloImpresion } from "@/lib/generador/letras3dImpresion"
 import type { FormaLlavero } from "@/lib/generador/llaveros"
 import type { IconoTextura } from "@/lib/generador/texturizador"
+import { aUrlMapa } from "@/lib/generador/mapaTopo"
 import { aUrl, type DisenoTexturizador } from "@/lib/generador/texturizador-url"
 
 /** Un cortador de galletas del catálogo (lib/generador/cortadores.ts) */
@@ -45,7 +46,7 @@ export type LetrasCatalogo = {
 }
 
 /** Mapa topográfico impreso (lib/generador/mapaTopo.ts): un lugar fijo; las alturas se guardan en docs/impresion-bajo-pedido/alturas */
-export type MapaCatalogo = { lugar: string; lat: number; lon: number; km: number; ancho: number; capas: number }
+export type MapaCatalogo = { lugar: string; lat: number; lon: number; km: number; ancho: number; capas: number; /** cumbre blanca en la foto y en el texto */ nevado?: boolean }
 
 export type DisenoCatalogo = {
   handle: string
@@ -142,10 +143,10 @@ const mapa = (handle: string, titulo: string, resumen: string, m: MapaCatalogo, 
   handle, titulo, resumen, pieza: "mapa", mapa: m, etiquetas,
 })
 const MAPAS_IMPRESION: DisenoCatalogo[] = [
-  mapa("mapa-pico-de-orizaba-impreso-3d", "Mapa topográfico del Pico de Orizaba", "El volcán más alto de México en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, la cumbre sale de otro color, como nevada.", { lugar: "Pico de Orizaba", lat: 19.03, lon: -97.27, km: 12, ancho: 120, capas: 10 }, ["mapa topográfico", "pico de orizaba", "citlaltépetl", "volcán", "regalo"]),
-  mapa("mapa-popocatepetl-iztaccihuatl-impreso-3d", "Mapa topográfico del Popocatépetl e Iztaccíhuatl", "Los dos volcanes juntos en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, las cumbres salen de otro color.", { lugar: "Popocatépetl e Iztaccíhuatl", lat: 19.1, lon: -98.65, km: 40, ancho: 120, capas: 10 }, ["mapa topográfico", "popocatépetl", "iztaccíhuatl", "volcanes", "regalo"]),
-  mapa("mapa-nevado-de-toluca-impreso-3d", "Mapa topográfico del Nevado de Toluca", "El Xinantécatl y su cráter en 10 capas, con el relieve real. Para tu escritorio o para regalar a quien lo subió.", { lugar: "Nevado de Toluca", lat: 19.11, lon: -99.76, km: 10, ancho: 120, capas: 10 }, ["mapa topográfico", "nevado de toluca", "xinantécatl", "volcán", "regalo"]),
-  mapa("mapa-cerro-de-la-silla-impreso-3d", "Mapa topográfico del Cerro de la Silla", "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina.", { lugar: "Cerro de la Silla", lat: 25.63, lon: -100.23, km: 9, ancho: 120, capas: 10 }, ["mapa topográfico", "cerro de la silla", "monterrey", "regalo"]),
+  mapa("mapa-pico-de-orizaba-impreso-3d", "Mapa topográfico del Pico de Orizaba", "El volcán más alto de México en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, la cumbre sale de otro color, como nevada.", { lugar: "Pico de Orizaba", nevado: true, lat: 19.03, lon: -97.27, km: 12, ancho: 120, capas: 10 }, ["mapa topográfico", "pico de orizaba", "citlaltépetl", "volcán", "regalo"]),
+  mapa("mapa-popocatepetl-iztaccihuatl-impreso-3d", "Mapa topográfico del Popocatépetl e Iztaccíhuatl", "Los dos volcanes juntos en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, las cumbres salen de otro color.", { lugar: "Popocatépetl e Iztaccíhuatl", nevado: true, lat: 19.1, lon: -98.65, km: 40, ancho: 120, capas: 10 }, ["mapa topográfico", "popocatépetl", "iztaccíhuatl", "volcanes", "regalo"]),
+  mapa("mapa-nevado-de-toluca-impreso-3d", "Mapa topográfico del Nevado de Toluca", "El Xinantécatl y su cráter en 10 capas, con el relieve real. Para tu escritorio o para regalar a quien lo subió.", { lugar: "Nevado de Toluca", nevado: true, lat: 19.11, lon: -99.76, km: 10, ancho: 120, capas: 10 }, ["mapa topográfico", "nevado de toluca", "xinantécatl", "volcán", "regalo"]),
+  mapa("mapa-cerro-de-la-silla-impreso-3d", "Mapa topográfico del Cerro de la Silla", "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina; a dos colores, la cima sale de otro color.", { lugar: "Cerro de la Silla", lat: 25.63, lon: -100.23, km: 9, ancho: 120, capas: 10 }, ["mapa topográfico", "cerro de la silla", "monterrey", "regalo"]),
 ]
 
 export const CATALOGO_IMPRESION: DisenoCatalogo[] = [
@@ -290,9 +291,8 @@ export function urlHerramienta(d: DisenoCatalogo, extra = ""): string {
     return `/disenar/llaveros?${q.toString()}${extra}`
   }
   if (d.pieza === "mapa" && d.mapa) {
-    const m = d.mapa
-    const q = new URLSearchParams({ lat: String(m.lat), lon: String(m.lon), km: String(m.km), capas: String(m.capas), ancho: String(m.ancho) })
-    return `/disenar/mapa-topografico?${q.toString()}${extra}`
+    const { lat, lon, km, capas, ancho } = d.mapa
+    return `/disenar/mapa-topografico?${aUrlMapa({ lat, lon, km, capas, ancho })}${extra}`
   }
   if (d.pieza === "modelo") {
     // la página propia del modelo (título y rangos desde el servidor); las medidas van en la liga

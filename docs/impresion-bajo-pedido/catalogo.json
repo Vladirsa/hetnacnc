@@ -2324,29 +2324,65 @@
     "modelo_3d": "modelos/mapa-pico-de-orizaba-impreso-3d.stl",
     "vista_colores": [
       {
-        "triangulos": 13100,
-        "hex": "#1f964c"
+        "triangulos": 12,
+        "hex": "#288c46"
       },
       {
-        "triangulos": 1624,
+        "triangulos": 786,
+        "hex": "#358844"
+      },
+      {
+        "triangulos": 1974,
+        "hex": "#428442"
+      },
+      {
+        "triangulos": 2810,
+        "hex": "#4f8040"
+      },
+      {
+        "triangulos": 4884,
+        "hex": "#5c7c3e"
+      },
+      {
+        "triangulos": 4014,
+        "hex": "#69783c"
+      },
+      {
+        "triangulos": 2100,
+        "hex": "#76743a"
+      },
+      {
+        "triangulos": 1500,
+        "hex": "#837038"
+      },
+      {
+        "triangulos": 920,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 596,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 396,
         "hex": "#e4e1d8"
       }
     ],
     "diseno": {
       "lugar": "Pico de Orizaba",
+      "nevado": true,
       "lat": 19.03,
       "lon": -97.27,
       "km": 12,
       "ancho": 120,
       "capas": 10
     },
-    "volumen_cm3": 139.2,
+    "volumen_cm3": 138.6,
     "medidas_mm": [
       120,
       120,
       22
     ],
-    "capas": 10,
     "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
@@ -2370,29 +2406,65 @@
     "modelo_3d": "modelos/mapa-popocatepetl-iztaccihuatl-impreso-3d.stl",
     "vista_colores": [
       {
-        "triangulos": 12764,
-        "hex": "#1f964c"
+        "triangulos": 12,
+        "hex": "#288c46"
       },
       {
-        "triangulos": 1508,
+        "triangulos": 604,
+        "hex": "#358844"
+      },
+      {
+        "triangulos": 3668,
+        "hex": "#428442"
+      },
+      {
+        "triangulos": 3196,
+        "hex": "#4f8040"
+      },
+      {
+        "triangulos": 3288,
+        "hex": "#5c7c3e"
+      },
+      {
+        "triangulos": 2636,
+        "hex": "#69783c"
+      },
+      {
+        "triangulos": 2464,
+        "hex": "#76743a"
+      },
+      {
+        "triangulos": 1492,
+        "hex": "#837038"
+      },
+      {
+        "triangulos": 1100,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 624,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 212,
         "hex": "#e4e1d8"
       }
     ],
     "diseno": {
       "lugar": "Popocatépetl e Iztaccíhuatl",
+      "nevado": true,
       "lat": 19.1,
       "lon": -98.65,
       "km": 40,
       "ancho": 120,
       "capas": 10
     },
-    "volumen_cm3": 112.6,
+    "volumen_cm3": 111.4,
     "medidas_mm": [
       120,
       120,
       22
     ],
-    "capas": 10,
     "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
@@ -2416,29 +2488,65 @@
     "modelo_3d": "modelos/mapa-nevado-de-toluca-impreso-3d.stl",
     "vista_colores": [
       {
-        "triangulos": 16712,
-        "hex": "#1f964c"
+        "triangulos": 12,
+        "hex": "#288c46"
       },
       {
-        "triangulos": 3160,
+        "triangulos": 216,
+        "hex": "#358844"
+      },
+      {
+        "triangulos": 1902,
+        "hex": "#428442"
+      },
+      {
+        "triangulos": 4234,
+        "hex": "#4f8040"
+      },
+      {
+        "triangulos": 3870,
+        "hex": "#5c7c3e"
+      },
+      {
+        "triangulos": 2712,
+        "hex": "#69783c"
+      },
+      {
+        "triangulos": 2152,
+        "hex": "#76743a"
+      },
+      {
+        "triangulos": 1656,
+        "hex": "#837038"
+      },
+      {
+        "triangulos": 1890,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 870,
+        "hex": "#e4e1d8"
+      },
+      {
+        "triangulos": 486,
         "hex": "#e4e1d8"
       }
     ],
     "diseno": {
       "lugar": "Nevado de Toluca",
+      "nevado": true,
       "lat": 19.11,
       "lon": -99.76,
       "km": 10,
       "ancho": 120,
       "capas": 10
     },
-    "volumen_cm3": 141.3,
+    "volumen_cm3": 141.2,
     "medidas_mm": [
       120,
       120,
       22
     ],
-    "capas": 10,
     "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
@@ -2448,7 +2556,7 @@
   {
     "handle": "mapa-cerro-de-la-silla-impreso-3d",
     "titulo": "Mapa topográfico del Cerro de la Silla",
-    "resumen": "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina.",
+    "resumen": "El cerro de Monterrey en 10 capas, con el relieve real. Un recuerdo regio para la casa o la oficina; a dos colores, la cima sale de otro color.",
     "pieza": "mapa",
     "etiquetas": [
       "mapa topográfico",
@@ -2461,12 +2569,48 @@
     "modelo_3d": "modelos/mapa-cerro-de-la-silla-impreso-3d.stl",
     "vista_colores": [
       {
-        "triangulos": 17192,
-        "hex": "#1f964c"
+        "triangulos": 12,
+        "hex": "#288c46"
       },
       {
-        "triangulos": 2168,
-        "hex": "#e4e1d8"
+        "triangulos": 2202,
+        "hex": "#358844"
+      },
+      {
+        "triangulos": 2914,
+        "hex": "#428442"
+      },
+      {
+        "triangulos": 3564,
+        "hex": "#4f8040"
+      },
+      {
+        "triangulos": 3086,
+        "hex": "#5c7c3e"
+      },
+      {
+        "triangulos": 2630,
+        "hex": "#69783c"
+      },
+      {
+        "triangulos": 1980,
+        "hex": "#76743a"
+      },
+      {
+        "triangulos": 1282,
+        "hex": "#837038"
+      },
+      {
+        "triangulos": 1262,
+        "hex": "#906c36"
+      },
+      {
+        "triangulos": 820,
+        "hex": "#9d6834"
+      },
+      {
+        "triangulos": 246,
+        "hex": "#aa6432"
       }
     ],
     "diseno": {
@@ -2477,13 +2621,12 @@
       "ancho": 120,
       "capas": 10
     },
-    "volumen_cm3": 90.2,
+    "volumen_cm3": 89.2,
     "medidas_mm": [
       120,
       120,
       22
     ],
-    "capas": 10,
     "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",

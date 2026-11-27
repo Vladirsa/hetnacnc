@@ -67,14 +67,13 @@ type Diseno = {
   titulo: string
   resumen: string
   pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras" | "mapa"
-  /** mapas: cuántas capas y el crédito de las alturas */
-  capas?: number
+  /** mapas: el crédito de las alturas */
   credito?: string
   /** llaveros y letras: se piden con el texto del cliente, de hasta max_texto letras */
   personalizable?: boolean
   max_texto?: number
-  /** letras 3D: cómo van (pie, pared, luz) */
-  diseno?: { estilo?: string }
+  /** letras 3D: cómo van (pie, pared, luz); mapas: capas y si la cumbre es nevada */
+  diseno?: { estilo?: string; capas?: number; nevado?: boolean }
   etiquetas: string[]
   herramienta_url: string
   foto: string
@@ -135,7 +134,7 @@ function descripcion(d: Diseno): string {
   if (d.pieza === "mapa")
     return [
       `<p>${esc(d.resumen)}</p>`,
-      `<ul><li>Medidas: ${mm(d.medidas_mm)}, en ${d.capas || 10} capas de relieve sobre una base.</li><li>A dos colores, la cumbre sale de otro color (por ejemplo, blanca como nevada).</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<ul><li>Medidas: ${esc(mm(d.medidas_mm))}, en ${Math.round(Number(d.diseno?.capas)) || 10} capas de relieve sobre una base.</li><li>A dos colores, la cumbre sale de otro color${d.diseno?.nevado ? " (por ejemplo, blanca como nevada)" : ""}.</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
       `<p>¿Otro lugar o en MDF para corte láser? Ábrelo en la herramienta de Mapa topográfico de HETNA: baja gratis las capas en DXF o el STL para tu impresora.</p>`,
       d.credito ? `<p><small>${esc(d.credito)}</small></p>` : "",
     ].join("")

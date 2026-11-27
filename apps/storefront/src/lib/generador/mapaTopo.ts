@@ -14,7 +14,11 @@ import { curvasDeMascara } from "@/lib/generador/trazado"
 import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
 export const MOSAICOS = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
+/** Crédito de las alturas para lugares de México (las fichas del catálogo). */
 export const CREDITO = "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA."
+/** Crédito completo (la herramienta acepta cualquier lugar): las atribuciones que piden las fuentes de los mosaicos. */
+export const CREDITO_GLOBAL =
+  "Alturas: Mapzen Terrain Tiles (AWS). México: INEGI, Relieve continental, 2016. EE.UU.: 3DEP; SRTM y GMTED2010 cortesía del U.S. Geological Survey. Mundo: ETOPO1 de NOAA. Canadá: Open Government Licence – Canada. Europa: Copernicus EU-DEM. Reino Unido: © Environment Agency 2015. Noruega: © Kartverket. Austria: © offene Daten Österreichs (DGM). Australia: © Commonwealth of Australia (Geoscience Australia) 2017. Nueva Zelanda: © Crown copyright, LINZ. Ártico: ArcticDEM (DigitalGlobe, NSF 1043681, 1559691 y 1542736)."
 
 /** Lugares de México para empezar (lat, lon, ancho en km). */
 export const LUGARES: { nombre: string; lat: number; lon: number; km: number }[] = [
@@ -36,6 +40,8 @@ const latAY = (lat: number, z: number) => ((1 - Math.log(Math.tan((lat * Math.PI
 export function planMosaicos(lat: number, lon: number, km: number) {
   const metrosPorGrado = 111320
   const dLat = km * 1000 / 2 / metrosPorGrado
+  // el cuadro no puede salirse de la proyección (±85°): se recorre el centro hacia el ecuador
+  lat = Math.sign(lat) * Math.min(Math.abs(lat), 85 - dLat)
   const dLon = dLat / Math.cos((lat * Math.PI) / 180)
   // zoom: que el cuadro mida ~300 px (256 px por mosaico)
   let z = 1
@@ -43,12 +49,55 @@ export function planMosaicos(lat: number, lon: number, km: number) {
   const x0 = lonAX(lon - dLon, z), x1 = lonAX(lon + dLon, z)
   const y0 = latAY(lat + dLat, z), y1 = latAY(lat - dLat, z) // y crece hacia el sur
   const tiles: { x: number; y: number; url: string }[] = []
-  for (let ty = Math.floor(y0); ty <= Math.floor(y1); ty++) for (let tx = Math.floor(x0); tx <= Math.floor(x1); tx++) tiles.push({ x: tx, y: ty, url: `${MOSAICOS}/${z}/${tx}/${ty}.png` })
+  for (let ty = Math.floor(y0); ty <= Math.floor(y1); ty++) for (let tx = Math.floor(x0); tx <= Math.floor(x1); tx++) tiles.push({ x: tx, y: ty, url: `${MOSAICOS}/${z}/${((tx % 2 ** z) + 2 ** z) % 2 ** z}/${ty}.png` })
   return { z, tiles, recorte: { x0: x0 * 256, y0: y0 * 256, x1: x1 * 256, y1: y1 * 256 }, tx0: Math.floor(x0), ty0: Math.floor(y0) }
 }
 
 /** Píxeles RGBA de Terrarium → metros. */
 export const alturaTerrarium = (r: number, g: number, b: number) => r * 256 + g + b / 256 - 32768
+
+/** Lado de la cuadrícula de alturas: el mismo en la página y en el catálogo (así "Modificar" da la pieza de la foto). */
+export const LADO_ALTURAS = 160
+
+/**
+ * Los mosaicos (RGBA de 256 × 256, en el orden de `plan.tiles`) → la cuadrícula
+ * de alturas (m, enteras) del recorte, de `lado` px en el lado largo. La usan la
+ * página (que baja las imágenes) y scripts/alturas-mapas.ts (catálogo).
+ */
+export function rejillaAlturas(plan: ReturnType<typeof planMosaicos>, mosaicos: ArrayLike<number>[], lado = LADO_ALTURAS) {
+  const { recorte: r, tx0, ty0 } = plan
+  const rx = Math.floor(r.x0 - tx0 * 256), ry = Math.floor(r.y0 - ty0 * 256)
+  const rw = Math.ceil(r.x1 - r.x0), rh = Math.ceil(r.y1 - r.y0)
+  const indice = new Map(plan.tiles.map((t, i) => [`${t.x - tx0},${t.y - ty0}`, i]))
+  const k = Math.max(1, Math.max(rw, rh) / lado)
+  const w = Math.max(8, Math.round(rw / k)), h = Math.max(8, Math.round(rh / k))
+  const alt = new Float32Array(w * h)
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const gx = rx + Math.min(rw - 1, Math.floor(x * k)), gy = ry + Math.min(rh - 1, Math.floor(y * k))
+      const m = mosaicos[indice.get(`${Math.floor(gx / 256)},${Math.floor(gy / 256)}`) ?? -1]
+      if (!m) continue
+      const o = ((gy % 256) * 256 + (gx % 256)) * 4
+      alt[y * w + x] = Math.round(alturaTerrarium(m[o], m[o + 1], m[o + 2]))
+    }
+  return { alt, w, h }
+}
+
+/** El lugar y las medidas del mapa en la liga de la herramienta (?lat&lon&km&capas&ancho). */
+export type LigaMapa = { lat: number; lon: number; km: number; capas?: number; ancho?: number }
+export const aUrlMapa = (m: LigaMapa) =>
+  new URLSearchParams(Object.entries(m).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString()
+/** Lee la liga; sólo regresa lo que es válido (lugar completo, capas 2–30, ancho 50–1500 mm). */
+export function deUrlMapa(busqueda: string): Partial<LigaMapa> {
+  const q = new URLSearchParams(busqueda)
+  const n = (k: string) => (q.get(k)?.trim() ? Number(q.get(k)) : NaN)
+  const lat = n("lat"), lon = n("lon"), km = n("km"), capas = n("capas"), ancho = n("ancho")
+  return {
+    ...(Math.abs(lat) <= 84 && Math.abs(lon) <= 180 && km >= 1 && km <= 300 ? { lat, lon, km } : {}),
+    ...(capas >= 2 && capas <= 30 ? { capas: Math.round(capas) } : {}),
+    ...(ancho >= 50 && ancho <= 1500 ? { ancho } : {}),
+  }
+}
 
 // ── alturas → piezas ───────────────────────────────────────────────────────
 export type OpcionesMapa = {
@@ -58,7 +107,7 @@ export type OpcionesMapa = {
   invertir: boolean // profundidad (lagos, mar): la capa es lo que queda abajo
 }
 
-export type ResultadoMapa = { dibujo: Dibujo; hojas: number; noCaben: number; niveles: number[]; avisos: string[]; errores: string[] }
+export type ResultadoMapa = { dibujo: Dibujo; hojas: number; noCaben: number; piezas: number; niveles: number[]; avisos: string[]; errores: string[] }
 
 /** Suaviza la cuadrícula (caja 3×3) para que los contornos no salgan dentados. */
 function suavizar(e: Float32Array, w: number, h: number): Float32Array {
@@ -78,11 +127,12 @@ function suavizar(e: Float32Array, w: number, h: number): Float32Array {
 
 /** Las capas del mapa en mm (Y hacia arriba): la base (rectángulo W × H) y los contornos de cada nivel. */
 export function capasMapa(alturas: Float32Array, w: number, h: number, o: Pick<OpcionesMapa, "capas" | "ancho" | "invertir">) {
-  if (w < 8 || h < 8 || alturas.length !== w * h) return { error: "No hay alturas para ese lugar." } as const
+  const falla = (e: string) => ({ capas: [] as P[][][], niveles: [] as number[], errores: [e] })
+  if (w < 8 || h < 8 || alturas.length !== w * h) return falla("No hay alturas para ese lugar.")
   const e = suavizar(alturas, w, h)
   let min = Infinity, max = -Infinity
   for (const v of e) (min = Math.min(min, v)), (max = Math.max(max, v))
-  if (!(max - min > 5)) return { error: "El terreno es casi plano en esa zona: escoge un lugar con montañas o barrancas." } as const
+  if (!(max - min > 5)) return falla("El terreno es casi plano en esa zona: escoge un lugar con montañas o barrancas.")
   const n = Math.max(2, Math.min(30, Math.round(o.capas)))
   const esc = o.ancho / Math.max(w, h) // mm por pixel
   const W = w * esc, H = h * esc
@@ -96,12 +146,12 @@ export function capasMapa(alturas: Float32Array, w: number, h: number, o: Pick<O
   }
   // la base: el rectángulo completo; luego una por nivel
   const capas: P[][][] = [[rectPts(0, 0, W, H)], ...niveles.map(contornosDe)]
-  return { W, H, niveles, capas }
+  return { capas, niveles, errores: [] as string[] }
 }
 
 export function piezasMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa): ResultadoMapa {
   const c = capasMapa(alturas, w, h, o)
-  if ("error" in c) return { dibujo: { trazos: [], avisos: [], unidades: "mm" }, hojas: 0, noCaben: 0, niveles: [], avisos: [], errores: [c.error!] }
+  if (c.errores.length) return { dibujo: { trazos: [], avisos: [], unidades: "mm" }, hojas: 0, noCaben: 0, piezas: 0, niveles: [], avisos: [], errores: c.errores }
   const { capas, niveles } = c
   const grupos: Trazo[][] = []
   const avisos: string[] = []
@@ -115,29 +165,28 @@ export function piezasMapa(alturas: Float32Array, w: number, h: number, o: Opcio
   if (vacias) avisos.push(`${vacias} capas quedan vacías: usa menos capas.`)
   const r = acomodarEnHojas(grupos, o.hoja, 6)
   if (r.noCaben) avisos.push(`${r.noCaben} piezas no caben en la hoja: haz el mapa más chico o usa una hoja más grande.`)
-  return { dibujo: { trazos: r.trazos, avisos: [], unidades: "mm" }, hojas: r.hojas, noCaben: r.noCaben, niveles, avisos, errores: [] }
+  return { dibujo: { trazos: r.trazos, avisos: [], unidades: "mm" }, hojas: r.hojas, noCaben: r.noCaben, piezas: grupos.length, niveles, avisos, errores: [] }
 }
 
 // ── para impresora 3D ──────────────────────────────────────────────────────
-export type OpcionesMapa3D = { capas: number; ancho: number; invertir: boolean; base: number; grosorCapa: number; cumbre: number } // cumbre: fracción de capas de arriba (2.º color)
-export const OPCIONES_MAPA_3D = { base: 2, grosorCapa: 2, cumbre: 0.3 }
+export const OPCIONES_MAPA_3D = { base: 2, grosorCapa: 2, cumbre: 0.3 } // cumbre: fracción de capas de arriba (2.º color)
+export type OpcionesMapa3D = { capas: number; ancho: number } & Partial<typeof OPCIONES_MAPA_3D>
 
 /**
- * El mapa como una pieza para imprimir: la base y cada capa encima de la
- * anterior, cada una sólo en su grosor (así el volumen y los gramos salen
- * bien). Dos partes para imprimir a dos colores: base y faldas, y la cumbre.
+ * El mapa como una pieza para imprimir (sólo alturas: en profundidad quedaría
+ * de cabeza): la base y cada capa encima de la anterior, cada una sólo en su
+ * grosor (así el volumen y los gramos salen bien). Dos partes para imprimir a
+ * dos colores: base y montaña, y la cumbre. `porCapa`: triángulos de la base y
+ * de cada capa, en el mismo orden que la malla (para la foto en degradado).
  */
-export function mallaMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa3D): { malla: Malla; alto: number; errores: string[] } {
-  // en profundidad las capas crecen hacia arriba (pirámide de cabeza): para impresora sólo altura
-  if (o.invertir) return { malla: { tris: [], avisos: [] }, alto: 0, errores: ["El STL para impresora sale sólo con alturas (apaga «Profundidad»)."] }
-  const c = capasMapa(alturas, w, h, o)
-  if ("error" in c) return { malla: { tris: [], avisos: [] }, alto: 0, errores: [c.error!] }
+export function mallaMapa(alturas: Float32Array, w: number, h: number, opciones: OpcionesMapa3D): { malla: Malla; alto: number; porCapa: number[]; errores: string[] } {
+  const o = { ...OPCIONES_MAPA_3D, ...opciones }
+  const c = capasMapa(alturas, w, h, { ...o, invertir: false })
+  if (c.errores.length) return { malla: { tris: [], avisos: [] }, alto: 0, porCapa: [], errores: c.errores }
   const base = Math.max(0.6, Math.min(10, o.base)), g = Math.max(0.2, Math.min(10, o.grosorCapa))
-  const niveles = c.capas.slice(1)
-  const desde = Math.max(1, Math.min(niveles.length - 1, Math.round(niveles.length * (1 - Math.max(0, Math.min(0.9, o.cumbre))))))
-  const tramo = (a: number, b: number) => ([] as number[]).concat(...niveles.slice(a, b).map((cs, i) => (cs.length ? extruirEn(cs, g, base + (a + i) * g) : [])))
-  const abajo = [...extruirEn(c.capas[0], base, 0), ...tramo(0, desde)]
-  const arriba = tramo(desde, niveles.length)
-  const malla = arriba.length ? conPartes(["Base y montaña", abajo], ["Cumbre", arriba]) : conPartes(["Base y montaña", abajo])
-  return { malla, alto: base + niveles.length * g, errores: [] }
+  const piezas = c.capas.map((cs, i) => (cs.length ? (i === 0 ? extruirEn(cs, base, 0) : extruirEn(cs, g, base + (i - 1) * g)) : []))
+  const niveles = piezas.length - 1
+  const desde = 1 + Math.max(1, Math.min(niveles - 1, Math.round(niveles * (1 - Math.max(0, Math.min(0.9, o.cumbre))))))
+  const malla = conPartes(["Base y montaña", piezas.slice(0, desde).flat()], ["Cumbre", piezas.slice(desde).flat()])
+  return { malla, alto: base + niveles * g, porCapa: piezas.map((t) => t.length / 9), errores: [] }
 }

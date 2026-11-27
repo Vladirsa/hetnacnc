@@ -11,8 +11,8 @@
 // blanco) en docs/impresion-bajo-pedido/fotos y guarda su STL simplificado
 // (la vista 3D de la ficha) en docs/impresion-bajo-pedido/modelos.
 //
-// SOLO_MODELOS=1: rehace sólo las piezas de Modelos 3D y deja como están en
-// catalogo.json los rodillos y placas (no hacen falta las tipografías).
+// SOLO_MODELOS=1: rehace sólo las piezas de Modelos 3D y los mapas (no llevan
+// tipografías) y deja como están en catalogo.json los rodillos y placas.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { join, resolve } from "path"
 import sharp from "sharp"
@@ -25,7 +25,7 @@ import { OPCIONES_IMPRESION_FABRICA, hacerLetrasImpresion, pararMalla } from "@/
 import { hacerRodillo, hacerSoporte, hacerTexturizador } from "@/lib/generador/texturizador"
 import { CATALOGO_IMPRESION, urlHerramienta, type DisenoCatalogo } from "@/lib/impresion/catalogo-disenos"
 import { construirMalla, limpiarValores, modeloPorId, valoresIniciales } from "@/lib/generador/modelos3d"
-import { CREDITO, OPCIONES_MAPA_3D, mallaMapa } from "@/lib/generador/mapaTopo"
+import { CREDITO, mallaMapa } from "@/lib/generador/mapaTopo"
 
 // La página baja opentype.js del CDN; aquí se usa una copia local (OPENTYPE_JS=ruta a dist/opentype.js)
 // Se carga hasta que hace falta: con SOLO_MODELOS no se necesita
@@ -229,7 +229,7 @@ function medir(t: number[]) {
 
 async function generar() {
 // sin meshoptimizer los rodillos fallarían a media corrida, con fotos ya reescritas
-if (!SOLO_MODELOS && !process.env.MESHOPT_JS) throw new Error("Falta MESHOPT_JS (ruta a node_modules/meshoptimizer) para simplificar las vistas 3D")
+if ((!SOLO_MODELOS || CATALOGO_IMPRESION.some((d) => d.pieza === "mapa")) && !process.env.MESHOPT_JS) throw new Error("Falta MESHOPT_JS (ruta a node_modules/meshoptimizer) para simplificar las vistas 3D")
 for (const dir of [FOTOS, MODELOS]) mkdirSync(dir, { recursive: true })
 const salida: any[] = []
 for (const d of CATALOGO_IMPRESION) {
@@ -252,17 +252,29 @@ for (const d of CATALOGO_IMPRESION) {
     continue
   }
   if (d.pieza === "mapa" && d.mapa) {
-    // alturas guardadas (scripts/alturas-mapas.ts): sin red
+    // alturas guardadas (scripts/alturas-mapas.ts): sin red; si cambió el lugar, hay que volver a bajarlas
     const ruta = join(ALTURAS, `${d.handle}.json`)
     if (!existsSync(ruta)) throw new Error(`Falta ${ruta}: corre scripts/alturas-mapas.ts`)
     const a = JSON.parse(readFileSync(ruta, "utf8"))
-    const r = mallaMapa(Float32Array.from(a.alturas), a.w, a.h, { capas: d.mapa.capas, ancho: d.mapa.ancho, invertir: false, ...OPCIONES_MAPA_3D })
+    if (a.lat !== d.mapa.lat || a.lon !== d.mapa.lon || a.km !== d.mapa.km) throw new Error(`${d.handle}: las alturas guardadas son de otro lugar; corre scripts/alturas-mapas.ts`)
+    const r = mallaMapa(Float32Array.from(a.alturas), a.w, a.h, { capas: d.mapa.capas, ancho: d.mapa.ancho })
     if (r.errores.length) throw new Error(`${d.handle}: ${r.errores.join(" ")}`)
     const m = medir(r.malla.tris)
-    // base y montaña verde; la cumbre clara, como nevada
-    const tramos = r.malla.partes!.map((p, i) => ({ triangulos: p.triangulos, rgb: i === 0 ? VERDE : BLANCO }))
+    // la foto en degradado por capa (de verde a café) y la cumbre blanca si es nevado; la venta a 2 colores usa las 2 partes de la malla
+    // la cumbre empieza donde termina la primera parte (en triángulos)
+    const n = r.porCapa.length, cumbre = r.malla.partes![0].triangulos
+    let acum = 0
+    const tramos = r.porCapa
+      .map((t, i) => {
+        const enCumbre = r.malla.partes!.length === 2 && acum >= cumbre
+        acum += t
+        const f = i / Math.max(1, n - 1)
+        const rgb = enCumbre && d.mapa!.nevado ? BLANCO : [Math.round(40 + f * 130), Math.round(140 - f * 40), Math.round(70 - f * 20)]
+        return { triangulos: t, rgb }
+      })
+      .filter((t) => t.triangulos > 0)
     console.log(`${d.handle}: ${m.volumen_cm3} cm³, ${m.medidas_mm.join(" × ")} mm`)
-    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramos)), diseno: d.mapa, ...m, capas: d.mapa.capas, credito: CREDITO, ...(r.malla.partes!.length === 2 ? { grupos_color: ["Base y montaña", "Cumbre"] } : {}) })
+    salida.push({ handle: d.handle, titulo: d.titulo, resumen: d.resumen, pieza: d.pieza, etiquetas: d.etiquetas, herramienta_url: urlHerramienta(d), foto: `fotos/${d.handle}.png`, ...(await guardarVista(d.handle, r.malla.tris, tramos)), diseno: d.mapa, ...m, credito: CREDITO, ...(r.malla.partes!.length === 2 ? { grupos_color: ["Base y montaña", "Cumbre"] } : {}) })
     continue
   }
   if (SOLO_MODELOS) {

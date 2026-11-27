@@ -51,9 +51,9 @@ export function GeneradorRelojPalabras({ cabecera }: { cabecera?: React.ReactNod
     </div>
   )
 
-  // precio aprox.: 3 placas de L × L en láser (MDF de 3 mm de referencia; la rejilla gruesa sube un poco)
+  // precio aprox.: 3 placas de L × L en láser, de referencia en MDF de 3 mm (la rejilla de 6 a 9 mm sube un poco; el taller la cotiza)
   const L = r.alto
-  const corte = r.dibujo.trazos.filter((t) => t.capa === "corte")
+  const corte = useMemo(() => r.dibujo.trazos.filter((t) => t.capa === "corte"), [r])
   const pedidoPrecio = texto && corte.length ? { ...precioMDF("laser", 3), anchoMm: L, largoMm: L, cantidad: 3, corte_mm: largoCorte(corte) / 3, perforaciones: Math.round(corte.length / 3) } : undefined
 
   return (
@@ -74,7 +74,7 @@ export function GeneradorRelojPalabras({ cabecera }: { cabecera?: React.ReactNod
       pieza={`Reloj de palabras de ${Math.round(numero(lado) || 300)} mm (frente, rejilla y fondo)`}
       material="MDF de 3 mm (frente y fondo) y de 6 a 9 mm (rejilla)"
       precio={pedidoPrecio}
-      cotizar={pedidoPrecio ? { ...contextoMDF("laser", 3), nota: `Reloj de palabras de ${Math.round(L)} mm: 3 placas (frente con letras caladas, rejilla de 6 a 9 mm y fondo). Sin electrónica.` } : undefined}
+      cotizar={pedidoPrecio ? { ...contextoMDF("laser", 3), nota: `Reloj de palabras de ${Math.round(L)} mm: 3 placas (frente con letras caladas, rejilla de 6 a 9 mm y fondo). El precio en la herramienta es de referencia en MDF de 3 mm. Sin electrónica.` } : undefined}
       vacio="Cargando la letra…"
     />
   )
