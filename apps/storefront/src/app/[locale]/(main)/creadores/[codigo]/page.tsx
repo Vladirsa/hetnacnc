@@ -37,10 +37,10 @@ export default async function CreadorPage({ params }: Props) {
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[900px] px-4 py-14 text-center lg:px-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">
-            <TS>De parte de</TS> {c.nombre}
-            {c.red && c.red !== "otra" ? ` · ${NOMBRE_RED[c.red] || ""}` : ""}
+            <TS>De parte de</TS> <TS>{c.nombre}</TS>
+            <TS>{c.red && c.red !== "otra" ? ` · ${NOMBRE_RED[c.red] || ""}` : ""}</TS>
           </p>
-          <h1 className="mx-auto mt-2 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">{tiempo} <TS>de HETNA Taller, gratis</TS></h1>
+          <h1 className="mx-auto mt-2 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>{tiempo}</TS> <TS>de HETNA Taller, gratis</TS></h1>
           {c.mensaje ? (
             <p className="mx-auto mt-4 max-w-xl text-lg italic text-white/80">“<TS>{c.mensaje}</TS>”</p>
           ) : (
@@ -53,12 +53,12 @@ export default async function CreadorPage({ params }: Props) {
             <CopiarCodigo codigo={c.codigo} />
           </div>
           <a href={liga} className="mt-6 inline-block rounded-xl bg-[#C2560A] px-8 py-4 text-lg font-semibold text-white no-underline hover:brightness-110">
-            <TS>Activar mis</TS> {c.dias} <TS>días</TS>
+            <TS>Activar mis</TS> <TS>{c.dias}</TS> <TS>días</TS>
           </a>
           <p className="mt-3 text-sm text-white/60"><TS>El código se aplica solo al registrarte desde este botón.</TS></p>
           {c.canal_url && (
             <a href={c.canal_url} target="_blank" rel="noopener noreferrer nofollow" className="mt-4 inline-block text-sm text-[#F2C9A5] underline underline-offset-2">
-              <TS>Ver el canal de</TS> {c.nombre}
+              <TS>Ver el canal de</TS> <TS>{c.nombre}</TS>
             </a>
           )}
         </div>
@@ -73,13 +73,13 @@ export default async function CreadorPage({ params }: Props) {
             ["Herramientas gratis", "Calculadora CNC, diseños para láser y router, y CAM 2D y 3D.", "/herramientas-cnc"],
           ].map(([t, d, h]) => (
             <LocalizedClientLink key={t} href={h} className="rounded-2xl border border-[#E7E4DC] bg-white p-5 hover:border-[#C2560A]">
-              <p className="font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </LocalizedClientLink>
           ))}
         </div>
         <p className="mt-8 text-center text-[12px] text-[#7A776E]">
-          <TS>Vale para talleres nuevos. Al terminar el regalo puedes seguir con el plan gratis o contratar un plan. ¿Tú también enseñas CNC?</TS>{" "}
+          <TS>Vale para talleres nuevos. Al terminar el regalo puedes seguir con el plan gratis o contratar un plan. ¿Tú también enseñas CNC?</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/creadores" className="underline"><TS>Únete al programa de creadores</TS></LocalizedClientLink>.
         </p>
       </section>
