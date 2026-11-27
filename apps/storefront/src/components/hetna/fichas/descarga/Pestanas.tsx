@@ -3,6 +3,7 @@
 // Pestañas Descripción / Especificaciones / Licencia. Todo el contenido va en
 // el HTML (para Google y para quien no tiene JavaScript); sólo se oculta lo
 // que no está elegido.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 export function Pestanas({
@@ -31,7 +32,7 @@ export function Pestanas({
               activa === p.clave ? "border-[#E85D04] text-[#1E2329]" : "border-transparent text-[#5B6370] hover:text-[#1E2329]"
             }`}
           >
-            {p.titulo}
+            <T>{p.titulo}</T>
           </button>
         ))}
       </div>
