@@ -45,6 +45,7 @@ export const EN_META_CLIENTE: Record<string, string> = {
   "Genera gratis patrones Voronoi para celosías, lámparas y mosaicos: elige forma, celdas y puente y descarga el DXF o SVG para cortar.": "Generate Voronoi patterns free for screens, lamps and mosaics: choose shape, cells and bridge and download the DXF or SVG to cut.",
   "Generador de cajas con juntas de dedo gratis": "Free Finger Joint Box Generator",
   "Generador de engranes en DXF gratis": "Free Gear Generator in DXF",
+  "Generador de letras y letreros para corte láser y CNC": "Letter and Sign Generator for Laser Cutting and CNC",
   "Generador de letreros en DXF para CNC y láser": "Sign Generator in DXF for CNC and Laser",
   "Generador de moldes 3D gratis: de STL a molde para resina, yeso o silicona": "Free 3D Mold Generator: From STL to Mold for Resin, Plaster or Silicone",
   "Generador de patrón Voronoi para láser y CNC": "Voronoi Pattern Generator for Laser and CNC",

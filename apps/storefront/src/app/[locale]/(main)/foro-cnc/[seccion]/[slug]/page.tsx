@@ -1,3 +1,4 @@
+import { TITULOS_SEO_FORO } from "@/lib/seo/titulos-foro"
 import { metaEnIdioma } from "@/i18n/servidor"
 import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
@@ -52,12 +53,12 @@ async function generateMetadataEs({ params }: Props): Promise<Metadata> {
     ? extracto(`${extracto(pregunta, 60)} Respuesta: ${respuesta}`, 155)
     : extracto(pregunta || t.cuerpo, 155)
   return {
-    title: { absolute: `${t.titulo} | Foro CNC México` },
+    title: { absolute: TITULOS_SEO_FORO[slug] || `${t.titulo} | Foro CNC México` },
     description: descripcion,
     alternates: { canonical: url },
     robots: t.estado === "publicado" ? undefined : { index: false, follow: false },
     openGraph: {
-      title: t.titulo,
+      title: TITULOS_SEO_FORO[slug] || t.titulo,
       description: descripcion,
       url,
       type: "article",
