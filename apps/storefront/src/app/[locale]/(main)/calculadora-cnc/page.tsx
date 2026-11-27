@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { CalculadoraCNC } from "@/components/hetna/calculadora/CalculadoraCNC"
@@ -10,7 +12,7 @@ import { PROCESOS } from "@/lib/calculadora"
 
 const SITIO = "https://hetnacnc.com"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   // Enfocada en "calculadora de avance y revoluciones": /herramientas-cnc es la
   // página general de herramientas (no compiten por la misma búsqueda).
   title: "Calculadora CNC de avance y revoluciones (RPM)",
@@ -80,10 +82,10 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#C2560A] opacity-30 blur-3xl" />
         <div className="relative mx-auto max-w-[1280px]">
-          <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.08em] text-[#FFB27A]">Gratis · sin cuenta</span>
-          <h1 className="m-0 mt-3 font-display text-[28px] font-bold leading-tight lg:text-[40px]">Calculadora CNC de avance y revoluciones (RPM)</h1>
+          <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-[11.5px] font-bold uppercase tracking-[0.08em] text-[#FFB27A]"><TS>Gratis · sin cuenta</TS></span>
+          <h1 className="m-0 mt-3 font-display text-[28px] font-bold leading-tight lg:text-[40px]"><TS>Calculadora CNC de avance y revoluciones (RPM)</TS></h1>
           <p className="m-0 mt-2 max-w-[720px] text-[15px] leading-relaxed text-white/75">
-            Dile qué máquina tienes y qué vas a cortar. Te da los parámetros para empezar y revisa que tu máquina pueda con ellos: potencia, flexión de la fresa, alcance del láser, perforación del plasma.
+            <TS>Dile qué máquina tienes y qué vas a cortar. Te da los parámetros para empezar y revisa que tu máquina pueda con ellos: potencia, flexión de la fresa, alcance del láser, perforación del plasma.</TS>
           </p>
           <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-[13px] text-white/70">
             {["6 procesos en una sola herramienta", "Se ajusta a los límites de tu máquina", "Te avisa lo que puede salir mal"].map((t) => (
@@ -99,27 +101,27 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
         <CalculadoraCNC procesoInicial={proceso} />
       </div>
       <section className="mx-auto max-w-[1280px] px-4 pb-10 lg:px-8">
-        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]">Fórmulas de revoluciones y avance</h2>
+        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]"><TS>Fórmulas de revoluciones y avance</TS></h2>
         <div className="grid gap-3 text-[14px] leading-relaxed text-[#40403A] lg:grid-cols-2">
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-            <p className="m-0 font-bold text-[#142033]">Revoluciones (RPM)</p>
-            <p className="m-0 mt-1 font-mono text-[13px]">RPM = (Vc × 1000) ÷ (π × D)</p>
-            <p className="m-0 mt-1.5">Vc es la velocidad de corte del material en m/min (la da el fabricante de la fresa) y D el diámetro de la fresa en mm.</p>
+            <p className="m-0 font-bold text-[#142033]"><TS>Revoluciones (RPM)</TS></p>
+            <p className="m-0 mt-1 font-mono text-[13px]"><TS>RPM = (Vc × 1000) ÷ (π × D)</TS></p>
+            <p className="m-0 mt-1.5"><TS>Vc es la velocidad de corte del material en m/min (la da el fabricante de la fresa) y D el diámetro de la fresa en mm.</TS></p>
           </div>
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-            <p className="m-0 font-bold text-[#142033]">Avance (mm/min)</p>
-            <p className="m-0 mt-1 font-mono text-[13px]">Avance = RPM × z × fz</p>
-            <p className="m-0 mt-1.5">z es el número de filos y fz la carga de viruta por filo en mm. Si fz es muy baja la fresa roza y se quema; si es muy alta se rompe.</p>
+            <p className="m-0 font-bold text-[#142033]"><TS>Avance (mm/min)</TS></p>
+            <p className="m-0 mt-1 font-mono text-[13px]"><TS>Avance = RPM × z × fz</TS></p>
+            <p className="m-0 mt-1.5"><TS>z es el número de filos y fz la carga de viruta por filo en mm. Si fz es muy baja la fresa roza y se quema; si es muy alta se rompe.</TS></p>
           </div>
         </div>
         <p className="m-0 mt-3 max-w-[760px] text-[13px] leading-relaxed text-[#6B6A63]">
-          Ejemplo con números redondos: una fresa de 6 mm a Vc = 300 m/min gira a (300 × 1000) ÷ (3.1416 × 6) ≈ 15,900 RPM; con 2 filos y fz = 0.1 mm,
-          el avance es 15,900 × 2 × 0.1 ≈ 3,180 mm/min. La calculadora de arriba hace estas cuentas con los rangos del material y revisa que tu máquina las aguante.
+          <TS>Ejemplo con números redondos: una fresa de 6 mm a Vc = 300 m/min gira a (300 × 1000) ÷ (3.1416 × 6) ≈ 15,900 RPM; con 2 filos y fz = 0.1 mm,
+          el avance es 15,900 × 2 × 0.1 ≈ 3,180 mm/min. La calculadora de arriba hace estas cuentas con los rangos del material y revisa que tu máquina las aguante.</TS>
         </p>
       </section>
       <section className="mx-auto max-w-[1280px] px-4 pb-10 lg:px-8">
-        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]">Cómo se calcula</h2>
-        <p className="m-0 mb-4 max-w-[760px] text-[14px] leading-relaxed text-[#6B6A63]">No es una tabla fija: cada resultado sale de un rango de fabricante y después se ajusta a lo que tu máquina puede hacer.</p>
+        <h2 className="m-0 mb-1 font-display text-[22px] font-bold text-[#142033]"><TS>Cómo se calcula</TS></h2>
+        <p className="m-0 mb-4 max-w-[760px] text-[14px] leading-relaxed text-[#6B6A63]"><TS>No es una tabla fija: cada resultado sale de un rango de fabricante y después se ajusta a lo que tu máquina puede hacer.</TS></p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {COMO.map((c) => (
             <div key={c.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
@@ -132,7 +134,7 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
       </section>
       <section className="mx-auto max-w-[1280px] px-4 pb-12 lg:px-8">
         <div className="max-w-[860px]">
-        <h2 className="font-display text-[22px] font-bold m-0 mb-3 text-[#1B1B18]">Preguntas frecuentes</h2>
+        <h2 className="font-display text-[22px] font-bold m-0 mb-3 text-[#1B1B18]"><TS>Preguntas frecuentes</TS></h2>
         <div className="flex flex-col gap-2">
           {PREGUNTAS.map((q) => (
             <details key={q.p} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
@@ -142,17 +144,22 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
           ))}
         </div>
         <p className="m-0 mt-4 text-[14px] text-[#6B6A63]">
-          ¿Quieres el precio de una pieza?{" "}
+          <TS>¿Quieres el precio de una pieza?</TS>{" "}
           <LocalizedClientLink href="/cotizar" className="font-semibold text-[#C2560A]">
-            Calculadoras de precio
+            <TS>Calculadoras de precio</TS>
           </LocalizedClientLink>{" "}
-          · ¿Más herramientas?{" "}
+          <TS>· ¿Más herramientas?</TS>{" "}
           <LocalizedClientLink href="/herramientas-cnc" className="font-semibold text-[#C2560A]">
-            Todas las herramientas CNC
+            <TS>Todas las herramientas CNC</TS>
           </LocalizedClientLink>
         </p>
         </div>
       </section>
     </div>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
