@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { VideoProducto } from "./VideoProducto"
 import {
   archivos as leerArchivos,
@@ -54,7 +55,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
 
       {compat.length > 0 && (
         <Bloque>
-          <Titulo>Compatibilidad</Titulo>
+          <Titulo><TS>Compatibilidad</TS></Titulo>
           <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
             {compat.map((c) => (
               <li
@@ -70,7 +71,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
 
       {archivos.length > 0 && (
         <Bloque>
-          <Titulo>Archivos descargables</Titulo>
+          <Titulo><TS>Archivos descargables</TS></Titulo>
           <ul className="list-none p-0 m-0 flex flex-col gap-2">
             {archivos.map((a) => (
               <li key={a.url}>
@@ -96,7 +97,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
       {videos.length > 0 && (
         <div className="lg:col-span-2">
           <Bloque>
-            <Titulo>Videos</Titulo>
+            <Titulo><TS>Videos</TS></Titulo>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {ytVideos.map((v) => (
                 <VideoProducto key={v.url} id={v.youtube as string} titulo={`${titulo} - video`} />
@@ -107,7 +108,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
                 {otrosVideos.map((v) => (
                   <li key={v.url}>
                     <a href={v.url} target="_blank" rel="noopener noreferrer" className="text-[14px] font-semibold text-[#B34D07] hover:underline break-all">
-                      Ver video →
+                      <TS>Ver video →</TS>
                     </a>
                   </li>
                 ))}
@@ -120,15 +121,15 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
       {preguntas.length > 0 && (
         <div className="lg:col-span-2">
           <Bloque>
-            <Titulo>Preguntas frecuentes</Titulo>
+            <Titulo><TS>Preguntas frecuentes</TS></Titulo>
             <div className="flex flex-col divide-y divide-[#E7E4DC]">
               {preguntas.map((p) => (
                 <details key={p.pregunta} className="group py-3">
                   <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[15px] font-semibold text-[#142033]">
-                    {p.pregunta}
+                    <TS>{p.pregunta}</TS>
                     <span className="text-[#B34D07] text-[20px] leading-none transition group-open:rotate-45" aria-hidden="true">+</span>
                   </summary>
-                  <p className="m-0 mt-2 text-[14px] leading-[1.6] text-[#4A4A45] whitespace-pre-line">{p.respuesta}</p>
+                  <p className="m-0 mt-2 text-[14px] leading-[1.6] text-[#4A4A45] whitespace-pre-line"><TS>{p.respuesta}</TS></p>
                 </details>
               ))}
             </div>
