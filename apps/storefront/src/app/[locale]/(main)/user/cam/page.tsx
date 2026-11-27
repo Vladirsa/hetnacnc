@@ -1,9 +1,11 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listMyCamJobs } from "@/lib/data/cam"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mis trabajos CAM",
   description: "Estado y archivos de tus servicios del Laboratorio CAM.",
   robots: { index: false, follow: false },
@@ -32,15 +34,15 @@ export default async function MisTrabajosCam() {
     return (
       <main className="container">
         <div className="mx-auto max-w-[460px] py-16 text-center">
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">Entra a tu cuenta</h1>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><TS>Entra a tu cuenta</TS></h1>
           <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">
-            Tus trabajos CAM y sus archivos se guardan en tu cuenta.
+            <TS>Tus trabajos CAM y sus archivos se guardan en tu cuenta.</TS>
           </p>
           <LocalizedClientLink
             href="/login"
             className="mt-6 inline-block rounded-[10px] bg-[#C2560A] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
           >
-            Iniciar sesión
+            <TS>Iniciar sesión</TS>
           </LocalizedClientLink>
         </div>
       </main>
@@ -50,19 +52,19 @@ export default async function MisTrabajosCam() {
   return (
     <main className="container">
       <div className="mx-auto max-w-[820px] py-10">
-        <h1 className="text-[26px] font-bold text-[#1B1B18]">Mis trabajos CAM</h1>
+        <h1 className="text-[26px] font-bold text-[#1B1B18]"><TS>Mis trabajos CAM</TS></h1>
         <p className="mt-2 text-[15px] text-[#4A4943]">
-          Los servicios que pediste en el Laboratorio CAM y los archivos que te entregamos.
+          <TS>Los servicios que pediste en el Laboratorio CAM y los archivos que te entregamos.</TS>
         </p>
 
         {!jobs.length ? (
           <div className="mt-8 rounded-[14px] border border-[#E7E4DC] bg-white p-6">
-            <p className="text-[15px] text-[#4A4943]">Todavía no tienes trabajos pagados.</p>
+            <p className="text-[15px] text-[#4A4943]"><TS>Todavía no tienes trabajos pagados.</TS></p>
             <LocalizedClientLink
               href="/cam/lab"
               className="mt-4 inline-block rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
             >
-              Abrir el laboratorio
+              <TS>Abrir el laboratorio</TS>
             </LocalizedClientLink>
           </div>
         ) : (
@@ -86,7 +88,7 @@ export default async function MisTrabajosCam() {
                     {job.deliverables.map((d) => (
                       <li key={d.id}>
                         <a href={d.url} className="text-[14px] font-semibold text-[#B34D07] underline" download>
-                          Descargar {d.name}
+                          <TS>Descargar</TS> {d.name}
                         </a>
                       </li>
                     ))}
@@ -99,4 +101,9 @@ export default async function MisTrabajosCam() {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
