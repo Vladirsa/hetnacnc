@@ -86,7 +86,7 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
           <>
             <LocalizedClientLink href={`/cnc/${g.slug}`} className="hover:text-[#B34D07]"><TS>{g.h1}</TS></LocalizedClientLink>
             <span>/</span>
-            <span className="font-medium text-[#1B1B18]">{ciudad.nombre}</span>
+            <span className="font-medium text-[#1B1B18]"><TS>{ciudad.nombre}</TS></span>
           </>
         ) : (
           <span className="font-medium text-[#1B1B18]"><TS>{g.h1}</TS></span>
@@ -97,13 +97,13 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
         <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl"><TS>{h1}</TS></h1>
         {ciudad && (
           <p className="mt-3 max-w-2xl text-[#F2C9A5]">
-            {locales.length
+            <TS>{locales.length
               ? `${locales.length === 1 ? "Un taller" : `${locales.length} talleres`} de la red en ${ciudad.estado}, y más con envío a ${ciudad.nombre}.`
-              : `Talleres de la red con envío a ${ciudad.nombre}.`}
+              : `Talleres de la red con envío a ${ciudad.nombre}.`}</TS>
           </p>
         )}
         {g.intro.map((p, i) => (
-          <p key={i} className="mt-3 max-w-2xl text-white/80">{p}</p>
+          <p key={i} className="mt-3 max-w-2xl text-white/80"><TS>{p}</TS></p>
         ))}
         <div className="mt-6 flex flex-wrap gap-3">
           <LocalizedClientLink href={g.cta.href} className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:bg-[#A84A08]">
@@ -122,14 +122,14 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
         <section id="precio" className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,480px)]">
           <div>
             <h2 className="text-xl font-extrabold text-[#142033]">
-              <TS>Precio al instante</TS>{ciudad ? ` en ${ciudad.nombre}` : ""}
+              <TS>Precio al instante</TS><TS>{ciudad ? ` en ${ciudad.nombre}` : ""}</TS>
             </h2>
             <p className="mt-2 text-[#40403A]">
               <TS>Sube tu archivo (DXF, SVG, STL u OBJ) o escribe las medidas. Lo revisamos al momento —contornos abiertos, líneas duplicadas, textos sin
               convertir, agujeros muy chicos— y te damos un rango de precio sin crear cuenta.</TS>
             </p>
             <p className="mt-2 text-sm text-[#6B675C]">
-              <TS>El estimado sirve para decidir; el precio final lo dan los talleres en sus propuestas</TS>{ciudad ? `, incluido el envío a ${ciudad.nombre} si no recoges` : ""}.
+              <TS>El estimado sirve para decidir; el precio final lo dan los talleres en sus propuestas</TS><TS>{ciudad ? `, incluido el envío a ${ciudad.nombre} si no recoges` : ""}</TS>.
             </p>
           </div>
           <CalculadoraLead
@@ -149,11 +149,11 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
             <section key={s.titulo}>
               <h2 className="text-xl font-extrabold text-[#142033]"><TS>{s.titulo}</TS></h2>
               {s.parrafos?.map((p, i) => (
-                <p key={i} className="mt-2 text-[#40403A]">{p}</p>
+                <p key={i} className="mt-2 text-[#40403A]"><TS>{p}</TS></p>
               ))}
               {s.lista && (
                 <ul className="mt-2 grid list-disc gap-1 pl-5 text-[#40403A]">
-                  {s.lista.map((x) => <li key={x}>{x}</li>)}
+                  {s.lista.map((x) => <li key={x}><TS>{x}</TS></li>)}
                 </ul>
               )}
             </section>
@@ -172,8 +172,8 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
             <h2 className="text-xl font-extrabold text-[#142033]"><TS>Preguntas frecuentes</TS></h2>
             {faqs.map((f) => (
               <details key={f.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
-                <summary className="cursor-pointer font-semibold text-[#142033]">{f.p}</summary>
-                <p className="mt-2 text-[#40403A]">{f.r}</p>
+                <summary className="cursor-pointer font-semibold text-[#142033]"><TS>{f.p}</TS></summary>
+                <p className="mt-2 text-[#40403A]"><TS>{f.r}</TS></p>
               </details>
             ))}
           </section>
@@ -182,28 +182,28 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
         <aside className="grid content-start gap-6">
           {ciudad && directorio.length > 0 && (
             <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <h2 className="text-base font-extrabold text-[#142033]"><TS>Empresas en</TS> {ciudad.estado}</h2>
+              <h2 className="text-base font-extrabold text-[#142033]"><TS>Empresas en</TS> <TS>{ciudad.estado}</TS></h2>
               <p className="mt-1 text-xs text-[#6B675C]"><TS>Del directorio de HETNA: en su perfil ves qué hacen y les pides cotización.</TS></p>
               <ul className="mt-3 grid gap-1">
                 {directorio.slice(0, 12).map((e) => (
                   <li key={e.slug}>
                     <LocalizedClientLink href={`/talleres/directorio/${e.slug}`} className="block rounded-lg px-2 py-1.5 hover:bg-[#FAF9F6]">
-                      <span className="block truncate text-sm font-bold text-[#142033]">{e.empresa}</span>
-                      {(e.ciudad || e.estado) && <span className="block truncate text-xs text-[#6B675C]">{[e.ciudad, e.estado].filter(Boolean).join(", ")}</span>}
+                      <span className="block truncate text-sm font-bold text-[#142033]"><TS>{e.empresa}</TS></span>
+                      {(e.ciudad || e.estado) && <span className="block truncate text-xs text-[#6B675C]"><TS>{[e.ciudad, e.estado].filter(Boolean).join(", ")}</TS></span>}
                     </LocalizedClientLink>
                   </li>
                 ))}
               </ul>
               {directorio.length > 12 && (
                 <LocalizedClientLink href={rutaEstado(ciudad)} className="mt-2 inline-block text-sm font-semibold text-[#C2560A]">
-                  <TS>Ver las</TS> {directorio.length} <TS>empresas →</TS>
+                  <TS>Ver las</TS> <TS>{directorio.length}</TS> <TS>empresas →</TS>
                 </LocalizedClientLink>
               )}
             </section>
           )}
           {mostrar.length > 0 && (
             <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <h2 className="text-base font-extrabold text-[#142033]">{ciudad && locales.length ? `Talleres en ${ciudad.estado} y con envío` : "Talleres de la red"}</h2>
+              <h2 className="text-base font-extrabold text-[#142033]"><TS>{ciudad && locales.length ? `Talleres en ${ciudad.estado} y con envío` : "Talleres de la red"}</TS></h2>
               <div className="mt-3 grid gap-2">
                 {mostrar.map((t) => (
                   <LocalizedClientLink key={t.id} href={`/talleres/${t.handle}`} className="flex items-center gap-3 rounded-xl p-2 hover:bg-[#FAF9F6]">
@@ -211,14 +211,14 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
                       {t.logo ? <Image src={t.logo} alt={`Logo de ${t.nombre}`} className="h-full w-full object-cover" width={80} height={80} /> : t.nombre.slice(0, 2).toUpperCase()}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold text-[#142033]">{t.nombre}{t.verificado ? " ✓" : ""}</span>
-                      <span className="block truncate text-xs text-[#6B675C]">{ubicacion(t.perfil) || "México"}</span>
+                      <span className="block truncate text-sm font-bold text-[#142033]"><TS>{t.nombre}</TS><TS>{t.verificado ? " ✓" : ""}</TS></span>
+                      <span className="block truncate text-xs text-[#6B675C]"><TS>{ubicacion(t.perfil) || "México"}</TS></span>
                     </span>
                   </LocalizedClientLink>
                 ))}
               </div>
               <LocalizedClientLink href={ciudad ? rutaEstado(ciudad) : "/talleres"} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
-                {ciudad ? `Todas las empresas CNC en ${ciudad.estado} →` : "Ver todos los talleres →"}
+                <TS>{ciudad ? `Todas las empresas CNC en ${ciudad.estado} →` : "Ver todos los talleres →"}</TS>
               </LocalizedClientLink>
             </section>
           )}
@@ -242,7 +242,7 @@ export async function GuiaCnc({ guia: g, ciudad }: { guia: Guia; ciudad?: Ciudad
                 {CIUDADES.filter((c) => c.slug !== ciudad?.slug).map((c) => (
                   <li key={c.slug}>
                     <LocalizedClientLink href={`/cnc/${g.slug}/${c.slug}`} className="inline-block rounded-full border border-[#E7E4DC] px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]">
-                      {c.nombre}
+                      <TS>{c.nombre}</TS>
                     </LocalizedClientLink>
                   </li>
                 ))}
