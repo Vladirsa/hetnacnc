@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -61,7 +62,7 @@ const PanelHojas = ({ g }: { g: Grupo }) => (
       href={"/categories/" + g.handle}
       className="rounded-[8px] px-3 py-2 text-[13px] font-bold text-[#B34D07] hover:underline"
     >
-      Ver todo en {g.nombre}
+      <TS>Ver todo en</TS> {g.nombre}
     </LocalizedClientLink>
     <div className="grid grid-cols-2 gap-x-2">
       {g.hojas.map((h) => (
@@ -89,12 +90,12 @@ const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
       className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15"
     >
       <Hamburguesa />
-      Todos los productos
+      <TS>Todos los productos</TS>
       {tienda && <Flecha />}
     </LocalizedClientLink>
     {tienda && (
       <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[340px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
-        <p className="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]">Categorías</p>
+        <p className="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]"><TS>Categorías</TS></p>
         {tienda.categorias.map((c) => (
           <LocalizedClientLink
             key={c.clave}
@@ -105,7 +106,7 @@ const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
             {c.conteo > 0 ? (
               <span className="shrink-0 font-mono text-[12px] text-[#6B6A63]">{c.conteo}</span>
             ) : (
-              <span className="shrink-0 rounded bg-[#FFF4EC] px-1.5 py-0.5 text-[10.5px] font-bold uppercase text-[#A84303]">Próximamente</span>
+              <span className="shrink-0 rounded bg-[#FFF4EC] px-1.5 py-0.5 text-[10.5px] font-bold uppercase text-[#A84303]"><TS>Próximamente</TS></span>
             )}
           </LocalizedClientLink>
         ))}
@@ -114,14 +115,14 @@ const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
             href="/categories"
             className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
           >
-            Ver todos los productos ({tienda.total})
+            <TS>Ver todos los productos (</TS>{tienda.total})
             <FlechaDerecha />
           </LocalizedClientLink>
           <LocalizedClientLink
             href="/tienda"
             className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF]"
           >
-            Ir a la tienda
+            <TS>Ir a la tienda</TS>
             <FlechaDerecha />
           </LocalizedClientLink>
         </div>
@@ -143,7 +144,7 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
         className="h-full flex items-center gap-2 px-4 text-white text-[13.5px] font-bold bg-white/10 hover:bg-white/15"
       >
         <Hamburguesa />
-        Todas las categorías
+        <TS>Todas las categorías</TS>
       </LocalizedClientLink>
       <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[720px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
         <div className="mega relative flex min-h-[380px]">
@@ -180,14 +181,14 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
               href="/categories"
               className="mt-2 flex items-center justify-between gap-2 rounded-[8px] border-t border-[#E7E4DC] px-3 py-3 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
             >
-              Ver todos los productos{tienda ? ` (${tienda.total})` : ""}
+              <TS>Ver todos los productos</TS>{tienda ? ` (${tienda.total})` : ""}
               <FlechaDerecha />
             </LocalizedClientLink>
             <LocalizedClientLink
               href="/tienda"
               className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF]"
             >
-              Ver toda la tienda
+              <TS>Ver toda la tienda</TS>
               <FlechaDerecha />
             </LocalizedClientLink>
           </div>
@@ -218,8 +219,8 @@ const OpcionHerramienta = ({
       </span>
     )}
     <span className="flex flex-col">
-      <span className="text-[13.5px] font-semibold text-[#1B1B18]">{titulo}</span>
-      {texto && <span className="text-[12px] text-[#6B6A63] leading-snug">{texto}</span>}
+      <span className="text-[13.5px] font-semibold text-[#1B1B18]"><TS>{titulo}</TS></span>
+      {texto && <span className="text-[12px] text-[#6B6A63] leading-snug"><TS>{texto}</TS></span>}
     </span>
   </LocalizedClientLink>
 )
@@ -230,7 +231,7 @@ const ListaHerramientas = () => (
       href="/herramientas-cnc"
       className="flex items-center justify-between rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
     >
-      Todas las herramientas
+      <TS>Todas las herramientas</TS>
       <FlechaDerecha />
     </LocalizedClientLink>
     {GRUPOS_HERRAMIENTAS.map((g) => (
@@ -248,7 +249,7 @@ const ListaHerramientas = () => (
 const MenuHerramientas = () => (
   <div className="group relative h-full flex items-center shrink-0">
     <span tabIndex={0} className={ENLACE + " cursor-default"}>
-      Herramientas CNC
+      <TS>Herramientas CNC</TS>
       <Flecha />
     </span>
     <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[340px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
@@ -262,17 +263,17 @@ const MenuFabricacion = () => (
     {/* Es enlace a /fabricacion (en pantallas táctiles el hover no es confiable)
         y el desplegable se abre al pasar el mouse o con el teclado. */}
     <LocalizedClientLink href="/fabricacion" className={ENLACE}>
-      Fabricación
+      <TS>Fabricación</TS>
       <Flecha />
     </LocalizedClientLink>
     <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[620px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-4 whitespace-normal">
       <div className="grid grid-cols-4 gap-4">
         {FABRICACION.map((g) => (
           <div key={g.titulo}>
-            <p className="pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]">{g.titulo}</p>
+            <p className="pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]"><TS>{g.titulo}</TS></p>
             {g.enlaces.map((e) => (
               <LocalizedClientLink key={e.href} href={e.href} className="block rounded-[8px] py-1.5 text-[13.5px] text-[#1B1B18] hover:text-[#B34D07]">
-                {e.texto}
+                <TS>{e.texto}</TS>
               </LocalizedClientLink>
             ))}
           </div>
@@ -281,11 +282,11 @@ const MenuFabricacion = () => (
       <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-[#E7E4DC] pt-3">
         {FABRICACION_EXTRA.map((e) => (
           <LocalizedClientLink key={e.href} href={e.href} className="text-[13px] font-semibold text-[#B34D07] hover:underline">
-            {e.texto}
+            <TS>{e.texto}</TS>
           </LocalizedClientLink>
         ))}
         <LocalizedClientLink href="/cotizar" className="ml-auto rounded-full bg-[#142033] px-3.5 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[#1E2E47]">
-          Cotizar un trabajo
+          <TS>Cotizar un trabajo</TS>
         </LocalizedClientLink>
       </div>
     </div>
@@ -306,14 +307,14 @@ const COMUNIDAD = [
 const MenuComunidad = () => (
   <div className="group relative h-full flex items-center shrink-0">
     <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
-      Comunidad
+      <TS>Comunidad</TS>
       <Flecha />
     </LocalizedClientLink>
     <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[300px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
       {COMUNIDAD.map((c) => (
         <LocalizedClientLink key={c.href} href={c.href} className="block rounded-[8px] px-3 py-2.5 hover:bg-[#FAF6EF]">
-          <span className="block text-[13.5px] font-bold text-[#1B1B18]">{c.titulo}</span>
-          <span className="block text-[12.5px] text-[#6B6A63]">{c.texto}</span>
+          <span className="block text-[13.5px] font-bold text-[#1B1B18]"><TS>{c.titulo}</TS></span>
+          <span className="block text-[12.5px] text-[#6B6A63]"><TS>{c.texto}</TS></span>
         </LocalizedClientLink>
       ))}
     </div>
@@ -340,7 +341,7 @@ export const BarraNavegacion = ({
         <MegaCategorias raices={raices} tienda={tienda} />
         <MenuFabricacion />
         <MenuHerramientas />
-        <LocalizedClientLink href="/talleres" className={ENLACE}>Talleres</LocalizedClientLink>
+        <LocalizedClientLink href="/talleres" className={ENLACE}><TS>Talleres</TS></LocalizedClientLink>
         <MenuComunidad />
         <span className="flex-1" />
         {/* Desde xl: entre 1024 y 1280 px no cabe (y ya está en Fabricación) */}
@@ -348,13 +349,13 @@ export const BarraNavegacion = ({
           href="/cotizar"
           className="hidden xl:inline-block shrink-0 border border-white/40 hover:bg-white/10 text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
         >
-          Cotizar un trabajo
+          <TS>Cotizar un trabajo</TS>
         </LocalizedClientLink>
         <LocalizedClientLink
           href="/talleres/unete"
           className="shrink-0 bg-[#C2560A] hover:bg-[#A84A08] text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
         >
-          Vende con nosotros
+          <TS>Vende con nosotros</TS>
         </LocalizedClientLink>
       </nav>
     </>
