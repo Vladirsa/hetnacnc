@@ -9,6 +9,9 @@ import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
 
 export type ResultadoLamina = { dibujo: Dibujo; ancho: number; alto: number; avisos: string[]; errores: string[]; datos: [string, string][] }
 
+/** Tope de medidas (mm): una cifra absurda congelaría la pestaña. */
+const MAX_MM = 10000
+const fuera = (...v: number[]) => v.some((x) => !(Math.abs(x) <= MAX_MM))
 const vacio = (e: string): ResultadoLamina => ({ dibujo: { trazos: [], avisos: [], unidades: "mm" }, ancho: 0, alto: 0, avisos: [], errores: [e], datos: [] })
 const r1 = (x: number) => (Math.round(x * 10) / 10).toLocaleString("es-MX")
 function encuadrar(t: Trazo[], datos: [string, string][], avisos: string[] = []): ResultadoLamina {
@@ -21,6 +24,7 @@ function encuadrar(t: Trazo[], datos: [string, string][], avisos: string[] = [])
 export type OpcionesCono = { mayor: number; menor: number; alto: number; espesor: number; partes: number }
 
 export function desarrolloCono(o: OpcionesCono): ResultadoLamina {
+  if (fuera(o.mayor, o.menor, o.alto, o.espesor)) return vacio("Las medidas pasan de 10 m: revísalas.")
   const e = Math.max(0, o.espesor || 0)
   const D = o.mayor - e, d = Math.max(0, o.menor - e) // diámetros a la fibra media
   if (!(D > 0) || !(o.alto > 0)) return vacio("Pon el diámetro mayor y el alto.")
@@ -35,7 +39,7 @@ export function desarrolloCono(o: OpcionesCono): ResultadoLamina {
   for (let k = 0; k < n; k++) {
     // cada parte se dibuja aparte, desplazada para que no se encimen
     const a0 = -paso / 2, pts: P[] = []
-    const seg = Math.max(16, Math.ceil((paso * Rg) / 3))
+    const seg = Math.min(2000, Math.max(16, Math.ceil((paso * Rg) / 3)))
     for (let i = 0; i <= seg; i++) {
       const a = a0 + (paso * i) / seg
       pts.push([Rg * Math.cos(a), Rg * Math.sin(a)])
@@ -66,6 +70,7 @@ const dist = (a: V3, b: V3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
  * lado de enfrente (lado de "ancho" en y negativa).
  */
 export function desarrolloTransicion(o: OpcionesTransicion): ResultadoLamina {
+  if (fuera(o.ancho, o.fondo, o.diametro, o.alto, o.espesor)) return vacio("Las medidas pasan de 10 m: revísalas.")
   const e = Math.max(0, o.espesor || 0)
   const A = o.ancho - e, B = o.fondo - e, R = (o.diametro - e) / 2, H = o.alto
   if (!(A > 0 && B > 0 && R > 0 && H > 0)) return vacio("Pon las medidas del rectángulo, el diámetro y el alto.")
@@ -146,6 +151,7 @@ export type OpcionesBoca = { tubo: number; principal: number; angulo: number; la
  * `principal`) con un ángulo entre ejes de `angulo` grados (90 = en T).
  */
 export function bocaDePescado(o: OpcionesBoca): ResultadoLamina {
+  if (fuera(o.tubo, o.principal, o.largo, o.espesor)) return vacio("Las medidas pasan de 10 m: revísalas.")
   const r = o.tubo / 2, Rr = o.principal / 2, a = (Math.max(15, Math.min(90, o.angulo || 90)) * Math.PI) / 180
   if (!(r > 0 && Rr > 0)) return vacio("Pon los diámetros de los dos tubos.")
   if (r > Rr + 1e-9) return vacio("El tubo que llega no puede ser más grueso que el principal.")

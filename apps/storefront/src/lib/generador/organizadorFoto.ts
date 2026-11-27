@@ -120,7 +120,7 @@ export function hacerOrganizador(herramientas: P[][], o: OpcionesOrganizador): R
   const vacio = (e: string): ResultadoOrganizador => ({ dibujo: { trazos: [], avisos: [], unidades: "mm" }, malla: { tris: [], avisos: [] }, ancho: 0, alto: 0, piezas: 0, avisos: [], errores: [e] })
   if (!herramientas.length) return vacio("No encontramos herramientas sobre la hoja: que sean más oscuras que el papel y que la foto tenga buena luz.")
   const avisos: string[] = []
-  let huecos = desplazar(herramientas, Math.max(0, o.holgura), MM)
+  let huecos = desplazar(herramientas, Math.min(20, Math.max(0, o.holgura || 0)), MM)
   const exteriores = huecos.filter((p) => areaSigno(p) > 0)
   if (o.dedos) {
     // un círculo de 22 mm en el lado derecho de cada herramienta, a media altura
@@ -134,7 +134,7 @@ export function hacerOrganizador(herramientas: P[][], o: OpcionesOrganizador): R
   }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
   for (const p of huecos) for (const [x, y] of p) (x0 = Math.min(x0, x)), (y0 = Math.min(y0, y)), (x1 = Math.max(x1, x)), (y1 = Math.max(y1, y))
-  const M = Math.max(3, o.margen)
+  const M = Math.min(100, Math.max(3, o.margen || 0))
   const W = x1 - x0 + 2 * M, H = y1 - y0 + 2 * M
   const mover = (c: P[][]) => c.map((p) => p.map(([x, y]) => [x - x0 + M, y - y0 + M] as P))
   const huecosEn = mover(huecos)

@@ -32,8 +32,15 @@ export function GeneradorIncrustacion({ cabecera }: { cabecera?: React.ReactNode
   const [errorArchivo, setErrorArchivo] = useState("")
   const { fuente, error } = useFuente(letra, !dibujo)
 
-  const forma = useMemo(() => (dibujo ? dibujo.forma : fuente && texto.trim() ? textoAForma(fuente, texto.trim(), numero(alto) || 60) : []), [dibujo, fuente, texto, alto])
-  const r = useMemo(() => hacerIncrustacion(forma, { fresa: numero(fresa) || 0, holgura: numero(holgura) || 0, profundidad: numero(profundidad) || FABRICA.profundidad }), [forma, fresa, holgura, profundidad])
+  const forma = useMemo(() => (dibujo ? dibujo.forma : fuente && texto.trim() ? textoAForma(fuente, texto.trim(), Math.min(1000, Math.max(5, numero(alto) || 60))) : []), [dibujo, fuente, texto, alto])
+  const r = useMemo(() => {
+    try {
+      return hacerIncrustacion(forma, { fresa: Math.min(25, Math.max(0, numero(fresa) || 0)), holgura: numero(holgura) || 0, profundidad: numero(profundidad) || FABRICA.profundidad })
+    } catch {
+      // p. ej. un dibujo subido con coordenadas fuera de rango
+      return { dibujo: { trazos: [], avisos: [], unidades: "mm" }, ancho: 0, alto: 0, avisos: [], errores: ["No se pudo armar la incrustación con ese dibujo: revisa que esté en milímetros y no sea enorme."] }
+    }
+  }, [forma, fresa, holgura, profundidad])
 
   const subir = async (f: File | undefined) => {
     setErrorArchivo("")

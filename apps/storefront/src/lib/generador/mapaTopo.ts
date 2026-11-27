@@ -100,7 +100,8 @@ export function piezasMapa(alturas: Float32Array, w: number, h: number, o: Opcio
   capas.forEach((c, i) => {
     if (!c.length) return
     const siguiente = capas[i + 1] || []
-    grupos.push([...c.map((pts) => ({ pts, cerrado: true, capa: "corte" })), ...siguiente.map((pts) => ({ pts, cerrado: true, capa: "marcar" }))])
+    // corte en rojo y guía en azul: en el SVG/PDF quedan en capas distintas (la guía se raya, no se corta)
+    grupos.push([...c.map((pts) => ({ pts, cerrado: true, capa: "corte", color: "#FF0000" })), ...siguiente.map((pts) => ({ pts, cerrado: true, capa: "marcar", color: "#0000FF" }))])
   })
   const vacias = capas.filter((c) => !c.length).length
   if (vacias) avisos.push(`${vacias} capas quedan vacías: usa menos capas.`)

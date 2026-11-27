@@ -3,7 +3,7 @@
 // Mapa topográfico por capas (2D Studio · Decoración). El navegador baja los
 // mosaicos de alturas (imágenes públicas) y el motor (lib/generador/mapaTopo.ts)
 // saca una pieza por capa.
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
@@ -22,6 +22,8 @@ const imagen = (url: string) =>
     i.crossOrigin = "anonymous"
     i.onload = () => ok(i)
     i.onerror = () => mal(new Error("No se pudieron bajar las alturas. Revisa tu conexión."))
+    // un mosaico que no contesta no deja el botón en "Bajando…" para siempre
+    setTimeout(() => mal(new Error("El servidor de alturas tardó mucho. Intenta de nuevo.")), 20000)
     i.src = url
   })
 
@@ -62,18 +64,22 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
   const [alturas, setAlturas] = useState<{ alt: Float32Array; w: number; h: number } | null>(null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState("")
+  const carga = useRef(0)
 
   const cargar = async () => {
     const la = numero(lat), lo = numero(lon), k = numero(km)
     if (!(Math.abs(la) <= 84 && Math.abs(lo) <= 180 && k >= 1 && k <= 300)) return setError("Revisa la latitud, la longitud y el ancho (1 a 300 km).")
     setError("")
     setCargando(true)
+    // si mientras tanto piden otro lugar, esta carga ya no cuenta
+    const n = ++carga.current
     try {
-      setAlturas(await bajarAlturas(la, lo, k))
+      const a = await bajarAlturas(la, lo, k)
+      if (n === carga.current) setAlturas(a)
     } catch (e) {
-      setError((e as Error).message)
+      if (n === carga.current) setError((e as Error).message)
     } finally {
-      setCargando(false)
+      if (n === carga.current) setCargando(false)
     }
   }
   const r = useMemo(() => (alturas ? piezasMapa(alturas.alt, alturas.w, alturas.h, { capas: numero(capas) || 10, ancho: numero(ancho) || 300, hoja: HOJAS[hoja], invertir }) : null), [alturas, capas, ancho, hoja, invertir])
@@ -84,7 +90,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       <Seccion titulo="Lugar" nota="Escoge uno o pega las coordenadas de Google Maps (clic derecho en el mapa).">
         <div className="grid grid-cols-2 gap-1.5">
           {LUGARES.map((l) => (
-            <button key={l.nombre} type="button" onClick={() => (setLat(String(l.lat)), setLon(String(l.lon)), setKm(String(l.km)), setAlturas(null))} className="rounded-[8px] bg-[#1C2431] px-2 py-1.5 text-left text-[11.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
+            <button key={l.nombre} type="button" onClick={() => (carga.current++, setCargando(false), setLat(String(l.lat)), setLon(String(l.lon)), setKm(String(l.km)), setAlturas(null))} className="rounded-[8px] bg-[#1C2431] px-2 py-1.5 text-left text-[11.5px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
               {l.nombre}
             </button>
           ))}

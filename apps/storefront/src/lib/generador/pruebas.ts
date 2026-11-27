@@ -62,14 +62,18 @@ export function pruebaAjuste(espesor: number, paso: number, rotular: Rotulador |
 }
 
 // ── Matriz de material ─────────────────────────────────────────────────────
-// Colores de capas de LightBurn (00 negro, 01 azul, 02 rojo, 03 verde…): al
-// importar el SVG cada cuadro cae en su capa y se le pone su potencia y velocidad.
-const CAPAS_LB = [
-  "#0000FF", "#FF0000", "#00E000", "#D0D000", "#FF8000", "#00E0E0", "#FF00FF", "#B4B4B4", "#0000A0", "#A00000",
-  "#00A000", "#A0A000", "#C08000", "#00A0FF", "#A000A0", "#808080", "#7D87B9", "#BB7784", "#4A6FE3", "#D33F6A",
-  "#8CD78C", "#F0B98D", "#F6C4E1", "#FA9ED4", "#500A78", "#B45A00", "#004754", "#86FA88", "#FFDB66", "#000000",
+// Colores de capas de LightBurn (00 negro, 01 azul, 02 rojo…): al importar el
+// SVG cada cuadro cae en su capa y se le pone su potencia y velocidad. La 00
+// (negro) queda para los rótulos y la 02 (rojo) para el corte del marco, así
+// que los cuadros usan las demás.
+const PALETA_LB = [
+  "#000000", "#0000FF", "#FF0000", "#00E000", "#D0D000", "#FF8000", "#00E0E0", "#FF00FF", "#B4B4B4", "#0000A0",
+  "#A00000", "#00A000", "#A0A000", "#C08000", "#00A0FF", "#A000A0", "#808080", "#7D87B9", "#BB7784", "#4A6FE3",
+  "#D33F6A", "#8CD78C", "#F0B98D", "#F6C4E1", "#FA9ED4", "#500A78", "#B45A00", "#004754", "#86FA88", "#FFDB66",
 ]
-export const MAX_CELDAS = CAPAS_LB.length
+const ROTULOS = 0, MARCO = 2
+const CAPAS_CUADROS = PALETA_LB.map((_, i) => i).filter((i) => i !== ROTULOS && i !== MARCO)
+export const MAX_CELDAS = CAPAS_CUADROS.length
 
 export type OpcionesMatriz = { potencias: number[]; velocidades: number[]; lado: number; unidad: string }
 
@@ -84,17 +88,20 @@ export function matrizMaterial(o: OpcionesMatriz, rotular: Rotulador | null): Re
     t.push(...rotulo(rotular, `${pot}%`, 3, IZQ / 2, ABAJO + i * (L + G) + L / 2))
     V.forEach((vel, j) => {
       const n = i * V.length + j
-      const color = CAPAS_LB[n % CAPAS_LB.length]
+      const capa = CAPAS_CUADROS[n % CAPAS_CUADROS.length]
+      const color = PALETA_LB[capa]
       const x0 = IZQ + j * (L + G), y0 = ABAJO + i * (L + G)
       t.push({ pts: rect(x0, y0, x0 + L, y0 + L), cerrado: true, capa: `P${pot}-V${vel}`, color })
-      leyenda.push(`${String(n).padStart(2, "0")} (${color}),${pot},${vel}`)
+      leyenda.push(`${String(capa).padStart(2, "0")} (${color}),${pot},${vel}`)
     })
   })
   V.forEach((vel, j) => t.push(...rotulo(rotular, String(vel), 2.6, IZQ + j * (L + G) + L / 2, ABAJO / 2)))
   const W = IZQ + V.length * (L + G) - G + 4, H = ABAJO + P_.length * (L + G) - G + 8
   t.push(...rotulo(rotular, `POTENCIA % / VELOCIDAD ${o.unidad.toUpperCase()}`, 3, W / 2, H - 3))
-  t.unshift({ pts: rect(0, 0, W, H), cerrado: true, capa: "corte" })
-  return { dibujo: { trazos: t, avisos: [], unidades: "mm" }, ancho: W, alto: H, avisos, leyenda }
+  t.unshift({ pts: rect(0, 0, W, H), cerrado: true, capa: "corte", color: PALETA_LB[MARCO] })
+  // los rótulos en la capa 00 (negro): no se mezclan con ningún cuadro
+  const conColor = t.map((x) => (x.color ? x : { ...x, color: PALETA_LB[ROTULOS] }))
+  return { dibujo: { trazos: conColor, avisos: [], unidades: "mm" }, ancho: W, alto: H, avisos, leyenda: [...leyenda, `${String(ROTULOS).padStart(2, "0")} (${PALETA_LB[ROTULOS]}),rótulos (grabado),`, `${String(MARCO).padStart(2, "0")} (${PALETA_LB[MARCO]}),marco (corte),`] }
 }
 
 /** "10, 20, 30" o "10-100/10" → números (máx. 10). */
