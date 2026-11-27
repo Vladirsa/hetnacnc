@@ -14,7 +14,7 @@ import { curvasDeMascara } from "@/lib/generador/trazado"
 import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
 export const MOSAICOS = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
-export const CREDITO = "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre."
+export const CREDITO = "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA."
 
 /** Lugares de México para empezar (lat, lon, ancho en km). */
 export const LUGARES: { nombre: string; lat: number; lon: number; km: number }[] = [
@@ -128,6 +128,8 @@ export const OPCIONES_MAPA_3D = { base: 2, grosorCapa: 2, cumbre: 0.3 }
  * bien). Dos partes para imprimir a dos colores: base y faldas, y la cumbre.
  */
 export function mallaMapa(alturas: Float32Array, w: number, h: number, o: OpcionesMapa3D): { malla: Malla; alto: number; errores: string[] } {
+  // en profundidad las capas crecen hacia arriba (pirámide de cabeza): para impresora sólo altura
+  if (o.invertir) return { malla: { tris: [], avisos: [] }, alto: 0, errores: ["El STL para impresora sale sólo con alturas (apaga «Profundidad»)."] }
   const c = capasMapa(alturas, w, h, o)
   if ("error" in c) return { malla: { tris: [], avisos: [] }, alto: 0, errores: [c.error!] }
   const base = Math.max(0.6, Math.min(10, o.base)), g = Math.max(0.2, Math.min(10, o.grosorCapa))

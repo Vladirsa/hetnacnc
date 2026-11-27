@@ -3,7 +3,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 import { cajaDe } from "./contornos"
-import { OPCIONES_MAPA_3D, alturaTerrarium, mallaMapa, piezasMapa, planMosaicos } from "./mapaTopo"
+import { areaPts } from "./contornos"
+import { OPCIONES_MAPA_3D, alturaTerrarium, capasMapa, mallaMapa, piezasMapa, planMosaicos } from "./mapaTopo"
 import { volumenMalla } from "./vectores"
 
 test("Terrarium: 32768 de base", () => {
@@ -70,9 +71,15 @@ test("mapa para imprimir: capas apiladas, volumen real y dos colores", () => {
   assert.ok(Math.abs(zmin) < 1e-6 && Math.abs(zmax - r.alto) < 1e-6, `de ${zmin} a ${zmax}`)
   assert.ok(Math.abs(r.alto - (OPCIONES_MAPA_3D.base + 6 * OPCIONES_MAPA_3D.grosorCapa)) < 1e-9)
   // volumen: la base llena más cada capa en su grosor (menos que un bloque macizo de la altura total)
-  const cm3 = (mm3: number) => mm3 / 1000
+  // volumen: la base llena más el área de cada capa por su grosor (de ahí salen los gramos y el precio)
+  const c = capasMapa(cerro(40, 30, 300), W_, H_, { capas: 6, ancho: 120, invertir: false })
+  assert.ok(!("error" in c))
+  const area = (cs: number[][][]) => Math.abs(cs.reduce((s, p) => s + areaPts(p as [number, number][]), 0))
+  const esperado = (area(c.capas[0]) * OPCIONES_MAPA_3D.base + c.capas.slice(1).reduce((s, cs) => s + area(cs) * OPCIONES_MAPA_3D.grosorCapa, 0)) / 1000
   const v = volumenMalla(r.malla.tris) // cm³
-  assert.ok(v > cm3(120 * 90 * OPCIONES_MAPA_3D.base) && v < cm3(120 * 90 * r.alto) * 0.6, `volumen ${v} cm³`)
+  assert.ok(Math.abs(v - esperado) / esperado < 0.02, `volumen ${v} cm³, esperado ${esperado}`)
+  // en profundidad no sale (sería una pirámide de cabeza)
+  assert.match(mallaMapa(cerro(40, 30, 300), W_, H_, { capas: 6, ancho: 120, invertir: true, ...OPCIONES_MAPA_3D }).errores[0], /alturas/)
 })
 
 test("mapas del catálogo: sus alturas guardadas, 2 colores y liga que carga el lugar", async () => {

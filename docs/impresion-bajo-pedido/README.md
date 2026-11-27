@@ -41,7 +41,7 @@ Diseños propios de HETNA (hechos con el Texturizador, con los Cortadores de gal
 - Se arman con `mallaMapa` (`lib/generador/mapaTopo.ts`): una base de 2 mm y 10 capas de 2 mm, cada una sólo en su grosor, de 120 × 120 mm.
 - Van a dos colores: «Base y montaña» y «Cumbre» (las capas de arriba).
 - Las alturas están guardadas en `alturas/<handle>.json`, así que el generador no usa la red. Para un lugar nuevo, súmalo y corre `npx tsx scripts/alturas-mapas.ts` en `apps/storefront`.
-- El crédito de las alturas (Mapzen Terrain Tiles, datos SRTM/NASA y otros) sale en la descripción de la ficha.
+- El crédito de las alturas sale en la descripción de la ficha (`CREDITO` en `mapaTopo.ts`). Para México lo exige INEGI (Relieve continental, 2016).
 - "Modificar" abre `/disenar/mapa-topografico?lat=…&lon=…&km=…`, que carga el lugar solo. Ahí el cliente baja el STL para su impresora o las capas en DXF para láser.
 
 ## Publicar o actualizar el catálogo

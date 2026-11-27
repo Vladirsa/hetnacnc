@@ -2310,7 +2310,7 @@
   {
     "handle": "mapa-pico-de-orizaba-impreso-3d",
     "titulo": "Mapa topográfico del Pico de Orizaba",
-    "resumen": "El volcán más alto de México en 10 capas, con el relieve real. Pídelo a dos colores para que la cumbre se vea nevada.",
+    "resumen": "El volcán más alto de México en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, la cumbre sale de otro color, como nevada.",
     "pieza": "mapa",
     "etiquetas": [
       "mapa topográfico",
@@ -2347,7 +2347,7 @@
       22
     ],
     "capas": 10,
-    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
       "Cumbre"
@@ -2356,7 +2356,7 @@
   {
     "handle": "mapa-popocatepetl-iztaccihuatl-impreso-3d",
     "titulo": "Mapa topográfico del Popocatépetl e Iztaccíhuatl",
-    "resumen": "Los dos volcanes juntos en 10 capas, con el relieve real. A dos colores, las cumbres salen de otro color.",
+    "resumen": "Los dos volcanes juntos en 10 capas, con el relieve real. Con los talleres que imprimen a dos colores, las cumbres salen de otro color.",
     "pieza": "mapa",
     "etiquetas": [
       "mapa topográfico",
@@ -2393,7 +2393,7 @@
       22
     ],
     "capas": 10,
-    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
       "Cumbre"
@@ -2439,7 +2439,7 @@
       22
     ],
     "capas": 10,
-    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
       "Cumbre"
@@ -2484,7 +2484,7 @@
       22
     ],
     "capas": 10,
-    "credito": "Alturas: Mapzen Terrain Tiles (AWS), datos SRTM/NASA y otros; uso libre.",
+    "credito": "Alturas: Mapzen Terrain Tiles (AWS). Datos de México: INEGI, Relieve continental, 2016; SRTM y GMTED2010 cortesía del U.S. Geological Survey; ETOPO1 de NOAA.",
     "grupos_color": [
       "Base y montaña",
       "Cumbre"

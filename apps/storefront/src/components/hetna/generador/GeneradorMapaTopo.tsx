@@ -151,8 +151,11 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       <Interruptor etiqueta="Profundidad (lagos y mar) en vez de altura" activo={invertir} cambiar={setInvertir} />
       {error && <Aviso tipo="error">{error}</Aviso>}
       {r && <span className="text-[12px] text-[#F2D29B]">{r.niveles.length} capas de {Math.round(r.niveles[0] || 0)} a {Math.round(r.niveles[r.niveles.length - 1] || 0)} m · {r.hojas} {r.hojas === 1 ? "hoja" : "hojas"}</span>}
-      {r && !r.errores.length && (
-        <Boton onClick={bajarSTL}>Bajar STL para impresora 3D</Boton>
+      {r && !r.errores.length && !invertir && (
+        <>
+          <Boton onClick={bajarSTL}>Bajar STL para impresora 3D</Boton>
+          {(numero(ancho) || 300) > 250 && <Aviso tipo="info">El STL sale de {numero(ancho) || 300} mm: para la mayoría de las impresoras pon 250 mm o menos en «Tamaño del mapa».</Aviso>}
+        </>
       )}
       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Para impresora 3D sale en una sola pieza: base de {OPCIONES_MAPA_3D.base} mm y capas de {OPCIONES_MAPA_3D.grosorCapa} mm (la cumbre puede ir de otro color).</span>
       <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada pieza trae rayada (línea punteada) la silueta de la que va encima: pégalas en orden sobre la base. {CREDITO}</span>
