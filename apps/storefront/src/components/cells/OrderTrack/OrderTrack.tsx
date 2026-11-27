@@ -45,12 +45,12 @@ export const OrderTrack = async ({ order }: { order: any }) => {
         {envios.map((e) => {
           const contenido = (
             <Card className="px-4 hover:bg-secondary/30">
-              {e.paqueteria && <span className="font-semibold">{e.paqueteria} · </span>}
+              {e.paqueteria && <span className="font-semibold"><TS>{e.paqueteria}</TS> · </span>}
               <span className="text-secondary"><TS>Guía</TS> </span>
-              <span className="font-semibold">{e.guia}</span>
+              <span className="font-semibold"><TS>{e.guia}</TS></span>
               {(e.estado || e.entregado) && (
                 <span className="ml-2 text-secondary">
-                  — {e.entregado ? "Entregado" : ESTADO[e.estado as string] || e.estado}
+                  — <TS>{e.entregado ? "Entregado" : ESTADO[e.estado as string] || e.estado}</TS>
                 </span>
               )}
               {e.url && <span className="ml-2 text-[#B34D07] underline"><TS>Rastrear →</TS></span>}
@@ -60,7 +60,7 @@ export const OrderTrack = async ({ order }: { order: any }) => {
             <li key={e.guia}>
               {e.url ? (
                 <a href={e.url} target="_blank" rel="noopener noreferrer">
-                  {contenido}
+                  <TS>{contenido}</TS>
                 </a>
               ) : (
                 contenido
