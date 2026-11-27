@@ -3,6 +3,7 @@
 // Carrusel de las herramientas de un estudio (3D o 2D) en la portada de
 // /disenar. Desliza con el dedo en el celular y con flechas en la computadora;
 // es scroll nativo con "snap", sin librerías, para que cargue rápido.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRef } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -32,12 +33,12 @@ export function CarruselEstudio({ id, etiqueta, titulo, texto, abrir, herramient
       <div className="flex flex-wrap items-end justify-between gap-4 px-4 lg:px-8">
         <div className="max-w-[720px]">
           <span className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: acento }}>
-            {etiqueta}
+            <T>{etiqueta}</T>
           </span>
           <h2 id={`${id}-titulo`} className="m-0 mt-1.5 text-[26px] font-extrabold leading-tight text-white lg:text-[34px]">
-            {titulo}
+            <T>{titulo}</T>
           </h2>
-          <p className="m-0 mt-2 text-[15px] leading-relaxed text-white/65">{texto}</p>
+          <p className="m-0 mt-2 text-[15px] leading-relaxed text-white/65"><T>{texto}</T></p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -61,7 +62,7 @@ export function CarruselEstudio({ id, etiqueta, titulo, texto, abrir, herramient
             className="rounded-[10px] px-4 py-2.5 text-[14px] font-extrabold text-white hover:brightness-110"
             style={{ background: acento }}
           >
-            Abrir el estudio →
+            <T>Abrir el estudio →</T>
           </LocalizedClientLink>
         </div>
       </div>
@@ -96,9 +97,9 @@ export function CarruselEstudio({ id, etiqueta, titulo, texto, abrir, herramient
               </span>
               <span className="flex flex-1 flex-col p-4">
                 <span className="text-[16px] font-bold leading-tight text-white">{h.nombre}</span>
-                <span className="mt-1.5 flex-1 text-[13.5px] leading-snug text-white/60">{h.texto}</span>
+                <span className="mt-1.5 flex-1 text-[13.5px] leading-snug text-white/60"><T>{h.texto}</T></span>
                 <span className="mt-3 text-[13px] font-bold" style={{ color: acento }}>
-                  Abrir →
+                  <T>Abrir →</T>
                 </span>
               </span>
             </LocalizedClientLink>
