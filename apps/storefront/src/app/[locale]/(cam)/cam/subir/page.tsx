@@ -1,8 +1,9 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 
 import { EstudioCam2D } from "@/components/hetna/cam/EstudioCam2D"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/cam/subir" },
   title: "CAM Studio 2D: de tu DXF a G-code en un minuto",
   description:
@@ -14,4 +15,9 @@ export const metadata: Metadata = {
 // de perderlo. La explicación de qué hace y qué no vive en /laboratorio-cam.
 export default function CamStudio2D() {
   return <EstudioCam2D />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
