@@ -5,6 +5,7 @@
 // concreto, jabón o velas: de dos partes (con llaves, bebedero y
 // respiraderos), abierto, o la caja para colar silicona. El motor está en
 // lib/generador/moldes.ts. Tu archivo no sale del navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
@@ -58,7 +59,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Numero = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex min-w-0 flex-col gap-1">
-    <span className="text-[12px] font-semibold text-[#6B6A63]">{etiqueta}</span>
+    <span className="text-[12px] font-semibold text-[#6B6A63]"><T>{etiqueta}</T></span>
     <span className="flex items-center rounded-[10px] border border-[#E7E4DC] bg-white focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 bg-transparent px-2.5 py-2 text-[15px] text-[#1B1B18] outline-none" />
       <span className="pr-2.5 text-[12px] text-[#9A978C]">{sufijo}</span>
@@ -69,7 +70,7 @@ const Numero = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string;
 const Casilla = ({ etiqueta, activa, cambiar }: { etiqueta: string; activa: boolean; cambiar: (v: boolean) => void }) => (
   <label className="flex items-center gap-2 text-[13.5px] text-[#1B1B18]">
     <input type="checkbox" checked={activa} onChange={(e) => cambiar(e.target.checked)} className="h-4 w-4 accent-[#C2560A]" />
-    {etiqueta}
+    <T>{etiqueta}</T>
   </label>
 )
 
@@ -230,10 +231,10 @@ export function GeneradorMoldes() {
   return (
     <main className="flex-1 bg-[#FAF9F6]">
       <section className="px-4 pb-4 pt-6 lg:px-8">
-        <span className="inline-block rounded-full bg-[#E6F4EC] px-3 py-1 text-[12px] font-bold tracking-wide text-[#16794F]">GRATIS · SIN MARCA DE AGUA</span>
-        <h1 className="m-0 mt-2 font-display text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">Generador de moldes 3D</h1>
+        <span className="inline-block rounded-full bg-[#E6F4EC] px-3 py-1 text-[12px] font-bold tracking-wide text-[#16794F]"><T>GRATIS · SIN MARCA DE AGUA</T></span>
+        <h1 className="m-0 mt-2 font-display text-[26px] font-bold text-[#1B1B18] lg:text-[34px]"><T>Generador de moldes 3D</T></h1>
         <p className="m-0 mt-1 max-w-[760px] text-[15px] text-[#6B6A63]">
-          Sube tu pieza en STL, OBJ o STEP y sale el <strong className="text-[#1B1B18]">molde listo para imprimir</strong>: de dos partes con llaves, bebedero y respiraderos, abierto, o la caja para colar silicona. Para resina, yeso, concreto, jabón o velas. Tu archivo no sale de tu navegador.
+          <T>Sube tu pieza en STL, OBJ o STEP y sale el</T> <strong className="text-[#1B1B18]"><T>molde listo para imprimir</T></strong><T>: de dos partes con llaves, bebedero y respiraderos, abierto, o la caja para colar silicona. Para resina, yeso, concreto, jabón o velas. Tu archivo no sale de tu navegador.</T>
         </p>
       </section>
 
@@ -241,14 +242,14 @@ export function GeneradorMoldes() {
         <section className="flex flex-col gap-4 rounded-[14px] border border-[#E7E4DC] bg-white p-4 lg:p-5">
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[12px] border-2 border-dashed border-[#E7E4DC] p-5 text-center hover:border-[#C2560A] hover:bg-[#FFF8F1]">
             <span className="text-[15px] font-bold text-[#1B1B18]">{malla ? `Cambiar pieza (${nombre})` : "Sube tu pieza"}</span>
-            <span className="text-[12.5px] text-[#6B6A63]">STL, OBJ o STEP · hasta 60 MB</span>
+            <span className="text-[12.5px] text-[#6B6A63]"><T>STL, OBJ o STEP · hasta 60 MB</T></span>
             <input type="file" accept=".stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {cargando && <p className="m-0 text-[13px] text-[#C2560A]">{cargando}</p>}
           {error && <p className="m-0 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[13px] text-[#8A1C1C]">{error}</p>}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">1. Tipo de molde</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>1. Tipo de molde</T></span>
             <div className="flex flex-wrap gap-2">
               {TIPOS.map((t) => (
                 <Opcion key={t.id} activa={tipo === t.id} onClick={() => cambiarTipo(t.id)}>
@@ -256,11 +257,11 @@ export function GeneradorMoldes() {
                 </Opcion>
               ))}
             </div>
-            <span className="text-[12.5px] text-[#6B6A63]">{tipoActual.nota}</span>
+            <span className="text-[12.5px] text-[#6B6A63]"><T>{tipoActual.nota}</T></span>
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">2. Qué lado va hacia arriba</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>2. Qué lado va hacia arriba</T></span>
             <div className="flex flex-wrap gap-1.5">
               {ARRIBAS.map((a) => (
                 <Opcion key={a.id} activa={arriba === a.id} onClick={() => { arribaElegido.current = true; setArriba(a.id) }}>
@@ -271,7 +272,7 @@ export function GeneradorMoldes() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">3. Medidas</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>3. Medidas</T></span>
             <div className="grid grid-cols-2 gap-2">
               <Numero etiqueta={tipo === "caja_silicona" ? "Grosor de la caja" : "Pared del molde"} valor={pared} cambiar={setPared} />
               {tipo === "caja_silicona" && <Numero etiqueta="Silicona alrededor" valor={espacio} cambiar={setEspacio} />}
@@ -279,17 +280,17 @@ export function GeneradorMoldes() {
             {tipo === "dos_partes" && (
               <label className="flex flex-col gap-1 text-[13px] text-[#1B1B18]">
                 <span>
-                  Dónde se parte: <b>{particion}%</b> de la altura de la pieza
+                  <T>Dónde se parte:</T> <b>{particion}%</b> <T>de la altura de la pieza</T>
                 </span>
                 <input type="range" min={5} max={95} value={particion} onChange={(e) => setParticion(Number(e.target.value))} className="accent-[#C2560A]" />
-                <span className="text-[12px] text-[#6B6A63]">Ponlo en la parte más ancha de la pieza para que salga sin atorarse.</span>
+                <span className="text-[12px] text-[#6B6A63]"><T>Ponlo en la parte más ancha de la pieza para que salga sin atorarse.</T></span>
               </label>
             )}
           </div>
 
           {tipo === "abierto" && (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">4. Pieza hueca</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>4. Pieza hueca</T></span>
               <Casilla
                 etiqueta="Que salga hueca (macetas, vasos, lámparas de cemento)"
                 activa={hueco}
@@ -301,7 +302,7 @@ export function GeneradorMoldes() {
               />
               {hueco && (
                 <>
-                  <span className="text-[12px] text-[#6B6A63]">Sale un núcleo con tapa que se mete por la boca. La pared queda del grosor que elijas donde la pieza es más ancha y más delgada donde se angosta. La boca de la pieza va hacia arriba y plana (paso 2). Para macetas, vasos y cajas; no para piezas con asas o salientes.</span>
+                  <span className="text-[12px] text-[#6B6A63]"><T>Sale un núcleo con tapa que se mete por la boca. La pared queda del grosor que elijas donde la pieza es más ancha y más delgada donde se angosta. La boca de la pieza va hacia arriba y plana (paso 2). Para macetas, vasos y cajas; no para piezas con asas o salientes.</T></span>
                   <Casilla etiqueta="Agujero de drenaje en el fondo" activa={drenaje} cambiar={setDrenaje} />
                   <div className="grid grid-cols-2 gap-2">
                     <Numero etiqueta="Pared de la pieza" valor={grosorHueco} cambiar={setGrosorHueco} />
@@ -314,7 +315,7 @@ export function GeneradorMoldes() {
 
           {tipo === "dos_partes" && (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">4. Para vaciar y que embone</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>4. Para vaciar y que embone</T></span>
               <Casilla etiqueta="Llaves de registro (las mitades embonan)" activa={llaves} cambiar={setLlaves} />
               <Casilla etiqueta="Bebedero con embudo" activa={bebedero} cambiar={setBebedero} />
               <Casilla etiqueta="Orejas para cerrarlo con pinzas de papelería" activa={orejas} cambiar={setOrejas} />
@@ -329,16 +330,16 @@ export function GeneradorMoldes() {
           {res && (
             <div className="flex flex-col gap-2 border-t border-[#E7E4DC] pt-3">
               <p className="m-0 text-[13.5px] text-[#1B1B18]">
-                {res.tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} ml</b>
+                {res.tipo === "caja_silicona" ? "Silicona necesaria" : "Material para vaciar"}: <b>~{res.colado} <T>ml</T></b>
               </p>
               {res.desmoldeo?.dudoso && (
                 <p className="m-0 rounded-[10px] bg-[#FFF8F1] px-3 py-2 text-[12.5px] text-[#7A4A12]" data-testid="desmoldeo">
-                  No pudimos revisar si la pieza se atora: el archivo tiene huecos o caras volteadas. Revísalo en tu programa o prueba la caja para silicona.
+                  <T>No pudimos revisar si la pieza se atora: el archivo tiene huecos o caras volteadas. Revísalo en tu programa o prueba la caja para silicona.</T>
                 </p>
               )}
               {res.desmoldeo && !res.desmoldeo.dudoso && (res.desmoldeo.atorado <= SIN_ATORAR ? (
                 <div className="rounded-[10px] bg-[#E6F4EC] px-3 py-2 text-[12.5px] text-[#16794F]" data-testid="desmoldeo">
-                  <b>✓ La pieza sale sin atorarse.</b>{" "}
+                  <b><T>✓ La pieza sale sin atorarse.</T></b>{" "}
                   {res.tipo === "dos_partes"
                     ? "Las dos mitades también se pueden maquinar en un CNC de 3 ejes desde su cara de partición (en aluminio, MDF o cera)."
                     : "El molde también se puede maquinar en un CNC de 3 ejes desde arriba (en aluminio, MDF o cera)."}
@@ -353,13 +354,13 @@ export function GeneradorMoldes() {
                 </div>
               ) : (
                 <div className="rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[12.5px] text-[#8A1C1C]" data-testid="desmoldeo">
-                  <b>⚠ Se va a atorar:</b> aprox. {Math.round(res.desmoldeo.atorado * 100)}% de la pieza no sale al abrir el molde {res.desmoldeo.nucleo
+                  <b><T>⚠ Se va a atorar:</T></b> <T>aprox.</T> {Math.round(res.desmoldeo.atorado * 100)}<T>% de la pieza no sale al abrir el molde</T> {res.desmoldeo.nucleo
                     ? "(el núcleo no sale: la boca de la pieza es más angosta que su interior; quítale lo hueco o usa la caja para silicona)."
                     : `(hay molde atrapado ${res.tipo === "dos_partes" ? "entre la pieza y la partición" : "encima de la pieza"}).`}
                   <div className="mt-2 flex flex-wrap gap-2">
                     {res.desmoldeo.particion && (
                       <button type="button" onClick={() => setParticion(res.desmoldeo!.particion!.particion)} className="rounded-[8px] bg-[#142033] px-3 py-1.5 text-[12.5px] font-semibold text-white">
-                        Partir al {res.desmoldeo.particion.particion}%{res.desmoldeo.particion.atorado > SIN_ATORAR ? ` (se atora ${Math.round(res.desmoldeo.particion.atorado * 100)}%)` : " (sale bien)"}
+                        <T>Partir al</T> {res.desmoldeo.particion.particion}%{res.desmoldeo.particion.atorado > SIN_ATORAR ? ` (se atora ${Math.round(res.desmoldeo.particion.atorado * 100)}%)` : " (sale bien)"}
                       </button>
                     )}
                     {res.desmoldeo.arriba && (
@@ -373,13 +374,13 @@ export function GeneradorMoldes() {
                         }}
                         className="rounded-[8px] bg-[#142033] px-3 py-1.5 text-[12.5px] font-semibold text-white"
                       >
-                        Girar: {ARRIBAS.find((a) => a.id === res.desmoldeo!.arriba!.arriba)?.nombre}
+                        <T>Girar:</T> {ARRIBAS.find((a) => a.id === res.desmoldeo!.arriba!.arriba)?.nombre}
                         {res.desmoldeo.arriba.particion ? ` y partir al ${res.desmoldeo.arriba.particion}%` : ""}
                         {res.desmoldeo.arriba.atorado > SIN_ATORAR ? ` (se atora ${Math.round(res.desmoldeo.arriba.atorado * 100)}%)` : " (sale bien)"}
                       </button>
                     )}
                     {!res.desmoldeo.particion && !res.desmoldeo.arriba && (
-                      <span>Ningún lado ni altura la deja salir completa: usa la caja para silicona (el molde flexible sí sale) o parte la pieza.</span>
+                      <span><T>Ningún lado ni altura la deja salir completa: usa la caja para silicona (el molde flexible sí sale) o parte la pieza.</T></span>
                     )}
                   </div>
                 </div>
@@ -391,7 +392,7 @@ export function GeneradorMoldes() {
               ))}
               <div className="flex flex-wrap gap-2">
                 <button type="button" disabled={calculando} onClick={bajarZip} className="rounded-[10px] bg-[#C2560A] disabled:opacity-50 px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#A9480A]">
-                  Descargar molde (ZIP)
+                  <T>Descargar molde (ZIP)</T>
                 </button>
                 {res.piezas.map((p) => (
                   <button
@@ -401,16 +402,16 @@ export function GeneradorMoldes() {
                     onClick={() => descargar(`${nombre}-${p.nombre}.stl`, mallaSTL(p.voltear ? volteada(p.malla) : p.malla), "model/stl")}
                     className="rounded-[10px] border border-[#E7E4DC] px-3 py-2.5 text-[13px] disabled:opacity-50 font-semibold text-[#1B1B18] hover:border-[#C2560A]"
                   >
-                    {p.nombre}.stl
+                    {p.nombre}<T>.stl</T>
                   </button>
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" disabled={calculando} onClick={fabricar} className="disabled:opacity-50 rounded-[10px] bg-[#16794F] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#12603F]">
-                  Fabrícamelo
+                  <T>Fabrícamelo</T>
                 </button>
                 <button type="button" disabled={calculando} onClick={cotizar} className="disabled:opacity-50 rounded-[10px] border border-[#E7E4DC] px-4 py-2.5 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]">
-                  Cotizar impresión
+                  <T>Cotizar impresión</T>
                 </button>
               </div>
               {aviso && <p className="m-0 text-[12.5px] text-[#8A1C1C]">{aviso}</p>}
@@ -424,13 +425,13 @@ export function GeneradorMoldes() {
             {malla ? (
               <Vista modelo={modeloVista} piezas={piezasVista} cortes={cortesVista} separar={separar} />
             ) : (
-              <div className="grid h-[460px] place-items-center rounded-[12px] bg-[#0F151E] px-6 text-center text-[14px] text-[#8A97AB]">Sube tu pieza y aquí aparece el molde en 3D.</div>
+              <div className="grid h-[460px] place-items-center rounded-[12px] bg-[#0F151E] px-6 text-center text-[14px] text-[#8A97AB]"><T>Sube tu pieza y aquí aparece el molde en 3D.</T></div>
             )}
-            {calculando && <span className="absolute left-3 top-3 rounded-full bg-[#142033] px-3 py-1 text-[12px] text-white">Armando el molde…</span>}
+            {calculando && <span className="absolute left-3 top-3 rounded-full bg-[#142033] px-3 py-1 text-[12px] text-white"><T>Armando el molde…</T></span>}
           </div>
           {piezasVista && (
             <label className="flex items-center gap-3 text-[13px] text-[#1B1B18]">
-              Separar
+              <T>Separar</T>
               <input type="range" min={0} max={80} value={separar} onChange={(e) => setSeparar(Number(e.target.value))} className="flex-1 accent-[#C2560A]" />
             </label>
           )}
@@ -438,7 +439,7 @@ export function GeneradorMoldes() {
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {res.piezas.map((p) => (
                 <li key={p.nombre} className="rounded-[12px] border border-[#E7E4DC] bg-white px-3 py-2.5 text-[13.5px] text-[#1B1B18]">
-                  <b>{p.nombre}</b> · {p.tam.join(" × ")} mm{p.voltear ? (p.cama === "tapa" ? " · se descarga volteada: la tapa va sobre la cama" : " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes") : ""}
+                  <b>{p.nombre}</b> · {p.tam.join(" × ")} <T>mm</T>{p.voltear ? (p.cama === "tapa" ? " · se descarga volteada: la tapa va sobre la cama" : " · se descarga volteada: la cara de partición va hacia arriba y la cavidad no lleva soportes") : ""}
                 </li>
               ))}
             </ul>
