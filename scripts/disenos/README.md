@@ -21,6 +21,14 @@ Genera todos y los sube al **bucket privado** en `disenos-generados/<nombre>/<no
 
 Guardarlos en Backblaze **no los publica**: para venderlos se suben con Admin → Subir diseños.
 
+## Pasarlos a la tienda (en borrador)
+
+```bash
+~/hetnacnc/scripts/disenos/subir_a_tienda.sh
+```
+
+Genera todos, los guarda en Backblaze y crea cada producto **en borrador** con el mismo camino que «Subir diseños»: archivo al bucket privado, foto realista con IA (si hay `FAL_KEY`), ficha escrita por Claude con las medidas del LEEME y oferta en la tienda HETNA. No duplica (SKU fijo `HCNC-G-<NOMBRE>`); la bisagra se salta porque ya tiene producto. Los borradores no se anuncian en redes; se anuncian solos la primera vez que los publicas.
+
 ## Agregar un diseño nuevo
 
 Agrega un `.py` a esta carpeta que escriba en el directorio actual `<nombre>.zip` y `<nombre>.png`. El script de subida toma todos los `.zip` que encuentre.
