@@ -13,6 +13,7 @@
 //
 // La casilla oculta sigue abriendo el panel con CSS; CerrarMenus la desmarca
 // al cambiar de página.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -57,7 +58,7 @@ const Rama = ({ c, nivel }: { c: NodoMenu; nivel: number }) => {
           style={{ paddingLeft: 16 + (nivel + 1) * 14 }}
           className="block py-2.5 pr-4 text-[13.5px] font-bold text-[#B34D07]"
         >
-          Ver todo en {c.n}
+          <T>Ver todo en</T> {c.n}
         </LocalizedClientLink>
         {c.c.map((h) => (
           <Rama key={h.h} c={h} nivel={nivel + 1} />
@@ -79,16 +80,16 @@ const Ligero = () => (
     <div className="grid grid-cols-3 gap-2 border-b border-[#E7E4DC] bg-[#FAF6EF] p-3">
       {ACCESOS_RAPIDOS.map((a) => (
         <LocalizedClientLink key={a.href} href={a.href} className="rounded-[10px] bg-white p-2.5 text-center shadow-sm">
-          <span className="block text-[13px] font-bold leading-tight text-[#142033]">{a.texto}</span>
+          <span className="block text-[13px] font-bold leading-tight text-[#142033]"><T>{a.texto}</T></span>
         </LocalizedClientLink>
       ))}
     </div>
-    <LocalizedClientLink href="/tienda" className={ENLACE_SIMPLE}>Tienda</LocalizedClientLink>
-    <LocalizedClientLink href="/fabricacion" className={ENLACE_SIMPLE}>Fabricación</LocalizedClientLink>
-    <LocalizedClientLink href="/herramientas-cnc" className={ENLACE_SIMPLE}>Herramientas CNC</LocalizedClientLink>
-    <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>Talleres</LocalizedClientLink>
-    <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>Foro CNC</LocalizedClientLink>
-    <LocalizedClientLink href="/servicios/aprendizaje-cnc" className={ENLACE_SIMPLE}>Academia</LocalizedClientLink>
+    <LocalizedClientLink href="/tienda" className={ENLACE_SIMPLE}><T>Tienda</T></LocalizedClientLink>
+    <LocalizedClientLink href="/fabricacion" className={ENLACE_SIMPLE}><T>Fabricación</T></LocalizedClientLink>
+    <LocalizedClientLink href="/herramientas-cnc" className={ENLACE_SIMPLE}><T>Herramientas CNC</T></LocalizedClientLink>
+    <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}><T>Talleres</T></LocalizedClientLink>
+    <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}><T>Foro CNC</T></LocalizedClientLink>
+    <LocalizedClientLink href="/servicios/aprendizaje-cnc" className={ENLACE_SIMPLE}><T>Academia</T></LocalizedClientLink>
   </div>
 )
 
@@ -98,8 +99,8 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
     <div className="grid grid-cols-3 gap-2 border-b border-[#E7E4DC] bg-[#FAF6EF] p-3">
       {ACCESOS_RAPIDOS.map((a) => (
         <LocalizedClientLink key={a.href} href={a.href} className="rounded-[10px] bg-white p-2.5 text-center shadow-sm active:bg-[#F4F1EA]">
-          <span className="block text-[13px] font-bold leading-tight text-[#142033]">{a.texto}</span>
-          {a.detalle && <span className="mt-0.5 block text-[11px] leading-tight text-[#6B6A63]">{a.detalle}</span>}
+          <span className="block text-[13px] font-bold leading-tight text-[#142033]"><T>{a.texto}</T></span>
+          {a.detalle && <span className="mt-0.5 block text-[11px] leading-tight text-[#6B6A63]"><T>{a.detalle}</T></span>}
         </LocalizedClientLink>
       ))}
     </div>
@@ -107,12 +108,12 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
     {arbol.length ? (
       <details>
         <summary className={TITULO_ACORDEON}>
-          Categorías
+          <T>Categorías</T>
           <Flecha />
         </summary>
         <div className="border-b border-[#E7E4DC]">
           <LocalizedClientLink href="/tienda" className="block px-4 py-3 text-[14px] font-bold text-[#B34D07]">
-            Ver todo el catálogo
+            <T>Ver todo el catálogo</T>
           </LocalizedClientLink>
           {arbol.map((c) => (
             <Rama key={c.h} c={c} nivel={0} />
@@ -122,23 +123,23 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
     ) : (
       // Catálogo honesto: sin categorías con productos, liga directa a la tienda
       <LocalizedClientLink href="/tienda" className={ENLACE_SIMPLE}>
-        Todos los productos
+        <T>Todos los productos</T>
       </LocalizedClientLink>
     )}
 
     <details>
       <summary className={TITULO_ACORDEON}>
-        Fabricación
+        <T>Fabricación</T>
         <Flecha />
       </summary>
       <div className="border-b border-[#E7E4DC] bg-[#FAF6EF] px-4 py-2">
         {FABRICACION.map((g) => (
           <div key={g.titulo} className="py-1.5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A887F]">{g.titulo}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8A887F]"><T>{g.titulo}</T></p>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {g.enlaces.map((e) => (
                 <LocalizedClientLink key={e.href} href={e.href} className="rounded-full border border-[#E7E4DC] bg-white px-3 py-1.5 text-[13px] text-[#142033]">
-                  {e.texto}
+                  <T>{e.texto}</T>
                 </LocalizedClientLink>
               ))}
             </div>
@@ -147,7 +148,7 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 border-t border-[#E7E4DC] py-2">
           {FABRICACION_EXTRA.map((e) => (
             <LocalizedClientLink key={e.href} href={e.href} className="text-[13.5px] font-semibold text-[#B34D07]">
-              {e.texto}
+              <T>{e.texto}</T>
             </LocalizedClientLink>
           ))}
         </div>
@@ -156,36 +157,36 @@ const Contenido = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramientas: H
 
     <details>
       <summary className={TITULO_ACORDEON}>
-        Herramientas CNC
+        <T>Herramientas CNC</T>
         <Flecha />
       </summary>
       <div className="border-b border-[#E7E4DC] p-2">
         <LocalizedClientLink href="/herramientas-cnc" className="block rounded-[8px] px-3 py-2.5 text-[14px] font-bold text-[#B34D07] active:bg-[#FAF6EF]">
-          Todas las herramientas
+          <T>Todas las herramientas</T>
         </LocalizedClientLink>
         {herramientas.map((g) => (
           <LocalizedClientLink key={g.id} href={g.href} className="flex items-center gap-3 rounded-[8px] px-3 py-2.5 active:bg-[#FAF6EF]">
             <span className="shrink-0 text-[#C2560A]">
               <ServicioIcono nombre={g.icono} size={18} />
             </span>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">{g.titulo}</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>{g.titulo}</T></span>
           </LocalizedClientLink>
         ))}
       </div>
     </details>
 
     <LocalizedClientLink href="/talleres" className={ENLACE_SIMPLE}>
-      Talleres
+      <T>Talleres</T>
     </LocalizedClientLink>
     <LocalizedClientLink href="/foro-cnc" className={ENLACE_SIMPLE}>
-      Foro CNC
+      <T>Foro CNC</T>
     </LocalizedClientLink>
     <LocalizedClientLink href="/servicios/aprendizaje-cnc" className={ENLACE_SIMPLE}>
-      Academia y guías CNC
+      <T>Academia y guías CNC</T>
     </LocalizedClientLink>
 
     <LocalizedClientLink href="/talleres/unete" className="mx-4 my-5 block rounded-full bg-[#C2560A] py-3 text-center text-[14.5px] font-bold text-white">
-      Vende con nosotros
+      <T>Vende con nosotros</T>
     </LocalizedClientLink>
   </div>
 )
@@ -210,15 +211,15 @@ export const MenuMovil = ({ arbol, herramientas }: { arbol: NodoMenu[]; herramie
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-        <span className="sr-only">Abrir menú</span>
+        <span className="sr-only"><T>Abrir menú</T></span>
       </label>
 
       <div className="fixed inset-0 z-[80] hidden flex-col bg-white peer-checked:flex">
         <div className="flex items-center justify-between bg-[#142033] px-4 py-3 text-white">
-          <span className="text-[16px] font-bold">Menú</span>
+          <span className="text-[16px] font-bold"><T>Menú</T></span>
           <label htmlFor="mm-menu" className="cursor-pointer p-2 text-[20px] leading-none">
             <span aria-hidden="true">✕</span>
-            <span className="sr-only">Cerrar menú</span>
+            <span className="sr-only"><T>Cerrar menú</T></span>
           </label>
         </div>
         {abierto ? <Contenido arbol={arbol} herramientas={herramientas} /> : <Ligero />}
