@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { ROLES, type Rol } from "@/lib/panel/roles"
@@ -35,7 +36,7 @@ export function Equipo({ usuarios, error }: { usuarios: U[]; error: string }) {
   return (
     <>
       <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-        <h2 className="mb-3 text-[15px] font-extrabold">Quién entra</h2>
+        <h2 className="mb-3 text-[15px] font-extrabold"><T>Quién entra</T></h2>
         {error && <p className="text-sm text-[#B3261E]">{error}</p>}
         <ul className="divide-y divide-[#EFEDE6]">
           {lista.map((u) => (
@@ -53,22 +54,22 @@ export function Equipo({ usuarios, error }: { usuarios: U[]; error: string }) {
         {msg && <p className="mt-2 text-[12.5px] font-semibold text-[#0F7A4A]">{msg}</p>}
       </section>
       <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-        <h2 className="mb-1 text-[15px] font-extrabold">Invitar a alguien</h2>
-        <p className="mb-3 text-[12px] text-[#6B675C]">Se crea su cuenta de administrador. Mándale la liga por WhatsApp; cuando acepte y ponga su contraseña, aquí le asignas el rol (mientras, entra como "Sin acceso").</p>
+        <h2 className="mb-1 text-[15px] font-extrabold"><T>Invitar a alguien</T></h2>
+        <p className="mb-3 text-[12px] text-[#6B675C]"><T>Se crea su cuenta de administrador. Mándale la liga por WhatsApp; cuando acepte y ponga su contraseña, aquí le asignas el rol (mientras, entra como "Sin acceso").</T></p>
         <form onSubmit={invitar} className="flex flex-wrap gap-2">
           <input className="h-10 min-w-[200px] flex-1 rounded-lg border border-[#E7E4DC] px-3 text-[14px]" type="email" placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <select className="h-10 rounded-lg border border-[#E7E4DC] bg-white px-2 text-[13px]" value={rolNuevo} onChange={(e) => setRolNuevo(e.target.value as Rol)}>
             {Object.entries(ROLES).filter(([k]) => k !== "sin_acceso").map(([k, r]) => <option key={k} value={k}>{r.nombre}</option>)}
           </select>
-          <button disabled={ocupado} className="h-10 rounded-lg bg-[#C2560A] px-4 text-[14px] font-bold text-white disabled:opacity-60">Crear invitación</button>
+          <button disabled={ocupado} className="h-10 rounded-lg bg-[#C2560A] px-4 text-[14px] font-bold text-white disabled:opacity-60"><T>Crear invitación</T></button>
         </form>
         {liga && (
           <div className="mt-3 rounded-xl bg-[#F8F7F2] p-3">
-            <p className="text-[12px] font-semibold text-[#142033]">Liga de invitación (válida unos días):</p>
+            <p className="text-[12px] font-semibold text-[#142033]"><T>Liga de invitación (válida unos días):</T></p>
             <p className="break-all text-[12px] text-[#1D4F8C]">{liga}</p>
             <div className="mt-2 flex gap-2">
-              <button type="button" onClick={() => navigator.clipboard?.writeText(liga)} className="rounded-lg border border-[#E7E4DC] px-3 py-1.5 text-[12px] font-semibold">Copiar</button>
-              <a href={`https://wa.me/?text=${encodeURIComponent(`Te invito al HETNA Panel. Abre esta liga, pon tu nombre y contraseña: ${liga}`)}`} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EC] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]">Mandar por WhatsApp</a>
+              <button type="button" onClick={() => navigator.clipboard?.writeText(liga)} className="rounded-lg border border-[#E7E4DC] px-3 py-1.5 text-[12px] font-semibold"><T>Copiar</T></button>
+              <a href={`https://wa.me/?text=${encodeURIComponent(`Te invito al HETNA Panel. Abre esta liga, pon tu nombre y contraseña: ${liga}`)}`} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EC] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]"><T>Mandar por WhatsApp</T></a>
             </div>
           </div>
         )}
