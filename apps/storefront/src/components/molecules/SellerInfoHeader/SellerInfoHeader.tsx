@@ -31,11 +31,11 @@ export const SellerInfoHeader = ({
       <SellerAvatar photo={photo} size={56} alt={name} />
     </div>
     <div className="flex flex-col gap-1">
-      <h3 className="heading-sm text-primary">{name}</h3>
+      <h3 className="heading-sm text-primary"><TS>{name}</TS></h3>
       {showReviews && (
         <div className="flex items-center gap-2">
           <StarRating starSize={14} rate={rating || 0} />
-          <span className="label-md text-secondary">{reviewCount} <TS>reviews</TS></span>
+          <span className="label-md text-secondary"><TS>{reviewCount}</TS> <TS>reviews</TS></span>
         </div>
       )}
     </div>
