@@ -32,9 +32,9 @@ export default async function DistribuidorPage({ params }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[900px] px-4 py-14 text-center lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Regalo de</TS> {d.nombre}</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Regalo de</TS> <TS>{d.nombre}</TS></p>
           <h1 className="mx-auto mt-2 max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">
-            {meses} <TS>de HETNA Taller, gratis</TS>
+            <TS>{meses}</TS> <TS>de HETNA Taller, gratis</TS>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/75">
             <TS>Con tu máquina nueva viene el Cotizador HETNA: sube tu DXF o STL y sabe en 2 minutos cuánto tarda, cuánto te cuesta y cuánto cobrar.</TS>
@@ -44,7 +44,7 @@ export default async function DistribuidorPage({ params }: Props) {
             <CopiarCodigo codigo={d.codigo} />
           </div>
           <a href={liga} className="mt-6 inline-block rounded-xl bg-[#C2560A] px-8 py-4 text-lg font-semibold text-white no-underline hover:brightness-110">
-            <TS>Activar mis</TS> {d.dias} <TS>días</TS>
+            <TS>Activar mis</TS> <TS>{d.dias}</TS> <TS>días</TS>
           </a>
           <p className="mt-3 text-sm text-white/60"><TS>El código se aplica solo al registrarte desde este botón.</TS></p>
         </div>
@@ -60,8 +60,8 @@ export default async function DistribuidorPage({ params }: Props) {
           ].map(([n, t, txt]) => (
             <div key={n} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-3xl font-black text-[#C2560A]">{n}</p>
-              <p className="mt-1 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{txt}</p>
+              <p className="mt-1 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{txt}</TS></p>
             </div>
           ))}
         </div>
