@@ -286,7 +286,7 @@ export function GeneradorPartir3D() {
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre || "Sube tu modelo 3D"}</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>{nombre || "Sube tu modelo 3D"}</T></span>
             <span className="text-[12px] text-[#6B6A63]"><T>STL, OBJ o STEP · hasta 60 MB</T></span>
             <input type="file" accept=".stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
@@ -359,14 +359,14 @@ export function GeneradorPartir3D() {
                 <span className="text-[12.5px] text-[#6B6A63]"><T>{CONECTORES.find((c) => c.id === conector)?.nota}</T></span>
                 {conector !== "ninguno" && (
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-[12px] font-semibold text-[#6B6A63]">{conector === "imanes" ? "Imanes" : "Pernos"} <T>por unión</T></span>
+                    <span className="text-[12px] font-semibold text-[#6B6A63]"><T>{conector === "imanes" ? "Imanes" : "Pernos"}</T> <T>por unión</T></span>
                     <div className="flex flex-wrap gap-1.5">
                       {[0, 1, 2, 3, 4, 6].map((n) => (
-                        <Opcion key={n} activa={porUnion === n} onClick={() => setPorUnion(n)}>{n === 0 ? "Automático" : n}</Opcion>
+                        <Opcion key={n} activa={porUnion === n} onClick={() => setPorUnion(n)}><T>{n === 0 ? "Automático" : n}</T></Opcion>
                       ))}
                     </div>
                     <span className="text-[12px] text-[#6B6A63]">
-                      {porUnion === 0 ? "Según el tamaño de cada cara: 1 en caras chicas y hasta 4 en las grandes." : `${porUnion} en cada cara de corte, si caben con su pared.`} <T>Ve dónde quedan en “Cortes y pernos”.</T>
+                      <T>{porUnion === 0 ? "Según el tamaño de cada cara: 1 en caras chicas y hasta 4 en las grandes." : `${porUnion} en cada cara de corte, si caben con su pared.`}</T> <T>Ve dónde quedan en “Cortes y pernos”.</T>
                     </span>
                   </div>
                 )}
@@ -400,7 +400,7 @@ export function GeneradorPartir3D() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Opcion activa={vista === "piezas"} onClick={() => setVista("piezas")}><T>Piezas</T></Opcion>
-                <Opcion activa={vista === "cortes"} onClick={() => setVista("cortes")}><T>Cortes y</T> {conector === "imanes" ? "imanes" : "pernos"}</Opcion>
+                <Opcion activa={vista === "cortes"} onClick={() => setVista("cortes")}><T>Cortes y</T> <T>{conector === "imanes" ? "imanes" : "pernos"}</T></Opcion>
                 {vista === "cortes" && (
                   <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6B6A63]">
                     <span className="ml-1"><T>Toca el modelo para cortar en</T></span>
@@ -410,7 +410,7 @@ export function GeneradorPartir3D() {
                   </span>
                 )}
               </div>
-              {vista === "cortes" && <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Los planos naranjas son los cortes y los cilindros verdes,</T> {conector === "imanes" ? "los huecos de los imanes" : "los pernos"}<T>. Gira con un dedo o el ratón; un toque sin arrastrar agrega un corte en ese punto.</T></p>}
+              {vista === "cortes" && <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Los planos naranjas son los cortes y los cilindros verdes,</T> <T>{conector === "imanes" ? "los huecos de los imanes" : "los pernos"}</T><T>. Gira con un dedo o el ratón; un toque sin arrastrar agrega un corte en ese punto.</T></p>}
               {res && res.piezas.length > 1 && vista === "piezas" && (
                 <label className="flex items-center gap-3 text-[13px] text-[#6B6A63]">
                   <T>Separar piezas</T>
@@ -435,7 +435,7 @@ export function GeneradorPartir3D() {
               {res && (
                 <>
                   {res.avisos.map((a) => <p key={a} className="m-0 text-[13.5px] text-[#B34D07]">{a}</p>)}
-                  {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`} <T>en la cama de</T> {camaN.join("×")} <T>mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</T></p>}
+                  {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]"><T>{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`}</T> <T>en la cama de</T> <T>{camaN.join("×")}</T> <T>mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</T></p>}
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
 
                   <button type="button" onClick={cotizar} className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2">
@@ -462,7 +462,7 @@ export function GeneradorPartir3D() {
                         <li key={p.nombre} className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5 flex items-center gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="text-[14px] font-semibold text-[#1B1B18]">{p.nombre}</div>
-                            <div className={`text-[12.5px] ${ok ? "text-[#6B6A63]" : "text-[#8A1C1C]"}`}>{p.tam.join(" × ")} <T>mm</T>{ok ? "" : " · no cabe"}</div>
+                            <div className={`text-[12.5px] ${ok ? "text-[#6B6A63]" : "text-[#8A1C1C]"}`}><T>{p.tam.join(" × ")}</T> <T>mm</T><T>{ok ? "" : " · no cabe"}</T></div>
                           </div>
                           <button type="button" onClick={() => descargar(`${nombre}-${p.nombre}.stl`, mallaSTL(p.malla), "model/stl")} className="px-3 py-2 rounded-[8px] bg-[#142033] hover:bg-[#0F1826] text-white text-[13px] font-semibold">
                             <T>STL</T>
