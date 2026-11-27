@@ -699,22 +699,25 @@ export async function publicarPendientes(knex: any, logger?: any) {
   // Las que se quedaron "publicando" más de 30 min (reinicio del servidor) vuelven a la cola
   await knex(T_POST).where({ estado: "publicando" }).where("updated_at", "<", knex.raw("now() - interval '30 minutes'")).update({ estado: "programada" })
   await descartarVencidas(knex, logger)
-  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderBy("programada_para").limit(10).select("id", "mercado", "redes", "medios", "fuente")
+  // Las solicitudes de cotización van primero: tienen fecha de cierre y cada hora cuenta
+  const listas = await knex(T_POST).where({ estado: "programada" }).where("programada_para", "<=", knex.fn.now()).orderByRaw("(origen = 'licitacion') desc").orderBy("programada_para").limit(10).select("id", "mercado", "redes", "medios", "fuente", "origen")
   // Las cuentas de HETNA son de México: lo de otros mercados (EE. UU., Colombia…) no
   // sale en las mismas cuentas salvo que se active en Configuración (mercados_redes)
   const mercadosOk: string[] = Array.isArray(cfg.mercados_redes) && cfg.mercados_redes.length ? cfg.mercados_redes : ["mx"]
   const ritmo = { max: Number(cfg.max_dia ?? 3), separacion: Number(cfg.separacion_h ?? 3) }
   let n = 0
-  for (const { id, mercado, redes, medios, fuente } of listas) {
+  for (const { id, mercado, redes, medios, fuente, origen } of listas) {
     if (!mercadosOk.includes(mercado || "mx")) {
       await knex(T_POST).where({ id }).update({ estado: "borrador", notas: `Es para el mercado ${String(mercado).toUpperCase()}; las cuentas son de México. Actívalo en Configuración si quieres publicarlo.`, updated_at: knex.fn.now() })
       continue
     }
     // Ritmo: pocas publicaciones al día y separadas (muchas seguidas se ven como spam y el algoritmo las castiga).
     // Las historias no cuentan.
+    // Las historias y las solicitudes de cotización no esperan turno ni cuentan para el tope:
+    // una solicitud que sale al día siguiente ya llegó tarde (los talleres cotizan en horas).
     const soloHistoria = Array.isArray(redes) && redes.length > 0 && redes.every((r: string) => r === "instagram_historia")
-    if (!soloHistoria && ritmo.max > 0) {
-      const hoy = await knex(T_POST).where("publicada_en", ">=", knex.raw(`date_trunc('day', now() at time zone ?) at time zone ?`, [zonaDe(mercado), zonaDe(mercado)])).whereIn("estado", ["publicada", "parcial"]).whereRaw(`not (redes::jsonb <@ '["instagram_historia"]'::jsonb)`).select("publicada_en").orderBy("publicada_en", "desc")
+    if (!soloHistoria && origen !== "licitacion" && ritmo.max > 0) {
+      const hoy = await knex(T_POST).where("publicada_en", ">=", knex.raw(`date_trunc('day', now() at time zone ?) at time zone ?`, [zonaDe(mercado), zonaDe(mercado)])).whereIn("estado", ["publicada", "parcial"]).whereNot("origen", "licitacion").whereRaw(`not (redes::jsonb <@ '["instagram_historia"]'::jsonb)`).select("publicada_en").orderBy("publicada_en", "desc")
       const ultima = hoy[0]?.publicada_en ? new Date(hoy[0].publicada_en).getTime() : 0
       const espera = ultima + ritmo.separacion * 3600_000 - Date.now()
       if (hoy.length >= ritmo.max || espera > 0) {
