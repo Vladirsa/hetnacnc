@@ -28,7 +28,7 @@ export default async function RepetirPedidoPage({ params, searchParams }: Props)
     <main className="container">
       <div className="mx-auto max-w-[900px] py-10">
         <LocalizedClientLink href="/user/piezas" className="text-sm font-semibold text-[#C2560A] hover:underline"><TS>← Mis piezas</TS></LocalizedClientLink>
-        <h1 className="mt-2 text-[26px] font-bold text-[#1B1B18]"><TS>Repetir pedido</TS> {p.folio}{t ? ` con ${t.nombre}` : ""}</h1>
+        <h1 className="mt-2 text-[26px] font-bold text-[#1B1B18]"><TS>Repetir pedido</TS> <TS>{p.folio}</TS><TS>{t ? ` con ${t.nombre}` : ""}</TS></h1>
         <p className="mb-6 mt-1 text-[15px] text-[#4A4943]"><TS>Ya va todo puesto como la vez pasada. Cambia la cantidad o lo que necesites y envía.</TS></p>
         <FormSolicitudTaller
           taller={t?.handle}
