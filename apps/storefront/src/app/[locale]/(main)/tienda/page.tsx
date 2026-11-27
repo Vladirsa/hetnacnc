@@ -1,6 +1,7 @@
 // /mx/tienda — "¿Qué necesitas hoy?": la entrada a todo lo que se compra,
 // se contrata o se cotiza en HETNA. Conteos y precios salen de la base en el
 // momento (lib/hetna/tienda.ts); nada escrito a mano.
+import { metaEnIdioma } from "@/i18n/servidor"
 import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
@@ -15,7 +16,7 @@ import { migas } from "@/lib/hetna/schema"
 
 export const revalidate = 60
 
-export async function generateMetadata(): Promise<Metadata> {
+async function generateMetadataEs(): Promise<Metadata> {
   return {
     title: "Tienda CNC: diseños DXF, servicios CAM y fabricación a medida",
     description:
@@ -67,4 +68,9 @@ export default async function TiendaPage({ params }: { params: Promise<{ locale:
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
