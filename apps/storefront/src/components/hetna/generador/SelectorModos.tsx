@@ -4,6 +4,7 @@
 // Letreros y placas): tarjetas con dibujo arriba del panel. Al elegir, la
 // dirección cambia a la del modo (sin recargar) para que la liga compartida
 // abra lo mismo.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useParams } from "next/navigation"
 
 export type Modo<T extends string> = { id: T; slug: string; nombre: string; nota: string; icono: React.ReactNode }
@@ -26,7 +27,7 @@ export function SelectorModos<T extends string>({
   }
   return (
     <section className="flex flex-col gap-2 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
-      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">{titulo}</span>
+      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>{titulo}</T></span>
       <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${modos.length}, minmax(0, 1fr))` }}>
         {modos.map((m) => (
           <button
@@ -45,7 +46,7 @@ export function SelectorModos<T extends string>({
           </button>
         ))}
       </div>
-      <span className="text-[11.5px] leading-snug text-[#8A97AB]">{modos.find((m) => m.id === modo)?.nota}</span>
+      <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>{modos.find((m) => m.id === modo)?.nota}</T></span>
     </section>
   )
 }
