@@ -62,10 +62,10 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             s.etapa === "cancelada" ? "bg-[#FDECEA] text-[#B3261E]" : "bg-[#FFF1E6] text-[#C2560A]"
           }`}
         >
-          {s.etapa_nombre}
+          <T>{s.etapa_nombre}</T>
         </span>
       </div>
-      {s.etapa_explica && <p className="mt-1 text-sm text-[#6B675C]">{s.etapa_explica}</p>}
+      {s.etapa_explica && <p className="mt-1 text-sm text-[#6B675C]"><T>{s.etapa_explica}</T></p>}
 
       <ol className="mt-5 grid gap-0">
         {linea.map((p, i) => {
@@ -85,14 +85,14 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
                       : "border-2 border-[#E7E4DC] bg-white text-[#9B978C]"
                 }`}
               >
-                {hecha ? "✓" : p.estado === "omitida" ? "–" : i + 1}
+                <T>{hecha ? "✓" : p.estado === "omitida" ? "–" : i + 1}</T>
               </span>
               <span className="min-w-0">
                 <span className={`block text-sm font-bold ${p.estado === "pendiente" || p.estado === "omitida" ? "text-[#9B978C]" : "text-[#142033]"}`}>
-                  {p.nombre}
+                  <T>{p.nombre}</T>
                   {p.fecha && <span className="ml-2 font-normal text-[#6B675C]">{fecha(p.fecha)}</span>}
                 </span>
-                {actual && <span className="block text-sm text-[#44433D]">{p.explica}</span>}
+                {actual && <span className="block text-sm text-[#44433D]"><T>{p.explica}</T></span>}
               </span>
             </li>
           )
@@ -101,10 +101,10 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
 
       {s.envio && (
         <p className="mt-4 rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#2B2A26]">
-          <T>Envío:</T> <strong>{s.envio.paqueteria || "—"}</strong>
+          <T>Envío:</T> <strong><T>{s.envio.paqueteria || "—"}</T></strong>
           {s.envio.guia && (
             <>
-              {" "}<T>· Guía</T> <strong className="select-all">{s.envio.guia}</strong>
+              <T>{" "}</T><T>· Guía</T> <strong className="select-all"><T>{s.envio.guia}</T></strong>
             </>
           )}
         </p>
@@ -115,7 +115,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           <p className="min-w-0 flex-1 text-sm text-[#1F5A2B]">
             <T>¿Ya tienes tu pedido? Confírmalo para cerrar el proyecto. Si llegó con algún problema, repórtalo abajo antes de confirmar. Si no
             confirmas ni reportas nada, el proyecto se cierra solo a los</T> {DIAS_CIERRE_AUTOMATICO} <T>días de la entrega</T>
-            {s.cobro_directo ? "." : " y HETNA le libera el pago al taller."}
+            <T>{s.cobro_directo ? "." : " y HETNA le libera el pago al taller."}</T>
           </p>
           <button
             type="button"
@@ -123,18 +123,18 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             disabled={pendiente}
             className="rounded-xl bg-[#1E7B3A] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {pendiente ? "Confirmando…" : "Ya lo recibí"}
+            <T>{pendiente ? "Confirmando…" : "Ya lo recibí"}</T>
           </button>
-          {error && <p className="w-full text-sm text-[#B3261E]">{error}</p>}
+          {error && <p className="w-full text-sm text-[#B3261E]"><T>{error}</T></p>}
         </div>
       )}
 
       {s.disputa && (
         <div className="mt-4 rounded-xl border-2 border-[#C2560A] bg-[#FFF6EE] p-4 text-sm text-[#5A2E0A]">
-          <p className="font-bold"><T>Reportaste un problema:</T> {s.disputa.nombre}</p>
+          <p className="font-bold"><T>Reportaste un problema:</T> <T>{s.disputa.nombre}</T></p>
           <p className="mt-1">
-            {queSigue ||
-              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y busca resolver en ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}{" "}
+            <T>{queSigue ||
+              `${s.cobro_directo ? "" : "HETNA retiene el pago al taller mientras se resuelve. "}HETNA pide evidencia a los dos y busca resolver en ${DIAS_HABILES_DECISION_DISPUTA} días hábiles: dar por bueno el trabajo, reembolso parcial o reembolso total.`}</T><T>{" "}</T>
             <T>Te escribimos por correo; puedes responder con fotos o lo que quieras agregar.</T>
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           <div className="grid gap-2">
             {TIPOS.map((t) => (
               <label key={t.v} className="flex items-center gap-2 text-sm text-[#2B2A26]">
-                <input type="radio" name="tipo-problema" checked={tipo === t.v} onChange={() => setTipo(t.v)} /> {t.t}
+                <input type="radio" name="tipo-problema" checked={tipo === t.v} onChange={() => setTipo(t.v)} /> <T>{t.t}</T>
               </label>
             ))}
           </div>
@@ -165,21 +165,21 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
             className="w-full rounded-xl border border-[#E7E4DC] bg-white p-3 text-sm"
           />
           <p className="text-xs text-[#6B675C]">
-            {s.cobro_directo
+            <T>{s.cobro_directo
               ? "Mientras lo revisamos el proyecto no se cierra solo. Como le pagaste directo al taller, si procede un reembolso lo hace él y HETNA se lo exige."
-              : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}{" "}
+              : "Mientras lo revisamos, HETNA no le libera el pago al taller y el proyecto no se cierra solo."}</T><T>{" "}</T>
             <T>Buscamos resolver en</T> {DIAS_HABILES_DECISION_DISPUTA} <T>días hábiles. Esto no limita tu derecho de acudir a la PROFECO.</T>
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={enviarProblema} disabled={pendiente}
               className="rounded-xl bg-[#B3261E] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
-              {pendiente ? "Enviando…" : "Enviar a HETNA"}
+              <T>{pendiente ? "Enviando…" : "Enviar a HETNA"}</T>
             </button>
             <button type="button" onClick={() => setReportando(false)} className="rounded-xl border border-[#E7E4DC] px-5 py-2.5 text-sm">
               <T>Cancelar</T>
             </button>
           </div>
-          {errorProblema && <p className="text-sm text-[#B3261E]">{errorProblema}</p>}
+          {errorProblema && <p className="text-sm text-[#B3261E]"><T>{errorProblema}</T></p>}
         </div>
       )}
 
@@ -191,7 +191,7 @@ export default function SeguimientoSolicitud({ token, s }: { token: string; s: V
           <ul className="mt-2 grid gap-2">
             {[...(s.historial || [])].reverse().map((h, i) => (
               <li key={i} className="text-sm text-[#40403A]">
-                <span className="font-semibold text-[#142033]">{QUIEN[h.quien] || h.quien}</span>{" "}
+                <span className="font-semibold text-[#142033]">{QUIEN[h.quien] || h.quien}</span><T>{" "}</T>
                 <span className="text-xs text-[#6B675C]">{fecha(h.fecha)}</span>
                 <span className="block"><T>{h.nota}</T></span>
               </li>
