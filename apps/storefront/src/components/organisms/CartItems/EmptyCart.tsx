@@ -3,7 +3,7 @@ import { Button } from '@/components/atoms/Button/Button'
 import { CustomCarousel as Carousel } from '@/components/cells/Carousel/Carousel'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import { CategoryCard } from '@/components/organisms/CategoryCard/CategoryCard'
-import { listCategories } from '@/lib/data/categories';
+import { listCategoriesAccion as listCategories } from '@/lib/data/categories-accion';
 
 export const EmptyCart = async () => {
   const { categories } = await listCategories();
