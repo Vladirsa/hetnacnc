@@ -4,6 +4,7 @@
 // Toma el DXF que acaba de generar la herramienta, lo revisa (revisión del
 // archivo, 1.1), muestra el precio en vivo con la cantidad (1.2) y lo manda a
 // la solicitud de fabricación con el archivo ya cargado.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -70,14 +71,14 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
     return (
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#1F2937] bg-[#121923] px-4 py-2.5 text-[#E6EBF2]" data-testid="barra-fabricar">
         <div className={`flex items-baseline gap-2 ${cargando ? "opacity-60" : ""}`}>
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9AA6B8]">Precio aprox.</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9AA6B8]"><T>Precio aprox.</T></span>
           {precio ? (
             <>
               <b className="text-[18px] text-white">
                 {pesos(precio.minimo)} – {pesos(precio.maximo)}
               </b>
               <span className="text-[12px] text-[#9AA6B8]">
-                + IVA{cantidad > 1 ? ` · ≈ ${pesos(precio.recomendado / cantidad)} c/u` : ""}
+                <T>+ IVA</T>{cantidad > 1 ? ` · ≈ ${pesos(precio.recomendado / cantidad)} c/u` : ""}
               </span>
             </>
           ) : (
@@ -85,7 +86,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
           )}
         </div>
         <label className="flex items-center gap-2 text-[12.5px] text-[#C9D2E0]">
-          Cantidad
+          <T>Cantidad</T>
           <input
             type="number"
             min={1}
@@ -107,13 +108,13 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
           <div className="absolute bottom-full left-0 z-20 mb-2 flex w-[340px] flex-col gap-2 rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-3 text-[#1B1B18] shadow-xl">
             {geo.largo > 0 && (
               <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-                <b className="text-[#1B1B18]">Material:</b>{" "}
+                <b className="text-[#1B1B18]"><T>Material:</T></b>{" "}
                 {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
               </p>
             )}
             <RevisionArchivo geo={geo} proceso={maquina} espesor_mm={espesorMm} />
             <p className="m-0 text-[11.5px] text-[#7A776E]">
-              Estimado de referencia en {material}, sin envío. Al mandarlo, el archivo va cargado y los talleres te dan su precio final; tú eliges.
+              <T>Estimado de referencia en</T> {material}<T>, sin envío. Al mandarlo, el archivo va cargado y los talleres te dan su precio final; tú eliges.</T>
             </p>
           </div>
         </details>
@@ -122,7 +123,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
           onClick={fabricar}
           className="ml-auto flex min-h-[40px] items-center justify-center rounded-[10px] bg-[#FF6A1A] px-5 text-[14.5px] font-extrabold text-white hover:bg-[#E65C12]"
         >
-          Mandar a fabricar
+          <T>Mandar a fabricar</T>
         </button>
         {aviso && <p className="m-0 w-full text-[12.5px] text-[#F6B8AE]">{aviso}</p>}
       </div>
@@ -133,20 +134,20 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
     <div className="flex flex-col gap-3 rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="m-0 text-[12px] font-semibold uppercase tracking-wide text-[#8A3D06]">Precio para fabricarlo</p>
+          <p className="m-0 text-[12px] font-semibold uppercase tracking-wide text-[#8A3D06]"><T>Precio para fabricarlo</T></p>
           {precio ? (
             <p className={`m-0 text-[24px] font-extrabold leading-tight text-[#1B1B18] ${cargando ? "opacity-60" : ""}`}>
-              {pesos(precio.minimo)} – {pesos(precio.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]">+ IVA</span>
+              {pesos(precio.minimo)} – {pesos(precio.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]"><T>+ IVA</T></span>
             </p>
           ) : (
             <p className="m-0 text-[14px] text-[#6B6A63]">{cargando ? "Calculando…" : "Sin estimado para este diseño"}</p>
           )}
           {precio && cantidad > 1 && (
-            <p className="m-0 text-[12px] text-[#6B6A63]">≈ {pesos(precio.recomendado / cantidad)} cada uno + IVA</p>
+            <p className="m-0 text-[12px] text-[#6B6A63]">≈ {pesos(precio.recomendado / cantidad)} <T>cada uno + IVA</T></p>
           )}
         </div>
         <label className="flex flex-col gap-1 text-[12.5px] font-medium text-[#1B1B18]">
-          Cantidad
+          <T>Cantidad</T>
           <input
             type="number"
             min={1}
@@ -159,7 +160,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
       </div>
       {geo.largo > 0 && (
         <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-          <b className="text-[#1B1B18]">Material:</b>{" "}
+          <b className="text-[#1B1B18]"><T>Material:</T></b>{" "}
           {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
         </p>
       )}
@@ -169,11 +170,11 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
         onClick={fabricar}
         className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#FF6A1A] py-3.5 text-[15px] font-extrabold text-white hover:bg-[#E65C12]"
       >
-        Mandar a fabricar
+        <T>Mandar a fabricar</T>
       </button>
       {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
       <p className="m-0 text-[11.5px] text-[#7A776E]">
-        Estimado de referencia en {material}, sin envío. Al mandarlo, el archivo va cargado y los talleres te dan su precio final; tú eliges.
+        <T>Estimado de referencia en</T> {material}<T>, sin envío. Al mandarlo, el archivo va cargado y los talleres te dan su precio final; tú eliges.</T>
       </p>
     </div>
   )
