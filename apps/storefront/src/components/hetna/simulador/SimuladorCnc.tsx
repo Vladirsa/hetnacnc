@@ -6,6 +6,7 @@
 // pausa, bloque a bloque, velocidad y coordenadas. Si el programa tiene un
 // error, la máquina se detiene en esa línea con la alarma, como la de verdad.
 // Todo corre en el navegador: el programa no sale de tu computadora.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -15,7 +16,7 @@ import { Bloque, type Fresa } from "@/lib/simulador/material"
 
 const Vista3D = dynamic(() => import("./Vista3DSimulador"), {
   ssr: false,
-  loading: () => <div className="grid h-[520px] place-items-center rounded-[12px] border border-[#2B3648] text-[13px] text-[#8A97AB]">Cargando vista 3D…</div>,
+  loading: () => <div className="grid h-[520px] place-items-center rounded-[12px] border border-[#2B3648] text-[13px] text-[#8A97AB]"><T>Cargando vista 3D…</T></div>,
 })
 
 const VELOCIDADES = [1, 2, 5, 10, 25, 100]
@@ -235,7 +236,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
       <section className="flex min-w-0 flex-col gap-3">
         {aviso}
         <div className={`rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3 ${aviso ? "hidden" : ""}`}>
-          <label className="text-[12px] font-semibold text-[#8A97AB]">Ejercicio</label>
+          <label className="text-[12px] font-semibold text-[#8A97AB]"><T>Ejercicio</T></label>
           <select className={CAMPO} value={ejemploId} onChange={(e) => cargarEjemplo(e.target.value)}>
             {!ejemploId && <option value="">Mi programa</option>}
             {EJEMPLOS.map((e) => (
@@ -247,13 +248,13 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
 
         <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[13px] font-bold text-white">Programa G-code</span>
+            <span className="text-[13px] font-bold text-white"><T>Programa G-code</T></span>
             <div className="flex gap-2 text-[12px]">
               <label className="cursor-pointer font-semibold text-[#F28A3C] hover:underline">
-                Abrir archivo
+                <T>Abrir archivo</T>
                 <input type="file" accept=".nc,.gcode,.ngc,.tap,.cnc,.txt" className="hidden" onChange={(e) => subirArchivo(e.target.files?.[0])} />
               </label>
-              <button type="button" onClick={bajar} className="font-semibold text-[#F28A3C] hover:underline">Descargar .nc</button>
+              <button type="button" onClick={bajar} className="font-semibold text-[#F28A3C] hover:underline"><T>Descargar .nc</T></button>
             </div>
           </div>
           {enMarcha ? (
@@ -279,20 +280,20 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
           )}
           {enMarcha && (
             <button type="button" onClick={reiniciar} className="mt-2 text-[12px] font-semibold text-[#F28A3C] hover:underline">
-              Detener y editar el programa
+              <T>Detener y editar el programa</T>
             </button>
           )}
         </div>
 
         <div className="rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3">
-          <span className="text-[13px] font-bold text-white">Alarmas y avisos ({resultado.alarmas.length})</span>
+          <span className="text-[13px] font-bold text-white"><T>Alarmas y avisos (</T>{resultado.alarmas.length})</span>
           {resultado.alarmas.length === 0 ? (
-            <p className="m-0 mt-1 text-[12.5px] text-[#7BE0A3]">✓ Sin errores. El programa está listo para correr.</p>
+            <p className="m-0 mt-1 text-[12.5px] text-[#7BE0A3]"><T>✓ Sin errores. El programa está listo para correr.</T></p>
           ) : (
             <ul className="m-0 mt-1 list-none space-y-1 p-0">
               {resultado.alarmas.map((a, i) => (
                 <li key={i} className={`text-[12.5px] ${a.nivel === "error" ? "text-[#FFB4AB]" : "text-[#F2C94C]"}`}>
-                  <b>Línea {a.linea}:</b> {a.mensaje}
+                  <b><T>Línea</T> {a.linea}:</b> <T>{a.mensaje}</T>
                 </li>
               ))}
             </ul>
@@ -307,7 +308,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
         {alarmaActiva && <div className="rounded-[10px] border border-[#B3261E] bg-[#B3261E]/20 px-3 py-2 text-[13px] font-semibold text-[#FFB4AB]">{alarmaActiva}</div>}
         {estado === "terminado" && !alarmaActiva && (
           <div className="rounded-[10px] border border-[#1E7B3A] bg-[#1E7B3A]/20 px-3 py-2 text-[13px] font-semibold text-[#7BE0A3]">
-            Programa terminado. Material quitado: {bloque.volumenQuitado().toFixed(1)} cm³.
+            <T>Programa terminado. Material quitado:</T> {bloque.volumenQuitado().toFixed(1)} <T>cm³.</T>
           </div>
         )}
 
@@ -315,22 +316,22 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
           {/* Panel de control */}
           <div className="flex flex-wrap items-center gap-2">
             {estado === "corriendo" ? (
-              <button type="button" onClick={pausar} className={`${BTN} bg-[#F2C94C] text-[#1B1B18]`}>⏸ Pausa</button>
+              <button type="button" onClick={pausar} className={`${BTN} bg-[#F2C94C] text-[#1B1B18]`}><T>⏸ Pausa</T></button>
             ) : (
               <button type="button" onClick={ciclo} disabled={!resultado.movimientos.length} className={`${BTN} bg-[#1E9E52] text-white`}>
                 ▶ {estado === "pausa" ? "Continuar" : "Ciclo de inicio"}
               </button>
             )}
-            <button type="button" onClick={alFinal} disabled={!resultado.movimientos.length} className={`${BTN} bg-white/10 text-white`}>⏭ Ver resultado</button>
-            <button type="button" onClick={reiniciar} className={`${BTN} bg-white/10 text-white`}>⟲ Reiniciar</button>
+            <button type="button" onClick={alFinal} disabled={!resultado.movimientos.length} className={`${BTN} bg-white/10 text-white`}><T>⏭ Ver resultado</T></button>
+            <button type="button" onClick={reiniciar} className={`${BTN} bg-white/10 text-white`}><T>⟲ Reiniciar</T></button>
             <label className="flex items-center gap-1.5 text-[12.5px] text-[#C9CED6]">
-              <input type="checkbox" checked={bloqueABloque} onChange={(e) => setBloqueABloque(e.target.checked)} /> Bloque a bloque
+              <input type="checkbox" checked={bloqueABloque} onChange={(e) => setBloqueABloque(e.target.checked)} /> <T>Bloque a bloque</T>
             </label>
             <label className="flex items-center gap-1.5 text-[12.5px] text-[#C9CED6]">
-              <input type="checkbox" checked={trayectoria} onChange={(e) => setTrayectoria(e.target.checked)} /> Trayectorias
+              <input type="checkbox" checked={trayectoria} onChange={(e) => setTrayectoria(e.target.checked)} /> <T>Trayectorias</T>
             </label>
             <label className="flex items-center gap-1.5 text-[12.5px] text-[#C9CED6]">
-              Velocidad
+              <T>Velocidad</T>
               <select className="rounded-[6px] border border-[#2B3648] bg-[#0F151E] px-1 py-0.5 text-white" value={vel} onChange={(e) => setVel(Number(e.target.value))}>
                 {VELOCIDADES.map((v) => (
                   <option key={v} value={v}>×{v}</option>
@@ -345,14 +346,14 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
             <span className="text-[#8A97AB]">Z <b className="text-white">{f3(herramienta.z)}</b></span>
             <span className="text-[#8A97AB]">F <b className="text-white">{m && m.tipo === "corte" ? Math.round(m.f) : "—"}</b></span>
             <span className="text-[#8A97AB]">S <b className="text-white">{m ? m.s : 0}</b></span>
-            <span className="text-[#8A97AB]">Husillo <b className={m?.husillo ? "text-[#7BE0A3]" : "text-white"}>{m?.husillo ? "ON" : "OFF"}</b></span>
+            <span className="text-[#8A97AB]"><T>Husillo</T> <b className={m?.husillo ? "text-[#7BE0A3]" : "text-white"}>{m?.husillo ? "ON" : "OFF"}</b></span>
           </div>
           <div className="lg:col-span-2">
             <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
               <div className="h-full bg-[#F07A1A]" style={{ width: `${Math.round(progreso * 100)}%` }} />
             </div>
             <p className="m-0 mt-1 text-[12px] text-[#8A97AB]">
-              Línea {linea || "—"} · {Math.round(progreso * 100)}% · Tiempo estimado del programa: {minutos(resultado.tiempoMin)}
+              <T>Línea</T> {linea || "—"} · {Math.round(progreso * 100)}<T>% · Tiempo estimado del programa:</T> {minutos(resultado.tiempoMin)}
             </p>
           </div>
         </div>
@@ -360,7 +361,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
         {/* Material y fresa */}
         <div className="grid gap-3 rounded-[12px] border border-[#2B3648] bg-[#121A26] p-3 sm:grid-cols-2">
           <div>
-            <span className="text-[13px] font-bold text-white">Material (mm)</span>
+            <span className="text-[13px] font-bold text-white"><T>Material (mm)</T></span>
             <div className="mt-1 grid grid-cols-3 gap-2">
               {(["ancho", "largo", "alto"] as const).map((k) => (
                 <label key={k} className="text-[11.5px] text-[#8A97AB]">
@@ -370,7 +371,7 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
               ))}
             </div>
             <label className="mt-2 block text-[11.5px] text-[#8A97AB]">
-              Cero de pieza (X0 Y0); Z0 = cara de arriba
+              <T>Cero de pieza (X0 Y0); Z0 = cara de arriba</T>
               <select className={CAMPO} value={material.cero} onChange={(e) => setMaterial({ ...material, cero: e.target.value as Material["cero"] })}>
                 <option value="esquina">Esquina inferior izquierda</option>
                 <option value="centro">Centro de la pieza</option>
@@ -378,10 +379,10 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
             </label>
           </div>
           <div>
-            <span className="text-[13px] font-bold text-white">Fresa</span>
+            <span className="text-[13px] font-bold text-white"><T>Fresa</T></span>
             <div className="mt-1 grid grid-cols-2 gap-2">
               <label className="text-[11.5px] text-[#8A97AB]">
-                Tipo
+                <T>Tipo</T>
                 <select className={CAMPO} value={fresa.tipo} onChange={(e) => setFresa({ ...fresa, tipo: e.target.value as Fresa["tipo"] })}>
                   <option value="plana">Plana (recta)</option>
                   <option value="bola">Punta de bola</option>
@@ -389,12 +390,12 @@ export function SimuladorCnc({ inicial, alCambiarCodigo, aviso }: { inicial?: In
                 </select>
               </label>
               <label className="text-[11.5px] text-[#8A97AB]">
-                Diámetro (mm)
+                <T>Diámetro (mm)</T>
                 <input type="number" min={0.5} step={0.1} className={CAMPO} value={fresa.diametro} onChange={(e) => setFresa({ ...fresa, diametro: Math.max(0.5, Math.min(50, Number(e.target.value) || 1)) })} />
               </label>
               {fresa.tipo === "v" && (
                 <label className="text-[11.5px] text-[#8A97AB]">
-                  Ángulo (°)
+                  <T>Ángulo (°)</T>
                   <input type="number" min={10} max={150} className={CAMPO} value={fresa.angulo || 60} onChange={(e) => setFresa({ ...fresa, angulo: Math.max(10, Math.min(150, Number(e.target.value) || 60)) })} />
                 </label>
               )}
