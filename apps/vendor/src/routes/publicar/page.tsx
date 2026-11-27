@@ -7,6 +7,7 @@
 //
 // Lo que va escribiendo se guarda en este navegador (localStorage), para que
 // no pierda nada si cierra la pestaña a la mitad.
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
@@ -20,6 +21,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Publicar producto",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -333,16 +336,16 @@ const PublicarPage = () => {
       <div style={S.page}>
         <div style={{ ...S.card, textAlign: "center" }}>
           <p style={{ fontSize: 44, margin: 0 }}>🎉</p>
-          <h1 style={{ ...S.h1, marginTop: 8 }}>¡Listo, tu producto ya está a la venta!</h1>
+          <h1 style={{ ...S.h1, marginTop: 8 }}><T>¡Listo, tu producto ya está a la venta!</T></h1>
           <p style={{ ...S.sub, marginTop: 8 }}>
-            Ya aparece en la tienda. Cuando alguien lo compre te avisamos por correo y lo ves en Pedidos.
+            <T>Ya aparece en la tienda. Cuando alguien lo compre te avisamos por correo y lo ves en Pedidos.</T>
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 8 }}>
             <a href={`/mx/products/${listo.handle}`} target="_blank" rel="noreferrer" style={{ ...S.btn, textDecoration: "none" }}>
-              Ver en la tienda
+              <T>Ver en la tienda</T>
             </a>
             <button type="button" style={S.btn2} onClick={otro}>
-              Publicar otro producto
+              <T>Publicar otro producto</T>
             </button>
           </div>
         </div>
@@ -354,18 +357,18 @@ const PublicarPage = () => {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Publicar producto</h1>
+      <h1 style={S.h1}><T>Publicar producto</T></h1>
       <p style={S.sub}>
-        Paso {paso + 1} de {PASOS.length}: <b>{PASOS[paso]}</b>. Lo que escribas se guarda solo en este navegador.
+        <T>Paso</T> {paso + 1} <T>de</T> <T>{PASOS.length}</T>: <b>{PASOS[paso]}</b><T>. Lo que escribas se guarda solo en este navegador.</T>
       </p>
       {paso === 0 && (
         <p style={{ ...S.sub, marginTop: -10 }}>
-          ¿Tienes muchos productos? <Link to="/publicar-excel" style={{ color: "#C2560A", fontWeight: 700 }}>Súbelos de una vez con Excel</Link>.
+          <T>¿Tienes muchos productos?</T> <Link to="/publicar-excel" style={{ color: "#C2560A", fontWeight: 700 }}><T>Súbelos de una vez con Excel</T></Link>.
         </p>
       )}
       {avisoAlta && (
         <div role="status" style={{ background: "#FFF6DB", border: "1px solid #F0D58A", borderRadius: 12, padding: "12px 14px", marginBottom: 16, fontSize: 14, lineHeight: 1.5 }}>
-          <b>Todavía no puedes publicar.</b> {avisoAlta} Puedes ir llenando tu producto: se queda guardado en este navegador.
+          <b><T>Todavía no puedes publicar.</T></b> <T>{avisoAlta}</T> <T>Puedes ir llenando tu producto: se queda guardado en este navegador.</T>
         </div>
       )}
 
@@ -376,14 +379,14 @@ const PublicarPage = () => {
       <div style={S.card}>
         {paso === 0 && (
           <>
-            <h2 style={S.h2}>Fotos del producto</h2>
+            <h2 style={S.h2}><T>Fotos del producto</T></h2>
             <p style={S.ayuda}>
-              Hasta {MAX_FOTOS} fotos, <b>con fondo blanco</b> y bien iluminadas. La primera es la principal. Si tu foto no tiene
-              fondo blanco, quítaselo gratis en{" "}
+              <T>Hasta</T> {MAX_FOTOS} <T>fotos,</T> <b><T>con fondo blanco</T></b> <T>y bien iluminadas. La primera es la principal. Si tu foto no tiene
+              fondo blanco, quítaselo gratis en</T><T>{" "}</T>
               <a href="https://www.remove.bg/es" target="_blank" rel="noreferrer">
-                remove.bg
-              </a>{" "}
-              (Editar → Fondo → blanco).
+                <T>remove.bg</T>
+              </a><T>{" "}</T>
+              <T>(Editar → Fondo → blanco).</T>
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: 12 }}>
               {d.fotos.map((f, i) => (
@@ -391,21 +394,21 @@ const PublicarPage = () => {
                   <div style={{ aspectRatio: "1/1", background: `#F7F5F0 center/contain no-repeat url(${f.url})`, opacity: f.subiendo ? 0.5 : 1 }} />
                   <div style={{ padding: 8, fontSize: 12 }}>
                     {f.subiendo ? (
-                      <span style={{ color: "#6B675C" }}>Subiendo…</span>
+                      <span style={{ color: "#6B675C" }}><T>Subiendo…</T></span>
                     ) : f.blanco === false ? (
                       <span style={{ color: fondoBlanco ? "#9B3225" : "#9A6A06", fontWeight: 600 }} title={fondoBlanco ? "" : "Puedes publicarla, pero con fondo blanco se vende más"}>
-                        ⚠ Sin fondo blanco{fondoBlanco ? "" : " (recomendado)"}
+                        <T>⚠ Sin fondo blanco</T><T>{fondoBlanco ? "" : " (recomendado)"}</T>
                       </span>
                     ) : i === 0 ? (
-                      <span style={{ color: "#14683F", fontWeight: 600 }}>★ Principal</span>
+                      <span style={{ color: "#14683F", fontWeight: 600 }}><T>★ Principal</T></span>
                     ) : (
                       <button type="button" onClick={() => hacerPrincipal(i)} style={{ border: 0, background: "none", color: "#C2560A", cursor: "pointer", padding: 0, fontSize: 12, fontWeight: 600 }}>
-                        Hacer principal
+                        <T>Hacer principal</T>
                       </button>
                     )}
                     {!f.subiendo && (
                       <button type="button" onClick={() => quitarFoto(i)} style={{ float: "right", border: 0, background: "none", color: "#6B675C", cursor: "pointer", padding: 0, fontSize: 12 }}>
-                        Quitar
+                        <T>Quitar</T>
                       </button>
                     )}
                   </div>
@@ -415,7 +418,7 @@ const PublicarPage = () => {
                 <label style={{ border: "2px dashed #D9D5C9", borderRadius: 12, aspectRatio: "1/1", display: "grid", placeItems: "center", cursor: "pointer", color: "#6B675C", fontSize: 13, textAlign: "center", padding: 8 }}>
                   <span>
                     <span style={{ fontSize: 30, display: "block", lineHeight: 1 }}>＋</span>
-                    Agregar fotos
+                    <T>Agregar fotos</T>
                   </span>
                   <input
                     type="file"
@@ -437,58 +440,58 @@ const PublicarPage = () => {
 
         {paso === 1 && (
           <>
-            <h2 style={S.h2}>¿Qué vendes?</h2>
+            <h2 style={S.h2}><T>¿Qué vendes?</T></h2>
             <p style={S.ayuda}>
-              Escribe como lo buscaría un cliente: <b>qué es + marca o material + medida o modelo</b>. Ejemplo: "Fresa de
-              compresión 1/4 2 filos para MDF y triplay".
+              <T>Escribe como lo buscaría un cliente:</T> <b><T>qué es + marca o material + medida o modelo</T></b><T>. Ejemplo: "Fresa de
+              compresión 1/4 2 filos para MDF y triplay".</T>
             </p>
-            <label style={S.label}>Título</label>
+            <label style={S.label}><T>Título</T></label>
             <input
               style={S.input}
               value={d.titulo}
               maxLength={120}
-              placeholder="Ej. Spindle enfriado por aire 2.2 kW 220 V con variador"
+              placeholder={traducir("Ej. Spindle enfriado por aire 2.2 kW 220 V con variador")}
               onChange={(e) => cambiar({ titulo: e.target.value })}
               autoFocus
             />
-            <p style={{ ...S.ayuda, margin: "6px 0 0", textAlign: "right" }}>{d.titulo.trim().length} / 120</p>
+            <p style={{ ...S.ayuda, margin: "6px 0 0", textAlign: "right" }}><T>{d.titulo.trim().length}</T> / 120</p>
           </>
         )}
 
         {paso === 2 && (
           <>
-            <h2 style={S.h2}>Categoría</h2>
-            <p style={S.ayuda}>Así te encuentran en la tienda y en los filtros.</p>
+            <h2 style={S.h2}><T>Categoría</T></h2>
+            <p style={S.ayuda}><T>Así te encuentran en la tienda y en los filtros.</T></p>
             {sugeridas.length > 0 && (
               <>
-                <label style={S.label}>Te sugerimos</label>
+                <label style={S.label}><T>Te sugerimos</T></label>
                 <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>
                   {sugeridas.map((c) => (
                     <button key={c.id} type="button" style={opcion(d.categoria_id === c.id)} onClick={() => cambiar({ categoria_id: c.id })}>
-                      {c.ruta}
+                      <T>{c.ruta}</T>
                     </button>
                   ))}
                 </div>
               </>
             )}
-            <label style={S.label}>{sugeridas.length ? "¿No es ninguna? Búscala" : "Busca la categoría"}</label>
-            <input style={S.input} value={buscar} placeholder="Ej. fresas, spindle, láser, madera…" onChange={(e) => setBuscar(e.target.value)} />
+            <label style={S.label}><T>{sugeridas.length ? "¿No es ninguna? Búscala" : "Busca la categoría"}</T></label>
+            <input style={S.input} value={buscar} placeholder={traducir("Ej. fresas, spindle, láser, madera…")} onChange={(e) => setBuscar(e.target.value)} />
             {buscar.trim() && (
               <div style={{ display: "grid", gap: 6, marginTop: 10, maxHeight: 320, overflowY: "auto" }}>
                 {encontradas.length ? (
                   encontradas.map((c) => (
                     <button key={c.id} type="button" style={opcion(d.categoria_id === c.id)} onClick={() => cambiar({ categoria_id: c.id })}>
-                      {c.ruta}
+                      <T>{c.ruta}</T>
                     </button>
                   ))
                 ) : (
-                  <p style={{ ...S.ayuda, margin: 0 }}>No encontramos esa categoría. Prueba con otra palabra.</p>
+                  <p style={{ ...S.ayuda, margin: 0 }}><T>No encontramos esa categoría. Prueba con otra palabra.</T></p>
                 )}
               </div>
             )}
             {categoria && (
               <p style={{ ...S.ok, marginTop: 14 }}>
-                Elegiste: <b>{categoria.ruta}</b>
+                <T>Elegiste:</T> <b><T>{categoria.ruta}</T></b>
               </p>
             )}
           </>
@@ -496,19 +499,19 @@ const PublicarPage = () => {
 
         {paso === 3 && (
           <>
-            <h2 style={S.h2}>Precio y existencias</h2>
-            <p style={S.ayuda}>El precio es por pieza, en pesos mexicanos, con IVA incluido.</p>
+            <h2 style={S.h2}><T>Precio y existencias</T></h2>
+            <p style={S.ayuda}><T>El precio es por pieza, en pesos mexicanos, con IVA incluido.</T></p>
             <div style={S.grid}>
               <div>
-                <label style={S.label}>Precio (MXN)</label>
-                <input style={S.input} inputMode="decimal" value={d.precio} placeholder="Ej. 349" onChange={(e) => cambiar({ precio: e.target.value.replace(/[^0-9.]/g, "") })} />
+                <label style={S.label}><T>Precio (MXN)</T></label>
+                <input style={S.input} inputMode="decimal" value={d.precio} placeholder={traducir("Ej. 349")} onChange={(e) => cambiar({ precio: e.target.value.replace(/[^0-9.]/g, "") })} />
               </div>
               <div>
-                <label style={S.label}>Piezas disponibles</label>
+                <label style={S.label}><T>Piezas disponibles</T></label>
                 <input style={S.input} inputMode="numeric" value={d.existencias} onChange={(e) => cambiar({ existencias: e.target.value.replace(/\D/g, "") })} />
               </div>
             </div>
-            <label style={{ ...S.label, marginTop: 16 }}>Condición</label>
+            <label style={{ ...S.label, marginTop: 16 }}><T>Condición</T></label>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {[
                 ["nuevo", "Nuevo"],
@@ -516,14 +519,14 @@ const PublicarPage = () => {
                 ["reacondicionado", "Reacondicionado"],
               ].map(([v, t]) => (
                 <button key={v} type="button" style={opcion(d.condicion === v)} onClick={() => cambiar({ condicion: v })}>
-                  {t}
+                  <T>{t}</T>
                 </button>
               ))}
             </div>
             <details style={{ marginTop: 16 }}>
-              <summary style={{ cursor: "pointer", fontSize: 13, color: "#6B675C" }}>Más opciones (SKU / código interno)</summary>
+              <summary style={{ cursor: "pointer", fontSize: 13, color: "#6B675C" }}><T>Más opciones (SKU / código interno)</T></summary>
               <div style={{ marginTop: 10 }}>
-                <label style={S.label}>SKU (opcional, si no, lo ponemos nosotros)</label>
+                <label style={S.label}><T>SKU (opcional, si no, lo ponemos nosotros)</T></label>
                 <input style={S.input} value={d.sku} maxLength={40} onChange={(e) => cambiar({ sku: e.target.value })} />
               </div>
             </details>
@@ -532,10 +535,10 @@ const PublicarPage = () => {
 
         {paso === 4 && (
           <>
-            <h2 style={S.h2}>Envío</h2>
+            <h2 style={S.h2}><T>Envío</T></h2>
             <p style={S.ayuda}>
-              El paquete ya empacado. Con esto la paquetería calcula el envío del cliente. Elige uno parecido o escribe tus
-              medidas.
+              <T>El paquete ya empacado. Con esto la paquetería calcula el envío del cliente. Elige uno parecido o escribe tus
+              medidas.</T>
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 8, marginBottom: 16 }}>
               {PAQUETES.map((p) => {
@@ -547,11 +550,11 @@ const PublicarPage = () => {
                     style={opcion(activo)}
                     onClick={() => cambiar({ peso_kg: p.peso_kg, largo_cm: p.largo_cm, ancho_cm: p.ancho_cm, alto_cm: p.alto_cm })}
                   >
-                    <b>{p.nombre}</b>
+                    <b><T>{p.nombre}</T></b>
                     <span style={{ display: "block", fontSize: 12, color: "#6B675C", marginTop: 2 }}>
-                      {p.largo_cm}×{p.ancho_cm}×{p.alto_cm} cm · {p.peso_kg} kg
+                      <T>{p.largo_cm}</T>×<T>{p.ancho_cm}</T>×<T>{p.alto_cm}</T> <T>cm ·</T> <T>{p.peso_kg}</T> <T>kg</T>
                     </span>
-                    <span style={{ display: "block", fontSize: 12, color: "#6B675C" }}>{p.nota}</span>
+                    <span style={{ display: "block", fontSize: 12, color: "#6B675C" }}><T>{p.nota}</T></span>
                   </button>
                 )
               })}
@@ -564,7 +567,7 @@ const PublicarPage = () => {
                 ["alto_cm", "Alto (cm)"],
               ].map(([k, t]) => (
                 <div key={k}>
-                  <label style={S.label}>{t}</label>
+                  <label style={S.label}><T>{t}</T></label>
                   <input style={S.input} inputMode="decimal" value={d[k]} onChange={(e) => cambiar({ [k]: e.target.value.replace(/[^0-9.]/g, "") })} />
                 </div>
               ))}
@@ -574,14 +577,14 @@ const PublicarPage = () => {
 
         {paso === 5 && (
           <>
-            <h2 style={S.h2}>Descripción</h2>
+            <h2 style={S.h2}><T>Descripción</T></h2>
             <p style={S.ayuda}>
-              Cuenta lo que el cliente necesita saber: material, medidas, qué incluye y para qué sirve. Los renglones que
-              empiezan con "-" salen como lista. Es opcional, pero vende más.
+              <T>Cuenta lo que el cliente necesita saber: material, medidas, qué incluye y para qué sirve. Los renglones que
+              empiezan con "-" salen como lista. Es opcional, pero vende más.</T>
             </p>
             {!d.descripcion.trim() && (
               <button type="button" style={{ ...S.btn2, marginBottom: 10 }} onClick={() => cambiar({ descripcion: PLANTILLA })}>
-                Usar plantilla
+                <T>Usar plantilla</T>
               </button>
             )}
             <textarea style={S.area} value={d.descripcion} maxLength={8000} onChange={(e) => cambiar({ descripcion: e.target.value })} placeholder={PLANTILLA} />
@@ -590,45 +593,45 @@ const PublicarPage = () => {
 
         {paso === 6 && (
           <>
-            <h2 style={S.h2}>Revisa y publica</h2>
-            <p style={S.ayuda}>Así se va a ver. Si algo está mal, regresa al paso con "Cambiar".</p>
+            <h2 style={S.h2}><T>Revisa y publica</T></h2>
+            <p style={S.ayuda}><T>Así se va a ver. Si algo está mal, regresa al paso con "Cambiar".</T></p>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(140px,220px) 1fr", gap: 18, alignItems: "start" }}>
               <div style={{ aspectRatio: "1/1", borderRadius: 12, border: "1px solid #E7E4DC", background: `#fff center/contain no-repeat url(${d.fotos[0]?.url || ""})` }} />
               <div>
-                <p style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px" }}>{d.titulo}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px" }}><T>{d.titulo}</T></p>
                 <p style={{ fontSize: 24, fontWeight: 800, margin: "0 0 6px" }}>{pesos(d.precio)}</p>
                 <p style={{ ...S.ayuda, margin: 0 }}>
-                  {({ nuevo: "Nuevo", usado: "Usado", reacondicionado: "Reacondicionado" })[d.condicion]} · {d.existencias} disponibles
+                  {({ nuevo: "Nuevo", usado: "Usado", reacondicionado: "Reacondicionado" })[d.condicion]} · <T>{d.existencias}</T> <T>disponibles</T>
                 </p>
-                <p style={{ ...S.ayuda, margin: "4px 0 0" }}>{categoria?.ruta}</p>
+                <p style={{ ...S.ayuda, margin: "4px 0 0" }}><T>{categoria?.ruta}</T></p>
                 <p style={{ ...S.ayuda, margin: "4px 0 0" }}>
-                  Paquete: {d.largo_cm}×{d.ancho_cm}×{d.alto_cm} cm · {d.peso_kg} kg
+                  <T>Paquete:</T> <T>{d.largo_cm}</T>×<T>{d.ancho_cm}</T>×<T>{d.alto_cm}</T> <T>cm ·</T> <T>{d.peso_kg}</T> <T>kg</T>
                 </p>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
               {PASOS.slice(0, 6).map((nombre, i) => (
                 <button key={nombre} type="button" style={{ ...S.btn2, padding: "6px 12px", fontSize: 12 }} onClick={() => setPaso(i)}>
-                  Cambiar {nombre.toLowerCase()}
+                  <T>Cambiar</T> {nombre.toLowerCase()}
                 </button>
               ))}
             </div>
           </>
         )}
 
-        {error && <div style={S.error}>{error}</div>}
+        {error && <div style={S.error}><T>{error}</T></div>}
 
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 22 }}>
           <button type="button" style={{ ...S.btn2, visibility: paso === 0 ? "hidden" : "visible" }} onClick={atras}>
-            ← Atrás
+            <T>← Atrás</T>
           </button>
           {paso < PASOS.length - 1 ? (
             <button type="button" style={S.btn} onClick={siguiente}>
-              Siguiente →
+              <T>Siguiente →</T>
             </button>
           ) : (
             <button type="button" style={{ ...S.btn, opacity: publicando ? 0.7 : 1 }} disabled={publicando} onClick={publicar}>
-              {publicando ? "Publicando…" : "Publicar ahora"}
+              <T>{publicando ? "Publicando…" : "Publicar ahora"}</T>
             </button>
           )}
         </div>
