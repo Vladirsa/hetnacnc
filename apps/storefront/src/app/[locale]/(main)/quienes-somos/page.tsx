@@ -1,10 +1,12 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, ubicacionEmpresa } from "@/lib/hetna/empresa"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/quienes-somos" },
   title: "Quiénes somos",
   description:
@@ -44,15 +46,15 @@ export default function QuienesSomos() {
       }}
     >
       <p className="text-lg font-semibold text-[#142033]">
-        “No quieres hacer nada, yo te vendo el diseño. No quieres diseñar, yo te lo diseño. Quieres maquilarlo y no tienes
-        cómo, yo te lo maquilo.”
+        <TS>“No quieres hacer nada, yo te vendo el diseño. No quieres diseñar, yo te lo diseño. Quieres maquilarlo y no tienes
+        cómo, yo te lo maquilo.”</TS>
       </p>
 
-      <h2>Qué hacemos</h2>
+      <h2><TS>Qué hacemos</TS></h2>
       <p>
-        HETNA CNC nace en {ubicacionEmpresa()} para resolver toda la cadena de la fabricación digital en un solo lugar:
+        <TS>HETNA CNC nace en</TS> {ubicacionEmpresa()} <TS>para resolver toda la cadena de la fabricación digital en un solo lugar:
         máquinas, herramientas, materiales, diseños listos para cortar y servicios de fabricación con talleres de todo
-        México.
+        México.</TS>
       </p>
 
       <div className="my-5 grid gap-3 sm:grid-cols-3">
@@ -64,26 +66,31 @@ export default function QuienesSomos() {
         ))}
       </div>
 
-      <h2>Para talleres</h2>
+      <h2><TS>Para talleres</TS></h2>
       <p>
-        Los talleres de la red ofrecen sus servicios en el <LocalizedClientLink href="/talleres">directorio de talleres</LocalizedClientLink>,
+        <TS>Los talleres de la red ofrecen sus servicios en el</TS> <LocalizedClientLink href="/talleres"><TS>directorio de talleres</TS></LocalizedClientLink><TS>,
         reciben solicitudes de cotización y venden con Envíos HETNA, sin contratar paqueterías por su cuenta. Además tienen
-        herramientas para cotizar desde el celular.
+        herramientas para cotizar desde el celular.</TS>
       </p>
 
-      <h2>Comunidad</h2>
+      <h2><TS>Comunidad</TS></h2>
       <p>
-        Somos parte de la comunidad CNC de México: administramos el grupo de Facebook “Router CNC México” y compartimos
-        contenido en <LocalizedClientLink href="/servicios/aprendizaje-cnc">Aprendizaje CNC</LocalizedClientLink>.
+        <TS>Somos parte de la comunidad CNC de México: administramos el grupo de Facebook “Router CNC México” y compartimos
+        contenido en</TS> <LocalizedClientLink href="/servicios/aprendizaje-cnc"><TS>Aprendizaje CNC</TS></LocalizedClientLink>.
       </p>
 
-      <h2>Nuestro compromiso</h2>
+      <h2><TS>Nuestro compromiso</TS></h2>
       <ul>
-        <li>Precios claros en pesos y envío calculado antes de pagar.</li>
-        <li>Información clara de cada taller: servicios, máquinas, materiales y tiempos de entrega.</li>
-        <li>Pagos y tratos dentro de la plataforma, para que tu compra quede respaldada.</li>
-        <li>Atención en español: {EMPRESA.horario}.</li>
+        <li><TS>Precios claros en pesos y envío calculado antes de pagar.</TS></li>
+        <li><TS>Información clara de cada taller: servicios, máquinas, materiales y tiempos de entrega.</TS></li>
+        <li><TS>Pagos y tratos dentro de la plataforma, para que tu compra quede respaldada.</TS></li>
+        <li><TS>Atención en español:</TS> {EMPRESA.horario}.</li>
       </ul>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
