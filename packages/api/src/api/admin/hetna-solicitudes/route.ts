@@ -5,6 +5,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_PROPUESTA, T_SOLICITUD, folioTexto, ligaPropuestas } from "../../../lib/licitacion"
+import { sePuedeDifundir } from "../../../lib/difusion"
 import { NOMBRE_PROBLEMA, type TipoProblema } from "../../../lib/disputa"
 import { ETAPAS, NOMBRE_ETAPA, asegurarSeguimiento, etapaDe, limiteRevision } from "../../../lib/seguimiento"
 
@@ -54,6 +55,8 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
         folio: folioTexto(s.folio),
         modo: s.modo,
         estado: s.estado,
+        difundir_redes: Boolean(s.difundir_redes),
+        se_puede_difundir: sePuedeDifundir(s),
         etapa: e,
         etapa_nombre: NOMBRE_ETAPA[e],
         etapa_desde: s.etapa_desde || s.updated_at,

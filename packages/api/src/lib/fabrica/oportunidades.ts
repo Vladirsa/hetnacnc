@@ -78,11 +78,11 @@ export async function fichaSolicitud(knex: any, solicitudId: string) {
   if (cierra) datos.push(["Cierra", cierra])
   datos.push(["Cotizaciones", n ? `${n} recibida${n === 1 ? "" : "s"}` : "sé el primero"])
   return {
-    cinta: { texto: pub.tipo === "suministro" ? "Se busca proveedor" : "Se busca taller" },
-    titulo: [t.servicio, lugar && `en ${pub.ciudad || pub.estado_mx}`].filter(Boolean).join(" ") || "Trabajo de fabricación CNC",
+    cinta: { texto: `${pub.tipo === "suministro" ? "Se busca proveedor" : "Se busca taller CNC"}${pub.estado_mx || pub.ciudad ? ` en ${pub.estado_mx || pub.ciudad}` : ""}` },
+    titulo: `Cotízale a este cliente: ${[t.servicio, t.material && `en ${t.material}`].filter(Boolean).join(" ") || "trabajo de fabricación CNC"}`,
     datos: datos.map(([k, v]) => [k, String(v).slice(0, 60)]) as [string, string][],
     sub: `Datos al ${hoyTexto()}`,
-    cta: "Cotiza gratis, sin comisión",
+    cta: "Regístrate gratis y cotiza",
     url: ligaTrabajo(s.folio),
   }
 }

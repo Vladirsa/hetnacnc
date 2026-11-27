@@ -15,6 +15,8 @@ type Solicitud = {
   folio: string
   modo: string
   estado: string
+  difundir_redes?: boolean
+  se_puede_difundir?: boolean
   etapa: string
   etapa_nombre: string
   etapa_desde: string
@@ -204,6 +206,25 @@ function Tarjeta({ s, alCambiar }: { s: Solicitud; alCambiar: () => void }) {
         {s.pago_monto ? ` · Pago ${s.pago_estado || "—"} ${pesos(s.pago_monto)}` : ""}
         {s.guia ? ` · Guía ${s.paqueteria || ""} ${s.guia}` : ""}
       </div>
+
+      {s.se_puede_difundir && (
+        <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", fontSize: 13 }}>
+          {s.difundir_redes ? (
+            <span style={{ color: C.verde, fontWeight: 600 }}>📣 Anunciada en redes y Telegram</span>
+          ) : (
+            <>
+              <button type="button" style={boton("normal")} disabled={ocupado}
+                onClick={() =>
+                  window.confirm("¿Publicar el anuncio? Sale sólo el resumen (sin nombre, contacto ni archivos) en redes y Telegram, para que más talleres se registren y coticen.") &&
+                  accion({ accion: "difundir_redes" }, "Listo: el anuncio quedó programado en el Social Hub (sale en minutos, en horario).", () => {})
+                }>
+                📣 Publicar en redes y Telegram
+              </button>
+              <span style={{ color: C.tenue }}>Esta no salió sola (entró antes del cambio o el cliente desmarcó la casilla).</span>
+            </>
+          )}
+        </div>
+      )}
 
       {s.estado === "revision" && (
         <div style={{ marginTop: 12, background: C.suave, borderRadius: 10, padding: 12 }}>

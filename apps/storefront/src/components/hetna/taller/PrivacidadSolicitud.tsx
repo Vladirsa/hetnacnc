@@ -41,7 +41,8 @@ const MODALIDADES: { valor: string; titulo: string; texto: string }[] = [
 export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { dirigida: boolean; servicio?: string; material?: string; estado?: string }) {
   const [modalidad, setModalidad] = useState("publica")
   const [p, setP] = useState<Record<string, string>>(INICIAL)
-  const [redes, setRedes] = useState(false)
+  // Marcada de inicio: el anuncio trae más talleres (y altas nuevas). Quien no quiere, la desmarca.
+  const [redes, setRedes] = useState(true)
   const [abierto, setAbierto] = useState(false)
   // Fase 3: privada, restringida y "sólo verificados" son de la Membresía Empresarial
   const [miembro, setMiembro] = useState(false)
@@ -62,7 +63,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
       <input type="hidden" name="modalidad" value={dirigida ? "privada" : modalidad} />
       <input type="hidden" name="privacidad" value={JSON.stringify(p)} />
       <input type="hidden" name="solo_verificados" value={miembro && soloVerif ? "1" : ""} />
-      <input type="hidden" name="difundir_redes" value={redes && !privada ? "1" : ""} />
+      <input type="hidden" name="difundir_redes" value={redes && !privada ? "1" : "0"} />
 
       {!dirigida && (
         <div className="grid gap-2 sm:grid-cols-3">

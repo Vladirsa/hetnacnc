@@ -8,6 +8,10 @@
 //       interna = la nota sólo la ve HETNA: no sale en la liga del cliente ni en su correo.
 //       A "enviada_talleres" desde la revisión = aprobar (avisa a los talleres).
 //   { accion: "nota", nota, interna? }         → sólo anota en el historial
+//   { accion: "difundir_redes" }               → anuncio en redes y Telegram (Social Hub) para
+//                                                que más talleres se registren y coticen. Para
+//                                                las que el cliente no marcó la casilla: HETNA
+//                                                le pide permiso por WhatsApp antes.
 //   { accion: "resolver_disputa", decision, nota }
 //       decision = liberar           → el taller cobra; si ya entregó, se cierra y se avisa la liquidación
 //                  reembolso_parcial → se cierra; HETNA devuelve al cliente y liquida al taller lo que diga la nota
@@ -16,7 +20,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { aprobarSolicitud } from "../../../../../lib/difusion"
+import { aprobarSolicitud, publicarSolicitudEnRedes, sePuedeDifundir } from "../../../../../lib/difusion"
 import { T_SOLICITUD, boton, esc, folioTexto, ligaPropuestas, marco } from "../../../../../lib/licitacion"
 import { sendEmail } from "../../../../../lib/resend"
 import { ETAPAS, type Etapa, anotar, asegurarSeguimiento, cambiarEtapa, etapaDe } from "../../../../../lib/seguimiento"
@@ -97,6 +101,14 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
       // expediente necesitan su fecha); lo que se esconde es sólo la nota interna.
       await cambiarEtapa(knex, s, etapa, { actor: "hetna", nota: interna ? undefined : nota || undefined, extra, logger })
       if (interna && nota) await anotar(knex, s.id, "hetna", nota, false)
+      return res.json({ ok: true })
+    }
+    case "difundir_redes": {
+      if (!sePuedeDifundir(s)) return res.status(409).json({ message: "Sólo se anuncian las solicitudes abiertas (no privadas) que siguen recibiendo propuestas." })
+      await knex(T_SOLICITUD).where({ id: s.id }).update({ difundir_redes: true })
+      const pub = await publicarSolicitudEnRedes(knex, { ...s, difundir_redes: true }, logger)
+      if (!pub) return res.status(409).json({ message: "No se creó el anuncio: ya se había anunciado o falló. Revisa el Social Hub." })
+      await anotar(knex, s.id, "hetna", "HETNA la anunció en redes sociales y Telegram (resumen sin datos de contacto).", false)
       return res.json({ ok: true })
     }
     case "nota": {
