@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { FC, useState } from 'react';
 
 import { zodResolver } from '@/lib/helpers/zod-resolver';
@@ -93,7 +94,7 @@ const Form: React.FC<Props> = ({ handleClose }) => {
           />
         </div>
         {error && <p className="label-md text-negative" data-testid="profile-details-form-error">{error}</p>}
-        <Button className="w-full" data-testid="profile-details-form-submit-button">Guardar</Button>
+        <Button className="w-full" data-testid="profile-details-form-submit-button"><T>Guardar</T></Button>
       </div>
     </form>
   );
