@@ -73,17 +73,17 @@ export default async function CreditosPage({
           <section className="rounded-[14px] border border-[#E7E4DC] bg-[#142033] p-6 text-white">
             <p className="text-[12px] uppercase tracking-wide text-[#9FB0C9]"><TS>Tu saldo</TS></p>
             <p className="mt-1 text-[40px] font-bold leading-none">
-              {ilimitado ? "∞" : saldo}{" "}
+              <TS>{ilimitado ? "∞" : saldo}</TS><TS>{" "}</TS>
               <span className="text-[18px] font-semibold text-[#9FB0C9]">
-                {ilimitado ? "créditos ilimitados" : saldo === 1 ? "crédito" : "créditos"}
+                <TS>{ilimitado ? "créditos ilimitados" : saldo === 1 ? "crédito" : "créditos"}</TS>
               </span>
             </p>
             <p className="mt-2 text-[14px] text-[#9FB0C9]">
-              {ilimitado
+              <TS>{ilimitado
                 ? "Cuenta de HETNA: el escaneo 3D, el cotizador y las descargas no te descuentan nada."
                 : alcanzan > 0
                 ? `Te alcanza para ${alcanzan} ${alcanzan === 1 ? "escaneo 3D" : "escaneos 3D"} (${porEscaneo} créditos cada uno).`
-                : `Un escaneo 3D cuesta ${porEscaneo} créditos. Todavía no te alcanza.`}
+                : `Un escaneo 3D cuesta ${porEscaneo} créditos. Todavía no te alcanza.`}</TS>
             </p>
             {!res.ok && (
               <p className="mt-3 rounded-[8px] bg-[#1F3350] px-3 py-2 text-[13px]">
@@ -118,8 +118,8 @@ export default async function CreditosPage({
                 <span>
                   <LocalizedClientLink href="/disenar/muebles-ensamble" className="font-semibold text-[#B34D07] underline">
                     <TS>Muebles</TS>
-                  </LocalizedClientLink>{" "}
-                  y{" "}
+                  </LocalizedClientLink><TS>{" "}</TS>
+                  y<TS>{" "}</TS>
                   <LocalizedClientLink href="/disenar/despiece-muebles" className="font-semibold text-[#B34D07] underline">
                     <TS>cocina integral</TS>
                   </LocalizedClientLink>
@@ -141,7 +141,7 @@ export default async function CreditosPage({
                   >
                     <TS>Escaneo 3D</TS>
                   </LocalizedClientLink>
-                  : {porEscaneo} <TS>créditos por pieza. La vista previa es gratis.</TS>
+                  : <TS>{porEscaneo}</TS> <TS>créditos por pieza. La vista previa es gratis.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
@@ -159,13 +159,13 @@ export default async function CreditosPage({
               <li className="flex gap-2">
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>
-                  <TS>El</TS>{" "}
+                  <TS>El</TS><TS>{" "}</TS>
                   <LocalizedClientLink
                     href="/herramientas-cnc#laboratorio-cam"
                     className="font-semibold text-[#B34D07] underline"
                   >
                     <TS>Laboratorio CAM</TS>
-                  </LocalizedClientLink>{" "}
+                  </LocalizedClientLink><TS>{" "}</TS>
                   <TS>es gratis y sin cuenta.</TS>
                 </span>
               </li>
