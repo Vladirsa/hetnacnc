@@ -37,6 +37,8 @@ export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vist
             alt={`${titulo} — ${v.titulo}`}
             fill
             priority={i === 0}
+            // La portada es lo más grande de la ficha (LCP): que el navegador la pida primero
+            fetchPriority={i === 0 ? "high" : undefined}
             sizes="(min-width: 1024px) 60vw, 100vw"
             className="object-contain"
           />
