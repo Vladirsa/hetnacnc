@@ -19,11 +19,11 @@ export const TarjetaArticulo = ({ a, compacta = false }: { a: ArticuloResumen; c
       <img src={a.cover_image_url} alt="" loading="lazy" width={640} height={360} className="-mx-4 -mt-4 mb-1 aspect-video w-[calc(100%+2rem)] max-w-none rounded-t-[14px] object-cover" />
     )}
     <span className="flex items-center gap-2 text-[11.5px] font-bold uppercase tracking-wide">
-      <span className={a.guia ? "text-[#16794F]" : "text-[#C2560A]"}>{a.guia ? "Guía" : "Artículo"}</span>
+      <span className={a.guia ? "text-[#16794F]" : "text-[#C2560A]"}><TS>{a.guia ? "Guía" : "Artículo"}</TS></span>
       <span className="text-[#9A978C] normal-case font-medium tracking-normal">{fechaCorta(a.published_at)}</span>
     </span>
-    <span className={`font-bold text-[#1B1B18] leading-snug group-hover:text-[#B34D07] ${compacta ? "text-[14.5px] line-clamp-2" : "text-[16.5px]"}`}>{a.title}</span>
-    {!compacta && <span className="text-[13.5px] text-[#55544D] leading-relaxed line-clamp-3">{a.excerpt}</span>}
+    <span className={`font-bold text-[#1B1B18] leading-snug group-hover:text-[#B34D07] ${compacta ? "text-[14.5px] line-clamp-2" : "text-[16.5px]"}`}><TS>{a.title}</TS></span>
+    {!compacta && <span className="text-[13.5px] text-[#55544D] leading-relaxed line-clamp-3"><TS>{a.excerpt}</TS></span>}
   </LocalizedClientLink>
 )
 
