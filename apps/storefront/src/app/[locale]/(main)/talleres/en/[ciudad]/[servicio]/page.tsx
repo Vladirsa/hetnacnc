@@ -6,6 +6,8 @@
 // publica gratis y los talleres le mandan propuesta dentro de HETNA.
 // Sólo datos reales (lib/seo/estados.ts): con menos de MIN_EMPRESAS talleres de
 // ese servicio la página lleva noindex; sin ninguno, regresa a la del estado.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 
@@ -46,7 +48,7 @@ async function cargar(p: { ciudad: string; servicio: string }) {
   return { c, s, pag: PAGINAS_SERVICIO[s.clave], d, f: filtrarServicio(d, s.clave) }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const x = await cargar(await params)
   if (!x || !x.f.total) return {}
   const { c, pag, f } = x
@@ -138,9 +140,9 @@ export default async function ServicioEnEstado({ params }: Props) {
       />
 
       <nav aria-label="Migas de pan" className="flex flex-wrap gap-1.5 text-[13px] text-[#6B675C]">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/talleres" className="hover:text-[#B34D07]">Talleres</LocalizedClientLink>
+        <LocalizedClientLink href="/talleres" className="hover:text-[#B34D07]"><TS>Talleres</TS></LocalizedClientLink>
         <span>/</span>
         <LocalizedClientLink href={rutaEstado(c)} className="hover:text-[#B34D07]">{c.estado}</LocalizedClientLink>
         <span>/</span>
@@ -149,22 +151,22 @@ export default async function ServicioEnEstado({ params }: Props) {
 
       <section className="mt-4 rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
         <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">
-          {pag.nombre} en {c.estado}
+          {pag.nombre} <TS>en</TS> {c.estado}
         </h1>
         <p className="mt-3 max-w-2xl text-[#F2C9A5]">
-          {plural(f.total, "taller", "talleres")} de {pag.nombre.toLowerCase()}
+          {plural(f.total, "taller", "talleres")} <TS>de</TS> {pag.nombre.toLowerCase()}
           {top.length ? ` en ${top.slice(0, 3).join(", ")}${f.municipios.length > 3 ? " y más municipios" : ""}` : ` en ${c.estado}`}.
         </p>
         <p className="mt-3 max-w-2xl text-white/80">
-          Publica tu trabajo gratis y recibe propuestas de varios talleres con precio y tiempo de entrega. Sin pagar por contacto: comparas, eliges y pagas dentro de HETNA.
+          <TS>Publica tu trabajo gratis y recibe propuestas de varios talleres con precio y tiempo de entrega. Sin pagar por contacto: comparas, eliges y pagas dentro de HETNA.</TS>
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <LocalizedClientLink href={licitacion} className="rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:bg-[#A84A08]">
-            Publicar mi trabajo gratis
+            <TS>Publicar mi trabajo gratis</TS>
           </LocalizedClientLink>
           {calc && (
             <a href="#precio" className="rounded-xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10">
-              Ver precio al instante
+              <TS>Ver precio al instante</TS>
             </a>
           )}
         </div>
@@ -172,11 +174,11 @@ export default async function ServicioEnEstado({ params }: Props) {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div>
-          <h2 className="text-xl font-extrabold text-[#142033]">Qué hacen los talleres de {pag.nombre.toLowerCase()}</h2>
-          <p className="mt-2 text-[#40403A]">En {c.estado} encuentras {pag.queHacen}.</p>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Qué hacen los talleres de</TS> {pag.nombre.toLowerCase()}</h2>
+          <p className="mt-2 text-[#40403A]"><TS>En</TS> {c.estado} <TS>encuentras</TS> {pag.queHacen}.</p>
         </div>
         <div>
-          <h2 className="text-xl font-extrabold text-[#142033]">Qué mandar para recibir un buen precio</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Qué mandar para recibir un buen precio</TS></h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-[#40403A]">
             {pag.enviar.map((e) => (
               <li key={e}>{e}</li>
@@ -186,7 +188,7 @@ export default async function ServicioEnEstado({ params }: Props) {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-extrabold text-[#142033]">Cómo funciona</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>Cómo funciona</TS></h2>
         <ol className="mt-3 grid gap-3 sm:grid-cols-3">
           {[
             ["1. Publicas tu trabajo", "Sube tu archivo o una foto con medidas, el material y la cantidad. Es gratis."],
@@ -203,8 +205,8 @@ export default async function ServicioEnEstado({ params }: Props) {
 
       {calc && (
         <section id="precio" className="mt-8 scroll-mt-24">
-          <h2 className="text-xl font-extrabold text-[#142033]">Precio estimado de {pag.nombre.toLowerCase()}</h2>
-          <p className="mt-1 text-sm text-[#6B675C]">Sube tu archivo o pon las medidas. El precio final te lo da el taller en su propuesta.</p>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Precio estimado de</TS> {pag.nombre.toLowerCase()}</h2>
+          <p className="mt-1 text-sm text-[#6B675C]"><TS>Sube tu archivo o pon las medidas. El precio final te lo da el taller en su propuesta.</TS></p>
           <div className="mt-3">
             <CalculadoraLead
               servicio={calc.servicio}
@@ -219,7 +221,7 @@ export default async function ServicioEnEstado({ params }: Props) {
 
       {f.talleres.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-xl font-extrabold text-[#142033]">Talleres de HETNA en {c.estado}</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> {c.estado}</h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {f.talleres.map((t) => (
               <li key={t.id} className="rounded-2xl border-2 border-[#C2560A] bg-white p-4">
@@ -233,7 +235,7 @@ export default async function ServicioEnEstado({ params }: Props) {
                   href={`/cotizar?taller=${encodeURIComponent(t.handle)}&servicio=${encodeURIComponent(pag.servicioSolicitud)}`}
                   className="mt-2 inline-block rounded-full bg-[#FDEEE1] px-2.5 py-1 text-[12px] font-semibold text-[#C2560A] hover:bg-[#FBDDC4]"
                 >
-                  Pedir cotización a este taller
+                  <TS>Pedir cotización a este taller</TS>
                 </LocalizedClientLink>
               </li>
             ))}
@@ -244,10 +246,10 @@ export default async function ServicioEnEstado({ params }: Props) {
       {f.empresas.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xl font-extrabold text-[#142033]">
-            Más talleres de {pag.nombre.toLowerCase()} en {c.estado}
+            <TS>Más talleres de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> {c.estado}
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-[#6B675C]">
-            Empresas que todavía no forman parte de HETNA, con datos públicos de su sitio web. Si pides cotización desde su perfil, tu solicitud llega a la red de talleres y además invitamos a esa empresa a responderte.
+            <TS>Empresas que todavía no forman parte de HETNA, con datos públicos de su sitio web. Si pides cotización desde su perfil, tu solicitud llega a la red de talleres y además invitamos a esa empresa a responderte.</TS>
           </p>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {f.empresas.map((e) => {
@@ -258,8 +260,8 @@ export default async function ServicioEnEstado({ params }: Props) {
                     {e.empresa}
                   </LocalizedClientLink>
                   <p className="mt-0.5 text-[13px] text-[#6B675C]">{e.ciudad || c.estado}</p>
-                  {texto && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]">{texto}</p>}
-                  <span className="mt-2 inline-block rounded-full bg-[#F3F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#6B675C]">Perfil no reclamado</span>
+                  {texto && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]"><TS>{texto}</TS></p>}
+                  <span className="mt-2 inline-block rounded-full bg-[#F3F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#6B675C]"><TS>Perfil no reclamado</TS></span>
                 </li>
               )
             })}
@@ -270,12 +272,12 @@ export default async function ServicioEnEstado({ params }: Props) {
       {f.municipios.length > 1 && (
         <section className="mt-8">
           <h2 className="text-xl font-extrabold text-[#142033]">
-            {pag.nombre} por {c.slug === "cdmx" ? "alcaldía" : "municipio"}
+            {pag.nombre} <TS>por</TS> {c.slug === "cdmx" ? "alcaldía" : "municipio"}
           </h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {f.municipios.map(([m, n]) => (
               <li key={m} className="rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033]">
-                {pag.nombre} en {m} <span className="text-[#6B675C]">({n})</span>
+                {pag.nombre} <TS>en</TS> {m} <span className="text-[#6B675C]">({n})</span>
               </li>
             ))}
           </ul>
@@ -283,17 +285,17 @@ export default async function ServicioEnEstado({ params }: Props) {
       )}
 
       <section className="mt-8 rounded-3xl border border-[#E7E4DC] bg-[#FDF6EF] p-6">
-        <h2 className="text-xl font-extrabold text-[#142033]">¿Tienes un taller de {pag.nombre.toLowerCase()} en {c.estado}?</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>¿Tienes un taller de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> {c.estado}?</h2>
         <p className="mt-2 max-w-3xl text-[#40403A]">
-          En HETNA te llegan trabajos de clientes de tu zona sin pagar por cada contacto: las licitaciones no cobran comisión. Registra tu taller gratis y empieza a mandar propuestas.
+          <TS>En HETNA te llegan trabajos de clientes de tu zona sin pagar por cada contacto: las licitaciones no cobran comisión. Registra tu taller gratis y empieza a mandar propuestas.</TS>
         </p>
         <LocalizedClientLink href="/talleres/unete" className="mt-4 inline-block rounded-xl bg-[#142033] px-5 py-3 font-semibold text-white hover:bg-[#0D1726]">
-          Registrar mi taller gratis
+          <TS>Registrar mi taller gratis</TS>
         </LocalizedClientLink>
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-extrabold text-[#142033]">Preguntas frecuentes</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>Preguntas frecuentes</TS></h2>
         {faqs.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
             <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
@@ -306,11 +308,11 @@ export default async function ServicioEnEstado({ params }: Props) {
         <section className="mt-10 grid gap-6 sm:grid-cols-2">
           {otrosServicios.length > 0 && (
             <div>
-              <h2 className="text-lg font-extrabold text-[#142033]">Otros servicios en {c.estado}</h2>
+              <h2 className="text-lg font-extrabold text-[#142033]"><TS>Otros servicios en</TS> {c.estado}</h2>
               <ul className="mt-3 flex flex-wrap gap-2">
                 <li>
                   <LocalizedClientLink href={rutaEstado(c)} className="inline-block rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]">
-                    Todos los talleres CNC
+                    <TS>Todos los talleres CNC</TS>
                   </LocalizedClientLink>
                 </li>
                 {otrosServicios.map((o) => (
@@ -328,7 +330,7 @@ export default async function ServicioEnEstado({ params }: Props) {
           )}
           {otrosEstados.length > 0 && (
             <div>
-              <h2 className="text-lg font-extrabold text-[#142033]">{pag.nombre} en otros estados</h2>
+              <h2 className="text-lg font-extrabold text-[#142033]">{pag.nombre} <TS>en otros estados</TS></h2>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {otrosEstados.map((o) => (
                   <li key={o.ciudad.slug}>
@@ -347,4 +349,9 @@ export default async function ServicioEnEstado({ params }: Props) {
       )}
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
