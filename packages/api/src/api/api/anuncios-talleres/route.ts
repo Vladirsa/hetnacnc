@@ -9,7 +9,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { T_SOLICITUD } from "../../../lib/licitacion"
 import { T_POST, textoBase } from "../../../lib/social-hub"
-import { resumenRedes } from "../../../lib/licitacion-privacidad"
+import { materialClaro, resumenRedes } from "../../../lib/licitacion-privacidad"
 
 const json = (v: any) => (typeof v === "string" ? (() => { try { return JSON.parse(v) } catch { return null } })() : v)
 
@@ -33,7 +33,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const resumen = resumenRedes(s)
     // Mismo lugar y mismos datos que ya permite mostrar el resumen (respeta la privacidad)
     const lugar = (resumen.match(/Ubicación: ([^.]+)\./) || [])[1] || ""
-    const titulo = s.trabajo.servicio ? [s.trabajo.servicio, s.trabajo.material].filter(Boolean).join(" - ") : s.trabajo.material ? `Trabajo - ${s.trabajo.material}` : p.titulo
+    const mat = materialClaro(s.trabajo.material)
+    const titulo = s.trabajo.servicio ? [s.trabajo.servicio, mat].filter(Boolean).join(" - ") : mat ? `Trabajo - ${mat}` : "Trabajo de fabricación CNC"
     const texto = textoBase("licitacion", { titulo, lugar, resumen, tipo: p.tipo }).replace(/\{\{liga\}\}/g, p.url_destino || "")
     const imagen = (json(p.medios) || []).find((m: any) => m?.url && m.tipo !== "video")?.url || null
     return {

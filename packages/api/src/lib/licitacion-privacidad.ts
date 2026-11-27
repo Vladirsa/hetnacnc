@@ -283,12 +283,24 @@ export function trabajoPublicoPrivado(s: any) {
 }
 
 /** Texto corto y sin datos sensibles para redes sociales (sección 1.3). */
+/**
+ * El material sólo si el cliente lo sabe: «no sé», «lo ignoro... es como un
+ * plástico», «?», «otro» no sirven para un título o un anuncio (se omite).
+ */
+export function materialClaro(m: unknown): string {
+  const t = String(m ?? "").trim()
+  if (!t || t.length > 60) return ""
+  if (/(no s[eé]|ignoro|desconozco|no lo s|ni idea|no tengo idea|\?|\.\.\.|…|^otro$|^n\/?a$|^-+$|como un|algo as[ií])/i.test(t)) return ""
+  return t
+}
+
 export function resumenRedes(s: any): string {
   const t = (s?.trabajo || {}) as Trabajo
   const p = privacidadDe(s)
   const quien = p.nombre === "empresa" && p.empresa === "publico" && s?.contacto?.empresa ? String(s.contacto.empresa) : "Un cliente"
   // Sin servicio: "un trabajo en MDF" (antes salía "para en MDF")
-  const que = t.servicio ? [t.servicio, t.material && `en ${t.material}`].filter(Boolean).join(" ") : t.material ? `un trabajo en ${t.material}` : ""
+  const mat = materialClaro(t.material)
+  const que = t.servicio ? [t.servicio, mat && `en ${mat}`].filter(Boolean).join(" ") : mat ? `un trabajo en ${mat}` : ""
   const lote = t.frecuencia && !/una vez|única|unica/i.test(t.frecuencia) ? "Producción recurrente." : t.cantidad ? `Cantidad: ${t.cantidad}.` : ""
   const donde = p.ubicacion === "confidencial" ? "" : p.ubicacion === "estado" ? t.estado_mx || "" : [t.ciudad, t.estado_mx].filter(Boolean).join(", ")
   return [
