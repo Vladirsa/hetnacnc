@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { convertToLocale } from "@/lib/helpers/money"
 
@@ -31,7 +32,7 @@ export const CartItemsFooter = ({
       <p className="text-[12px] text-[#6B6A63]">
         {typeof envio === "number" ? (
           <>
-            Envío de este taller:{" "}
+            <T>Envío de este taller:</T>{" "}
             <span className="font-semibold text-[#1B1B18]">
               {envio === 0
                 ? "sin costo"
@@ -40,18 +41,18 @@ export const CartItemsFooter = ({
           </>
         ) : (
           <>
-            El envío de este taller se calcula con tu dirección.{" "}
+            <T>El envío de este taller se calcula con tu dirección.</T>{" "}
             <LocalizedClientLink
               href="/formas-de-pago"
               className="font-medium text-[#B34D07] underline"
             >
-              Cómo se cobra
+              <T>Cómo se cobra</T>
             </LocalizedClientLink>
           </>
         )}
       </p>
       <p className="text-[13px] text-[#4A4943]">
-        Subtotal del taller:{" "}
+        <T>Subtotal del taller:</T>{" "}
         <span className="text-[15px] font-bold text-[#1B1B18]">
           {convertToLocale({ amount: subtotal, currency_code })}
         </span>
