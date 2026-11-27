@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Avatar } from "@/components/atoms/Avatar/Avatar"
 import { Badge } from "@/components/atoms/Badge/Badge"
 import { Card } from "@/components/atoms/Card/Card"
@@ -72,10 +73,10 @@ export const SingleOrderReturn = ({
   return (
     <>
       <Card className="bg-secondary p-4 flex justify-between mt-8" data-testid={testIdPrefix ? `${testIdPrefix}-header` : undefined}>
-        <Heading level="h2" data-testid={testIdPrefix ? `${testIdPrefix}-order-id` : undefined}>Order: #{item.order.display_id}</Heading>
+        <Heading level="h2" data-testid={testIdPrefix ? `${testIdPrefix}-order-id` : undefined}><T>Order: #</T>{item.order.display_id}</Heading>
         <div className="flex flex-col gap-2 items-center">
           <p className="label-sm text-secondary" data-testid={testIdPrefix ? `${testIdPrefix}-requested-date` : undefined}>
-            Return requested date:{" "}
+            <T>Return requested date:</T>{" "}
             {format(item.line_items[0].created_at, "MMM dd, yyyy")}
           </p>
         </div>
@@ -177,7 +178,7 @@ export const SingleOrderReturn = ({
           </div>
           <Divider />
           <div className="p-4 flex justify-between">
-            <p className="label-md text-secondary">Total:</p>
+            <p className="label-md text-secondary"><T>Total:</T></p>
             <p className="label-md !font-semibold text-primary" data-testid={priceTestId}>
               {convertToLocale({
                 amount: total,
