@@ -3,6 +3,7 @@
 // Incrustaciones (2D Studio · Letreros y placas): de un texto o un dibujo,
 // el bolsillo (hembra) y la pieza que entra (macho), compensados por la fresa.
 // Motor: lib/generador/letreros2d.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -112,7 +113,7 @@ export function GeneradorIncrustacion({ cabecera }: { cabecera?: React.ReactNode
       <span className="text-[11.5px] leading-snug text-[#8A97AB]">
         A la izquierda el bolsillo (vacíalo {numero(profundidad) || FABRICA.profundidad} mm en la madera base); a la derecha la pieza que entra (córtala por fuera en la madera de contraste, de {(numero(profundidad) || FABRICA.profundidad) + 1} mm o más, y lija al ras después de pegar).
       </span>
-      {(errorArchivo || error) && <span className="text-[12px] text-[#F6B8AE]">{errorArchivo || "No se pudo cargar la letra. Revisa tu conexión."}</span>}
+      {(errorArchivo || error) && <span className="text-[12px] text-[#F6B8AE]"><T>{errorArchivo || "No se pudo cargar la letra. Revisa tu conexión."}</T></span>}
     </div>
   )
 
