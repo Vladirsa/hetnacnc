@@ -4,6 +4,7 @@
 // del botón «Reclamar mi perfil» del directorio): confirma qué perfil se está
 // reclamando y qué pasa al registrarse. Se lee en el navegador para que la página
 // siga siendo estática y rápida.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -23,15 +24,15 @@ export function AvisoReclamarPerfil() {
     <div className="border-b-2 border-[#C2560A] bg-[#FDEEE1]">
       <div className="mx-auto max-w-[1200px] px-4 py-4 text-[#142033] lg:px-8">
         <p className="font-extrabold">
-          Estás reclamando el perfil de {perfil.empresa}
+          <T>Estás reclamando el perfil de</T> {perfil.empresa}
           {perfil.lugar ? ` (${perfil.lugar})` : ""}
         </p>
         <p className="mt-1 text-sm text-[#40403A]">
-          Registra tu taller abajo, de preferencia con el correo de tu empresa. Al terminar, tu perfil de HETNA (con tus
+          <T>Registra tu taller abajo, de preferencia con el correo de tu empresa. Al terminar, tu perfil de HETNA (con tus
           fotos, máquinas y servicios) sustituye al perfil no reclamado y podrás cotizar las solicitudes de clientes de tu
-          zona.{" "}
+          zona.</T>{" "}
           <a href="#registro" className="font-semibold text-[#C2560A] underline">
-            Ir al registro
+            <T>Ir al registro</T>
           </a>
         </p>
       </div>
