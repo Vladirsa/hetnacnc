@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
@@ -51,17 +52,17 @@ export function VisorDeLiga() {
     <div className="flex flex-1 flex-col gap-3 p-4 text-white">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="m-0 text-[16px] font-bold">
-          Visor <span className="text-[#F28A3C]">{nombre}</span>
+          <T>Visor</T> <span className="text-[#F28A3C]">{nombre}</span>
         </h1>
         {geo && <span className="text-[12.5px] text-[#8A97AB]">{resumenGeo(geo)}</span>}
         {u && (
           <a href={u} download={nombre} className="text-[12.5px] font-semibold text-[#F28A3C] hover:underline">
-            Descargar el archivo
+            <T>Descargar el archivo</T>
           </a>
         )}
       </div>
-      {estado === "cargando" && <p className="text-[14px] text-[#8A97AB]">Abriendo el archivo…</p>}
-      {estado === "error" && <p className="rounded-[10px] border border-[#6a3a14] bg-[#2a1a0c] px-3 py-2 text-[13.5px] text-[#F6C79B]">{mensaje}</p>}
+      {estado === "cargando" && <p className="text-[14px] text-[#8A97AB]"><T>Abriendo el archivo…</T></p>}
+      {estado === "error" && <p className="rounded-[10px] border border-[#6a3a14] bg-[#2a1a0c] px-3 py-2 text-[13.5px] text-[#F6C79B]"><T>{mensaje}</T></p>}
       {geo && (
         <div className="flex-1">
           <VisorCad geo={geo} alto={Math.max(420, typeof window !== "undefined" ? window.innerHeight - 140 : 520)} oscuro />
