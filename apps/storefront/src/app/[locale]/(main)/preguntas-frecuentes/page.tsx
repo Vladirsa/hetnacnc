@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { DIAS_SOLICITUD_ABIERTA, MAX_ARCHIVOS, MAX_MB_ARCHIVO } from "@/lib/hetna/promesas"
 import type { Metadata } from "next"
 
@@ -5,7 +7,7 @@ import PaginaInfo from "@/components/hetna/PaginaInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/preguntas-frecuentes" },
   title: "Preguntas frecuentes",
   description:
@@ -85,10 +87,15 @@ export default function PreguntasFrecuentes() {
         ))}
       </div>
       <p className="mt-6">
-        Más información en <LocalizedClientLink href="/devoluciones">Devoluciones</LocalizedClientLink>,{" "}
-        <LocalizedClientLink href="/formas-de-pago">Formas de pago</LocalizedClientLink> y{" "}
-        <LocalizedClientLink href="/servicios/envios-hetna">Envíos HETNA</LocalizedClientLink>.
+        <TS>Más información en</TS> <LocalizedClientLink href="/devoluciones"><TS>Devoluciones</TS></LocalizedClientLink>,{" "}
+        <LocalizedClientLink href="/formas-de-pago"><TS>Formas de pago</TS></LocalizedClientLink> y{" "}
+        <LocalizedClientLink href="/servicios/envios-hetna"><TS>Envíos HETNA</TS></LocalizedClientLink>.
       </p>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

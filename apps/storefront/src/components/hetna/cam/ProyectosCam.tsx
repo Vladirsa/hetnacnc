@@ -6,6 +6,7 @@
 //
 // Una liga compartida (?proyecto=ID) abre una COPIA: quien la recibe puede
 // cambiarla y guardarla como suya, sin tocar la original.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useState } from "react"
 
 type Resumen = { id: string; nombre: string; compartido: boolean; actualizado: string }
@@ -104,10 +105,10 @@ export function ProyectosCam({ herramienta, obtener, aplicar, oscuro = false }: 
 
   return (
     <div className={`flex flex-col gap-2 rounded-[10px] border p-3 ${c.caja}`}>
-      <b className="text-[13px]">Mis proyectos</b>
+      <b className="text-[13px]"><T>Mis proyectos</T></b>
       {!sesion ? (
         <span className={`text-[12.5px] leading-snug ${c.suave}`}>
-          <a href={`/mx/login?volver=${encodeURIComponent(typeof window === "undefined" ? "/mx" : window.location.pathname)}`} className="font-semibold text-[#C2560A] underline">Entra a tu cuenta</a> para guardar tu trabajo, retomarlo después y compartirlo con una liga.
+          <a href={`/mx/login?volver=${encodeURIComponent(typeof window === "undefined" ? "/mx" : window.location.pathname)}`} className="font-semibold text-[#C2560A] underline"><T>Entra a tu cuenta</T></a> <T>para guardar tu trabajo, retomarlo después y compartirlo con una liga.</T>
         </span>
       ) : (
         <>
@@ -118,7 +119,7 @@ export function ProyectosCam({ herramienta, obtener, aplicar, oscuro = false }: 
             </button>
             {actual && (
               <button type="button" disabled={ocupado} onClick={() => guardar(true)} className={boton}>
-                Guardar como nuevo
+                <T>Guardar como nuevo</T>
               </button>
             )}
           </div>
@@ -129,8 +130,8 @@ export function ProyectosCam({ herramienta, obtener, aplicar, oscuro = false }: 
                   <button type="button" onClick={() => abrir(p.id)} className="min-w-0 flex-1 truncate text-left font-semibold hover:text-[#C2560A]" title="Abrir">
                     {p.nombre} <span className={`font-normal ${c.suave}`}>· {fecha(p.actualizado)}{p.compartido ? " · compartido" : ""}</span>
                   </button>
-                  <button type="button" onClick={() => compartir(p)} className="text-[#C2560A] hover:underline">Copiar liga</button>
-                  {p.compartido && <button type="button" onClick={() => dejarDeCompartir(p)} className={`hover:underline ${c.suave}`}>Quitar liga</button>}
+                  <button type="button" onClick={() => compartir(p)} className="text-[#C2560A] hover:underline"><T>Copiar liga</T></button>
+                  {p.compartido && <button type="button" onClick={() => dejarDeCompartir(p)} className={`hover:underline ${c.suave}`}><T>Quitar liga</T></button>}
                   <button type="button" onClick={() => borrar(p)} className={`hover:text-[#B3261E] ${c.suave}`} aria-label={`Borrar ${p.nombre}`}>✕</button>
                 </li>
               ))}

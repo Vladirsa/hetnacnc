@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import {
   FieldError,
   FieldValues,
@@ -155,17 +156,17 @@ const Form = () => {
       <main className="container" data-testid="register-page">
         <Container className="border max-w-xl mx-auto mt-8 p-6 text-center" data-testid="register-revisa-correo">
           <p className="text-[44px] leading-none m-0" aria-hidden="true">📧</p>
-          <h1 className="heading-md text-primary uppercase mt-4 mb-3">Revisa tu correo</h1>
+          <h1 className="heading-md text-primary uppercase mt-4 mb-3"><T>Revisa tu correo</T></h1>
           <p className="text-md m-0">
-            Te mandamos una liga y un código a <b>{revisa}</b> para confirmar tu cuenta. Abre la liga, o escribe aquí el código.
+            <T>Te mandamos una liga y un código a</T> <b>{revisa}</b> <T>para confirmar tu cuenta. Abre la liga, o escribe aquí el código.</T>
           </p>
           <CampoCodigo email={revisa} alConfirmar={entrarTrasConfirmar} />
           <p className="text-md text-secondary mt-3 mb-0">
-            Si no llega en unos minutos, revisa spam o promociones. Desde &quot;Iniciar sesión&quot; puedes pedir que te la
-            mandemos otra vez.
+            <T>Si no llega en unos minutos, revisa spam o promociones. Desde &quot;Iniciar sesión&quot; puedes pedir que te la
+            mandemos otra vez.</T>
           </p>
           <Link href={volver ? `/login?volver=${encodeURIComponent(volver)}` : "/login"} className="block mt-6">
-            <Button className="w-full flex justify-center uppercase">Ir a iniciar sesión</Button>
+            <Button className="w-full flex justify-center uppercase"><T>Ir a iniciar sesión</T></Button>
           </Link>
         </Container>
       </main>
@@ -176,13 +177,13 @@ const Form = () => {
     <main className="container" data-testid="register-page">
       <Container className="border max-w-xl mx-auto mt-8 p-4" data-testid="register-form-container">
         <h1 className="heading-md text-primary uppercase mb-8">
-          Crear cuenta
+          <T>Crear cuenta</T>
         </h1>
         <form onSubmit={enviar} noValidate data-testid="register-form">
           {/* Trampa para robots: fuera de la vista y del teclado; si llega llena, no se crea la cuenta */}
           <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
             <label>
-              Sitio web
+              <T>Sitio web</T>
               <input ref={trampa} type="text" name="sitio_web" tabIndex={-1} autoComplete="off" defaultValue="" />
             </label>
           </div>
@@ -214,7 +215,7 @@ const Form = () => {
               {...register("email")}
             />
             <label className="label-sm block md:w-1/2">
-              <p className={errors.phone || errors.lada ? "text-negative" : undefined}>Teléfono (WhatsApp)</p>
+              <p className={errors.phone || errors.lada ? "text-negative" : undefined}><T>Teléfono (WhatsApp)</T></p>
               <div className="mt-2 flex gap-2">
                 <select
                   aria-label="Lada del país"
@@ -265,29 +266,29 @@ const Form = () => {
             loading={isSubmitting}
             data-testid="register-submit-button"
           >
-            Crear cuenta
+            <T>Crear cuenta</T>
           </Button>
           {/* Aviso de privacidad simplificado (LFPDPPP art. 16): responsable, finalidades y dónde leer el integral */}
           <p className="mt-4 text-xs leading-relaxed text-secondary">
-            Al crear tu cuenta aceptas los{" "}
-            <LocalizedClientLink href="/terminos-y-condiciones" className="underline">Términos y condiciones</LocalizedClientLink>.
+            <T>Al crear tu cuenta aceptas los</T>{" "}
+            <LocalizedClientLink href="/terminos-y-condiciones" className="underline"><T>Términos y condiciones</T></LocalizedClientLink><T>.
             HETNA CNC usa tus datos para administrar tu cuenta, tus compras y cotizaciones, y para darte soporte. Consulta
-            el{" "}
-            <LocalizedClientLink href="/aviso-de-privacidad" className="underline">Aviso de privacidad</LocalizedClientLink>{" "}
-            para conocer tus derechos y cómo negarte a recibir promociones.
+            el</T>{" "}
+            <LocalizedClientLink href="/aviso-de-privacidad" className="underline"><T>Aviso de privacidad</T></LocalizedClientLink>{" "}
+            <T>para conocer tus derechos y cómo negarte a recibir promociones.</T>
           </p>
         </form>
       </Container>
       <Container className="border max-w-xl mx-auto mt-8 p-4">
         <h2 className="heading-md text-primary uppercase mb-8">
-          ¿Ya tienes cuenta?
+          <T>¿Ya tienes cuenta?</T>
         </h2>
         <Link href={volver ? `/login?volver=${encodeURIComponent(volver)}` : "/login"} data-testid="register-login-link">
           <Button
             variant="tonal"
             className="w-full flex justify-center mt-8 uppercase"
           >
-            Iniciar sesión
+            <T>Iniciar sesión</T>
           </Button>
         </Link>
       </Container>

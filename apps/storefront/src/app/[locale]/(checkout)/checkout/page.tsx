@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { Suspense } from 'react';
 
 import { Metadata } from 'next';
@@ -17,7 +19,7 @@ import { listCartPaymentMethods } from '@/lib/data/payment';
 import { carritoSoloDigital } from '@/lib/hetna/tipo-ficha';
 import { isPaypal } from '@/lib/constants';
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: 'Finalizar compra',
   description: 'Mi carrito - Finalizar compra',
   robots: { index: false, follow: false }
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 export default async function CheckoutPage({}) {
   return (
     <Suspense
-      fallback={<div className="container flex items-center justify-center" data-testid="checkout-page-loading">Cargando...</div>}
+      fallback={<div className="container flex items-center justify-center" data-testid="checkout-page-loading"><TS>Cargando...</TS></div>}
     >
       <CheckoutPageContent />
     </Suspense>
@@ -71,7 +73,7 @@ async function CheckoutPageContent({}) {
         <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
           <section className="lg:col-span-7" data-testid="checkout-items-container" aria-labelledby="titulo-productos">
             <h2 id="titulo-productos" className="mb-3 text-[20px] font-extrabold text-[#111]">
-              Productos ({(cart.items ?? []).reduce((s: number, i: { quantity?: number }) => s + (i.quantity || 0), 0)})
+              <TS>Productos (</TS>{(cart.items ?? []).reduce((s: number, i: { quantity?: number }) => s + (i.quantity || 0), 0)})
             </h2>
             <CheckoutItems cart={cart} />
           </section>
@@ -102,4 +104,9 @@ async function CheckoutPageContent({}) {
       </main>
     </PaymentWrapper>
   );
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

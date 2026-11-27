@@ -4,6 +4,7 @@
 // repetido de palabras e íconos, para imprimir en 3D. Sirve para texturizar
 // barro, fondant, galletas o plastilina (con el espejo activado se lee bien al
 // presionar). El rodillo trae sus accesorios: mangos y guías de grosor.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -254,10 +255,10 @@ export function GeneradorTexturizador() {
       <Seccion titulo="¿Qué quieres hacer?">
         <div className="grid grid-cols-2 gap-1.5">
           <button type="button" onClick={() => setForma("placa")} aria-pressed={!rodillo} className={botonSel(!rodillo)}>
-            Placa
+            <T>Placa</T>
           </button>
           <button type="button" onClick={() => setForma("rodillo")} aria-pressed={rodillo} className={botonSel(rodillo)}>
-            Rodillo
+            <T>Rodillo</T>
           </button>
         </div>
       </Seccion>
@@ -278,7 +279,7 @@ export function GeneradorTexturizador() {
       </Seccion>
 
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Palabras</Etiqueta>
+        <Etiqueta><T>Palabras</T></Etiqueta>
         <textarea
           value={palabras}
           onChange={(e) => setPalabras(e.target.value)}
@@ -287,7 +288,7 @@ export function GeneradorTexturizador() {
           placeholder="Vacío = sólo íconos"
           className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
         />
-        <span className="text-[11.5px] text-[#8A97AB]">Separa varias palabras con coma o Enter (hasta 6).</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Separa varias palabras con coma o Enter (hasta 6).</T></span>
       </label>
 
       <Seccion titulo="Íconos">
@@ -341,7 +342,7 @@ export function GeneradorTexturizador() {
           </div>
           <label className="mt-2 flex items-center gap-2 text-[13px] text-[#C9D2E0]">
             <input type="checkbox" checked={verSoporte} onChange={(e) => setVerSoporte(e.target.checked)} className="accent-[#C2560A]" />
-            Ver en 3D puesto en su soporte
+            <T>Ver en 3D puesto en su soporte</T>
           </label>
         </Seccion>
       ) : (
@@ -358,10 +359,10 @@ export function GeneradorTexturizador() {
       <Seccion titulo="Patrón">
         <div className="grid grid-cols-2 gap-1.5">
           <button type="button" onClick={() => setAcomodo("intercalado")} aria-pressed={acomodo === "intercalado"} className={botonSel(acomodo === "intercalado")}>
-            Intercalado
+            <T>Intercalado</T>
           </button>
           <button type="button" onClick={() => setAcomodo("cuadricula")} aria-pressed={acomodo === "cuadricula"} className={botonSel(acomodo === "cuadricula")}>
-            Cuadrícula
+            <T>Cuadrícula</T>
           </button>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -375,10 +376,10 @@ export function GeneradorTexturizador() {
         {!rodillo && (
           <div className="mb-2 grid grid-cols-2 gap-1.5">
             <button type="button" onClick={() => setModo("alto")} aria-pressed={modo === "alto"} className={botonSel(modo === "alto")}>
-              En relieve
+              <T>En relieve</T>
             </button>
             <button type="button" onClick={() => setModo("bajo")} aria-pressed={modo === "bajo"} className={botonSel(modo === "bajo")}>
-              Hundido
+              <T>Hundido</T>
             </button>
           </div>
         )}
@@ -388,7 +389,7 @@ export function GeneradorTexturizador() {
         </div>
         <label className="mt-2 flex items-center gap-2 text-[13px] text-[#C9D2E0]">
           <input type="checkbox" checked={espejo} onChange={(e) => setEspejo(e.target.checked)} className="accent-[#C2560A]" />
-          Espejo (para sellar o texturizar)
+          <T>Espejo (para sellar o texturizar)</T>
         </label>
       </Seccion>
       <PanelColores mc={mc} />
@@ -440,12 +441,12 @@ export function GeneradorTexturizador() {
   )
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Escribe una palabra o elige un ícono para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Escribe una palabra o elige un ícono para generar los archivos.</T></p>
   ) : (
     <div className="flex max-w-[760px] flex-col gap-4">
       <div>
-        <h3 className="m-0 text-[18px] font-bold">Archivos</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">En milímetros. STL listo para tu laminador; SVG con la placa y el patrón.</p>
+        <h3 className="m-0 text-[18px] font-bold"><T>Archivos</T></h3>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>En milímetros. STL listo para tu laminador; SVG con la placa y el patrón.</T></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <TarjetaExport
@@ -454,7 +455,7 @@ export function GeneradorTexturizador() {
         >
           <div className="flex gap-2">
             <Boton tipo="primario" onClick={() => descargar(`${nombreArchivo}.stl`, mallaSTL(r!.malla), "model/stl")}>
-              STL
+              <T>STL</T>
             </Boton>
           </div>
         </TarjetaExport>
@@ -463,7 +464,7 @@ export function GeneradorTexturizador() {
           nota={rodillo ? "El patrón desenrollado (una vuelta), para imprimirlo en papel o grabarlo." : "Placa (corte) y patrón (grabado) para láser o router."}
         >
           <div className="flex gap-2">
-            <Boton onClick={() => descargar(`${nombreArchivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}>SVG</Boton>
+            <Boton onClick={() => descargar(`${nombreArchivo}.svg`, dibujoSVG(r!.dibujo, "corte"), "image/svg+xml")}><T>SVG</T></Boton>
           </div>
         </TarjetaExport>
       </div>
@@ -471,7 +472,7 @@ export function GeneradorTexturizador() {
 
       {rodillo && (
         <div className="flex flex-col gap-3">
-          <h3 className="m-0 text-[16px] font-bold">Accesorios</h3>
+          <h3 className="m-0 text-[16px] font-bold"><T>Accesorios</T></h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <TarjetaExport
               titulo="Mangos (2)"
@@ -482,7 +483,7 @@ export function GeneradorTexturizador() {
                   tipo="primario"
                   onClick={() => descargar(`${nombreArchivo}-mangos.stl`, mallaSTL(hacerMangos(numero(eje), numero(largo), numero(diametro))), "model/stl")}
                 >
-                  STL
+                  <T>STL</T>
                 </Boton>
               </div>
             </TarjetaExport>
@@ -501,7 +502,7 @@ export function GeneradorTexturizador() {
                     )
                   }
                 >
-                  STL
+                  <T>STL</T>
                 </Boton>
               </div>
             </TarjetaExport>
@@ -514,7 +515,7 @@ export function GeneradorTexturizador() {
                   tipo="primario"
                   onClick={() => descargar(`guias-${r1(numero(grosorMasa) || 3)}mm-hetna.stl`, mallaSTL(hacerGuias(numero(grosorMasa) || 3)), "model/stl")}
                 >
-                  STL
+                  <T>STL</T>
                 </Boton>
               </div>
             </TarjetaExport>
@@ -523,10 +524,10 @@ export function GeneradorTexturizador() {
       )}
 
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-        <span className="text-[15px] font-bold">¿No tienes impresora 3D?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA la imprime y te la envía.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes impresora 3D?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA la imprime y te la envía.</T></span>
         <a href={`/${locale}/collections/impresion-3d-bajo-pedido`} className="text-[13px] font-semibold text-[#F2D29B] underline">
-          O compra uno de nuestros diseños ya listos, impreso por el taller que elijas
+          <T>O compra uno de nuestros diseños ya listos, impreso por el taller que elijas</T>
         </a>
         <div className="flex gap-2">
           <Boton
@@ -540,7 +541,7 @@ export function GeneradorTexturizador() {
               if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
             }}
           >
-            Imprimir en 3D
+            <T>Imprimir en 3D</T>
           </Boton>
         </div>
       </div>
@@ -560,7 +561,7 @@ export function GeneradorTexturizador() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {medidas} · {r!.piezas} piezas</span> : null}
+      barra={listo ? <span>· {medidas} · {r!.piezas} <T>piezas</T></span> : null}
     />
   )
 }

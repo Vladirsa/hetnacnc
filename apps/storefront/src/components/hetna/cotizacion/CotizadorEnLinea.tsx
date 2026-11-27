@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 
@@ -35,7 +36,7 @@ function Paso({ n, titulo, children }: { n: number; titulo: string; children: Re
     <section className={caja}>
       <h2 className="m-0 flex items-center gap-3 text-[17px] font-bold text-[#142033]">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#142033] text-[13px] text-white">{n}</span>
-        {titulo}
+        <T>{titulo}</T>
       </h2>
       <div className="mt-4">{children}</div>
     </section>
@@ -232,13 +233,13 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
           <img src={taller.logo} alt={taller.nombre} className="h-16 w-16 rounded-[12px] object-contain" />
         ) : null}
         <div className="min-w-0 flex-1">
-          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Cotiza en línea{taller.ciudad ? ` · ${taller.ciudad}` : ""}</p>
-          <h1 className="m-0 text-[24px] font-bold leading-tight text-[#142033] md:text-[28px]">{taller.titulo}</h1>
-          {taller.descripcion ? <p className="m-0 mt-1 whitespace-pre-line text-[15px] text-[#40403A]">{taller.descripcion}</p> : null}
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Cotiza en línea</T>{taller.ciudad ? ` · ${taller.ciudad}` : ""}</p>
+          <h1 className="m-0 text-[24px] font-bold leading-tight text-[#142033] md:text-[28px]"><T>{taller.titulo}</T></h1>
+          {taller.descripcion ? <p className="m-0 mt-1 whitespace-pre-line text-[15px] text-[#40403A]"><T>{taller.descripcion}</T></p> : null}
         </div>
         {wa ? (
           <a href={wa} target="_blank" rel="noopener" className={botonClaro}>
-            WhatsApp
+            <T>WhatsApp</T>
           </a>
         ) : null}
       </div>
@@ -257,12 +258,12 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
   if (listo) {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
-        {encabezado}
+        <T>{encabezado}</T>
         <section className={`${caja} text-center`}>
           <p className="m-0 text-[44px] leading-none" aria-hidden="true">
             ✅
           </p>
-          <h2 className="m-0 mt-3 text-[22px] font-bold text-[#142033]">¡Solicitud enviada!</h2>
+          <h2 className="m-0 mt-3 text-[22px] font-bold text-[#142033]"><T>¡Solicitud enviada!</T></h2>
           <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]">{listo}</p>
           <button
             type="button"
@@ -274,7 +275,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
               setEstimado(null)
             }}
           >
-            Cotizar otra pieza
+            <T>Cotizar otra pieza</T>
           </button>
         </section>
       </div>
@@ -285,7 +286,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
 
   return (
     <form onSubmit={enviar} className="mx-auto max-w-3xl space-y-4" noValidate>
-      {encabezado}
+      <T>{encabezado}</T>
 
       <Paso n={1} titulo="Sube tu archivo">
         <div
@@ -300,7 +301,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             {archivo ? (
               <b className="break-all text-[#1B1B18]">{archivo.name}</b>
             ) : (
-              <>Arrastra aquí tu DXF, SVG, STL u OBJ (también PDF, STEP o imagen)</>
+              <><T>Arrastra aquí tu DXF, SVG, STL u OBJ (también PDF, STEP o imagen)</T></>
             )}
           </p>
           <button type="button" className={`${botonClaro} mt-3`} onClick={() => entrada.current?.click()}>
@@ -313,9 +314,9 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             className="hidden"
             onChange={(e) => elegirArchivo(e.target.files?.[0] || null)}
           />
-          <p className="m-0 mt-2 text-[12px] text-[#7A776E]">Máximo {taller.max_mb} MB. Tu archivo sólo lo ve el taller.</p>
+          <p className="m-0 mt-2 text-[12px] text-[#7A776E]"><T>Máximo</T> {taller.max_mb} <T>MB. Tu archivo sólo lo ve el taller.</T></p>
         </div>
-        {leyendo ? <p className="m-0 mt-3 text-[14px] text-[#7A776E]">Midiendo tu pieza…</p> : null}
+        {leyendo ? <p className="m-0 mt-3 text-[14px] text-[#7A776E]"><T>Midiendo tu pieza…</T></p> : null}
         {errorArchivo ? <p className="m-0 mt-3 text-[14px] text-[#B42318]">{errorArchivo}</p> : null}
 
         {geo ? (
@@ -323,27 +324,27 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             <VistaPrevia geo={geo} />
             <dl className="m-0 grid grid-cols-2 gap-x-4 gap-y-2 text-[14px] md:grid-cols-1">
               <div>
-                <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]">Medidas</dt>
+                <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]"><T>Medidas</T></dt>
                 <dd className="m-0 font-semibold text-[#1B1B18]">
                   {Math.round(geo.largo)} × {Math.round(geo.ancho)}
-                  {geo.tipo === "3d" ? ` × ${Math.round(geo.alto)}` : ""} mm
+                  {geo.tipo === "3d" ? ` × ${Math.round(geo.alto)}` : ""} <T>mm</T>
                 </dd>
               </div>
               {geo.tipo === "2d" ? (
                 <>
                   <div>
-                    <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]">Corte total</dt>
+                    <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]"><T>Corte total</T></dt>
                     <dd className="m-0 font-semibold text-[#1B1B18]">{mm(geo.corte_mm)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]">Perforaciones</dt>
+                    <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]"><T>Perforaciones</T></dt>
                     <dd className="m-0 font-semibold text-[#1B1B18]">{geo.perforaciones}</dd>
                   </div>
                 </>
               ) : geo.volumen_cm3 > 0 ? (
                 <div>
-                  <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]">Volumen</dt>
-                  <dd className="m-0 font-semibold text-[#1B1B18]">{geo.volumen_cm3.toFixed(1)} cm³</dd>
+                  <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]"><T>Volumen</T></dt>
+                  <dd className="m-0 font-semibold text-[#1B1B18]">{geo.volumen_cm3.toFixed(1)} <T>cm³</T></dd>
                 </div>
               ) : null}
             </dl>
@@ -357,7 +358,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
         ) : (
           <div className="mt-4">
             <p className="m-0 mb-2 text-[13px] text-[#7A776E]">
-              {archivo ? "No pudimos medir este archivo. " : "¿Sin archivo? "}Escribe las medidas aproximadas de tu pieza (mm):
+              {archivo ? "No pudimos medir este archivo. " : "¿Sin archivo? "}<T>Escribe las medidas aproximadas de tu pieza (mm):</T>
             </p>
             <div className="grid grid-cols-3 gap-2">
               {(["largo", "ancho", ...(tresD ? ["alto"] : [])] as ("largo" | "ancho" | "alto")[]).map((k) => (
@@ -393,14 +394,14 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
                   <span className="block text-[15px] font-semibold text-[#1B1B18]">
                     {s.emoji} {s.nombre}
                   </span>
-                  {s.descripcion ? <span className="mt-0.5 block text-[12px] text-[#7A776E]">{s.descripcion}</span> : null}
+                  {s.descripcion ? <span className="mt-0.5 block text-[12px] text-[#7A776E]"><T>{s.descripcion}</T></span> : null}
                 </button>
               ))}
             </div>
             {servicio ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_140px]">
                 <label>
-                  <span className={etiqueta}>Tipo de trabajo</span>
+                  <span className={etiqueta}><T>Tipo de trabajo</T></span>
                   <select
                     className={campo}
                     value={tipo?.id || ""}
@@ -414,7 +415,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
                   </select>
                 </label>
                 <label>
-                  <span className={etiqueta}>Piezas</span>
+                  <span className={etiqueta}><T>Piezas</T></span>
                   <input
                     className={campo}
                     type="number"
@@ -428,14 +429,14 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             ) : null}
           </>
         ) : (
-          <p className="m-0 text-[14px] text-[#40403A]">Cuéntale al taller qué necesitas en el mensaje de abajo.</p>
+          <p className="m-0 text-[14px] text-[#40403A]"><T>Cuéntale al taller qué necesitas en el mensaje de abajo.</T></p>
         )}
 
         {servicio && tipo ? (
           <div className="mt-4 rounded-[12px] bg-[#FAF9F6] p-4">
-            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Precio estimado</p>
+            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Precio estimado</T></p>
             {calculando ? (
-              <p className="m-0 mt-1 text-[15px] text-[#7A776E]">Calculando…</p>
+              <p className="m-0 mt-1 text-[15px] text-[#7A776E]"><T>Calculando…</T></p>
             ) : estimado?.estimable ? (
               <>
                 <p className="m-0 mt-1 text-[24px] font-bold text-[#142033]">
@@ -443,14 +444,14 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
                   <span className="ml-1 text-[14px] font-normal text-[#7A776E]">{estimado.iva_pct ? `+ IVA` : ""}</span>
                 </p>
                 <p className="m-0 mt-1 text-[12px] text-[#7A776E]">
-                  Estimado con las tarifas de {taller.nombre} para {cantidad} pieza{cantidad > 1 ? "s" : ""}. Es el trabajo de máquina; el material y los
-                  acabados, si los necesitas, te los confirma el taller junto con el precio final.
+                  <T>Estimado con las tarifas de</T> {taller.nombre} <T>para</T> {cantidad} <T>pieza</T>{cantidad > 1 ? "s" : ""}<T>. Es el trabajo de máquina; el material y los
+                  acabados, si los necesitas, te los confirma el taller junto con el precio final.</T>
                 </p>
               </>
             ) : estimado ? (
               <p className="m-0 mt-1 text-[14px] text-[#40403A]">{estimado.motivo || "El taller revisa tu archivo y te manda el precio."}</p>
             ) : (
-              <p className="m-0 mt-1 text-[14px] text-[#40403A]">Sube tu archivo o escribe las medidas para ver el precio.</p>
+              <p className="m-0 mt-1 text-[14px] text-[#40403A]"><T>Sube tu archivo o escribe las medidas para ver el precio.</T></p>
             )}
           </div>
         ) : null}
@@ -459,11 +460,11 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
       <Paso n={3} titulo="Tus datos para mandarte la cotización">
         <div className="grid gap-3 sm:grid-cols-2">
           <label>
-            <span className={etiqueta}>Nombre *</span>
+            <span className={etiqueta}><T>Nombre *</T></span>
             <input className={campo} value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} maxLength={120} autoComplete="name" />
           </label>
           <label>
-            <span className={etiqueta}>WhatsApp</span>
+            <span className={etiqueta}><T>WhatsApp</T></span>
             <input
               className={campo}
               value={datos.telefono}
@@ -475,7 +476,7 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             />
           </label>
           <label>
-            <span className={etiqueta}>Correo</span>
+            <span className={etiqueta}><T>Correo</T></span>
             <input
               className={campo}
               type="email"
@@ -486,11 +487,11 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
             />
           </label>
           <label>
-            <span className={etiqueta}>Empresa (opcional)</span>
+            <span className={etiqueta}><T>Empresa (opcional)</T></span>
             <input className={campo} value={datos.empresa} onChange={(e) => setDatos({ ...datos, empresa: e.target.value })} maxLength={120} autoComplete="organization" />
           </label>
           <label className="sm:col-span-2">
-            <span className={etiqueta}>Detalles (material, espesor, acabado, fecha…)</span>
+            <span className={etiqueta}><T>Detalles (material, espesor, acabado, fecha…)</T></span>
             <textarea className={`${campo} min-h-[96px]`} value={datos.mensaje} onChange={(e) => setDatos({ ...datos, mensaje: e.target.value })} maxLength={2000} />
           </label>
           {/* Trampa para robots: una persona no ve este campo */}
@@ -509,9 +510,9 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
           {enviando ? "Enviando…" : "Pedir mi cotización"}
         </button>
         <p className="m-0 mt-2 text-[12px] text-[#7A776E]">
-          Tus datos y tu archivo los recibe sólo {taller.nombre} para cotizarte. Consulta el{" "}
+          <T>Tus datos y tu archivo los recibe sólo</T> {taller.nombre} <T>para cotizarte. Consulta el</T>{" "}
           <a href="/aviso-de-privacidad" target={widget ? "_blank" : undefined} rel={widget ? "noopener" : undefined} className="underline">
-            aviso de privacidad
+            <T>aviso de privacidad</T>
           </a>
           .
         </p>
@@ -519,16 +520,16 @@ export function CotizadorEnLinea({ taller, widget = false }: { taller: TallerPub
 
       {widget ? (
         <p className="m-0 text-center text-[12px] text-[#7A776E]">
-          Cotizador de {taller.nombre} ·{" "}
+          <T>Cotizador de</T> {taller.nombre} ·{" "}
           <a href="https://hetnacnc.com/mx/servicios/cotizador-cnc?utm_source=widget&utm_medium=referral" target="_blank" rel="noopener" className="underline">
-            hecho con HETNA CNC
+            <T>hecho con HETNA CNC</T>
           </a>
         </p>
       ) : (
         <p className="m-0 text-center text-[12px] text-[#7A776E]">
-          <a href="/t" className="underline">Más talleres que cotizan en línea</a> ·{" "}
+          <a href="/t" className="underline"><T>Más talleres que cotizan en línea</T></a> ·{" "}
           <a href="/servicios/cotizador-cnc" className="underline">
-            ¿Tienes taller? Ten tu cotizador gratis
+            <T>¿Tienes taller? Ten tu cotizador gratis</T>
           </a>
         </p>
       )}

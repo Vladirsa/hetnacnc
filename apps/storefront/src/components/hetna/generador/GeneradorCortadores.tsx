@@ -4,6 +4,7 @@
 // clásica, un nombre o tu propio dibujo en SVG), la medida y, si quieres, un
 // sello con texto o ícono. Sale el STL del cortador (con filo y ceja) y el del
 // sello, listos para imprimir. Motor: lib/generador/cortadores.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -209,25 +210,25 @@ export function GeneradorCortadores() {
         )}
         {tipo === "nombre" && (
           <label className="mt-2 flex flex-col gap-1.5">
-            <Etiqueta>Nombre o palabra</Etiqueta>
+            <Etiqueta><T>Nombre o palabra</T></Etiqueta>
             <input
               value={nombre}
               maxLength={14}
               onChange={(e) => setNombre(e.target.value)}
               className="w-full rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[16px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
             />
-            <span className="text-[11.5px] text-[#8A97AB]">Las letras se unen en una sola galleta. Las letras cursivas quedan mejor.</span>
+            <span className="text-[11.5px] text-[#8A97AB]"><T>Las letras se unen en una sola galleta. Las letras cursivas quedan mejor.</T></span>
           </label>
         )}
         {tipo === "svg" && (
           <label className="mt-2 flex flex-col gap-1.5">
-            <Etiqueta>Tu dibujo en SVG</Etiqueta>
+            <Etiqueta><T>Tu dibujo en SVG</T></Etiqueta>
             <input type="file" accept=".svg,image/svg+xml" onChange={(e) => subirSvg(e.target.files?.[0])} className="text-[13px] text-[#C9D2E0]" />
             <span className="text-[11.5px] text-[#8A97AB]">
               {svg ? `Cargado: ${svg.nombre}` : "La silueta como trazo cerrado. ¿Tienes una foto?"}{" "}
               {!svg && (
                 <a href={`/${locale}/disenar/vectorizador`} className="underline">
-                  Pásala a SVG con el vectorizador
+                  <T>Pásala a SVG con el vectorizador</T>
                 </a>
               )}
             </span>
@@ -333,25 +334,25 @@ export function GeneradorCortadores() {
             className="flex min-h-[300px] flex-1 items-center justify-center rounded-[10px] bg-[#0F151E] p-6 [&>svg]:max-h-[460px] [&>svg]:w-full [&>svg]:max-w-[560px]"
             dangerouslySetInnerHTML={{ __html: vista2d }}
           />
-          <p className="m-0 text-[12.5px] text-[#8A97AB]">Así queda la galleta (con el sello, si elegiste uno).</p>
+          <p className="m-0 text-[12.5px] text-[#8A97AB]"><T>Así queda la galleta (con el sello, si elegiste uno).</T></p>
         </>
       )}
     </div>
   )
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Elige una forma para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Elige una forma para generar los archivos.</T></p>
   ) : (
     <div className="flex max-w-[760px] flex-col gap-4">
       <div>
-        <h3 className="m-0 text-[18px] font-bold">Archivos</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">STL en milímetros, listos para tu laminador.</p>
+        <h3 className="m-0 text-[18px] font-bold"><T>Archivos</T></h3>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>STL en milímetros, listos para tu laminador.</T></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <TarjetaExport titulo="Cortador" nota="Imprímelo así: la ceja sobre la cama y el filo hacia arriba. Sin soportes; 2 o 3 perímetros, sin relleno.">
           <div className="flex gap-2">
             <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, mallaSTL(r!.cortador), "model/stl")}>
-              STL
+              <T>STL</T>
             </Boton>
           </div>
         </TarjetaExport>
@@ -359,7 +360,7 @@ export function GeneradorCortadores() {
           <TarjetaExport titulo="Sello" nota="Imprímelo con el dibujo hacia arriba. Entra en el cortador con 0.8 mm de holgura.">
             <div className="flex gap-2">
               <Boton tipo="primario" onClick={() => descargar(`${archivo}-sello.stl`, mallaSTL(r!.sello!), "model/stl")}>
-                STL
+                <T>STL</T>
               </Boton>
             </div>
           </TarjetaExport>
@@ -367,12 +368,12 @@ export function GeneradorCortadores() {
       </div>
       <TarjetaColores mc={mc} archivo={`${archivo}-sello`} titulo={`Sello ${nombreForma || ""}`.trim()} nota="El sello: la placa de un color y el dibujo de otro." />
       <Aviso>
-        Para masa de galleta o fondant usa un filamento que el fabricante indique como apto para contacto con alimentos, y lávalo a mano. Las capas de una
-        pieza impresa guardan restos: si es para vender, imprime uno nuevo cada temporada.
+        <T>Para masa de galleta o fondant usa un filamento que el fabricante indique como apto para contacto con alimentos, y lávalo a mano. Las capas de una
+        pieza impresa guardan restos: si es para vender, imprime uno nuevo cada temporada.</T>
       </Aviso>
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-        <span className="text-[15px] font-bold">¿No tienes impresora 3D?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA lo imprime y te lo envía.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes impresora 3D?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA lo imprime y te lo envía.</T></span>
         <div className="flex gap-2">
           <Boton
             tipo="primario"
@@ -385,7 +386,7 @@ export function GeneradorCortadores() {
               if (!ok) setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
             }}
           >
-            Imprimir en 3D
+            <T>Imprimir en 3D</T>
           </Boton>
         </div>
       </div>

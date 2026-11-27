@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import FormRegistroTaller from '@/components/hetna/taller/FormRegistroTaller';
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import {
@@ -22,7 +23,7 @@ export function PasosTaller() {
       id="como-funciona-taller"
       className="mt-12 scroll-mt-24"
     >
-      <h2 className={H2}>Cómo funciona</h2>
+      <h2 className={H2}><TS>Cómo funciona</TS></h2>
       <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {PASOS_TALLER.map(([t, d], i) => (
           <li
@@ -46,7 +47,7 @@ export function PasosTaller() {
 export function BeneficiosTaller() {
   return (
     <section className="mt-12">
-      <h2 className={H2}>Beneficios para tu taller</h2>
+      <h2 className={H2}><TS>Beneficios para tu taller</TS></h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {BENEFICIOS_TALLER.map(([t, d]) => (
           <div
@@ -65,8 +66,8 @@ export function BeneficiosTaller() {
 export function PerfilesTaller() {
   return (
     <section className="mt-12 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-      <h2 className={H2}>¿Qué tipo de talleres buscamos?</h2>
-      <p className="mt-1 text-[#6B675C]">Si tu taller hace alguno de estos trabajos, es para ti.</p>
+      <h2 className={H2}><TS>¿Qué tipo de talleres buscamos?</TS></h2>
+      <p className="mt-1 text-[#6B675C]"><TS>Si tu taller hace alguno de estos trabajos, es para ti.</TS></p>
       <div className="mt-4 flex flex-wrap gap-2">
         {PERFILES_TALLER.map(p => (
           <span
@@ -85,7 +86,7 @@ export function PreguntasTaller({ todas = false }: { todas?: boolean }) {
   const preguntas = todas ? PREGUNTAS_TALLER : PREGUNTAS_TALLER.filter(q => q.corta);
   return (
     <section className="mt-12 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-      <h2 className={H2}>Preguntas de talleres</h2>
+      <h2 className={H2}><TS>Preguntas de talleres</TS></h2>
       <div className="mt-2">
         {preguntas.map(q => (
           <details
@@ -102,7 +103,7 @@ export function PreguntasTaller({ todas = false }: { todas?: boolean }) {
           href="/talleres/unete"
           className="mt-2 inline-block text-sm font-semibold text-[#C2560A]"
         >
-          Más preguntas y todo sobre la red de talleres →
+          <TS>Más preguntas y todo sobre la red de talleres →</TS>
         </LocalizedClientLink>
       )}
       <script
@@ -130,19 +131,19 @@ export function RegistroTaller() {
       className="mt-12 scroll-mt-24 rounded-3xl bg-[#142033] p-4 sm:p-8"
     >
       <div className="mb-5 text-white">
-        <h2 className="text-2xl font-extrabold sm:text-3xl">Registra tu taller</h2>
+        <h2 className="text-2xl font-extrabold sm:text-3xl"><TS>Registra tu taller</TS></h2>
         <p className="mt-1 max-w-2xl text-white/80">
-          Toma 3 minutos. Con estos datos te mandamos los trabajos que sí puedes hacer.
+          <TS>Toma 3 minutos. Con estos datos te mandamos los trabajos que sí puedes hacer.</TS>
         </p>
       </div>
       <FormRegistroTaller />
       <p className="mt-4 text-center text-sm text-white/70">
-        ¿Ya tienes cuenta?{' '}
+        <TS>¿Ya tienes cuenta?</TS>{' '}
         <a
           href="/seller"
           className="font-semibold text-[#F2A25F] underline"
         >
-          Entra a tu panel
+          <TS>Entra a tu panel</TS>
         </a>
       </p>
     </section>

@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ locale: string; generador: string }> }
 
 export const revalidate = 3600
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { generador } = await params
   const e = await esquemaCaja(generador)
   if (!e) return {}
@@ -31,4 +32,9 @@ export default async function PaginaCaja({ params }: Props) {
   const e = await esquemaCaja(generador)
   if (!e) notFound()
   return <GeneradorCajas esquema={e} locale={locale} />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

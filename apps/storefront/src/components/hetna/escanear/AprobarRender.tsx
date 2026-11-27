@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -39,15 +40,15 @@ export function AprobarRender({ id, puedeAprobar, aviso }: { id: string; puedeAp
         {puedeAprobar && (
           <>
             <button type="button" disabled={ocupado} onClick={() => mandar("aprobar")} className="rounded-[12px] bg-[#0F7A4A] px-5 py-3 text-[15px] font-bold text-white hover:bg-[#0B5E39] disabled:opacity-60">
-              Aprobar render
+              <T>Aprobar render</T>
             </button>
             <button type="button" disabled={ocupado} onClick={() => mandar("ajuste")} className="rounded-[12px] border border-[#C2560A] bg-white px-5 py-3 text-[15px] font-bold text-[#B34D07] hover:bg-[#FFF4EC] disabled:opacity-60">
-              Pedir ajuste
+              <T>Pedir ajuste</T>
             </button>
           </>
         )}
         <button type="button" disabled={ocupado} onClick={() => mandar("comentar")} className="rounded-[12px] border border-[#D9D5CC] bg-white px-5 py-3 text-[15px] font-semibold text-[#1B1B18] disabled:opacity-60">
-          Solo comentar
+          <T>Solo comentar</T>
         </button>
       </div>
       {error && <p className="m-0 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[13.5px] text-[#9B1C1C]">{error}</p>}

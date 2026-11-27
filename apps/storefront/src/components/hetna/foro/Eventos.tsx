@@ -1,5 +1,6 @@
 // Eventos del foro: tarjeta con la fecha, ficha del evento y liga para
 // agregarlo a Google Calendar. Las fechas se guardan en hora de México.
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { type Evento, SITIO, type TemaResumen, urlTema } from "@/lib/foro/tipos"
 
@@ -55,11 +56,11 @@ export function TarjetaEvento({ t }: { t: TemaResumen }) {
     <LocalizedClientLink href={urlTema(t)} className="flex items-start gap-3 rounded-[12px] border border-[#E7E4DC] bg-white p-4 hover:border-[#C2560A]">
       <FechaCuadro inicio={t.evento.inicio} />
       <span className="min-w-0">
-        <span className="block text-[15.5px] font-bold leading-snug text-[#1B1B18]">{t.titulo}</span>
+        <span className="block text-[15.5px] font-bold leading-snug text-[#1B1B18]"><TS>{t.titulo}</TS></span>
         <span className="mt-0.5 block text-[13.5px] text-[#44433D]">{fechaEvento(t.evento.inicio)}</span>
         <span className="block truncate text-[13px] text-[#6B6A63]">
           {t.evento.modalidad === "en_linea" ? "🖥 En línea · " : "📍 "}
-          {t.evento.lugar} · por {t.autor.nombre}
+          {t.evento.lugar} <TS>· por</TS> {t.autor.nombre}
         </span>
       </span>
     </LocalizedClientLink>
@@ -82,7 +83,7 @@ export function FichaEvento({ t, e }: { t: { titulo: string; seccion: { slug: st
         </div>
         {e.liga && (
           <a href={e.liga} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-[13.5px] font-semibold text-[#14683F] underline">
-            Registro o transmisión →
+            <TS>Registro o transmisión →</TS>
           </a>
         )}
       </div>
@@ -92,7 +93,7 @@ export function FichaEvento({ t, e }: { t: { titulo: string; seccion: { slug: st
         rel="noopener noreferrer"
         className="shrink-0 rounded-full border border-[#16794F] px-3.5 py-1.5 text-[13px] font-semibold text-[#14683F] hover:bg-[#EAF6EF]"
       >
-        + Agregar a mi calendario
+        <TS>+ Agregar a mi calendario</TS>
       </a>
     </div>
   )

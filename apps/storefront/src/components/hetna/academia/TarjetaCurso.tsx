@@ -1,4 +1,5 @@
 // Tarjeta de curso estilo Udemy/Domestika: portada, taller, duración y precio.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from "@/components/hetna/ImagenSegura"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import type { Course } from "@/lib/data/courses"
@@ -32,13 +33,13 @@ export function TarjetaCurso({ c }: { c: Course }) {
         </span>
         {(c.vistas_previas ?? 0) > 0 && !gratis && (
           <span className="absolute bottom-2.5 left-2.5 text-[11px] font-semibold bg-black/70 text-white px-2 py-0.5 rounded-full">
-            ▶ Vista previa gratis
+            <T>▶ Vista previa gratis</T>
           </span>
         )}
       </div>
       <div className="p-4 flex flex-col gap-1.5 flex-1">
         <h3 className="font-display text-[16px] leading-snug font-bold m-0 text-[#1B1B18] line-clamp-2">{c.title}</h3>
-        {c.taller?.nombre && <p className="m-0 text-[12.5px] text-[#6B6A63] line-clamp-1">Por {c.taller.nombre}</p>}
+        {c.taller?.nombre && <p className="m-0 text-[12.5px] text-[#6B6A63] line-clamp-1"><T>Por</T> {c.taller.nombre}</p>}
         <p className="m-0 text-[12.5px] text-[#9A978C]">
           {[lecciones ? `${lecciones} lecciones` : null, duracion, gratis ? NIVEL[c.level] : null]
             .filter(Boolean)
@@ -51,7 +52,7 @@ export function TarjetaCurso({ c }: { c: Course }) {
         )}
         <div className="mt-auto pt-2 flex items-center justify-between">
           <span className={`text-[17px] font-bold ${gratis ? "text-[#1F7A4D]" : "text-[#1B1B18]"}`}>{precioTexto(c)}</span>
-          <span className="text-[13px] font-semibold text-[#B34D07] group-hover:underline">Ver curso</span>
+          <span className="text-[13px] font-semibold text-[#B34D07] group-hover:underline"><T>Ver curso</T></span>
         </div>
       </div>
     </LocalizedClientLink>

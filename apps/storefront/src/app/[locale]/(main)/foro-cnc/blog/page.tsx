@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { TarjetaArticulo } from "@/components/hetna/foro/Blog"
@@ -13,7 +15,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || ""
 const POR_PAGINA = 12
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+async function generateMetadataEs({ searchParams }: Props): Promise<Metadata> {
   const q = await searchParams
   return {
     title: { absolute: "Blog CNC: guías de router, láser, plasma, CAM y precios | HETNA" },
@@ -40,18 +42,18 @@ export default async function BlogForo({ searchParams }: Props) {
       <div className="max-w-[1100px] mx-auto px-4 py-6 lg:py-8 flex flex-col gap-5">
         <Migas items={[{ nombre: "Foro CNC", href: "/foro-cnc" }, { nombre: "Blog" }]} />
         <header className="bg-[#142033] text-white rounded-[16px] p-6 sm:p-8">
-          <p className="m-0 text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Blog del Foro CNC</p>
-          <h1 className="m-0 mt-1 text-[28px] sm:text-[36px] font-extrabold leading-tight">Guías CNC para resolver lo que más se pregunta</h1>
+          <p className="m-0 text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Blog del Foro CNC</TS></p>
+          <h1 className="m-0 mt-1 text-[28px] sm:text-[36px] font-extrabold leading-tight"><TS>Guías CNC para resolver lo que más se pregunta</TS></h1>
           <p className="m-0 mt-2 max-w-2xl text-white/80">
-            Paso a paso de diseño, parámetros, materiales y negocio, escritas para talleres y makers de México. Si te queda una duda,
-            pregúntala en el foro.
+            <TS>Paso a paso de diseño, parámetros, materiales y negocio, escritas para talleres y makers de México. Si te queda una duda,
+            pregúntala en el foro.</TS>
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <LocalizedClientLink href="/foro-cnc/nuevo" className="rounded-full bg-[#C2560A] px-4 py-2 text-sm font-semibold hover:bg-[#A84A08]">
-              Hacer una pregunta
+              <TS>Hacer una pregunta</TS>
             </LocalizedClientLink>
             <LocalizedClientLink href="/foro-cnc" className="rounded-full border border-white/40 px-4 py-2 text-sm font-semibold hover:bg-white/10">
-              Ir al foro
+              <TS>Ir al foro</TS>
             </LocalizedClientLink>
           </div>
         </header>
@@ -62,7 +64,7 @@ export default async function BlogForo({ searchParams }: Props) {
               href="/foro-cnc/blog"
               className={`rounded-full px-3.5 py-1.5 text-[13.5px] font-semibold ${!seccion ? "bg-[#142033] text-white" : "bg-white border border-[#E0DCD2] text-[#44433D]"}`}
             >
-              Todo
+              <TS>Todo</TS>
             </LocalizedClientLink>
             {secs
               .filter((s) => s.slug !== "novedades-ofertas")
@@ -87,8 +89,8 @@ export default async function BlogForo({ searchParams }: Props) {
         ) : (
           <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[12px] p-8 text-center">
             <p className="m-0 text-[15px] text-[#44433D]">
-              {seccion ? `Todavía no hay guías de ${nombre(seccion)}.` : "Pronto publicamos las primeras guías."} Mientras, pregunta en el foro: la
-              comunidad te ayuda.
+              {seccion ? `Todavía no hay guías de ${nombre(seccion)}.` : "Pronto publicamos las primeras guías."} <TS>Mientras, pregunta en el foro: la
+              comunidad te ayuda.</TS>
             </p>
           </div>
         )}
@@ -96,4 +98,9 @@ export default async function BlogForo({ searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

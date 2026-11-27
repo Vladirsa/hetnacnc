@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -34,22 +35,22 @@ export async function PaginaPais({ pais }: { pais: string }) {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1000px] px-4 py-14 lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">{p.bandera} Muy pronto en {p.nombre}</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">HETNA CNC llega a {p.nombre}</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">{p.bandera} <TS>Muy pronto en</TS> {p.nombre}</p>
+          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>HETNA CNC llega a</TS> {p.nombre}</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">
-            La red de talleres de router, láser y plasma de México se prepara para abrir en {p.nombre}
-            {p.ciudades.length ? ` (${p.ciudades.slice(0, 3).join(", ")} y más)` : ""}. Abrimos primero donde más talleres y clientes se registren.
+            <TS>La red de talleres de router, láser y plasma de México se prepara para abrir en</TS> {p.nombre}
+            {p.ciudades.length ? ` (${p.ciudades.slice(0, 3).join(", ")} y más)` : ""}<TS>. Abrimos primero donde más talleres y clientes se registren.</TS>
           </p>
-          {p.nota && <p className="mt-3 max-w-2xl text-base font-semibold text-[#F2C9A5]">{p.nota}</p>}
+          {p.nota && <p className="mt-3 max-w-2xl text-base font-semibold text-[#F2C9A5]"><TS>{p.nota}</TS></p>}
           {empresas.length > 0 && (
             <p className="mt-3 text-sm text-white/80">
-              Ya ubicamos {empresas.length} {empresas.length === 1 ? "empresa CNC" : "empresas CNC"} en {p.nombre}.{" "}
-              <a href="#directorio" className="font-semibold text-[#F2A25F] underline">Ver la lista</a>
+              <TS>Ya ubicamos</TS> {empresas.length} {empresas.length === 1 ? "empresa CNC" : "empresas CNC"} <TS>en</TS> {p.nombre}.{" "}
+              <a href="#directorio" className="font-semibold text-[#F2A25F] underline"><TS>Ver la lista</TS></a>
             </p>
           )}
           {total > 0 && (
             <p className="mt-3 text-sm text-[#F2C9A5]">
-              Ya {total === 1 ? "hay 1 registro" : `hay ${total} registros`} en {p.nombre}
+              <TS>Ya</TS> {total === 1 ? "hay 1 registro" : `hay ${total} registros`} <TS>en</TS> {p.nombre}
               {conteo?.talleres ? ` (${conteo.talleres} ${conteo.talleres === 1 ? "taller" : "talleres"})` : ""}.
             </p>
           )}
@@ -60,48 +61,48 @@ export async function PaginaPais({ pais }: { pais: string }) {
         <div className="grid content-start gap-4">
           {p.cotizador && (
             <div className="rounded-2xl border border-[#BFE3CC] bg-[#E6F4EA] p-5">
-              <p className="font-bold text-[#0F5C2A]">📱 El Cotizador para talleres ya funciona en {p.nombre}</p>
+              <p className="font-bold text-[#0F5C2A]"><TS>📱 El Cotizador para talleres ya funciona en</TS> {p.nombre}</p>
               <p className="mt-1 text-sm text-[#1E4D2B]">
-                Con {p.cotizador}: cotiza desde DXF, STL o STEP con tus costos, manda PDF por WhatsApp y controla tu taller.
+                <TS>Con</TS> {p.cotizador}<TS>: cotiza desde DXF, STL o STEP con tus costos, manda PDF por WhatsApp y controla tu taller.</TS>
               </p>
               <LocalizedClientLink href="/servicios/cotizador-cnc" className="mt-2 inline-block text-sm font-semibold text-[#0F5C2A] underline">
-                Conocer el Cotizador →
+                <TS>Conocer el Cotizador →</TS>
               </LocalizedClientLink>
             </div>
           )}
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-bold text-[#142033]">Si tienes un taller CNC</p>
+            <p className="font-bold text-[#142033]"><TS>Si tienes un taller CNC</TS></p>
             <p className="mt-1 text-sm text-[#6B675C]">
-              Apúntate como taller fundador: cuando abramos {p.nombre}, recibes antes que nadie las solicitudes de fabricación de tu país, con el archivo revisado y precio estimado.
+              <TS>Apúntate como taller fundador: cuando abramos</TS> {p.nombre}<TS>, recibes antes que nadie las solicitudes de fabricación de tu país, con el archivo revisado y precio estimado.</TS>
             </p>
           </div>
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-bold text-[#142033]">Si necesitas piezas</p>
-            <p className="mt-1 text-sm text-[#6B675C]">Corte láser, router, plasma, lámina con doblez e impresión 3D: subes tu archivo y varios talleres te mandan su propuesta.</p>
+            <p className="font-bold text-[#142033]"><TS>Si necesitas piezas</TS></p>
+            <p className="mt-1 text-sm text-[#6B675C]"><TS>Corte láser, router, plasma, lámina con doblez e impresión 3D: subes tu archivo y varios talleres te mandan su propuesta.</TS></p>
           </div>
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-bold text-[#142033]">Gratis desde hoy</p>
+            <p className="font-bold text-[#142033]"><TS>Gratis desde hoy</TS></p>
             <ul className="mt-1 grid gap-1 text-sm">
-              <li><LocalizedClientLink href="/calculadora-cnc" className="text-[#C2560A] underline">Calculadora CNC</LocalizedClientLink> (velocidades y avances)</li>
-              <li><LocalizedClientLink href="/disenar" className="text-[#C2560A] underline">Diseños para láser y router</LocalizedClientLink> (cajas, letreros, llaveros)</li>
-              <li><LocalizedClientLink href="/herramientas-cnc" className="text-[#C2560A] underline">CAM 2D y 3D</LocalizedClientLink></li>
+              <li><LocalizedClientLink href="/calculadora-cnc" className="text-[#C2560A] underline"><TS>Calculadora CNC</TS></LocalizedClientLink> <TS>(velocidades y avances)</TS></li>
+              <li><LocalizedClientLink href="/disenar" className="text-[#C2560A] underline"><TS>Diseños para láser y router</TS></LocalizedClientLink> <TS>(cajas, letreros, llaveros)</TS></li>
+              <li><LocalizedClientLink href="/herramientas-cnc" className="text-[#C2560A] underline"><TS>CAM 2D y 3D</TS></LocalizedClientLink></li>
             </ul>
           </div>
         </div>
         <div id="apuntate" className="scroll-mt-20 rounded-3xl border border-[#E7E4DC] bg-white p-6">
-          <h2 className="text-xl font-extrabold text-[#142033]">Apúntate en {p.nombre}</h2>
-          <p className="mb-4 mt-1 text-sm text-[#6B675C]">Sin costo. Te avisamos primero cuando abramos.</p>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Apúntate en</TS> {p.nombre}</h2>
+          <p className="mb-4 mt-1 text-sm text-[#6B675C]"><TS>Sin costo. Te avisamos primero cuando abramos.</TS></p>
           <FormLatam paisInicial={p.clave} />
         </div>
       </section>
 
       {empresas.length > 0 && (
         <section id="directorio" className="mx-auto max-w-[1000px] scroll-mt-20 px-4 pb-12 lg:px-6">
-          <h2 className="text-2xl font-extrabold text-[#142033]">Empresas CNC en {p.nombre}</h2>
+          <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Empresas CNC en</TS> {p.nombre}</h2>
           <p className="mt-1 max-w-3xl text-sm text-[#6B675C]">
-            Talleres, proveedores e instructores de {p.nombre} que todavía no forman parte de HETNA. Son perfiles no reclamados:
-            los datos son públicos y vienen del sitio web de cada empresa. ¿Es la tuya?{" "}
-            <a href="#apuntate" className="font-semibold text-[#C2560A] underline">Apúntate como fundador</a>.
+            <TS>Talleres, proveedores e instructores de</TS> {p.nombre} <TS>que todavía no forman parte de HETNA. Son perfiles no reclamados:
+            los datos son públicos y vienen del sitio web de cada empresa. ¿Es la tuya?</TS>{" "}
+            <a href="#apuntate" className="font-semibold text-[#C2560A] underline"><TS>Apúntate como fundador</TS></a>.
           </p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {empresas.map((e) => (
@@ -109,7 +110,7 @@ export async function PaginaPais({ pais }: { pais: string }) {
                 <p className="font-bold text-[#142033]">{e.empresa}</p>
                 <p className="mt-0.5 text-xs text-[#6B675C]">
                   {NOMBRE_TIPO[e.tipo]}
-                  {e.ciudad ? ` · ${e.ciudad}` : ""} · <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5">Perfil no reclamado</span>
+                  {e.ciudad ? ` · ${e.ciudad}` : ""} · <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5"><TS>Perfil no reclamado</TS></span>
                 </p>
                 {e.servicios && <p className="mt-2 line-clamp-3 text-sm text-[#40403A]">{e.servicios}</p>}
                 <div className="mt-2 text-xs">
@@ -123,7 +124,7 @@ export async function PaginaPais({ pais }: { pais: string }) {
 
       <section className="mx-auto max-w-[1000px] px-4 pb-12 lg:px-6">
         <p className="text-sm text-[#6B675C]">
-          Otros países:{" "}
+          <TS>Otros países:</TS>{" "}
           {PAISES_LATAM.filter((x) => x.clave !== p.clave).map((x, i) => (
             <span key={x.clave}>
               {i ? " · " : ""}

@@ -1,6 +1,8 @@
 // /mx/anunciate/mi-anuncio?pedido=<id>&t=<llave> — panel del anunciante.
 // Sin cuenta ni contraseña: la llave (token) se le da al comprar y le llega por
 // correo. Muestra el estado del anuncio, sus vistas, clics y cuándo termina.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -8,7 +10,7 @@ import { estadoParaAnunciante } from "@/lib/publicidad/pedidos"
 import { miles, pesos } from "@/lib/publicidad/precios"
 import { ESPACIOS, esEspacio, nombreCorto } from "@/lib/publicidad/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "Mi anuncio | HETNA CNC" },
   robots: { index: false, follow: false },
 }
@@ -29,12 +31,12 @@ export default async function MiAnuncio({ searchParams }: Props) {
     return (
       <main className="w-full bg-[#FAF9F6]">
         <div className="max-w-[640px] mx-auto px-4 py-16 flex flex-col gap-3 text-center items-center">
-          <h1 className="m-0 font-display text-[28px] font-bold text-[#1B1B18]">No encontramos tu anuncio</h1>
+          <h1 className="m-0 font-display text-[28px] font-bold text-[#1B1B18]"><TS>No encontramos tu anuncio</TS></h1>
           <p className="m-0 text-[15px] text-[#44433D]">
-            Abre la liga completa que te llegó por correo al pagar. Si no la encuentras, escríbenos desde Contacto con el correo que usaste.
+            <TS>Abre la liga completa que te llegó por correo al pagar. Si no la encuentras, escríbenos desde Contacto con el correo que usaste.</TS>
           </p>
           <LocalizedClientLink href="/contacto" className="mt-2 bg-[#C2560A] text-white font-semibold px-6 py-3 rounded-[10px]">
-            Ir a Contacto
+            <TS>Ir a Contacto</TS>
           </LocalizedClientLink>
         </div>
       </main>
@@ -62,7 +64,7 @@ export default async function MiAnuncio({ searchParams }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <div className="max-w-[760px] mx-auto px-4 py-10 flex flex-col gap-5">
         <header className="flex flex-col gap-1">
-          <p className="m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-[#B34D07]">Mi anuncio en HETNA</p>
+          <p className="m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-[#B34D07]"><TS>Mi anuncio en HETNA</TS></p>
           <h1 className="m-0 font-display text-[28px] font-bold text-[#1B1B18]">{e.anunciante}</h1>
           <p className="m-0 text-[14.5px] text-[#44433D]">
             {espacio} · {porVistas ? `${miles(e.vistas_compradas as number)} vistas` : `${e.dias} días`} · {pesos(e.monto)}
@@ -91,28 +93,28 @@ export default async function MiAnuncio({ searchParams }: Props) {
           {porVistas ? (
             <>
               <p className="m-0 text-[14.5px] text-[#1B1B18]">
-                <b>{miles(vistas)}</b> de {miles(e.vistas_compradas as number)} vistas ({avance}%)
+                <b>{miles(vistas)}</b> <TS>de</TS> {miles(e.vistas_compradas as number)} <TS>vistas (</TS>{avance}%)
               </p>
               <div className="h-3 w-full overflow-hidden rounded-full bg-[#F0EDE6]" role="progressbar" aria-valuenow={avance ?? 0} aria-valuemin={0} aria-valuemax={100}>
                 <div className="h-full rounded-full bg-[#C2560A]" style={{ width: `${avance}%` }} />
               </div>
-              <p className="m-0 text-[13px] text-[#6B6A63]">Tu anuncio sale hasta cumplir todas tus vistas, tarde lo que tarde.</p>
+              <p className="m-0 text-[13px] text-[#6B6A63]"><TS>Tu anuncio sale hasta cumplir todas tus vistas, tarde lo que tarde.</TS></p>
             </>
           ) : (
             <p className="m-0 text-[14.5px] text-[#1B1B18]">
               {e.estado === "pagado" ? (
                 <>
-                  Se muestra hasta el <b>{fecha(e.pieza?.hasta || e.vence)}</b>.
+                  <TS>Se muestra hasta el</TS> <b>{fecha(e.pieza?.hasta || e.vence)}</b>.
                 </>
               ) : e.estado === "vencido" ? (
-                <>Terminó el {fecha(e.vence)}.</>
+                <><TS>Terminó el</TS> {fecha(e.vence)}.</>
               ) : (
-                <>Empieza a contar cuando se active.</>
+                <><TS>Empieza a contar cuando se active.</TS></>
               )}
             </p>
           )}
           <p className="m-0 text-[13px] text-[#6B6A63]">
-            Al hacer clic, tu anuncio lleva a: <span className="break-all font-mono text-[12.5px]">{e.enlace}</span>
+            <TS>Al hacer clic, tu anuncio lleva a:</TS> <span className="break-all font-mono text-[12.5px]">{e.enlace}</span>
           </p>
         </section>
 
@@ -127,11 +129,16 @@ export default async function MiAnuncio({ searchParams }: Props) {
             href="/contacto"
             className="inline-flex min-h-[48px] items-center justify-center rounded-[12px] border border-[#1B1B18] px-6 font-semibold text-[#1B1B18]"
           >
-            Cambiar mi imagen o mi enlace
+            <TS>Cambiar mi imagen o mi enlace</TS>
           </LocalizedClientLink>
         </div>
-        <p className="m-0 text-[12.5px] text-[#6B6A63]">Esta liga es personal: quien la tenga ve los resultados de tu anuncio. No la compartas.</p>
+        <p className="m-0 text-[12.5px] text-[#6B6A63]"><TS>Esta liga es personal: quien la tenga ve los resultados de tu anuncio. No la compartas.</TS></p>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

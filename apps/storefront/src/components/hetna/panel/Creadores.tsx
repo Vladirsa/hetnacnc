@@ -2,6 +2,7 @@
 
 // HETNA Panel → App → Creadores: crear códigos de creador, pausarlos, cambiar
 // su premio y atender las solicitudes del formulario de /creadores.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 async function accion(cuerpo: unknown): Promise<string> {
@@ -39,7 +40,7 @@ export function NuevoCreador({ inicial, etiqueta = "+ Nuevo creador" }: { inicia
   if (!abierto)
     return (
       <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#C2560A] px-3 py-2 text-[13px] font-bold text-white">
-        {etiqueta}
+        <T>{etiqueta}</T>
       </button>
     )
   return (
@@ -62,15 +63,15 @@ export function NuevoCreador({ inicial, etiqueta = "+ Nuevo creador" }: { inicia
       <input className={input} placeholder="Frase en su página (opcional, ej. «Yo cotizo así mis trabajos»)" value={f.mensaje} onChange={set("mensaje")} maxLength={280} />
       <div className="grid grid-cols-3 gap-2">
         <label className="text-[11px] text-[#6B675C]">
-          Días para su audiencia
+          <T>Días para su audiencia</T>
           <input className={input} type="number" min={1} max={365} value={f.dias} onChange={set("dias")} />
         </label>
         <label className="text-[11px] text-[#6B675C]">
-          Meses para él por taller que paga
+          <T>Meses para él por taller que paga</T>
           <input className={input} type="number" min={0} max={12} value={f.meses_por_taller} onChange={set("meses_por_taller")} />
         </label>
         <label className="text-[11px] text-[#6B675C]">
-          Comisión % (0 = sin dinero)
+          <T>Comisión % (0 = sin dinero)</T>
           <input className={input} type="number" min={0} max={50} step="0.5" value={f.comision_pct} onChange={set("comision_pct")} />
         </label>
       </div>
@@ -87,9 +88,9 @@ export function NuevoCreador({ inicial, etiqueta = "+ Nuevo creador" }: { inicia
           }}
           className="rounded-lg bg-[#0F7A4A] px-3 py-2 text-[13px] font-bold text-white disabled:opacity-50"
         >
-          Crear y mandarle su código
+          <T>Crear y mandarle su código</T>
         </button>
-        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]">Cancelar</button>
+        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]"><T>Cancelar</T></button>
       </div>
     </div>
   )
@@ -113,7 +114,7 @@ export function AccionesCreador({ codigo, activo, liga, meses, comision }: { cod
       >
         {copiado ? "¡Copiada!" : "Copiar su página"}
       </button>
-      <a href={liga} target="_blank" rel="noreferrer" className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A]">Ver página</a>
+      <a href={liga} target="_blank" rel="noreferrer" className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A]"><T>Ver página</T></a>
       <button
         disabled={ocupado}
         onClick={() => {
@@ -125,7 +126,7 @@ export function AccionesCreador({ codigo, activo, liga, meses, comision }: { cod
         }}
         className="rounded-lg bg-[#FFF6E0] px-3 py-1.5 text-[12px] font-bold text-[#8A5A00] disabled:opacity-50"
       >
-        Cambiar premio
+        <T>Cambiar premio</T>
       </button>
       <button
         disabled={ocupado}
@@ -153,7 +154,7 @@ export function DescartarSolicitud({ id, nombre }: { id: number; nombre: string 
       }}
       className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A] disabled:opacity-50"
     >
-      Descartar
+      <T>Descartar</T>
     </button>
   )
 }

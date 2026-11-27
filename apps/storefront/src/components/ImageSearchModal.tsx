@@ -2,6 +2,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useState } from 'react';
@@ -57,26 +58,26 @@ export function ImageSearchModal({ isOpen, onClose }: { isOpen: boolean; onClose
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-[#1B1B18]">Buscar por imagen</h3>
+          <h3 className="text-lg font-bold text-[#1B1B18]"><T>Buscar por imagen</T></h3>
           <button onClick={onClose} aria-label="Cerrar" className="text-2xl text-[#999]">✕</button>
         </div>
 
-        {isLoading && <p className="mb-3 p-3 rounded-lg bg-blue-50 text-sm text-blue-900">Preparando el buscador de imágenes (solo la primera vez)...</p>}
+        {isLoading && <p className="mb-3 p-3 rounded-lg bg-blue-50 text-sm text-blue-900"><T>Preparando el buscador de imágenes (solo la primera vez)...</T></p>}
         {error && <p className="mb-3 p-3 rounded-lg bg-red-50 text-sm text-red-900">{error}</p>}
 
         {preview ? (
           <div className="mb-4">
             <Image src={preview} alt="Vista previa" className="w-full h-48 object-cover rounded-lg border border-[#E7E4DC]" width={300} height={300} />
-            <button onClick={() => { setPreview(null); setMsg(null); }} className="w-full mt-2 text-sm text-[#6B6A63]">Cambiar imagen</button>
+            <button onClick={() => { setPreview(null); setMsg(null); }} className="w-full mt-2 text-sm text-[#6B6A63]"><T>Cambiar imagen</T></button>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 mb-4">
             <label className={pick}>
-              <span className="text-3xl">📷</span>Cámara
+              <span className="text-3xl">📷</span><T>Cámara</T>
               <input type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
             </label>
             <label className={pick}>
-              <span className="text-3xl">🖼️</span>Galería
+              <span className="text-3xl">🖼️</span><T>Galería</T>
               <input type="file" accept="image/*" onChange={onFile} className="hidden" />
             </label>
           </div>
@@ -91,7 +92,7 @@ export function ImageSearchModal({ isOpen, onClose }: { isOpen: boolean; onClose
         >
           {busy ? 'Analizando...' : 'Buscar producto similar'}
         </button>
-        <p className="text-xs text-[#6B6A63] mt-3 text-center">Funciona mejor con fotos claras de una sola herramienta o pieza.</p>
+        <p className="text-xs text-[#6B6A63] mt-3 text-center"><T>Funciona mejor con fotos claras de una sola herramienta o pieza.</T></p>
       </div>
     </div>
   );

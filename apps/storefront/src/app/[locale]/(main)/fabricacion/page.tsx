@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -12,7 +14,7 @@ import { trabajosAbiertos } from "@/lib/trabajos/datos"
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/fabricacion" },
   title: "Fabricación CNC en México, de prototipo a producción",
   description:
@@ -220,11 +222,11 @@ function Llamado({ titulo, texto }: { titulo: string; texto: string }) {
   return (
     <section className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[#FDEEE1] p-5 sm:p-6">
       <div className="max-w-xl">
-        <p className="text-lg font-extrabold text-[#142033]">{titulo}</p>
-        <p className="text-sm text-[#44433D]">{texto}</p>
+        <p className="text-lg font-extrabold text-[#142033]"><TS>{titulo}</TS></p>
+        <p className="text-sm text-[#44433D]"><TS>{texto}</TS></p>
       </div>
       <a href="#solicitar" className={BTN}>
-        Sube tu proyecto y cotiza
+        <TS>Sube tu proyecto y cotiza</TS>
       </a>
     </section>
   )
@@ -253,23 +255,23 @@ export default async function FabricacionPage() {
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 lg:px-8">
       {/* Hero */}
       <header className="overflow-hidden rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Fabricación CNC</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Fabricación CNC</TS></p>
         <h1 className="mt-1 max-w-3xl text-3xl font-extrabold leading-tight sm:text-5xl">
-          Fabricación CNC en México, de prototipo a producción
+          <TS>Fabricación CNC en México, de prototipo a producción</TS>
         </h1>
         <p className="mt-3 max-w-2xl text-white/80 sm:text-lg">
-          Prototipos, piezas únicas y producción por volumen con talleres especializados en México.
-          Cuéntanos qué necesitas, sube tu archivo y recibe cotizaciones.
+          <TS>Prototipos, piezas únicas y producción por volumen con talleres especializados en México.
+          Cuéntanos qué necesitas, sube tu archivo y recibe cotizaciones.</TS>
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="#solicitar" className={BTN}>
-            Solicitar cotización
+            <TS>Solicitar cotización</TS>
           </a>
           <a href="#capacidades" className="inline-flex items-center rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
-            Ver capacidades
+            <TS>Ver capacidades</TS>
           </a>
         </div>
-        <p className="mt-6 text-sm font-semibold text-white/90">¿Qué necesitas?</p>
+        <p className="mt-6 text-sm font-semibold text-white/90"><TS>¿Qué necesitas?</TS></p>
         <div className="mt-2 flex flex-wrap gap-2">
           {NECESIDADES.map((n) => (
             <LocalizedClientLink
@@ -282,18 +284,18 @@ export default async function FabricacionPage() {
           ))}
         </div>
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/75">
-          <li>✓ Cotizar es gratis</li>
-          <li>✓ Con archivo o sin archivo</li>
-          <li>✓ Talleres especializados en México</li>
-          <li>✓ Pago seguro dentro de HETNA</li>
-          <li>✓ Envíos a todo el país</li>
+          <li><TS>✓ Cotizar es gratis</TS></li>
+          <li><TS>✓ Con archivo o sin archivo</TS></li>
+          <li><TS>✓ Talleres especializados en México</TS></li>
+          <li><TS>✓ Pago seguro dentro de HETNA</TS></li>
+          <li><TS>✓ Envíos a todo el país</TS></li>
         </ul>
       </header>
 
       {/* Qué fabricamos */}
       <section className="mt-12">
-        <h2 className={H2}>¿Qué podemos fabricar?</h2>
-        <p className="mt-1 max-w-2xl text-[#6B675C]">Si está en esta lista, la red lo hace. Toca la que se parece a lo tuyo.</p>
+        <h2 className={H2}><TS>¿Qué podemos fabricar?</TS></h2>
+        <p className="mt-1 max-w-2xl text-[#6B675C]"><TS>Si está en esta lista, la red lo hace. Toca la que se parece a lo tuyo.</TS></p>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {FABRICAMOS.map((f) => (
             <LocalizedClientLink
@@ -309,38 +311,38 @@ export default async function FabricacionPage() {
             href="#solicitar"
             className="flex flex-col justify-center rounded-2xl border-2 border-dashed border-[#C2560A] bg-[#FDEEE1] p-4 text-[#B34D07]"
           >
-            <span className="block font-bold">¿Otra cosa?</span>
-            <span className="mt-1 block text-[13px]">Descríbela y te dicen si se puede y cuánto cuesta.</span>
+            <span className="block font-bold"><TS>¿Otra cosa?</TS></span>
+            <span className="mt-1 block text-[13px]"><TS>Descríbela y te dicen si se puede y cuánto cuesta.</TS></span>
           </a>
         </div>
       </section>
 
       {/* Servicios por necesidad */}
       <section id="servicios" className="mt-12 scroll-mt-24">
-        <h2 className={H2}>Servicios</h2>
+        <h2 className={H2}><TS>Servicios</TS></h2>
         <p className="mt-1 max-w-2xl text-[#6B675C]">
-          Elige lo que quieres lograr. No tienes que saber qué máquina se usa: el taller te lo propone.
+          <TS>Elige lo que quieres lograr. No tienes que saber qué máquina se usa: el taller te lo propone.</TS>
         </p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {SERVICIOS.map((s) => (
             <article key={s.titulo} className="flex flex-col rounded-2xl border border-[#E7E4DC] bg-white p-5">
-              <h3 className="text-lg font-extrabold text-[#142033]">{s.titulo}</h3>
+              <h3 className="text-lg font-extrabold text-[#142033]"><TS>{s.titulo}</TS></h3>
               <p className="mt-1 text-sm text-[#2B2A26]">{s.que}</p>
               <dl className="mt-3 grid gap-2 text-[13px]">
                 <div>
-                  <dt className="font-bold text-[#44433D]">Para quién</dt>
+                  <dt className="font-bold text-[#44433D]"><TS>Para quién</TS></dt>
                   <dd className="text-[#6B675C]">{s.para}</dd>
                 </div>
                 <div>
-                  <dt className="font-bold text-[#44433D]">Qué incluye</dt>
+                  <dt className="font-bold text-[#44433D]"><TS>Qué incluye</TS></dt>
                   <dd className="text-[#6B675C]">{s.incluye}</dd>
                 </div>
                 <div>
-                  <dt className="font-bold text-[#44433D]">Qué necesitas</dt>
+                  <dt className="font-bold text-[#44433D]"><TS>Qué necesitas</TS></dt>
                   <dd className="text-[#6B675C]">{s.necesitas}</dd>
                 </div>
                 <div>
-                  <dt className="font-bold text-[#44433D]">Tiempo típico</dt>
+                  <dt className="font-bold text-[#44433D]"><TS>Tiempo típico</TS></dt>
                   <dd className="font-semibold text-[#C2560A]">{s.tiempo}</dd>
                 </div>
               </dl>
@@ -349,11 +351,11 @@ export default async function FabricacionPage() {
                   href={pedir(s.necesidad, s.servicio)}
                   className="rounded-xl bg-[#C2560A] px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
                 >
-                  Cotizar
+                  <TS>Cotizar</TS>
                 </LocalizedClientLink>
                 {s.calculadora && (
                   <LocalizedClientLink href={s.calculadora.href} className="text-sm font-semibold text-[#142033] hover:text-[#C2560A]">
-                    {s.calculadora.texto} →
+                    <TS>{s.calculadora.texto}</TS> →
                   </LocalizedClientLink>
                 )}
               </div>
@@ -369,7 +371,7 @@ export default async function FabricacionPage() {
 
       {/* Cómo funciona */}
       <section id="como-funciona" className="mt-12 scroll-mt-24">
-        <h2 className={H2}>Así de fácil es pedir tu fabricación</h2>
+        <h2 className={H2}><TS>Así de fácil es pedir tu fabricación</TS></h2>
         <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Cuéntanos tu proyecto", "Qué quieres lograr, material, cantidad, medidas y para cuándo. Toma un par de minutos."],
@@ -388,23 +390,23 @@ export default async function FabricacionPage() {
         </ol>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-extrabold text-[#142033]">📁 Si ya tienes archivo</p>
+            <p className="font-extrabold text-[#142033]"><TS>📁 Si ya tienes archivo</TS></p>
             <p className="mt-1 text-sm text-[#44433D]">
-              Súbelo en el formulario (DXF, DWG, SVG, AI, PDF, STL, STEP…). El taller lo revisa antes de cotizar
-              y, si le falta algo (cotas, grosor, escala), te escribimos para aclararlo.
+              <TS>Súbelo en el formulario (DXF, DWG, SVG, AI, PDF, STL, STEP…). El taller lo revisa antes de cotizar
+              y, si le falta algo (cotas, grosor, escala), te escribimos para aclararlo.</TS>
             </p>
             <LocalizedClientLink href={pedir(undefined)} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
-              Subir mi archivo →
+              <TS>Subir mi archivo →</TS>
             </LocalizedClientLink>
           </div>
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-extrabold text-[#142033]">✏️ Si no tienes archivo</p>
+            <p className="font-extrabold text-[#142033]"><TS>✏️ Si no tienes archivo</TS></p>
             <p className="mt-1 text-sm text-[#44433D]">
-              Elige &ldquo;No tengo archivo, necesito diseño&rdquo;, &ldquo;Tengo boceto o foto&rdquo; o &ldquo;Tengo idea o
-              referencia&rdquo;. Los talleres que también diseñan te cotizan el diseño junto con la fabricación.
+              <TS>Elige &ldquo;No tengo archivo, necesito diseño&rdquo;, &ldquo;Tengo boceto o foto&rdquo; o &ldquo;Tengo idea o
+              referencia&rdquo;. Los talleres que también diseñan te cotizan el diseño junto con la fabricación.</TS>
             </p>
             <LocalizedClientLink href={pedir("Diseño")} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
-              Pedir ayuda con el diseño →
+              <TS>Pedir ayuda con el diseño →</TS>
             </LocalizedClientLink>
           </div>
         </div>
@@ -412,15 +414,15 @@ export default async function FabricacionPage() {
 
       {/* Conexión con talleres */}
       <section className="mt-12 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
-        <h2 className={H2}>Te conectamos con talleres especializados</h2>
+        <h2 className={H2}><TS>Te conectamos con talleres especializados</TS></h2>
         <p className="mt-1 max-w-3xl text-[#44433D]">
-          HETNA no es un solo taller: es una <strong>red de talleres CNC en México</strong>. Tu proyecto puede ser
-          atendido por cualquier taller de la red HETNA que haga ese trabajo.
+          <TS>HETNA no es un solo taller: es una</TS> <strong><TS>red de talleres CNC en México</TS></strong><TS>. Tu proyecto puede ser
+          atendido por cualquier taller de la red HETNA que haga ese trabajo.</TS>
         </p>
         <p className="mt-2 max-w-3xl text-[#6B675C]">
-          Seleccionamos a los talleres según el tipo de proyecto, tu material y tu ubicación: primero reciben el aviso
+          <TS>Seleccionamos a los talleres según el tipo de proyecto, tu material y tu ubicación: primero reciben el aviso
           los que trabajan tu material y los de tu estado, para que el precio y el envío te salgan mejor. Cada uno te
-          cotiza por separado y tú eliges con quién fabricar.
+          cotiza por separado y tú eliges con quién fabricar.</TS>
         </p>
         <ol className="mt-5 grid gap-3 md:grid-cols-5">
           {[
@@ -431,55 +433,55 @@ export default async function FabricacionPage() {
             ["Seguimiento", "Con tu folio ves el avance hasta que recibes tu pedido y lo calificas."],
           ].map(([t, d], i) => (
             <li key={t} className="rounded-2xl bg-[#FAF9F6] p-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#C2560A]">Paso {i + 1}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C2560A]"><TS>Paso</TS> {i + 1}</span>
               <span className="mt-1 block font-bold text-[#142033]">{t}</span>
               <span className="mt-1 block text-sm text-[#6B675C]">{d}</span>
             </li>
           ))}
         </ol>
         <p className="mt-4 text-sm text-[#44433D]">
-          Tus datos de contacto sólo los ve HETNA. Los talleres ven el trabajo y tus archivos, nunca tu correo ni tu teléfono.
+          <TS>Tus datos de contacto sólo los ve HETNA. Los talleres ven el trabajo y tus archivos, nunca tu correo ni tu teléfono.</TS>
         </p>
       </section>
 
       {/* Procesos y capacidades */}
       <section id="capacidades" className="mt-12 scroll-mt-24">
-        <h2 className={H2}>Capacidades</h2>
-        <p className="mt-1 max-w-2xl text-[#6B675C]">Lo que la red puede hacerle a tu pieza.</p>
+        <h2 className={H2}><TS>Capacidades</TS></h2>
+        <p className="mt-1 max-w-2xl text-[#6B675C]"><TS>Lo que la red puede hacerle a tu pieza.</TS></p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {OPERACIONES.map((o) => (
             <div key={o.que} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <p className="font-bold text-[#142033]">✓ {o.que}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{o.detalle}</p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{o.detalle}</TS></p>
             </div>
           ))}
           <a href="#solicitar" className="flex flex-col justify-center rounded-2xl bg-[#142033] p-4 text-white">
-            <span className="font-bold">¿Tu pieza necesita algo más?</span>
-            <span className="mt-1 text-sm text-white/75">Descríbelo en la solicitud.</span>
+            <span className="font-bold"><TS>¿Tu pieza necesita algo más?</TS></span>
+            <span className="mt-1 text-sm text-white/75"><TS>Descríbelo en la solicitud.</TS></span>
           </a>
         </div>
 
-        <h3 className="mt-10 text-xl font-extrabold text-[#142033]">Procesos y máquinas</h3>
+        <h3 className="mt-10 text-xl font-extrabold text-[#142033]"><TS>Procesos y máquinas</TS></h3>
         <p className="mt-1 max-w-2xl text-[#6B675C]">
-          En los que dicen &ldquo;precio al instante&rdquo; ves un estimado con sólo poner las medidas.
+          <TS>En los que dicen &ldquo;precio al instante&rdquo; ves un estimado con sólo poner las medidas.</TS>
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {PROCESOS.map((p) => (
             <div key={p.titulo} className="flex flex-col rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <p className="font-bold text-[#142033]">{p.titulo}</p>
-              <p className="text-sm text-[#6B675C]">{p.detalle}</p>
+              <p className="font-bold text-[#142033]"><TS>{p.titulo}</TS></p>
+              <p className="text-sm text-[#6B675C]"><TS>{p.detalle}</TS></p>
               <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-3 text-sm font-semibold">
                 {p.calculadora ? (
                   <LocalizedClientLink href={p.calculadora} className="text-[#1F5A2B] hover:underline">
-                    Precio al instante
+                    <TS>Precio al instante</TS>
                   </LocalizedClientLink>
                 ) : (
                   <LocalizedClientLink href={pedir(undefined, p.servicio)} className="text-[#C2560A] hover:underline">
-                    Pedir propuestas
+                    <TS>Pedir propuestas</TS>
                   </LocalizedClientLink>
                 )}
                 <LocalizedClientLink href={`/categories/${p.categoria}`} className="text-[#142033] hover:text-[#C2560A]">
-                  Ver talleres
+                  <TS>Ver talleres</TS>
                 </LocalizedClientLink>
               </div>
             </div>
@@ -490,10 +492,10 @@ export default async function FabricacionPage() {
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-[#F3F1EA] text-[#142033]">
             <tr>
-              <th className="px-4 py-3 font-bold">Proceso</th>
-              <th className="px-4 py-3 font-bold">Tamaño máximo típico</th>
-              <th className="px-4 py-3 font-bold">Grosor / pieza</th>
-              <th className="px-4 py-3 font-bold">Tolerancia típica</th>
+              <th className="px-4 py-3 font-bold"><TS>Proceso</TS></th>
+              <th className="px-4 py-3 font-bold"><TS>Tamaño máximo típico</TS></th>
+              <th className="px-4 py-3 font-bold"><TS>Grosor / pieza</TS></th>
+              <th className="px-4 py-3 font-bold"><TS>Tolerancia típica</TS></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E7E4DC] text-[#44433D]">
@@ -509,22 +511,22 @@ export default async function FabricacionPage() {
         </table>
       </div>
       <p className="mt-2 text-xs text-[#6B675C]">
-        Referencias típicas por proceso. La medida máxima y la tolerancia exacta las confirma cada taller con su máquina, en la propuesta.
-        Para piezas más grandes se pueden hacer por secciones.
+        <TS>Referencias típicas por proceso. La medida máxima y la tolerancia exacta las confirma cada taller con su máquina, en la propuesta.
+        Para piezas más grandes se pueden hacer por secciones.</TS>
       </p>
       <div className={`mt-6 grid gap-4 ${maquinas.length ? "lg:grid-cols-2" : ""}`}>
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-          <p className="font-extrabold text-[#142033]">Acabados</p>
+          <p className="font-extrabold text-[#142033]"><TS>Acabados</TS></p>
           <div className="mt-3 flex flex-wrap gap-2">
             {ACABADOS_TEXTO.map((a) => (
               <span key={a} className="rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm text-[#2B2A26]">{a}</span>
             ))}
           </div>
-          <p className="mt-3 text-sm text-[#6B675C]">Producción por volumen: desde una pieza hasta pedidos recurrentes cada mes.</p>
+          <p className="mt-3 text-sm text-[#6B675C]"><TS>Producción por volumen: desde una pieza hasta pedidos recurrentes cada mes.</TS></p>
         </div>
         {maquinas.length > 0 && (
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-            <p className="font-extrabold text-[#142033]">Máquinas registradas por talleres de la red</p>
+            <p className="font-extrabold text-[#142033]"><TS>Máquinas registradas por talleres de la red</TS></p>
             <div className="mt-3 flex flex-wrap gap-2">
               {maquinas.map((m) => (
                 <span key={m} className="rounded-full border border-[#E7E4DC] px-3 py-1.5 text-sm text-[#2B2A26]">{m}</span>
@@ -537,22 +539,22 @@ export default async function FabricacionPage() {
 
       {/* Materiales */}
       <section className="mt-12">
-        <h2 className={H2}>Materiales que trabajamos</h2>
+        <h2 className={H2}><TS>Materiales que trabajamos</TS></h2>
         <p className="mt-1 max-w-2xl text-[#6B675C]">
-          Los talleres de la red trabajan estos materiales. Si no ves el tuyo, pregúntalo en tu solicitud.
+          <TS>Los talleres de la red trabajan estos materiales. Si no ves el tuyo, pregúntalo en tu solicitud.</TS>
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {MATERIALES.map((m) => (
             <div key={m.nombre} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <p className="font-bold text-[#142033]">{m.nombre}</p>
               <p className="mt-1 text-sm text-[#6B675C]">
-                <span className="font-semibold text-[#44433D]">Ideal para:</span> {m.ideal}
+                <span className="font-semibold text-[#44433D]"><TS>Ideal para:</TS></span> {m.ideal}
               </p>
             </div>
           ))}
           <a href="#solicitar" className="rounded-2xl border-2 border-dashed border-[#C2560A] bg-[#FDEEE1] p-4 text-[#B34D07]">
-            <span className="block font-bold">Otros materiales</span>
-            <span className="mt-1 block text-sm">Latón, cobre, policarbonato, corcho, hule… pregúntanos por el tuyo.</span>
+            <span className="block font-bold"><TS>Otros materiales</TS></span>
+            <span className="mt-1 block text-sm"><TS>Latón, cobre, policarbonato, corcho, hule… pregúntanos por el tuyo.</TS></span>
           </a>
         </div>
       </section>
@@ -560,10 +562,10 @@ export default async function FabricacionPage() {
       {/* Ejemplos */}
       {(fotos.length > 0 || trabajos.length > 0) && (
         <section className="mt-12">
-          <h2 className={H2}>Ejemplos</h2>
+          <h2 className={H2}><TS>Ejemplos</TS></h2>
           {fotos.length > 0 && (
             <>
-              <p className="mt-1 text-[#6B675C]">Trabajos de talleres de la red, tal como los publicaron en su perfil.</p>
+              <p className="mt-1 text-[#6B675C]"><TS>Trabajos de talleres de la red, tal como los publicaron en su perfil.</TS></p>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {fotos.map((f) => (
                   <LocalizedClientLink
@@ -592,9 +594,9 @@ export default async function FabricacionPage() {
           {trabajos.length > 0 && (
             <>
               <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-lg font-extrabold text-[#142033]">Lo que otros clientes están cotizando ahora</h3>
+                <h3 className="text-lg font-extrabold text-[#142033]"><TS>Lo que otros clientes están cotizando ahora</TS></h3>
                 <LocalizedClientLink href="/trabajos" className="text-sm font-semibold text-[#C2560A]">
-                  Ver los {total} →
+                  <TS>Ver los</TS> {total} →
                 </LocalizedClientLink>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -615,7 +617,7 @@ export default async function FabricacionPage() {
       {/* Tiempos y cobertura */}
       <section className="mt-12 grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-          <h2 className="text-xl font-extrabold text-[#142033]">Tiempos típicos</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Tiempos típicos</TS></h2>
           <dl className="mt-3 divide-y divide-[#E7E4DC]">
             {TIEMPOS.map((t) => (
               <div key={t.que} className="flex items-center justify-between gap-4 py-2.5">
@@ -625,24 +627,24 @@ export default async function FabricacionPage() {
             ))}
           </dl>
           <p className="mt-3 text-xs text-[#6B675C]">
-            Son rangos de referencia. Cada taller confirma su tiempo de entrega en la propuesta, y ése es el que cuenta.
+            <TS>Son rangos de referencia. Cada taller confirma su tiempo de entrega en la propuesta, y ése es el que cuenta.</TS>
           </p>
         </div>
         <div className="rounded-2xl bg-[#142033] p-5 text-white sm:p-6">
-          <h2 className="text-xl font-extrabold">Cobertura</h2>
+          <h2 className="text-xl font-extrabold"><TS>Cobertura</TS></h2>
           <p className="mt-2 text-sm text-white/80">
-            Talleres en distintos estados de México y envíos por paquetería a todo el país. Cuando pides propuestas,
-            los talleres de tu estado reciben el aviso primero, para que el flete salga más barato.
+            <TS>Talleres en distintos estados de México y envíos por paquetería a todo el país. Cuando pides propuestas,
+            los talleres de tu estado reciben el aviso primero, para que el flete salga más barato.</TS>
           </p>
           <LocalizedClientLink href="/talleres" className="mt-4 inline-block text-sm font-semibold text-[#F2A25F]">
-            Ver talleres por estado →
+            <TS>Ver talleres por estado →</TS>
           </LocalizedClientLink>
         </div>
       </section>
 
       {/* Confianza */}
       <section className="mt-12">
-        <h2 className={H2}>Por qué HETNA</h2>
+        <h2 className={H2}><TS>Por qué HETNA</TS></h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
             [
@@ -689,7 +691,7 @@ export default async function FabricacionPage() {
 
       {/* Preguntas frecuentes */}
       <section className="mt-12 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-        <h2 className="mb-2 text-xl font-extrabold text-[#142033]">Preguntas frecuentes</h2>
+        <h2 className="mb-2 text-xl font-extrabold text-[#142033]"><TS>Preguntas frecuentes</TS></h2>
         {PREGUNTAS_FABRICACION.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
             <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
@@ -715,21 +717,21 @@ export default async function FabricacionPage() {
       {/* Solicitud, en la misma página */}
       <section id="solicitar" className="mt-12 scroll-mt-24 rounded-3xl bg-[#142033] p-4 sm:p-8">
         <div className="mb-5 text-white">
-          <h2 className="text-2xl font-extrabold sm:text-3xl">Solicita tu fabricación ahora</h2>
+          <h2 className="text-2xl font-extrabold sm:text-3xl"><TS>Solicita tu fabricación ahora</TS></h2>
           <p className="mt-1 max-w-2xl text-white/80">
-            Es gratis y sin compromiso. Con estos datos los talleres te pueden dar un precio real desde la primera respuesta.
+            <TS>Es gratis y sin compromiso. Con estos datos los talleres te pueden dar un precio real desde la primera respuesta.</TS>
           </p>
         </div>
         <FormSolicitudTaller />
         <p className="mt-4 text-center text-sm text-white/70">
-          ¿Prefieres hablar primero?{" "}
+          <TS>¿Prefieres hablar primero?</TS>{" "}
           <a
             href={ligaWhatsApp("Hola HETNA, quiero cotizar una fabricación CNC. Tipo de pieza: , material: , cantidad: , medidas: , ciudad: ")}
             target="_blank"
             rel="noreferrer"
             className="font-semibold text-[#F2A25F] underline"
           >
-            Escríbenos por WhatsApp
+            <TS>Escríbenos por WhatsApp</TS>
           </a>
         </p>
       </section>
@@ -737,7 +739,7 @@ export default async function FabricacionPage() {
       {/* Para talleres */}
       <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[#FBFAF6] p-5 sm:p-6">
         <div>
-          <h2 className="text-lg font-extrabold text-[#142033]">¿Tienes taller?</h2>
+          <h2 className="text-lg font-extrabold text-[#142033]"><TS>¿Tienes taller?</TS></h2>
           <p className="text-sm text-[#44433D]">
             {total > 0
               ? `Hay ${total === 1 ? "1 trabajo" : `${total} trabajos`} esperando precio. Regístrate gratis y manda tu propuesta.`
@@ -746,13 +748,18 @@ export default async function FabricacionPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <LocalizedClientLink href="/trabajos" className={BTN2.replace("px-6 py-3", "px-4 py-2 text-sm")}>
-            Ver trabajos abiertos
+            <TS>Ver trabajos abiertos</TS>
           </LocalizedClientLink>
           <a href="/seller" className="rounded-xl bg-[#142033] px-4 py-2 text-sm font-semibold text-white">
-            Registrar mi taller
+            <TS>Registrar mi taller</TS>
           </a>
         </div>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

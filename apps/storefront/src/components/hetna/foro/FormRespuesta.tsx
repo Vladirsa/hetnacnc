@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -55,7 +56,7 @@ export function FormRespuesta({ temaId, padreId, onListo, compacto = false }: { 
         </button>
         {onListo && (
           <button type="button" onClick={onListo} className="text-[14px] text-[#6B6A63] hover:text-[#1B1B18]">
-            Cancelar
+            <T>Cancelar</T>
           </button>
         )}
       </div>
@@ -70,7 +71,7 @@ export function ResponderA({ temaId, padreId }: { temaId: number; padreId: numbe
     return (
       <button type="button" onClick={() => setAbierto(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A] hover:text-[#B34D07]">
         <IconoResponder size={18} />
-        Responder
+        <T>Responder</T>
       </button>
     )
   return (

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 
 import { Button } from "@/components/atoms/Button/Button"
@@ -117,7 +118,7 @@ export const OfferCard = ({
               </p>
             ) : (
               <p className="label-md text-secondary" data-testid="offer-card-price-unavailable">
-                No disponible en tu región
+                <T>No disponible en tu región</T>
               </p>
             )}
           </div>

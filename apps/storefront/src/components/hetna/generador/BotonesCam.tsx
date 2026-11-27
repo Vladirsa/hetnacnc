@@ -3,6 +3,7 @@
 // Mandar lo que hizo el cliente directo al CAM de HETNA, sin descargar y volver
 // a subir: el DXF al CAM Studio 2D (corte láser o router: perfiles, cajas y
 // barrenos) y el STL al Laboratorio CAM 3, 4 y 5 ejes (desbaste y acabado).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { avisarUso } from "@/lib/generador/uso"
 import { useParams } from "next/navigation"
 import { useState } from "react"
@@ -43,13 +44,13 @@ export function BotonesCam({ nombre, dxf, stl, compacto = false }: { nombre: str
         {dxf && (
           <button type="button" disabled={!!enviando} onClick={() => ir("2d")} className={`${clase} bg-[#142A3D] text-[#BFE0FF] hover:bg-[#1A3650]`}>
             {enviando === "2d" ? "Abriendo…" : "Maquinar en CAM 2D"}
-            {!compacto && <span className="block text-[11px] font-normal text-[#8FB4D6]">Láser o router: corte, cajas, barrenos</span>}
+            {!compacto && <span className="block text-[11px] font-normal text-[#8FB4D6]"><T>Láser o router: corte, cajas, barrenos</T></span>}
           </button>
         )}
         {stl && (
           <button type="button" disabled={!!enviando} onClick={() => ir("3d")} className={`${clase} bg-[#2A1C12] text-[#FFD2B0] hover:bg-[#3A2616]`}>
             {enviando === "3d" ? "Abriendo…" : "Laboratorio CAM 3-5 ejes"}
-            {!compacto && <span className="block text-[11px] font-normal text-[#D6A989]">Router: desbaste y acabado en 3D</span>}
+            {!compacto && <span className="block text-[11px] font-normal text-[#D6A989]"><T>Router: desbaste y acabado en 3D</T></span>}
           </button>
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { convertToLocale } from "@/lib/helpers/money"
 
 // "Te faltan $180 para que SASA te mande gratis."
@@ -56,19 +57,19 @@ export const BarraEnvioGratis = ({
         >
           {logrado ? (
             <>
-              <span className="font-bold">¡Listo!</span> {nombre} te manda{" "}
-              <span className="font-bold">gratis</span> este pedido
+              <span className="font-bold"><T>¡Listo!</T></span> {nombre} <T>te manda</T>{" "}
+              <span className="font-bold"><T>gratis</T></span> <T>este pedido</T>
               {ahorro !== null && (
-                <> — te ahorras {dinero(ahorro)} de envío</>
+                <> <T>— te ahorras</T> {dinero(ahorro)} <T>de envío</T></>
               )}
               .
             </>
           ) : (
             <>
-              Te faltan <span className="font-bold">{dinero(falta)}</span> de tu
-              carrito para que <span className="font-semibold">{nombre}</span> te
-              mande <span className="font-bold">gratis</span>
-              {ahorro !== null && <> y te ahorres {dinero(ahorro)} de envío</>}.
+              <T>Te faltan</T> <span className="font-bold">{dinero(falta)}</span> <T>de tu
+              carrito para que</T> <span className="font-semibold">{nombre}</span> <T>te
+              mande</T> <span className="font-bold"><T>gratis</T></span>
+              {ahorro !== null && <> <T>y te ahorres</T> {dinero(ahorro)} <T>de envío</T></>}.
             </>
           )}
         </p>
@@ -98,7 +99,7 @@ export const BarraEnvioGratis = ({
 
       {!logrado && (
         <p className="mt-1.5 text-[11px] text-[#8A6A33]">
-          {nombre} manda gratis a partir de {dinero(umbral)} en tu carrito.
+          {nombre} <T>manda gratis a partir de</T> {dinero(umbral)} <T>en tu carrito.</T>
         </p>
       )}
     </div>

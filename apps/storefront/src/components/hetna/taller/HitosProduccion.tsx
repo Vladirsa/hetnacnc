@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import type { HitoProduccion } from "@/lib/cotizar/solicitud-taller"
@@ -16,8 +17,8 @@ export default function HitosProduccion({ hitos }: { hitos: HitoProduccion[] }) 
   return (
     <div className="mt-5 border-t border-[#E7E4DC] pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-bold text-[#142033]">Avance de la producción</p>
-        <p className="text-xs text-[#6B675C]">{hechos} de {hitos.length} etapas listas</p>
+        <p className="text-sm font-bold text-[#142033]"><T>Avance de la producción</T></p>
+        <p className="text-xs text-[#6B675C]">{hechos} <T>de</T> {hitos.length} <T>etapas listas</T></p>
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F3F1EA]">
         <div className="h-full rounded-full bg-[#1E7B3A]" style={{ width: `${Math.round((hechos / hitos.length) * 100)}%` }} />
@@ -33,7 +34,7 @@ export default function HitosProduccion({ hitos }: { hitos: HitoProduccion[] }) 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#142033]">
                   {h.nombre}
-                  {h.estado === "atrasado" && <span className="ml-2 rounded-full bg-[#FDECEA] px-2 py-0.5 text-xs font-bold text-[#B3261E]">Atrasado</span>}
+                  {h.estado === "atrasado" && <span className="ml-2 rounded-full bg-[#FDECEA] px-2 py-0.5 text-xs font-bold text-[#B3261E]"><T>Atrasado</T></span>}
                   {h.estado === "hecho" && h.dias_diferencia != null && (
                     <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${h.dias_diferencia > 0 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#E6F4EA] text-[#1E7B3A]"}`}>
                       {h.dias_diferencia > 0 ? `${h.dias_diferencia} ${h.dias_diferencia === 1 ? "día" : "días"} tarde` : "A tiempo"}
@@ -41,10 +42,10 @@ export default function HitosProduccion({ hitos }: { hitos: HitoProduccion[] }) 
                   )}
                 </p>
                 <p className="text-xs text-[#6B675C]">
-                  Planeado: {dia(h.fecha_plan)}
-                  {h.fecha_real && <> · Listo: {dia(h.fecha_real)}</>}
+                  <T>Planeado:</T> {dia(h.fecha_plan)}
+                  {h.fecha_real && <> <T>· Listo:</T> {dia(h.fecha_real)}</>}
                 </p>
-                {h.nota && <p className="mt-0.5 text-sm text-[#40403A]">{h.nota}</p>}
+                {h.nota && <p className="mt-0.5 text-sm text-[#40403A]"><T>{h.nota}</T></p>}
                 {h.fotos.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-2">
                     {h.fotos.map((f) =>

@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Input } from "@/components/atoms/Input/Input"
 import { cn } from "@/lib/utils"
 import { FieldError } from "react-hook-form"
@@ -15,7 +16,7 @@ export const LabeledInput = ({
   ...props
 }: LabeledInputProps) => (
   <label className={cn("label-sm block", className)}>
-    <p className={cn(error && "text-negative")}>{label}</p>
+    <p className={cn(error && "text-negative")}><T>{label}</T></p>
     <Input error={!!error} {...props} />
     {error && <p className="label-sm text-negative">{error.message}</p>}
   </label>

@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import {
   forwardRef,
   useImperativeHandle,
@@ -50,7 +51,7 @@ const CountrySelect = forwardRef<
 
   return (
     <label className="label-md">
-      <p className="mb-2">País</p>
+      <p className="mb-2"><T>País</T></p>
       <Listbox onChange={handleSelect} value={props.value}>
         <div className="relative">
           <Listbox.Button
@@ -91,7 +92,7 @@ const CountrySelect = forwardRef<
                   className="cursor-default select-none relative pl-6 pr-10 hover:bg-gray-50 py-4 border-b"
                   data-testid="shipping-address-option"
                 >
-                  {label}
+                  <T>{label}</T>
                 </Listbox.Option>
               ))}
             </Listbox.Options>

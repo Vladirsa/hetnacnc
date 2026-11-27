@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 
@@ -17,7 +19,7 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { usuario } = await params
   const p = await perfilPorUsuario(usuario)
   if (!p || p.suspendido) return { title: { absolute: "Perfil no encontrado | Foro CNC México" }, robots: { index: false } }
@@ -110,7 +112,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
               </div>
               {propio ? (
                 <LocalizedClientLink href="/foro-cnc/mi-perfil" className="border border-[#E0DCD2] font-semibold px-4 py-2 rounded-[10px] text-[14px] hover:border-[#C2560A]">
-                  Editar perfil
+                  <TS>Editar perfil</TS>
                 </LocalizedClientLink>
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
@@ -119,7 +121,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                       href={`/cotizar?taller=${encodeURIComponent(p.taller.handle)}`}
                       className="inline-flex min-h-[44px] items-center rounded-full bg-[#C2560A] px-5 text-[14.5px] font-semibold text-white hover:bg-[#A84A08]"
                     >
-                      Pedir cotización
+                      <TS>Pedir cotización</TS>
                     </LocalizedClientLink>
                   )}
                   <BotonSeguir objetivo={objetivoPerfil(p)} siguiendo={red.siguiendo} seguidores={red.seguidores} conCuenta={false} />
@@ -127,7 +129,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                     href={urlConversacion(p.usuario)}
                     className="inline-flex min-h-[44px] items-center rounded-full border border-[#C9C4B8] bg-white px-4 py-2 text-[14px] font-semibold text-[#44433D] hover:border-[#C2560A]"
                   >
-                    ✉ Mensaje
+                    <TS>✉ Mensaje</TS>
                   </LocalizedClientLink>
                 </div>
               )}
@@ -145,34 +147,34 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                   href={`/talleres/${p.taller.handle}`}
                   className="self-start mt-1 inline-flex items-center gap-1.5 rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
                 >
-                  Ver el taller {p.taller.nombre} y pedir cotización →
+                  <TS>Ver el taller</TS> {p.taller.nombre} <TS>y pedir cotización →</TS>
                 </LocalizedClientLink>
               )}
               <span className="text-[14px] text-[#6B6A63]">
                 {lugar ? `📍 ${lugar} · ` : ""}
-                {zonas ? `${zonas} · ` : ""}Miembro desde{" "}
+                {zonas ? `${zonas} · ` : ""}<TS>Miembro desde</TS>{" "}
                 {new Date(p.creado).toLocaleDateString("es-MX", { month: "long", year: "numeric", timeZone: "America/Mexico_City" })}
               </span>
             </div>
 
             <div className="flex gap-6 flex-wrap text-[14px]">
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{red.seguidores}</strong> <span className="text-[#6B6A63]">seguidores</span>
+                <strong className="text-[18px] text-[#1B1B18]">{red.seguidores}</strong> <span className="text-[#6B6A63]"><TS>seguidores</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{cuentas.siguiendo}</strong> <span className="text-[#6B6A63]">siguiendo</span>
+                <strong className="text-[18px] text-[#1B1B18]">{cuentas.siguiendo}</strong> <span className="text-[#6B6A63]"><TS>siguiendo</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.reputacion}</strong> <span className="text-[#6B6A63]">puntos</span>
+                <strong className="text-[18px] text-[#1B1B18]">{p.reputacion}</strong> <span className="text-[#6B6A63]"><TS>puntos</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.temas}</strong> <span className="text-[#6B6A63]">temas</span>
+                <strong className="text-[18px] text-[#1B1B18]">{p.temas}</strong> <span className="text-[#6B6A63]"><TS>temas</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.respuestas}</strong> <span className="text-[#6B6A63]">respuestas</span>
+                <strong className="text-[18px] text-[#1B1B18]">{p.respuestas}</strong> <span className="text-[#6B6A63]"><TS>respuestas</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#16794F]">{p.mejores}</strong> <span className="text-[#6B6A63]">mejores respuestas</span>
+                <strong className="text-[18px] text-[#16794F]">{p.mejores}</strong> <span className="text-[#6B6A63]"><TS>mejores respuestas</TS></span>
               </span>
             </div>
 
@@ -181,7 +183,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                 {/* Lista vieja de máquinas (texto): sólo mientras no capture las nuevas */}
                 {p.maquinas.length > 0 && !p.equipos.length && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[13px] font-bold text-[#44433D] w-[88px]">Máquinas</span>
+                    <span className="text-[13px] font-bold text-[#44433D] w-[88px]"><TS>Máquinas</TS></span>
                     {p.maquinas.map((m) => (
                       <span key={m} className="text-[13px] bg-[#F4F1EA] px-2.5 py-1 rounded-full">
                         {m}
@@ -191,7 +193,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                 )}
                 {p.software.length > 0 && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[13px] font-bold text-[#44433D] w-[88px]">Programas</span>
+                    <span className="text-[13px] font-bold text-[#44433D] w-[88px]"><TS>Programas</TS></span>
                     {p.software.map((m) => (
                       <span key={m} className="text-[13px] bg-[#EEF4FB] px-2.5 py-1 rounded-full">
                         {m}
@@ -209,35 +211,35 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
           <section className="flex flex-col gap-3 min-w-0">
             {p.bio && (
               <div className={`${CAJA_RED} flex flex-col gap-2`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Acerca de</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Acerca de</TS></h2>
                 <p className="m-0 text-[15px] text-[#23231F] leading-relaxed whitespace-pre-line break-words">{p.bio}</p>
               </div>
             )}
             {p.portafolio.length > 0 && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Portafolio</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Portafolio</TS></h2>
                 <PortafolioTrabajos trabajos={p.portafolio} />
               </div>
             )}
             {p.equipos.length > 0 && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Máquinas</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Máquinas</TS></h2>
                 <MaquinasTaller equipos={p.equipos} />
               </div>
             )}
             {p.materiales.length > 0 && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Materiales y espesores</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Materiales y espesores</TS></h2>
                 <MaterialesTaller materiales={p.materiales} />
               </div>
             )}
             {propio && p.tipo !== "cliente" && !p.equipos.length && !p.portafolio.length && (
               <div className={`${CAJA_RED} flex flex-col gap-2`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Muestra tu taller</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Muestra tu taller</TS></h2>
                 <p className="m-0 text-[14px] text-[#6B6A63]">
-                  Agrega tus máquinas, los materiales que cortas y fotos de tus trabajos: es lo que más convence a un cliente.{" "}
+                  <TS>Agrega tus máquinas, los materiales que cortas y fotos de tus trabajos: es lo que más convence a un cliente.</TS>{" "}
                   <LocalizedClientLink href="/foro-cnc/mi-perfil#taller" className="font-semibold text-[#B34D07] hover:underline">
-                    Completar mi perfil
+                    <TS>Completar mi perfil</TS>
                   </LocalizedClientLink>
                 </p>
               </div>
@@ -245,20 +247,20 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             {/* Portafolio viejo (fotos de "Proyectos" de la trayectoria): sólo si no hay del nuevo */}
             {!p.portafolio.length && p.trayectoria.some((x) => x.tipo === "proyecto" && x.fotos?.length) && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Portafolio</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Portafolio</TS></h2>
                 <Portafolio pasos={p.trayectoria} />
               </div>
             )}
             {(avales.length > 0 || propio) && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Aptitudes</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Aptitudes</TS></h2>
                 {avales.length ? (
                   <Aptitudes perfilId={p.id} avales={avales} puedeAvalar={Boolean(yo) && !propio} />
                 ) : (
                   <p className="m-0 text-[14px] text-[#6B6A63]">
-                    Agrega lo que sabes hacer para que la comunidad lo avale.{" "}
+                    <TS>Agrega lo que sabes hacer para que la comunidad lo avale.</TS>{" "}
                     <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
-                      Agregar aptitudes
+                      <TS>Agregar aptitudes</TS>
                     </LocalizedClientLink>
                   </p>
                 )}
@@ -266,14 +268,14 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             )}
             {(p.trayectoria.length > 0 || propio) && (
               <div className={`${CAJA_RED} flex flex-col gap-3`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Trayectoria</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Trayectoria</TS></h2>
                 {p.trayectoria.length ? (
                   <Trayectoria pasos={p.trayectoria} />
                 ) : (
                   <p className="m-0 text-[14px] text-[#6B6A63]">
-                    Tu experiencia, estudios, certificaciones y proyectos.{" "}
+                    <TS>Tu experiencia, estudios, certificaciones y proyectos.</TS>{" "}
                     <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
-                      Armar mi currículum
+                      <TS>Armar mi currículum</TS>
                     </LocalizedClientLink>
                   </p>
                 )}
@@ -281,13 +283,13 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             )}
             {(recomendaciones.length > 0 || (!propio && !p.suspendido)) && (
               <div id="recomendaciones" className={`${CAJA_RED} flex flex-col gap-3 scroll-mt-4`}>
-                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Recomendaciones</h2>
+                <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Recomendaciones</TS></h2>
                 <ListaRecomendaciones lista={recomendaciones} propio={propio} />
-                {!recomendaciones.length && <p className="m-0 text-[14px] text-[#6B6A63]">Aún no tiene recomendaciones.</p>}
+                {!recomendaciones.length && <p className="m-0 text-[14px] text-[#6B6A63]"><TS>Aún no tiene recomendaciones.</TS></p>}
                 {!propio && <FormRecomendar perfilId={p.id} nombre={p.nombre} previa={previa} />}
               </div>
             )}
-            <h2 className="m-0 mt-2 text-[18px] font-bold text-[#1B1B18]">Publicaciones</h2>
+            <h2 className="m-0 mt-2 text-[18px] font-bold text-[#1B1B18]"><TS>Publicaciones</TS></h2>
             {temas && temas.temas.length ? (
               temas.temas.map((t) => <TarjetaTema key={t.id} t={t} />)
             ) : (
@@ -304,4 +306,9 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

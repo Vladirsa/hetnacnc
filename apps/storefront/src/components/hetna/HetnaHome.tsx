@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import fs from "fs"
 import path from "path"
@@ -365,13 +366,13 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
         <section className="px-4 lg:px-16 pb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-[20px] font-semibold m-0">
-              Aprendizaje CNC
+              <TS>Aprendizaje CNC</TS>
             </h2>
             <LocalizedClientLink
               href="/servicios/aprendizaje-cnc"
               className="text-[13.5px] font-semibold text-[#B34D07] hover:underline"
             >
-              Ver todo
+              <TS>Ver todo</TS>
             </LocalizedClientLink>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

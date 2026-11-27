@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "next/image"
 
 import { ConfianzaCompra } from "@/components/hetna/ConfianzaCompra"
@@ -75,7 +76,7 @@ export const ResumenCompra = ({ cart, soloDigital = false }: { cart: any; soloDi
   return (
     <section className="rounded-[16px] border border-[#E7E4DC] bg-white p-4 sm:p-5" data-testid="cart-summary" aria-labelledby="titulo-resumen">
       <h2 id="titulo-resumen" className="text-[24px] font-extrabold text-[#111]">
-        Resumen
+        <T>Resumen</T>
       </h2>
 
       {/* Miniaturas de lo que compras */}
@@ -86,7 +87,7 @@ export const ResumenCompra = ({ cart, soloDigital = false }: { cart: any; soloDi
               {i.thumbnail ? (
                 <Image src={decodeURIComponent(i.thumbnail)} alt={i.product_title || "Producto"} fill sizes="60px" className="object-cover" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center text-[10px] text-[#8A8780]">Sin foto</span>
+                <span className="flex h-full w-full items-center justify-center text-[10px] text-[#8A8780]"><T>Sin foto</T></span>
               )}
               {i.quantity > 1 && (
                 <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 text-[10px] font-bold text-white">×{i.quantity}</span>
@@ -116,40 +117,40 @@ export const ResumenCompra = ({ cart, soloDigital = false }: { cart: any; soloDi
           </Fila>
         )}
 
-        <Fila termino={<span className="font-bold text-[#111]">Subtotal</span>}>
+        <Fila termino={<span className="font-bold text-[#111]"><T>Subtotal</T></span>}>
           <span className="font-bold text-[#111]">{d.precio(d.subtotalArticulos)}</span>
         </Fila>
 
-        <Fila termino={<span className="font-bold text-[#111]">Envío</span>}>
+        <Fila termino={<span className="font-bold text-[#111]"><T>Envío</T></span>}>
           {soloDigital && d.envio === 0 ? (
-            <span className="text-[13px] text-[#4A4943]">No aplica: es descarga</span>
+            <span className="text-[13px] text-[#4A4943]"><T>No aplica: es descarga</T></span>
           ) : d.allSellersHaveShipping ? (
-            <span className="font-bold text-[#111]">{d.envio === 0 ? <span className="text-[#17803F]">Gratis</span> : d.precio(d.envio)}</span>
+            <span className="font-bold text-[#111]">{d.envio === 0 ? <span className="text-[#17803F]"><T>Gratis</T></span> : d.precio(d.envio)}</span>
           ) : (
-            <span className="text-[13px] text-[#6B6A63]">Se calcula al elegir el envío</span>
+            <span className="text-[13px] text-[#6B6A63]"><T>Se calcula al elegir el envío</T></span>
           )}
         </Fila>
 
         {d.descuentoExtra > 0 && (
-          <Fila termino={<span className="font-bold text-[#111]">Descuentos extra</span>}>
+          <Fila termino={<span className="font-bold text-[#111]"><T>Descuentos extra</T></span>}>
             <span className="font-bold text-[#E5322D]">− {d.precio(d.descuentoExtra)}</span>
           </Fila>
         )}
 
         <Fila termino="IVA">
           {d.ivaIncluido ? (
-            <span className="text-[13px] text-[#4A4943]">Incluido{d.impuestos > 0 ? ` (${d.precio(d.impuestos)})` : ""}</span>
+            <span className="text-[13px] text-[#4A4943]"><T>Incluido</T>{d.impuestos > 0 ? ` (${d.precio(d.impuestos)})` : ""}</span>
           ) : d.impuestos > 0 ? (
             <span className="font-medium text-[#111]">{d.precio(d.impuestos)}</span>
           ) : (
-            <span className="text-[13px] text-[#4A4943]">No se agrega nada</span>
+            <span className="text-[13px] text-[#4A4943]"><T>No se agrega nada</T></span>
           )}
         </Fila>
       </dl>
 
       {d.descuentoArticulos + d.descuentoExtra > 0 && (
         <p className="mt-3 rounded-[8px] bg-[#FDECEA] px-3 py-2 text-[13px] font-semibold text-[#C9221D]">
-          ¡Te ahorras {d.precio(d.descuentoArticulos + d.descuentoExtra)} en esta compra!
+          <T>¡Te ahorras</T> {d.precio(d.descuentoArticulos + d.descuentoExtra)} <T>en esta compra!</T>
         </p>
       )}
 
@@ -170,7 +171,7 @@ export const PagarCompra = ({ cart, conPaypal = false, soloDigital = false }: { 
     <div className="flex flex-col gap-4">
       <section className="rounded-[16px] border border-[#E7E4DC] bg-white p-4 sm:p-5" aria-label="Pagar">
         <div className="flex items-baseline justify-between">
-          <span className="text-[16px] font-bold text-[#111]">Total a pagar</span>
+          <span className="text-[16px] font-bold text-[#111]"><T>Total a pagar</T></span>
           <span className="text-[24px] font-extrabold text-[#111]">{d.precio(cart?.total || 0)}</span>
         </div>
         <div className="mt-3">
@@ -184,7 +185,7 @@ export const PagarCompra = ({ cart, conPaypal = false, soloDigital = false }: { 
                 {d.falta.map((f) => (
                   <li key={f.paso}>
                     <LocalizedClientLink href={`/checkout?step=${f.paso}`} className="text-[13px] font-medium text-[#9B3225] underline">
-                      {f.texto}
+                      <T>{f.texto}</T>
                     </LocalizedClientLink>
                   </li>
                 ))}
@@ -192,16 +193,16 @@ export const PagarCompra = ({ cart, conPaypal = false, soloDigital = false }: { 
             </div>
           )}
           <p className="mt-2 text-[12px] leading-relaxed text-[#6B6A63]">
-            Al pagar confirmas que leíste y aceptas los{" "}
+            <T>Al pagar confirmas que leíste y aceptas los</T>{" "}
             <LocalizedClientLink href="/terminos-y-condiciones" className="underline">
-              términos y condiciones
+              <T>términos y condiciones</T>
             </LocalizedClientLink>{" "}
-            y la{" "}
+            <T>y la</T>{" "}
             <LocalizedClientLink href="/devoluciones" className="underline">
-              política de devoluciones
+              <T>política de devoluciones</T>
             </LocalizedClientLink>
-            . El vendedor recibe tu pago cuando confirmas que te llegó bien; si algo llega dañado, incompleto o distinto, repórtalo en
-            48 horas con fotos.
+            <T>. El vendedor recibe tu pago cuando confirmas que te llegó bien; si algo llega dañado, incompleto o distinto, repórtalo en
+            48 horas con fotos.</T>
           </p>
         </div>
       </section>

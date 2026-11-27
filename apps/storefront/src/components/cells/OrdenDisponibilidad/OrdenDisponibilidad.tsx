@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { Accordion } from "@/components/molecules/Accordion/Accordion"
@@ -53,11 +54,11 @@ export const OrdenDisponibilidad = () => {
             onChange={(e) => cambiar("disponible", e.target.checked ? "1" : null)}
             data-testid="filter-disponible"
           />
-          Sólo con existencia
+          <T>Sólo con existencia</T>
         </label>
         {/* Licencia de diseños: qué puedes hacer con el archivo (lib/hetna/licencias) */}
         <label className="flex flex-col gap-1 text-md">
-          <span>Licencia del diseño</span>
+          <span><T>Licencia del diseño</T></span>
           <select
             value={licencia}
             onChange={(e) => cambiar("licencia", e.target.value || null)}

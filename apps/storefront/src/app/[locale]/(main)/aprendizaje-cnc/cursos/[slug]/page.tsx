@@ -1,6 +1,8 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -16,7 +18,7 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const curso = await getCourseBySlug(slug)
   if (!curso) return {}
@@ -76,10 +78,10 @@ export default async function CursoDetalle({ params }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <JsonLd datos={schemaCurso} />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
         <span>/</span>
         <LocalizedClientLink href="/servicios/aprendizaje-cnc" className="hover:text-[#B34D07]">
-          Academia CNC
+          <TS>Academia CNC</TS>
         </LocalizedClientLink>
         <span>/</span>
         <span className="text-[#1B1B18] font-medium">{curso.title}</span>
@@ -94,7 +96,7 @@ export default async function CursoDetalle({ params }: Props) {
               </span>
               {gratis && (
                 <span className="text-[12px] font-bold uppercase tracking-wide bg-[#1F7A4D] text-white px-3 py-1 rounded-full">
-                  Gratis
+                  <TS>Gratis</TS>
                 </span>
               )}
             </div>
@@ -118,7 +120,7 @@ export default async function CursoDetalle({ params }: Props) {
           {secciones.length > 0 ? (
             <Temario secciones={secciones} acceso={acceso} slug={slug} />
           ) : (
-            <p className="m-0 text-[14.5px] text-[#6B6A63]">El taller está preparando el temario.</p>
+            <p className="m-0 text-[14.5px] text-[#6B6A63]"><TS>El taller está preparando el temario.</TS></p>
           )}
         </div>
 
@@ -136,14 +138,14 @@ export default async function CursoDetalle({ params }: Props) {
               inscrito={!!acceso?.inscrito}
             />
             <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[13.5px] text-[#1B1B18]">
-              <li>✓ Acceso sin fecha de vencimiento</li>
-              <li>✓ En el celular o la computadora</li>
-              {(curso.vistas_previas ?? 0) > 0 && !gratis && <li>✓ {curso.vistas_previas} lecciones de muestra gratis</li>}
-              {!gratis && <li>✓ Pago seguro con Mercado Pago, tarjeta o PayPal</li>}
+              <li><TS>✓ Acceso sin fecha de vencimiento</TS></li>
+              <li><TS>✓ En el celular o la computadora</TS></li>
+              {(curso.vistas_previas ?? 0) > 0 && !gratis && <li>✓ {curso.vistas_previas} <TS>lecciones de muestra gratis</TS></li>}
+              {!gratis && <li><TS>✓ Pago seguro con Mercado Pago, tarjeta o PayPal</TS></li>}
             </ul>
             {curso.taller?.handle && (
               <LocalizedClientLink href={`/sellers/${curso.taller.handle}`} className="text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                Conoce el taller {curso.taller.nombre}
+                <TS>Conoce el taller</TS> {curso.taller.nombre}
               </LocalizedClientLink>
             )}
           </div>
@@ -151,4 +153,9 @@ export default async function CursoDetalle({ params }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

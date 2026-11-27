@@ -2,6 +2,7 @@
 
 // HETNA Panel → App → Referidos y distribuidores: crear códigos, activarlos o
 // pausarlos, y marcar como aplicado un "mes a favor" de un taller que paga.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 async function accion(cuerpo: unknown): Promise<string> {
@@ -23,7 +24,7 @@ export function NuevoCodigo() {
   const [ocupado, setOcupado] = useState(false)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setF({ ...f, [k]: k === "codigo" ? e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") : e.target.value })
-  if (!abierto) return <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#C2560A] px-3 py-2 text-[13px] font-bold text-white">+ Nuevo código</button>
+  if (!abierto) return <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#C2560A] px-3 py-2 text-[13px] font-bold text-white"><T>+ Nuevo código</T></button>
   return (
     <div className="mt-2 grid gap-2 rounded-xl bg-[#F8F7F2] p-3">
       <input className={input} placeholder="Distribuidor o promoción (ej. CNC del Bajío)" value={f.nombre} onChange={set("nombre")} />
@@ -48,9 +49,9 @@ export function NuevoCodigo() {
           }}
           className="rounded-lg bg-[#0F7A4A] px-3 py-2 text-[13px] font-bold text-white disabled:opacity-50"
         >
-          Crear código
+          <T>Crear código</T>
         </button>
-        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]">Cancelar</button>
+        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]"><T>Cancelar</T></button>
       </div>
     </div>
   )
@@ -67,7 +68,7 @@ export function BotonCodigo({ codigo, activo, liga }: { codigo: string; activo: 
       >
         {copiado ? "¡Copiada!" : "Copiar su página"}
       </button>
-      <a href={liga} target="_blank" rel="noreferrer" className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A]">Ver página</a>
+      <a href={liga} target="_blank" rel="noreferrer" className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A]"><T>Ver página</T></a>
       <button
         disabled={ocupado}
         onClick={async () => {
@@ -101,7 +102,7 @@ export function MesAplicado({ id, nombre }: { id: string; nombre: string }) {
       }}
       className="rounded-lg bg-[#0F7A4A] px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-50"
     >
-      ✓ Ya apliqué 1 mes
+      <T>✓ Ya apliqué 1 mes</T>
     </button>
   )
 }
@@ -125,13 +126,13 @@ export function AtenderSolicitud({ id, empresa }: { id: number; empresa: string 
   if (!abierto) {
     return (
       <div className="mt-1.5 flex flex-wrap gap-1.5">
-        <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#0F7A4A] px-3 py-1.5 text-[12px] font-bold text-white">Crear su código</button>
+        <button onClick={() => setAbierto(true)} className="rounded-lg bg-[#0F7A4A] px-3 py-1.5 text-[12px] font-bold text-white"><T>Crear su código</T></button>
         <button
           disabled={ocupado}
           onClick={() => { if (confirm(`¿Descartar la solicitud de ${empresa}?`)) enviar({ accion: "descartar" }) }}
           className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 text-[12px] font-bold text-[#40403A] disabled:opacity-50"
         >
-          Descartar
+          <T>Descartar</T>
         </button>
       </div>
     )
@@ -142,13 +143,13 @@ export function AtenderSolicitud({ id, empresa }: { id: number; empresa: string 
         <input className={input} placeholder="Código" value={codigo} maxLength={24} onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} />
         <input className={input} type="number" min={1} max={365} placeholder="Días" value={dias} onChange={(e) => setDias(e.target.value)} />
       </div>
-      <p className="text-[11px] text-[#6B675C]">Se crea el código y le llega por correo con su página.</p>
+      <p className="text-[11px] text-[#6B675C]"><T>Se crea el código y le llega por correo con su página.</T></p>
       {msg && <p className="text-[12px] font-semibold text-[#B3261E]">{msg}</p>}
       <div className="flex gap-2">
         <button disabled={ocupado} onClick={() => enviar({ accion: "crear_para_solicitud", codigo, dias, nombre: empresa })} className="rounded-lg bg-[#0F7A4A] px-3 py-2 text-[13px] font-bold text-white disabled:opacity-50">
-          Crear y mandárselo
+          <T>Crear y mandárselo</T>
         </button>
-        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]">Cancelar</button>
+        <button onClick={() => setAbierto(false)} className="rounded-lg bg-white px-3 py-2 text-[13px] font-semibold text-[#40403A]"><T>Cancelar</T></button>
       </div>
     </div>
   )

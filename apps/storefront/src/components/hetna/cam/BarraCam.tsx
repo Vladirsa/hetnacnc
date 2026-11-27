@@ -2,6 +2,7 @@
 
 // Barra de arriba del CAM Studio (pantalla completa, como el 3D y 2D Studio):
 // cambia entre 2D (router y láser), 3D (3, 4 y 5 ejes) y Torno.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -21,8 +22,8 @@ export function BarraCam() {
         <LocalizedClientLink href="/" className="flex shrink-0 items-center gap-2 text-[15px] font-extrabold tracking-wide" aria-label="Ir a HETNA CNC">
           <span className="h-2.5 w-2.5 rounded-full bg-[#F07A1A] shadow-[0_0_12px_#F07A1A]" />
           <span>
-            HETNA <span className="text-[#F07A1A]">CAM</span>
-            <span className="hidden sm:inline"> Studio</span>
+            <T>HETNA</T> <span className="text-[#F07A1A]"><T>CAM</T></span>
+            <span className="hidden sm:inline"> <T>Studio</T></span>
           </span>
         </LocalizedClientLink>
 
@@ -47,13 +48,13 @@ export function BarraCam() {
 
         <div className="ml-auto flex shrink-0 items-center gap-1 text-[13px] font-semibold">
           <LocalizedClientLink href="/laboratorio-cam" className="hidden rounded-[8px] px-2.5 py-1.5 text-white/65 hover:bg-white/10 hover:text-white md:block">
-            Cómo funciona
+            <T>Cómo funciona</T>
           </LocalizedClientLink>
           <LocalizedClientLink href="/disenar" className="hidden rounded-[8px] px-2.5 py-1.5 text-white/65 hover:bg-white/10 hover:text-white sm:block">
-            Diseñar
+            <T>Diseñar</T>
           </LocalizedClientLink>
           <LocalizedClientLink href="/user/cam" className="rounded-[8px] px-2.5 py-1.5 text-white/65 hover:bg-white/10 hover:text-white">
-            Mis trabajos
+            <T>Mis trabajos</T>
           </LocalizedClientLink>
         </div>
       </div>

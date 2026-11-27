@@ -2,6 +2,7 @@
 // modelo que generó la IA, hechos con la cuenta de HETNA; ver
 // GET /store/hetna-muestras-3d), para qué sirve, cómo funciona y preguntas.
 // Va debajo del estudio y en la portada para quien no ha entrado.
+import { TS } from "@/i18n/TS"
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 type Muestra = { id: string; titulo: string; foto: string; modelo: string }
@@ -65,11 +66,11 @@ export async function PromoImagen3D() {
       {/* Vitrina */}
       <section className="px-4 py-12 lg:px-10">
         <div className="mx-auto max-w-[1240px]">
-          <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#F59A4A]">Imagen a 3D con IA</span>
-          <h2 className="m-0 mt-2 text-[28px] font-extrabold leading-tight lg:text-[38px]">De una foto a un modelo 3D en minutos</h2>
+          <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#F59A4A]"><TS>Imagen a 3D con IA</TS></span>
+          <h2 className="m-0 mt-2 text-[28px] font-extrabold leading-tight lg:text-[38px]"><TS>De una foto a un modelo 3D en minutos</TS></h2>
           <p className="m-0 mt-2 max-w-[720px] text-[15.5px] leading-relaxed text-white/65">
-            Sube la foto de una figura, una pieza o un producto y la IA crea el modelo con textura. Descárgalo para imprimir, maquinar o
-            mostrarlo en tu tienda.
+            <TS>Sube la foto de una figura, una pieza o un producto y la IA crea el modelo con textura. Descárgalo para imprimir, maquinar o
+            mostrarlo en tu tienda.</TS>
           </p>
 
           {lista.length > 0 ? (
@@ -80,7 +81,7 @@ export async function PromoImagen3D() {
                     <figure className="relative m-0 aspect-square bg-white">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={m.foto} alt={`Foto original: ${m.titulo}`} loading="lazy" className="h-full w-full object-contain" />
-                      <figcaption className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold">Foto</figcaption>
+                      <figcaption className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold"><TS>Foto</TS></figcaption>
                     </figure>
                     <figure
                       className="relative m-0 aspect-square"
@@ -88,10 +89,10 @@ export async function PromoImagen3D() {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={m.modelo} alt={`Modelo 3D generado: ${m.titulo}`} loading="lazy" className="h-full w-full object-contain" />
-                      <figcaption className="absolute left-2 top-2 rounded-full bg-[#F07A1A] px-2 py-0.5 text-[11px] font-semibold">Modelo 3D</figcaption>
+                      <figcaption className="absolute left-2 top-2 rounded-full bg-[#F07A1A] px-2 py-0.5 text-[11px] font-semibold"><TS>Modelo 3D</TS></figcaption>
                     </figure>
                   </div>
-                  <p className="m-0 truncate px-4 py-3 text-[14px] font-semibold text-white/85">{m.titulo}</p>
+                  <p className="m-0 truncate px-4 py-3 text-[14px] font-semibold text-white/85"><TS>{m.titulo}</TS></p>
                 </li>
               ))}
             </ul>
@@ -104,7 +105,7 @@ export async function PromoImagen3D() {
                     <circle cx="9" cy="10" r="2" />
                     <path d="M21 16l-5-5-8 8" />
                   </svg>
-                  Tu foto
+                  <TS>Tu foto</TS>
                 </span>
               </div>
               <span className="text-center text-[28px] text-[#F07A1A]">→</span>
@@ -117,7 +118,7 @@ export async function PromoImagen3D() {
                     <path d="M32 6 56 19v26L32 58 8 45V19L32 6Z" />
                     <path d="M8 19l24 13 24-13M32 32v26" />
                   </svg>
-                  Tu modelo 3D con textura
+                  <TS>Tu modelo 3D con textura</TS>
                 </span>
               </div>
             </div>
@@ -128,7 +129,7 @@ export async function PromoImagen3D() {
       {/* Usos */}
       <section className="border-t border-white/10 px-4 py-12 lg:px-10">
         <div className="mx-auto max-w-[1240px]">
-          <h2 className="m-0 text-[24px] font-extrabold lg:text-[30px]">¿Para qué sirve?</h2>
+          <h2 className="m-0 text-[24px] font-extrabold lg:text-[30px]"><TS>¿Para qué sirve?</TS></h2>
           <ul className="m-0 mt-6 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {USOS.map(([t, d]) => (
               <li key={t} className="rounded-[14px] border border-white/10 bg-white/[0.03] p-5">
@@ -156,9 +157,9 @@ export async function PromoImagen3D() {
       <section className="border-t border-white/10 px-4 py-12 lg:px-10">
         <div className="mx-auto grid max-w-[1240px] gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <div>
-            <h2 className="m-0 text-[24px] font-extrabold">Preguntas frecuentes</h2>
+            <h2 className="m-0 text-[24px] font-extrabold"><TS>Preguntas frecuentes</TS></h2>
             <p className="m-0 mt-2 text-[14.5px] leading-relaxed text-white/60">
-              Convierte imágenes a 3D gratis, en español y desde tu navegador. Descarga STL y GLB.
+              <TS>Convierte imágenes a 3D gratis, en español y desde tu navegador. Descarga STL y GLB.</TS>
             </p>
           </div>
           <div className="divide-y divide-white/10 rounded-[14px] border border-white/10">

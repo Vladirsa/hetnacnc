@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
@@ -35,9 +36,9 @@ const IconoWhatsApp = () => (
 export const FranjaAyuda = () => (
   <section className="bg-[#142033] text-white rounded-[16px] px-6 py-8 lg:px-10 flex flex-col md:flex-row md:items-center gap-5 justify-between">
     <div>
-      <h2 className="font-display text-[22px] font-bold m-0">¿No sabes qué servicio necesitas?</h2>
+      <h2 className="font-display text-[22px] font-bold m-0"><T>¿No sabes qué servicio necesitas?</T></h2>
       <p className="m-0 mt-1 text-[#C9D2E0] text-[14.5px]">
-        Cuéntanos tu proyecto y te decimos cómo hacerlo.
+        <T>Cuéntanos tu proyecto y te decimos cómo hacerlo.</T>
       </p>
     </div>
     <a
@@ -47,7 +48,7 @@ export const FranjaAyuda = () => (
       className="shrink-0 inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1FB457] text-[#0F1826] font-semibold px-5 py-3 rounded-[10px] text-[14.5px]"
     >
       <IconoWhatsApp />
-      Escríbenos
+      <T>Escríbenos</T>
     </a>
   </section>
 )
@@ -65,7 +66,7 @@ export const TarjetaServicio = ({ s }: { s: Servicio }) => (
       <span className="text-[12px] font-bold text-[#9A978C]">{s.numero}</span>
     </div>
     <h3 className="font-display text-[18px] font-bold m-0 text-[#1B1B18]">{s.nombre}</h3>
-    <p className="m-0 text-[14px] text-[#6B6A63] leading-relaxed">{s.resumen}</p>
+    <p className="m-0 text-[14px] text-[#6B6A63] leading-relaxed"><T>{s.resumen}</T></p>
     {subServicios(s.slug).length > 0 && (
       <ul className="m-0 p-0 list-none flex flex-col gap-1">
         {subServicios(s.slug).map((h) => (
@@ -77,7 +78,7 @@ export const TarjetaServicio = ({ s }: { s: Servicio }) => (
       </ul>
     )}
     <span className="mt-auto pt-1 text-[13.5px] font-semibold text-[#B34D07] group-hover:underline">
-      Ver servicio
+      <T>Ver servicio</T>
     </span>
   </LocalizedClientLink>
 )
@@ -86,10 +87,10 @@ export const ServiciosIndice = () => (
   <main className="w-full bg-[#FAF9F6] px-4 lg:px-16 py-8 lg:py-12 flex flex-col gap-8">
     <div>
       <h1 className="font-display text-[28px] lg:text-[36px] font-bold m-0 text-[#1B1B18]">
-        Nuestros servicios
+        <T>Nuestros servicios</T>
       </h1>
       <p className="m-0 mt-2 text-[15.5px] text-[#6B6A63] max-w-[620px]">
-        Diseño, maquinado, aprendizaje y herramientas para tu taller CNC.
+        <T>Diseño, maquinado, aprendizaje y herramientas para tu taller CNC.</T>
       </p>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -116,7 +117,7 @@ export const ArticuloAprendizajeCard = ({ a }: { a: LearningArticle }) => (
       </h3>
       <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{a.excerpt}</p>
       <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
-        Leer más
+        <T>Leer más</T>
       </span>
     </div>
   </LocalizedClientLink>
@@ -154,10 +155,10 @@ export const CursoCard = ({ c }: { c: Course }) => {
           <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{c.description}</p>
         )}
         {totalLecciones > 0 && (
-          <span className="text-[12.5px] text-[#9A978C]">{totalLecciones} lecciones</span>
+          <span className="text-[12.5px] text-[#9A978C]">{totalLecciones} <T>lecciones</T></span>
         )}
         <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
-          Ver curso
+          <T>Ver curso</T>
         </span>
       </div>
     </LocalizedClientLink>
@@ -180,9 +181,9 @@ export const ServicioPagina = ({
     <main className="w-full bg-[#FAF9F6]">
       {/* Migas */}
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><T>Inicio</T></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
+        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]"><T>Servicios</T></LocalizedClientLink>
         {padre && (
           <>
             <span>/</span>
@@ -203,10 +204,10 @@ export const ServicioPagina = ({
               {s.nombre}
             </span>
             <h1 className="font-display text-[30px] lg:text-[42px] leading-[1.1] font-bold m-0">
-              {s.titulo}
+              <T>{s.titulo}</T>
             </h1>
             <p className="m-0 text-[15.5px] lg:text-[17px] text-[#C9D2E0] max-w-[560px] leading-relaxed">
-              {s.subtitulo}
+              <T>{s.subtitulo}</T>
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <a
@@ -216,13 +217,13 @@ export const ServicioPagina = ({
                 className="inline-flex items-center gap-2 bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]"
               >
                 <IconoWhatsApp />
-                {s.boton}
+                <T>{s.boton}</T>
               </a>
               <a
                 href="#como-funciona"
                 className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]"
               >
-                Cómo funciona
+                <T>Cómo funciona</T>
               </a>
             </div>
           </div>
@@ -255,10 +256,10 @@ export const ServicioPagina = ({
         {s.proximo && (
           <div className="bg-[#FFF6E8] border border-[#F2C98F] rounded-[12px] px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <span className="self-start text-[11.5px] font-bold uppercase tracking-wide bg-[#F2A65A] text-[#3A2206] px-2.5 py-1 rounded-full">
-              En desarrollo
+              <T>En desarrollo</T>
             </span>
             <p className="m-0 text-[14px] text-[#5A3A12]">
-              <span>{s.proximo}</span> <span>Mientras tanto, te atendemos por WhatsApp.</span>
+              <span>{s.proximo}</span> <span><T>Mientras tanto, te atendemos por WhatsApp.</T></span>
             </p>
           </div>
         )}
@@ -273,14 +274,14 @@ export const ServicioPagina = ({
                 <ServicioIcono nombre="aprender" size={26} />
               </span>
               <div>
-                <h2 className="font-display text-[20px] font-bold m-0 text-[#1B1B18]">Foro CNC México</h2>
+                <h2 className="font-display text-[20px] font-bold m-0 text-[#1B1B18]"><T>Foro CNC México</T></h2>
                 <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] leading-relaxed max-w-[620px]">
-                  Pregunta a talleres y profesionales, comparte tus trabajos y videos, y date a conocer con tu perfil. Gratis.
+                  <T>Pregunta a talleres y profesionales, comparte tus trabajos y videos, y date a conocer con tu perfil. Gratis.</T>
                 </p>
               </div>
             </div>
             <span className="shrink-0 self-start sm:self-auto bg-[#C2560A] group-hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]">
-              Entrar al foro
+              <T>Entrar al foro</T>
             </span>
           </LocalizedClientLink>
         )}
@@ -288,7 +289,7 @@ export const ServicioPagina = ({
         {s.slug === "aprendizaje-cnc" && cursos && cursos.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
-              Cursos de la Academia
+              <T>Cursos de la Academia</T>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cursos.map((c) => (
@@ -301,7 +302,7 @@ export const ServicioPagina = ({
         {s.slug === "aprendizaje-cnc" && articulos && articulos.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
-              Guías y artículos
+              <T>Guías y artículos</T>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articulos.map((a) => (
@@ -325,7 +326,7 @@ export const ServicioPagina = ({
         )}
 
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Qué incluye</h2>
+          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]"><T>Qué incluye</T></h2>
           <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 gap-3">
             {s.incluye.map((x) => (
               <li
@@ -342,22 +343,22 @@ export const ServicioPagina = ({
         </section>
 
         <section id="como-funciona" className="flex flex-col gap-4 scroll-mt-24">
-          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
+          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]"><T>Cómo funciona</T></h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {s.pasos.map((p, i) => (
               <li key={p.titulo} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
                 <span className="w-8 h-8 rounded-full bg-[#142033] text-white text-[14px] font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
-                <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">{p.titulo}</h3>
-                <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">{p.texto}</p>
+                <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]"><T>{p.titulo}</T></h3>
+                <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><T>{p.texto}</T></p>
               </li>
             ))}
           </ol>
         </section>
 
         <section className="lg:hidden flex flex-col gap-3">
-          <h2 className="font-display text-[18px] font-bold m-0 text-[#1B1B18]">Formatos</h2>
+          <h2 className="font-display text-[18px] font-bold m-0 text-[#1B1B18]"><T>Formatos</T></h2>
           <div className="flex flex-wrap gap-2">
             {s.formatos.map((f) => (
               <span key={f} className="text-[12.5px] font-semibold bg-white border border-[#E7E4DC] px-3 py-1 rounded-full">

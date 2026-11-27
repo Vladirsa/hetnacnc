@@ -10,6 +10,7 @@
 //
 // Carga un STL desde `urlStl` (una ruta del propio sitio: no se exponen
 // enlaces firmados de almacenamiento) o una malla ya armada en `tris`.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
@@ -652,7 +653,7 @@ export function Estudio3D({
           </span>
           <div className="min-w-0">
             <p className="m-0 font-display text-[16px] font-bold leading-tight">
-              Estudio <span className="text-[#F28A3C]">3D</span>
+              <T>Estudio</T> <span className="text-[#F28A3C]">3D</span>
             </p>
             <p className="m-0 text-[12px] text-[#8A97AB] truncate">{subtitulo || titulo}</p>
           </div>
@@ -661,7 +662,7 @@ export function Estudio3D({
         {panel}
 
         <section className="flex flex-col gap-2">
-          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Color de la vista 3D</h3>
+          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Color de la vista 3D</T></h3>
           <div className="grid grid-cols-2 gap-2">
             {MATERIALES.map((m) => (
               <button
@@ -681,19 +682,19 @@ export function Estudio3D({
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">Vista</h3>
+          <h3 className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Vista</T></h3>
           <div className="grid grid-cols-2 gap-1.5">
-            <Chip activo={false} onClick={() => ponerVista("iso")}>Isométrica</Chip>
-            <Chip activo={false} onClick={() => ponerVista("frente")}>Frente</Chip>
-            <Chip activo={false} onClick={() => ponerVista("lado")}>Lado</Chip>
-            <Chip activo={false} onClick={() => ponerVista("arriba")}>Arriba</Chip>
+            <Chip activo={false} onClick={() => ponerVista("iso")}><T>Isométrica</T></Chip>
+            <Chip activo={false} onClick={() => ponerVista("frente")}><T>Frente</T></Chip>
+            <Chip activo={false} onClick={() => ponerVista("lado")}><T>Lado</T></Chip>
+            <Chip activo={false} onClick={() => ponerVista("arriba")}><T>Arriba</T></Chip>
           </div>
         </section>
 
         <section className="flex flex-col">
-          <Interruptor activo={rejilla} onClick={() => setRejilla((v) => !v)}>Rejilla</Interruptor>
-          <Interruptor activo={medidas} onClick={() => setMedidas((v) => !v)}>Caja de medidas</Interruptor>
-          <Interruptor activo={girar} onClick={() => setGirar((v) => !v)}>Girar sola</Interruptor>
+          <Interruptor activo={rejilla} onClick={() => setRejilla((v) => !v)}><T>Rejilla</T></Interruptor>
+          <Interruptor activo={medidas} onClick={() => setMedidas((v) => !v)}><T>Caja de medidas</T></Interruptor>
+          <Interruptor activo={girar} onClick={() => setGirar((v) => !v)}><T>Girar sola</T></Interruptor>
         </section>
 
         {avisos.length > 0 && (
@@ -755,21 +756,21 @@ export function Estudio3D({
         <div className={`relative ${pestana === "vista" ? "" : "hidden"} ${completa ? "flex-1" : llenar ? "h-[42vh] lg:h-auto lg:flex-1" : "h-[420px] lg:h-[560px]"}`}>
           <div ref={contRef} className="absolute inset-0" />
           {cargando && (
-            <div className="absolute inset-0 flex items-center justify-center text-[14px] text-[#8A97AB]">Cargando la pieza…</div>
+            <div className="absolute inset-0 flex items-center justify-center text-[14px] text-[#8A97AB]"><T>Cargando la pieza…</T></div>
           )}
           {error && (
             <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-[14px] text-[#F2B8A8]">{error}</div>
           )}
           {datos && (
             <dl className="pointer-events-none absolute top-3 left-3 m-0 grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-[12px]">
-              <dt className="text-[#8A97AB]">Caras</dt>
+              <dt className="text-[#8A97AB]"><T>Caras</T></dt>
               <dd className="m-0 font-semibold text-white">{Math.round(datos.triangulos).toLocaleString("es-MX")}</dd>
-              <dt className="text-[#8A97AB]">Vértices</dt>
+              <dt className="text-[#8A97AB]"><T>Vértices</T></dt>
               <dd className="m-0 font-semibold text-white">{Math.round(datos.vertices).toLocaleString("es-MX")}</dd>
               {conTextura && (
                 <>
-                  <dt className="text-[#8A97AB]">Material</dt>
-                  <dd className="m-0 font-semibold text-white">Textura PBR</dd>
+                  <dt className="text-[#8A97AB]"><T>Material</T></dt>
+                  <dd className="m-0 font-semibold text-white"><T>Textura PBR</T></dd>
                 </>
               )}
             </dl>
@@ -843,7 +844,7 @@ export function Estudio3D({
                 aria-expanded={menuDescarga}
                 className="flex items-center gap-1 rounded-[8px] bg-[#C2560A] hover:bg-[#A84A08] px-3 py-1.5 text-[13px] font-semibold"
               >
-                Descargar <span aria-hidden="true">{menuDescarga ? "▴" : "▾"}</span>
+                <T>Descargar</T> <span aria-hidden="true">{menuDescarga ? "▴" : "▾"}</span>
               </button>
               {menuDescarga && (
                 <div className="absolute bottom-full right-0 mb-2 min-w-[150px] rounded-[10px] bg-[#0B1017] border border-[#2B3648] py-1 shadow-xl">
@@ -860,7 +861,7 @@ export function Estudio3D({
                     }}
                     className="block w-full text-left px-3.5 py-2 text-[13px] text-white hover:bg-[#1C2431]"
                   >
-                    Imagen (PNG)
+                    <T>Imagen (PNG)</T>
                   </button>
                 </div>
               )}
@@ -878,28 +879,28 @@ export function Estudio3D({
 
         {pestana === "exportar" && !exportacion && (
           <div className={`p-5 lg:p-8 flex flex-col gap-4 ${completa || llenar ? "flex-1" : "min-h-[420px] lg:min-h-[560px]"}`}>
-            <h3 className="m-0 text-[18px] font-bold">Descargar la pieza</h3>
+            <h3 className="m-0 text-[18px] font-bold"><T>Descargar la pieza</T></h3>
             {descargas.length ? (
               <div className="grid sm:grid-cols-2 gap-3 max-w-[640px]">
                 {descargas.map((d) => (
                   <a key={d.href} href={d.href} className="rounded-[12px] bg-[#1C2431] hover:bg-[#243045] border border-[#2B3648] p-4 flex flex-col gap-1">
-                    <span className="text-[15px] font-bold text-white">{d.etiqueta}</span>
-                    {d.nota && <span className="text-[12.5px] text-[#8A97AB]">{d.nota}</span>}
+                    <span className="text-[15px] font-bold text-white"><T>{d.etiqueta}</T></span>
+                    {d.nota && <span className="text-[12.5px] text-[#8A97AB]"><T>{d.nota}</T></span>}
                   </a>
                 ))}
               </div>
             ) : (
-              <p className="m-0 text-[14px] text-[#8A97AB]">Esta pieza no tiene archivos para descargar.</p>
+              <p className="m-0 text-[14px] text-[#8A97AB]"><T>Esta pieza no tiene archivos para descargar.</T></p>
             )}
             <p className="m-0 max-w-[640px] text-[13px] leading-relaxed text-[#8A97AB]">
-              STL para impresión 3D y para CAM (Fusion 360, Aspire, ArtCAM). OBJ para programas de diseño y render. Si la malla
-              no cierra, repárala antes de imprimir (Bambu Studio, PrusaSlicer y Meshmixer lo hacen con un clic).
+              <T>STL para impresión 3D y para CAM (Fusion 360, Aspire, ArtCAM). OBJ para programas de diseño y render. Si la malla
+              no cierra, repárala antes de imprimir (Bambu Studio, PrusaSlicer y Meshmixer lo hacen con un clic).</T>
             </p>
           </div>
         )}
 
         <div className="px-4 py-2 lg:py-2.5 border-t border-[#1F2937] bg-[#0F151E] font-mono text-[11px] lg:text-[12.5px] text-[#C9D2E0] flex flex-wrap gap-x-3 gap-y-1">
-          <span className="hidden lg:inline font-semibold text-white">«{titulo}»</span>
+          <span className="hidden lg:inline font-semibold text-white">«<T>{titulo}</T>»</span>
           {datos ? (
             <>
               <span>
@@ -909,7 +910,7 @@ export function Estudio3D({
                   ? `${fmt(datos.x, unidad)} × ${fmt(datos.y, unidad)} × ${fmt(datos.z, unidad)}`
                   : "Proporciones aproximadas (sin escala real)"}
               </span>
-              <span className="hidden lg:inline">· {Math.round(datos.triangulos).toLocaleString("es-MX")} triángulos</span>
+              <span className="hidden lg:inline">· {Math.round(datos.triangulos).toLocaleString("es-MX")} <T>triángulos</T></span>
             </>
           ) : (
             <span>{cargando ? "cargando…" : "sin datos"}</span>

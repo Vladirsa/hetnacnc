@@ -8,6 +8,7 @@
 // no gana nada con 12 MP y en datos móviles la subida baja de 8 MB a ~600 KB.
 // Se abre a pantalla completa dentro del 3D Studio.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
@@ -200,12 +201,12 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
             {f.estado === "subiendo" && (
               <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[13px] font-semibold">
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Subiendo…
+                <T>Subiendo…</T>
               </span>
             )}
             {f.estado === "error" && (
               <span className="absolute inset-x-2 bottom-2 rounded-md bg-rose-600/90 px-2 py-1 text-[12px] font-semibold">
-                {f.mensaje} · toca para reintentar
+                <T>{f.mensaje}</T> <T>· toca para reintentar</T>
               </span>
             )}
             <button
@@ -234,7 +235,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
               {grande ? "Arrastra o toca para subir la foto" : vista.nombre}
               {!grande && vista.id === "front" ? " *" : ""}
             </span>
-            {grande && <span className="mt-1 text-[12.5px] text-white/50">JPG, PNG o WebP · una pieza, fondo liso</span>}
+            {grande && <span className="mt-1 text-[12.5px] text-white/50"><T>JPG, PNG o WebP · una pieza, fondo liso</T></span>}
           </>
         )}
       </label>
@@ -264,8 +265,8 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
           <div className="flex flex-col gap-5 border-b border-white/10 bg-[#12161D] p-4 [&>*]:shrink-0 lg:sticky lg:top-14 lg:max-h-[calc(100dvh-3.5rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-5">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h2 className="m-0 text-[17px] font-bold">Imagen a 3D</h2>
-                <p className="m-0 text-[12.5px] text-white/50">Modelo con IA a partir de una foto</p>
+                <h2 className="m-0 text-[17px] font-bold"><T>Imagen a 3D</T></h2>
+                <p className="m-0 text-[12.5px] text-white/50"><T>Modelo con IA a partir de una foto</T></p>
               </div>
               <LocalizedClientLink
                 href="/user/creditos"
@@ -296,7 +297,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                   {VISTAS.map((v) => ranura(v))}
                 </div>
                 <p className="mt-2 text-[12.5px] leading-relaxed text-white/55">
-                  El frente es obligatorio. Cada vista extra ayuda a la IA a reconstruir los lados que no se ven.
+                  <T>El frente es obligatorio. Cada vista extra ayuda a la IA a reconstruir los lados que no se ven.</T>
                 </p>
               </div>
             ) : (
@@ -304,17 +305,17 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
             )}
 
             <details className="rounded-[12px] border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-[13px] text-white/70">
-              <summary className="cursor-pointer font-semibold text-white">Consejos para un buen modelo</summary>
+              <summary className="cursor-pointer font-semibold text-white"><T>Consejos para un buen modelo</T></summary>
               <ul className="m-0 mt-2 flex list-disc flex-col gap-1 pl-4">
-                <li>Una sola pieza, completa y centrada.</li>
-                <li>Fondo liso de un color distinto al de la pieza.</li>
-                <li>Buena luz, sin sombras fuertes ni reflejos.</li>
-                <li>Foto real o render limpio; mejor de 3/4 que totalmente de frente.</li>
+                <li><T>Una sola pieza, completa y centrada.</T></li>
+                <li><T>Fondo liso de un color distinto al de la pieza.</T></li>
+                <li><T>Buena luz, sin sombras fuertes ni reflejos.</T></li>
+                <li><T>Foto real o render limpio; mejor de 3/4 que totalmente de frente.</T></li>
               </ul>
             </details>
 
             <div>
-              <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-white/50">Modelo</p>
+              <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-white/50"><T>Modelo</T></p>
               <div className="flex gap-2">
                 {opcion("n", tipo === "Normal", () => setTipo("Normal"), "Con textura")}
                 {opcion("g", tipo === "Geometry", () => setTipo("Geometry"), "Sólo forma")}
@@ -325,7 +326,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
             </div>
 
             <div>
-              <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-white/50">Detalle</p>
+              <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-white/50"><T>Detalle</T></p>
               <div className="flex gap-2">
                 {DETALLES.map((d) => opcion(d.id, detalle === d.id, () => setDetalle(d.id), d.nombre))}
               </div>
@@ -333,7 +334,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
             </div>
 
             <label className="block">
-              <span className="mb-2 block text-[12px] font-bold uppercase tracking-wider text-white/50">Nombre (opcional)</span>
+              <span className="mb-2 block text-[12px] font-bold uppercase tracking-wider text-white/50"><T>Nombre (opcional)</T></span>
               <input
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
@@ -345,25 +346,25 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
 
             <div className="rounded-[12px] border border-white/10 bg-black/25 px-3.5 py-3 text-[13px]">
               {saldo?.ilimitado ? (
-                <span className="text-emerald-300">Cuenta HETNA: sin costo.</span>
+                <span className="text-emerald-300"><T>Cuenta HETNA: sin costo.</T></span>
               ) : costo === 0 ? (
                 <span>
-                  <strong className="text-emerald-300">Gratis.</strong>{" "}
+                  <strong className="text-emerald-300"><T>Gratis.</T></strong>{" "}
                   <span className="text-white/65">
-                    Te {gratisRestantes === 1 ? "queda" : "quedan"} {gratisRestantes} de {modeloIa.gratis_por_mes} este mes.
+                    <T>Te</T> {gratisRestantes === 1 ? "queda" : "quedan"} {gratisRestantes} <T>de</T> {modeloIa.gratis_por_mes} <T>este mes.</T>
                   </span>
                 </span>
               ) : (
                 <span>
                   <strong>
-                    Cuesta {costo} {costo === 1 ? "crédito" : "créditos"}.
+                    <T>Cuesta</T> {costo} {costo === 1 ? "crédito" : "créditos"}.
                   </strong>{" "}
                   <span className="text-white/65">
-                    Ya usaste tu{modeloIa.gratis_por_mes === 1 ? "" : "s"} gratis del mes. Tienes {saldo?.saldo ?? 0}.
+                    <T>Ya usaste tu</T>{modeloIa.gratis_por_mes === 1 ? "" : "s"} <T>gratis del mes. Tienes</T> {saldo?.saldo ?? 0}.
                   </span>
                   {!alcanza && (
                     <LocalizedClientLink href="/user/creditos" className="mt-1 block font-semibold text-[#F59A4A] hover:underline">
-                      Comprar créditos →
+                      <T>Comprar créditos →</T>
                     </LocalizedClientLink>
                   )}
                 </span>
@@ -378,18 +379,18 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
             >
               {enviando ? (
                 <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Enviando…
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> <T>Enviando…</T>
                 </>
               ) : (
-                <>✦ Generar modelo 3D</>
+                <><T>✦ Generar modelo 3D</T></>
               )}
             </button>
             {error && <p className="-mt-2 text-[13px] font-semibold text-rose-300">{error}</p>}
             <p className="-mt-2 text-[11.5px] leading-relaxed text-white/40">
-              Tarda de 3 a 5 minutos. La IA reconstruye la forma, no la mide: el STL sale a 100 mm por su lado más largo. Las
-              fotos se procesan con Tencent Cloud (
+              <T>Tarda de 3 a 5 minutos. La IA reconstruye la forma, no la mide: el STL sale a 100 mm por su lado más largo. Las
+              fotos se procesan con Tencent Cloud (</T>
               <LocalizedClientLink href="/aviso-de-privacidad" className="underline">
-                aviso de privacidad
+                <T>aviso de privacidad</T>
               </LocalizedClientLink>
               ).
             </p>
@@ -416,7 +417,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                     />
                     {varias && listas.length > 1 && (
                       <span className="absolute -right-2 -top-2 rounded-full bg-[#F07A1A] px-2.5 py-1 text-[12px] font-bold">
-                        {listas.length} vistas
+                        {listas.length} <T>vistas</T>
                       </span>
                     )}
                   </div>
@@ -430,10 +431,10 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                     <path d="M32 6 56 19v26L32 58 8 45V19L32 6Z" />
                     <path d="M8 19l24 13 24-13M32 32v26" />
                   </svg>
-                  <p className="mt-4 text-[20px] font-bold">De una foto a un modelo 3D</p>
+                  <p className="mt-4 text-[20px] font-bold"><T>De una foto a un modelo 3D</T></p>
                   <p className="mt-2 text-[14px] leading-relaxed text-white/60">
-                    Sube la foto de una pieza, figura o producto. La IA crea el modelo con textura en minutos y lo descargas en GLB
-                    (con color) y STL (para imprimir o maquinar).
+                    <T>Sube la foto de una pieza, figura o producto. La IA crea el modelo con textura en minutos y lo descargas en GLB
+                    (con color) y STL (para imprimir o maquinar).</T>
                   </p>
                 </div>
               )}
@@ -441,9 +442,9 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
 
             <div className="border-t border-white/10 bg-[#0A0C10] p-4">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-[13px] font-bold uppercase tracking-wider text-white/60">Mis modelos</p>
+                <p className="text-[13px] font-bold uppercase tracking-wider text-white/60"><T>Mis modelos</T></p>
                 <LocalizedClientLink href="/user/escaneos" className="text-[13px] font-semibold text-[#F59A4A] hover:underline">
-                  Ver todos →
+                  <T>Ver todos →</T>
                 </LocalizedClientLink>
               </div>
               {recientes.length ? (
@@ -474,7 +475,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                   ))}
                 </div>
               ) : (
-                <p className="text-[13px] text-white/45">Aquí aparecerán los modelos que generes.</p>
+                <p className="text-[13px] text-white/45"><T>Aquí aparecerán los modelos que generes.</T></p>
               )}
             </div>
           </div>

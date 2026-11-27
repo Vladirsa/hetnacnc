@@ -1,8 +1,10 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Gracias | Envíos HETNA",
   robots: { index: false, follow: false },
 }
@@ -16,7 +18,7 @@ export default async function EnvioListoPage({ searchParams }: { searchParams: P
 
   return (
     <main className="mx-auto w-full max-w-[640px] px-4 py-14 text-center">
-      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]">Envíos HETNA{folio ? ` · ${folio}` : ""}</p>
+      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Envíos HETNA</TS>{folio ? ` · ${folio}` : ""}</p>
       <h1 className="mt-2 text-3xl font-extrabold text-[#142033]">
         {aprobado ? "¡Pago recibido!" : pendiente ? "Tu pago está en proceso" : "No se completó el pago"}
       </h1>
@@ -29,12 +31,17 @@ export default async function EnvioListoPage({ searchParams }: { searchParams: P
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white">
-          Cotizar otro envío
+          <TS>Cotizar otro envío</TS>
         </LocalizedClientLink>
         <LocalizedClientLink href="/" className="rounded-xl border border-[#E7E4DC] px-6 py-3 font-semibold text-[#142033]">
-          Ir al inicio
+          <TS>Ir al inicio</TS>
         </LocalizedClientLink>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

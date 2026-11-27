@@ -1,6 +1,8 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import { textoCapacidad } from "@/lib/hetna/capacidad-libre"
 import { resenasDeTaller, type ResenaTaller } from "@/lib/hetna/resenas-taller"
 import { cotizadorDeTaller } from "@/lib/hetna/perfil-unico"
@@ -39,7 +41,7 @@ const PESTANAS = [
 ] as const
 type Pestana = (typeof PESTANAS)[number][0]
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { handle } = await params
   const t = await tallerPorHandle(handle)
   if (!t) return {}
@@ -122,7 +124,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
             )}
           </div>
           <div className="min-w-0 flex-1 pt-2">
-            <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}</h1>{t.verificado ? (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Taller verificado</span>) : (<span className="rounded-full bg-[#F1F0EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller">Registrado · sin verificar</span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal">🏢 Empresa verificada</span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]">★ Taller fundador</span>)}{t.capacidadLibre && (<span className="rounded-full bg-[#FFF6E0] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#8A5A00]" title={t.capacidadLibre.nota || "Tiene máquina libre esta semana"}>{textoCapacidad(t.capacidadLibre)}</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA">🤝 Taller embajador</span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}{t.perfil.importacion && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Envía puerta a puerta con impuestos de importación incluidos">🌏 Importación desde {t.perfil.importacion.pais}</span>)}</div>
+            <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}</h1>{t.verificado ? (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><TS>✓ Taller verificado</TS></span>) : (<span className="rounded-full bg-[#F1F0EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller"><TS>Registrado · sin verificar</TS></span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal"><TS>🏢 Empresa verificada</TS></span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]"><TS>★ Taller fundador</TS></span>)}{t.capacidadLibre && (<span className="rounded-full bg-[#FFF6E0] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#8A5A00]" title={t.capacidadLibre.nota || "Tiene máquina libre esta semana"}>{textoCapacidad(t.capacidadLibre)}</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA"><TS>🤝 Taller embajador</TS></span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}{t.perfil.importacion && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Envía puerta a puerta con impuestos de importación incluidos"><TS>🌏 Importación desde</TS> {t.perfil.importacion.pais}</span>)}</div>
             {t.certificaciones.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2" aria-label="Certificaciones acreditadas">
                 {t.certificaciones.map((c) => (
@@ -133,7 +135,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
               </ul>
             )}
             {p.lema && <p className="mt-0.5 text-[#40403A]">{p.lema}</p>}
-            {p.marcas && p.marcas.length > 0 && <p className="mt-1 text-sm text-[#40403A]"><b>Marcas que distribuye:</b> {p.marcas.join(", ")}</p>}
+            {p.marcas && p.marcas.length > 0 && <p className="mt-1 text-sm text-[#40403A]"><b><TS>Marcas que distribuye:</TS></b> {p.marcas.join(", ")}</p>}
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6B675C]">
               {donde && <span>📍 {donde}</span>}
               {p.servicios.slice(0, 3).map((s) => (
@@ -152,14 +154,14 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
                 className="flex h-12 items-center justify-center rounded-xl border-2 border-[#142033] px-5 text-center font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
                 title="Sube tu archivo y ve un precio estimado al momento"
               >
-                Precio al momento
+                <TS>Precio al momento</TS>
               </LocalizedClientLink>
             )}
             <LocalizedClientLink
               href={`/talleres/${t.handle}?tab=cotizar`}
               className="flex h-12 items-center justify-center rounded-xl bg-[#C2560A] px-5 text-center font-semibold text-white hover:brightness-110"
             >
-              Solicitar cotización
+              <TS>Solicitar cotización</TS>
             </LocalizedClientLink>
           </div>
         </div>
@@ -177,7 +179,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
                   tab === id ? "border-[#C2560A] text-[#142033]" : "border-transparent text-[#6B675C] hover:text-[#142033]"
                 }`}
               >
-                {label}
+                <TS>{label}</TS>
               </LocalizedClientLink>
             </li>
           ))}
@@ -198,7 +200,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
         {tab === "productos" && (
           <section className={CAJA}>
-            <h2 className={H2}>Productos de {t.nombre}</h2>
+            <h2 className={H2}><TS>Productos de</TS> {t.nombre}</h2>
             <Suspense key={page} fallback={<ProductListingSkeleton />}>
               <SellerOffersListing seller_id={t.id} locale={locale} page={page} />
             </Suspense>
@@ -211,13 +213,13 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
         {tab === "cotizar" && (
           <section>
-            <h2 className={H2}>Cotiza con {t.nombre}</h2>
+            <h2 className={H2}><TS>Cotiza con</TS> {t.nombre}</h2>
             <p className="mb-4 text-sm text-[#6B675C]">
-              Describe tu trabajo y {t.nombre} te manda su propuesta por HETNA. Tú comparas, eliges y pagas dentro de la plataforma.
+              <TS>Describe tu trabajo y</TS> {t.nombre} <TS>te manda su propuesta por HETNA. Tú comparas, eliges y pagas dentro de la plataforma.</TS>
             </p>
             {paquete && (
               <p className="mb-4 rounded-xl bg-[#FFF1E6] px-4 py-3 text-sm text-[#142033]">
-                Servicio: <strong>{paquete.titulo}</strong> · desde ${paquete.desde.toLocaleString("es-MX")} MXN
+                <TS>Servicio:</TS> <strong><TS>{paquete.titulo}</TS></strong> <TS>· desde $</TS>{paquete.desde.toLocaleString("es-MX")} <TS>MXN</TS>
                 {paquete.entrega_dias ? ` · ${paquete.entrega_dias} días hábiles` : ""}
               </p>
             )}
@@ -262,15 +264,15 @@ function Inicio({
 
       {p.resenas ? (
         <section className={CAJA}>
-          <h2 className={H2}>Reputación en HETNA</h2>
+          <h2 className={H2}><TS>Reputación en HETNA</TS></h2>
           {!p.historial_suficiente && (
             <p className="-mt-2 mb-3 rounded-lg bg-[#FFF8EE] px-3 py-2 text-xs text-[#8A5A00]">
-              Perfil nuevo: todavía no tiene suficiente historial ({p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}). Toma la calificación con cautela.
+              <TS>Perfil nuevo: todavía no tiene suficiente historial (</TS>{p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}<TS>). Toma la calificación con cautela.</TS>
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-[#FAF9F5] p-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Reputación comercial</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Reputación comercial</TS></p>
               <p className="text-2xl font-extrabold text-[#142033]">{p.reputacion_comercial ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
               <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
                 {[["tiempo", "Cumplimiento de entregas"], ["comunicacion", "Comunicación"], ["precio", "Precio"], ["profesionalismo", "Profesionalismo"], ["posventa", "Servicio posventa"]]
@@ -281,7 +283,7 @@ function Inicio({
               </ul>
             </div>
             <div className="rounded-xl bg-[#FAF9F5] p-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Capacidad técnica</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Capacidad técnica</TS></p>
               <p className="text-2xl font-extrabold text-[#142033]">{p.capacidad_tecnica ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
               <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
                 {[["calidad", "Calidad de fabricación"], ["capacidad", "Cumple especificaciones"]]
@@ -290,19 +292,19 @@ function Inicio({
                     <li key={k} className="flex justify-between"><span>{n}</span><b>{p.indicadores?.[k]}</b></li>
                   ))}
               </ul>
-              {t.certificaciones.length > 0 && <p className="mt-2 text-xs text-[#1E7B3A]">+ {t.certificaciones.length} certificación(es) acreditada(s)</p>}
+              {t.certificaciones.length > 0 && <p className="mt-2 text-xs text-[#1E7B3A]">+ {t.certificaciones.length} <TS>certificación(es) acreditada(s)</TS></p>}
             </div>
           </div>
           <p className="mt-3 text-xs text-[#6B675C]">
-            Calculada sólo con evaluaciones de trabajos pagados y entregados en HETNA. Los planes y membresías no cambian esta calificación.
+            <TS>Calculada sólo con evaluaciones de trabajos pagados y entregados en HETNA. Los planes y membresías no cambian esta calificación.</TS>
           </p>
         </section>
       ) : null}
 
       {resenas.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Opiniones de clientes</h2>
-          <p className="-mt-2 mb-3 text-xs text-[#6B675C]">Sólo de trabajos pagados y entregados por HETNA.</p>
+          <h2 className={H2}><TS>Opiniones de clientes</TS></h2>
+          <p className="-mt-2 mb-3 text-xs text-[#6B675C]"><TS>Sólo de trabajos pagados y entregados por HETNA.</TS></p>
           <ul className="grid gap-3">
             {resenas.slice(0, 8).map((r, i) => (
               <li key={i} className="rounded-xl bg-[#FAF9F5] p-4 text-sm">
@@ -313,7 +315,7 @@ function Inicio({
                   {r.trabajo ? <span className="font-normal text-[#6B675C]"> · {r.trabajo}</span> : null}
                 </p>
                 <p className="mt-0.5 text-xs text-[#6B675C]">
-                  Calidad {r.calidad}/5 · Tiempo {r.tiempo}/5 · Trato {r.trato}/5 ·{" "}
+                  <TS>Calidad</TS> {r.calidad}<TS>/5 · Tiempo</TS> {r.tiempo}<TS>/5 · Trato</TS> {r.trato}/5 ·{" "}
                   {new Date(r.fecha).toLocaleDateString("es-MX", { month: "short", year: "numeric" })}
                 </p>
                 {r.comentario && <p className="mt-2 text-[#40403A]">{r.comentario}</p>}
@@ -330,7 +332,7 @@ function Inicio({
 
       {p.galeria.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Trabajos y taller</h2>
+          <h2 className={H2}><TS>Trabajos y taller</TS></h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {p.galeria.map((u, i) => (
               <a key={u} href={u} target="_blank" rel="noopener" className="block aspect-square overflow-hidden rounded-xl bg-[#F3F1EA]">
@@ -343,18 +345,18 @@ function Inicio({
       )}
 
       <section className={CAJA}>
-        <h2 className={H2}>Sobre el taller</h2>
+        <h2 className={H2}><TS>Sobre el taller</TS></h2>
         <p className="line-clamp-6 whitespace-pre-line leading-relaxed text-[#40403A]">
           {t.descripcion || "Este taller está completando su perfil. Solicita una cotización y te responderá por HETNA."}
         </p>
         <LocalizedClientLink href={`/talleres/${t.handle}?tab=nosotros`} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
-          Conocer más →
+          <TS>Conocer más →</TS>
         </LocalizedClientLink>
       </section>
 
       {publicaciones.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Novedades y trabajos en el foro</h2>
+          <h2 className={H2}><TS>Novedades y trabajos en el foro</TS></h2>
           <div className="flex flex-col gap-3">
             {publicaciones.map((x) => (
               <TarjetaTema key={x.id} t={x} />
@@ -365,7 +367,7 @@ function Inicio({
 
       {(p.servicios.length > 0 || p.maquinas.length > 0) && (
         <section className={CAJA}>
-          <h2 className={H2}>Lo que hace</h2>
+          <h2 className={H2}><TS>Lo que hace</TS></h2>
           <div className="flex flex-wrap gap-2">
             {p.servicios.map((x) => (
               <span key={x} className="rounded-full bg-[#142033] px-3 py-1 text-sm font-medium text-white">
@@ -378,13 +380,13 @@ function Inicio({
               {p.maquinas.slice(0, 3).map((m) => (
                 <div key={m.nombre} className="rounded-xl border border-[#E7E4DC] p-4">
                   <p className="font-bold text-[#142033]">{m.nombre}</p>
-                  {m.area && <p className="text-sm text-[#C2560A]">Área: {m.area}</p>}
+                  {m.area && <p className="text-sm text-[#C2560A]"><TS>Área:</TS> {m.area}</p>}
                 </div>
               ))}
             </div>
           )}
           <LocalizedClientLink href={`/talleres/${t.handle}?tab=capacidades`} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
-            Ver todas las capacidades →
+            <TS>Ver todas las capacidades →</TS>
           </LocalizedClientLink>
         </section>
       )}
@@ -399,33 +401,33 @@ function Nosotros({ t, donde }: { t: Taller; donde: string }) {
   return (
     <>
       <section className={CAJA}>
-        <h2 className={H2}>Quiénes somos</h2>
+        <h2 className={H2}><TS>Quiénes somos</TS></h2>
         <p className="whitespace-pre-line leading-relaxed text-[#40403A]">
           {t.descripcion || "Este taller está completando su perfil."}
         </p>
         <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
           {p.anos !== undefined && (
             <div>
-              <dt className="text-[#6B675C]">Años de experiencia</dt>
+              <dt className="text-[#6B675C]"><TS>Años de experiencia</TS></dt>
               <dd className="font-semibold text-[#142033]">{p.anos}</dd>
             </div>
           )}
           {p.entrega && (
             <div>
-              <dt className="text-[#6B675C]">Entrega típica</dt>
+              <dt className="text-[#6B675C]"><TS>Entrega típica</TS></dt>
               <dd className="font-semibold text-[#142033]">{p.entrega}</dd>
             </div>
           )}
           {donde && (
             <div>
-              <dt className="text-[#6B675C]">Zona de servicio</dt>
-              <dd className="font-semibold text-[#142033]">{donde} · envíos a todo México</dd>
+              <dt className="text-[#6B675C]"><TS>Zona de servicio</TS></dt>
+              <dd className="font-semibold text-[#142033]">{donde} <TS>· envíos a todo México</TS></dd>
             </div>
           )}
         </dl>
       </section>
       <section className="rounded-2xl bg-[#F3F1EA] p-5 text-sm text-[#40403A]">
-        Por seguridad de clientes y talleres, la cotización, el pago y el seguimiento se hacen dentro de HETNA.
+        <TS>Por seguridad de clientes y talleres, la cotización, el pago y el seguimiento se hacen dentro de HETNA.</TS>
       </section>
       <CtaCotizar t={t} />
     </>
@@ -438,7 +440,7 @@ function Capacidades({ t }: { t: Taller }) {
   if (vacio) {
     return (
       <section className={CAJA}>
-        <p className="text-[#6B675C]">Pronto verás aquí capacidades, máquinas y materiales de este taller.</p>
+        <p className="text-[#6B675C]"><TS>Pronto verás aquí capacidades, máquinas y materiales de este taller.</TS></p>
       </section>
     )
   }
@@ -446,7 +448,7 @@ function Capacidades({ t }: { t: Taller }) {
     <>
       {(p.capacidades.length > 0 || p.servicios.length > 0) && (
         <section className={CAJA}>
-          <h2 className={H2}>Capacidades y servicios</h2>
+          <h2 className={H2}><TS>Capacidades y servicios</TS></h2>
           {p.servicios.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {p.servicios.map((x) => (
@@ -468,7 +470,7 @@ function Capacidades({ t }: { t: Taller }) {
       )}
       {p.acabados.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Acabados que hace</h2>
+          <h2 className={H2}><TS>Acabados que hace</TS></h2>
           <ul className="grid gap-2 sm:grid-cols-2">
             {p.acabados.map((a) => (
               <li key={a.clave} className="flex items-baseline justify-between gap-3 rounded-xl bg-[#FAF9F5] px-3 py-2 text-[#40403A]">
@@ -477,12 +479,12 @@ function Capacidades({ t }: { t: Taller }) {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-[#6B675C]">Precios de referencia que pone el taller; el precio final va en su propuesta.</p>
+          <p className="mt-2 text-xs text-[#6B675C]"><TS>Precios de referencia que pone el taller; el precio final va en su propuesta.</TS></p>
         </section>
       )}
       {p.maquinas.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Máquinas</h2>
+          <h2 className={H2}><TS>Máquinas</TS></h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {p.maquinas.map((m, i) => (
               <div key={`${m.nombre}-${i}`} className="rounded-xl border border-[#E7E4DC] p-4">
@@ -491,11 +493,11 @@ function Capacidades({ t }: { t: Taller }) {
                   {m.nombre}
                   {m.marca ? <span className="font-normal text-[#6B675C]"> · {m.marca}</span> : null}
                 </p>
-                {areaTexto(m) && <p className="text-sm text-[#C2560A]">Área: {areaTexto(m)}</p>}
+                {areaTexto(m) && <p className="text-sm text-[#C2560A]"><TS>Área:</TS> {areaTexto(m)}</p>}
                 {(m.potencia || m.controlador) && (
                   <p className="mt-1 text-sm text-[#40403A]">{[m.potencia, m.controlador && `Control ${m.controlador}`].filter(Boolean).join(" · ")}</p>
                 )}
-                {m.detalle && <p className="mt-1 text-sm text-[#6B675C]">{m.detalle}</p>}
+                {m.detalle && <p className="mt-1 text-sm text-[#6B675C]"><TS>{m.detalle}</TS></p>}
               </div>
             ))}
           </div>
@@ -503,7 +505,7 @@ function Capacidades({ t }: { t: Taller }) {
       )}
       {p.materiales.length > 0 && (
         <section className={CAJA}>
-          <h2 className={H2}>Materiales que trabaja</h2>
+          <h2 className={H2}><TS>Materiales que trabaja</TS></h2>
           <div className="flex flex-wrap gap-2">
             {p.materiales.map((x) => (
               <span key={x} className={CHIP}>
@@ -521,15 +523,15 @@ function Capacidades({ t }: { t: Taller }) {
 function CtaCotizar({ t }: { t: Taller }) {
   return (
     <section className="rounded-2xl bg-[#142033] p-8 text-center text-white">
-      <h2 className="text-2xl font-extrabold">¿Tienes una pieza para fabricar?</h2>
+      <h2 className="text-2xl font-extrabold"><TS>¿Tienes una pieza para fabricar?</TS></h2>
       <p className="mx-auto mt-2 max-w-md text-white/70">
-        Describe tu trabajo y {t.nombre} te cotiza. El envío lo manejas con Envíos HETNA.
+        <TS>Describe tu trabajo y</TS> {t.nombre} <TS>te cotiza. El envío lo manejas con Envíos HETNA.</TS>
       </p>
       <LocalizedClientLink
         href={`/talleres/${t.handle}?tab=cotizar`}
         className="mt-5 inline-block rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110"
       >
-        Solicitar cotización
+        <TS>Solicitar cotización</TS>
       </LocalizedClientLink>
     </section>
   )
@@ -546,7 +548,7 @@ function Cumplimiento({ m }: { m: Medido }) {
   return (
     <section className={CAJA}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className={H2}>Cumplimiento medido en HETNA</h2>
+        <h2 className={H2}><TS>Cumplimiento medido en HETNA</TS></h2>
         {m.suficiente && m.puntaje != null && (
           <span
             className={`rounded-full px-3 py-1 text-sm font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
@@ -560,15 +562,20 @@ function Cumplimiento({ m }: { m: Medido }) {
           <div key={k} className="rounded-xl bg-[#FAF9F5] p-3">
             <dt className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">{k}</dt>
             <dd className="m-0 mt-1 text-xl font-extrabold text-[#142033]">{v}</dd>
-            {nota && <dd className="m-0 text-xs text-[#6B675C]">{nota}</dd>}
+            {nota && <dd className="m-0 text-xs text-[#6B675C]"><TS>{nota}</TS></dd>}
           </div>
         ))}
       </dl>
       <p className="mt-3 text-xs text-[#6B675C]">
-        Datos reales de sus pedidos en HETNA, recalculados cada día. El puntaje pesa trabajos terminados 30%, calidad calificada por clientes
-        30%, entregas a tiempo 25%, tiempo de respuesta 10% y reclamos 5%. Pagar un plan o la verificación no lo cambia.
+        <TS>Datos reales de sus pedidos en HETNA, recalculados cada día. El puntaje pesa trabajos terminados 30%, calidad calificada por clientes
+        30%, entregas a tiempo 25%, tiempo de respuesta 10% y reclamos 5%. Pagar un plan o la verificación no lo cambia.</TS>
         {m.suficiente ? "" : ` El puntaje aparece a partir de 3 trabajos terminados.`}
       </p>
     </section>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

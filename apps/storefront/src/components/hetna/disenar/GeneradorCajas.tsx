@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 
@@ -42,7 +43,7 @@ const aQuery = (v: Valores) => {
 // three.js sólo se descarga al abrir la pestaña Vista 3D
 const Piezas3D = dynamic(() => import("./Piezas3D"), {
   ssr: false,
-  loading: () => <div className="absolute inset-0 grid place-items-center text-[14px] text-[#8A97AB]">Cargando la vista 3D…</div>,
+  loading: () => <div className="absolute inset-0 grid place-items-center text-[14px] text-[#8A97AB]"><T>Cargando la vista 3D…</T></div>,
 })
 
 // Todos los formatos que entrega Boxes.py, con para qué sirve cada uno
@@ -97,7 +98,7 @@ const LLEGAN = ["x", "y", "h", "thickness", "outside"]
 // (~100 kB) en esta página, que no tiene vista 3D
 const Interruptor = ({ etiqueta, activo, cambiar }: { etiqueta: string; activo: boolean; cambiar: (v: boolean) => void }) => (
   <button type="button" onClick={() => cambiar(!activo)} aria-pressed={activo} className="flex items-center justify-between gap-3 text-left">
-    <span className="text-[13.5px] text-[#E6EBF2]">{etiqueta}</span>
+    <span className="text-[13.5px] text-[#E6EBF2]"><T>{etiqueta}</T></span>
     <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${activo ? "bg-[#C2560A]" : "bg-[#2B3648]"}`}>
       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${activo ? "left-[18px]" : "left-0.5"}`} />
     </span>
@@ -113,7 +114,7 @@ const Campo = ({ a, valor, cambiar }: { a: ArgCajas; valor: string | number | bo
   if (a.opciones) {
     return (
       <label htmlFor={id} className="flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]" title={a.ayuda}>
-        {a.etiqueta}
+        <T>{a.etiqueta}</T>
         <select id={id} value={String(valor ?? "")} onChange={(e) => cambiar(e.target.value)} className={campoOscuro + " text-ellipsis pr-8 text-[13px]"}>
           {a.opciones.map((o) => (
             // sin la letra de código de Boxes.py ("h Canto…" -> "Canto…")
@@ -128,7 +129,7 @@ const Campo = ({ a, valor, cambiar }: { a: ArgCajas; valor: string | number | bo
   const esNum = a.tipo === "int" || a.tipo === "float"
   return (
     <label htmlFor={id} className="flex min-w-0 flex-col gap-1 text-[12.5px] text-[#C9D2E0]" title={a.ayuda}>
-      {a.etiqueta}
+      <T>{a.etiqueta}</T>
       <input
         id={id}
         type="text"
@@ -283,7 +284,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
       <aside className="order-2 flex w-full flex-col gap-4 border-t border-[#1F2937] bg-[#111722] p-4 lg:sticky lg:top-14 lg:order-none lg:max-h-[calc(100dvh-3.5rem)] lg:w-[340px] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-t-0">
         <div className="flex flex-col gap-2">
           <LocalizedClientLink href="/disenar/caja-con-juntas" className="self-start text-[12px] font-semibold text-[#F28A3C] hover:underline">
-            ← Caja con juntas (con vista 3D)
+            <T>← Caja con juntas (con vista 3D)</T>
           </LocalizedClientLink>
           {/* Diseños con una versión propia de HETNA armada en 3D */}
           {VERSION_HETNA[esquema.id] && (
@@ -291,7 +292,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               href={`/disenar/caja-con-juntas?tipo=${VERSION_HETNA[esquema.id].tipo}${llevar.toString() ? `&${llevar.toString()}` : ""}`}
               className="flex items-center gap-2 rounded-[10px] border border-[#C2560A]/60 bg-[#C2560A]/15 px-3 py-2 text-[12.5px] font-semibold text-white hover:border-[#F28A3C]"
             >
-              {VERSION_HETNA[esquema.id].texto}
+              <T>{VERSION_HETNA[esquema.id].texto}</T>
             </LocalizedClientLink>
           )}
           <div className="flex items-center gap-3">
@@ -309,7 +310,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         </div>
 
         <section className="flex flex-col gap-2 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
-          <h2 className="m-0 text-[13px] font-bold">Material</h2>
+          <h2 className="m-0 text-[13px] font-bold"><T>Material</T></h2>
           <div className="flex flex-wrap gap-1.5">
             {MATERIALES.map((m) => (
               <button
@@ -323,20 +324,20 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               </button>
             ))}
           </div>
-          <p className="m-0 text-[11.5px] leading-snug text-[#8A97AB]">Mide tu tablero con vernier y corrige el espesor abajo: el MDF &quot;de 3&quot; suele medir 2.7 a 2.9 mm.</p>
+          <p className="m-0 text-[11.5px] leading-snug text-[#8A97AB]"><T>Mide tu tablero con vernier y corrige el espesor abajo: el MDF &quot;de 3&quot; suele medir 2.7 a 2.9 mm.</T></p>
         </section>
 
         <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-3">
           {esquema.grupos.map((g, i) => (
             <fieldset key={g.titulo} className="m-0 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
-              <legend className="sr-only">{g.titulo}</legend>
+              <legend className="sr-only"><T>{g.titulo}</T></legend>
               <button
                 type="button"
                 onClick={() => setAbiertos((p) => ({ ...p, [i]: !p[i] }))}
                 className="flex w-full items-center justify-between text-left text-[13px] font-bold text-white"
                 aria-expanded={Boolean(abiertos[i])}
               >
-                {g.titulo}
+                <T>{g.titulo}</T>
                 <span aria-hidden="true" className={`text-[#8A97AB] transition ${abiertos[i] ? "rotate-90" : ""}`}>
                   ▸
                 </span>
@@ -355,7 +356,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         </form>
 
         <section className="flex flex-col gap-2">
-          <h2 className="m-0 text-[11.5px] font-bold uppercase tracking-wide text-[#8A97AB]">Otros diseños · con tus medidas</h2>
+          <h2 className="m-0 text-[11.5px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Otros diseños · con tus medidas</T></h2>
           <div className="flex flex-wrap gap-1.5">
             {OTROS.filter((o) => o.id !== esquema.id).map((o) => (
               <LocalizedClientLink
@@ -367,17 +368,17 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               </LocalizedClientLink>
             ))}
             <LocalizedClientLink href="/disenar/cajas" className="rounded-full border border-dashed border-[#C2560A]/60 px-2.5 py-1 text-[11.5px] font-bold text-[#F28A3C] hover:border-[#F28A3C]">
-              Ver los 170+
+              <T>Ver los 170+</T>
             </LocalizedClientLink>
           </div>
         </section>
 
         <p className="m-0 text-[12px] leading-relaxed text-[#8A97AB]">
-          DXF para router o plasma; SVG o LightBurn para láser. ¿Router sin CAM? Pásalo a{" "}
+          <T>DXF para router o plasma; SVG o LightBurn para láser. ¿Router sin CAM? Pásalo a</T>{" "}
           <LocalizedClientLink href="/cam/subir" className="font-semibold text-[#F28A3C] hover:underline">
-            DXF a G-code
+            <T>DXF a G-code</T>
           </LocalizedClientLink>
-          . Haz una prueba de encaje en un recorte antes de cortar todo.
+          <T>. Haz una prueba de encaje en un recorte antes de cortar todo.</T>
         </p>
 
         <div className="tema-estudio rounded-[12px]">
@@ -385,11 +386,11 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         </div>
 
         <p className="m-0 text-[11.5px] text-[#5B6880]">
-          Motor:{" "}
+          <T>Motor:</T>{" "}
           <a href="https://github.com/florianfesti/boxes" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#8A97AB] hover:underline">
-            Boxes.py
+            <T>Boxes.py</T>
           </a>{" "}
-          (GPL-3.0), sin modificar. Interfaz y conexión con talleres: HETNA.
+          <T>(GPL-3.0), sin modificar. Interfaz y conexión con talleres: HETNA.</T>
         </p>
 
         {/* Descargas y venta siempre a la mano, al pie del panel */}
@@ -403,7 +404,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
           </div>
           <div className="grid grid-cols-1 gap-2">
             <a href={fabricar} className="rounded-[8px] bg-[#16794F] px-2 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#12623F]">
-              Fabrícamelo
+              <T>Fabrícamelo</T>
             </a>
           </div>
         </div>
@@ -457,8 +458,8 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         )}
         {pestana === "exportar" && (
           <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-            <h2 className="m-0 text-[17px] font-bold text-white">Archivos de corte</h2>
-            <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">Con tus medidas y tu material. Haz una prueba de encaje en un recorte antes de cortar todo.</p>
+            <h2 className="m-0 text-[17px] font-bold text-white"><T>Archivos de corte</T></h2>
+            <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>Con tus medidas y tu material. Haz una prueba de encaje en un recorte antes de cortar todo.</T></p>
             <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
               {FORMATOS_TODOS.filter((f) => !esquema.formatos?.length || esquema.formatos.includes(f.id)).map((f) => (
                 <a
@@ -472,19 +473,19 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                     <span className="text-[11px] font-semibold text-[#8A97AB]">.{f.ext}</span>
                   </span>
                   <span className="text-[12.5px] leading-snug text-[#C9D2E0]">{f.para}</span>
-                  {f.nota && <span className="text-[11.5px] leading-snug text-[#F2D29B]">{f.nota}</span>}
+                  {f.nota && <span className="text-[11.5px] leading-snug text-[#F2D29B]"><T>{f.nota}</T></span>}
                 </a>
               ))}
             </div>
             <div className="mt-4 flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-              <span className="text-[15px] font-bold">¿No tienes máquina?</span>
-              <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA te la corta y te la envía: el archivo, las medidas y el material ya van llenos.</span>
+              <span className="text-[15px] font-bold"><T>¿No tienes máquina?</T></span>
+              <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA te la corta y te la envía: el archivo, las medidas y el material ya van llenos.</T></span>
               <div className="flex max-w-[420px] gap-2">
                 <a href={fabricar} className="flex-1 rounded-[8px] bg-[#16794F] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#12623F]">
-                  Fabrícamelo
+                  <T>Fabrícamelo</T>
                 </a>
                 <LocalizedClientLink href="/cam/subir" className="flex-1 rounded-[8px] bg-[#2B3648] px-3 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#344158]">
-                  DXF a G-code
+                  <T>DXF a G-code</T>
                 </LocalizedClientLink>
               </div>
             </div>
@@ -540,24 +541,24 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
           {error && (
             <div className="absolute inset-0 grid place-items-center p-6">
               <div className="max-w-[420px] rounded-[12px] bg-[#3A1C1C] p-4 text-center text-[14px] text-[#F6B8AE]">
-                <strong className="text-white">No se pudo dibujar.</strong> {error} Revisa que las medidas sean mayores que varias veces el espesor.
+                <strong className="text-white"><T>No se pudo dibujar.</T></strong> {error} <T>Revisa que las medidas sean mayores que varias veces el espesor.</T>
               </div>
             </div>
           )}
-          {cargando && !vista && <div className="absolute inset-0 grid place-items-center text-[14px] text-[#8A97AB]">Dibujando…</div>}
+          {cargando && !vista && <div className="absolute inset-0 grid place-items-center text-[14px] text-[#8A97AB]"><T>Dibujando…</T></div>}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#1F2937] bg-[#0F141C] px-4 py-2 text-[12.5px] text-[#8A97AB]">
           {medidas && (
             <span>
-              Medidas: <b className="text-white">{medidas} mm</b>
+              <T>Medidas:</T> <b className="text-white">{medidas} <T>mm</T></b>
             </span>
           )}
           {valores.thickness !== undefined && (
             <span>
-              Espesor: <b className="text-white">{String(valores.thickness)} mm</b>
+              <T>Espesor:</T> <b className="text-white">{String(valores.thickness)} <T>mm</T></b>
             </span>
           )}
-          {!error && !cargando && <span className="rounded-full bg-[#12301F] px-2 py-0.5 text-[11.5px] font-bold text-[#9BE3B8]">Listo para cortar</span>}
+          {!error && !cargando && <span className="rounded-full bg-[#12301F] px-2 py-0.5 text-[11.5px] font-bold text-[#9BE3B8]"><T>Listo para cortar</T></span>}
         </div>
       </section>
     </div>

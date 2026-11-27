@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 
@@ -30,23 +31,23 @@ export const MigasDisenar = () => {
   return (
     <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6B6A63]">
       <LocalizedClientLink href="/" className="hover:text-[#B34D07]">
-        Inicio
+        <T>Inicio</T>
       </LocalizedClientLink>
       <span>/</span>
       <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]">
-        Herramientas CNC
+        <T>Herramientas CNC</T>
       </LocalizedClientLink>
       <span>/</span>
       {h ? (
         <>
           <LocalizedClientLink href="/disenar" className="hover:text-[#B34D07]">
-            Diseñar y escanear
+            <T>Diseñar y escanear</T>
           </LocalizedClientLink>
           <span>/</span>
           <span className="font-medium text-[#1B1B18]">{h.nombre}</span>
         </>
       ) : (
-        <span className="font-medium text-[#1B1B18]">Diseñar y escanear</span>
+        <span className="font-medium text-[#1B1B18]"><T>Diseñar y escanear</T></span>
       )}
     </nav>
   )
@@ -78,29 +79,29 @@ export const ColumnaDisenar = () => {
     <aside className="hidden xl:block border-r border-[#E7E4DC] bg-white">
       <nav aria-label="Herramientas para diseñar y escanear" className="p-3 pb-8">
         <Opcion slug="" nombre="Todas" icono="generador" activa={activa === ""} />
-        <Titulo>Generar un archivo</Titulo>
+        <Titulo><T>Generar un archivo</T></Titulo>
         <Opcion slug="cajas" nombre="Cajas: 170+ diseños" icono="caja" activa={activa === "cajas"} />
         {GENERADORES.map((h) => (
           <Opcion key={h.slug} slug={h.slug} nombre={h.nombre} icono={h.icono} activa={activa === h.slug} />
         ))}
-        <Titulo>De una pieza que ya existe</Titulo>
+        <Titulo><T>De una pieza que ya existe</T></Titulo>
         <Opcion slug={ESCANEO.slug} nombre={ESCANEO.nombre} icono={ESCANEO.icono} activa={activa === ESCANEO.slug} />
 
         <div className="mt-5">
           <BloquePublicidad />
         </div>
         <div className="mt-5 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-3">
-          <p className="text-[13px] font-semibold text-[#1B1B18]">¿Ya tienes el archivo?</p>
-          <p className="mt-0.5 text-[12.5px] leading-snug text-[#6B6A63]">Pásalo a G-code con el avance y las revoluciones calculados.</p>
+          <p className="text-[13px] font-semibold text-[#1B1B18]"><T>¿Ya tienes el archivo?</T></p>
+          <p className="mt-0.5 text-[12.5px] leading-snug text-[#6B6A63]"><T>Pásalo a G-code con el avance y las revoluciones calculados.</T></p>
           <LocalizedClientLink href="/cam/subir" className="mt-2 inline-block text-[13px] font-semibold text-[#B34D07] hover:underline">
-            DXF a G-code
+            <T>DXF a G-code</T>
           </LocalizedClientLink>
         </div>
         <div className="mt-3 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-3">
-          <p className="text-[13px] font-semibold text-[#1B1B18]">¿No tienes máquina?</p>
-          <p className="mt-0.5 text-[12.5px] leading-snug text-[#6B6A63]">Talleres CNC de todo México te cotizan la pieza.</p>
+          <p className="text-[13px] font-semibold text-[#1B1B18]"><T>¿No tienes máquina?</T></p>
+          <p className="mt-0.5 text-[12.5px] leading-snug text-[#6B6A63]"><T>Talleres CNC de todo México te cotizan la pieza.</T></p>
           <LocalizedClientLink href="/fabricacion" className="mt-2 inline-block text-[13px] font-semibold text-[#B34D07] hover:underline">
-            Te fabricamos tu pieza
+            <T>Te fabricamos tu pieza</T>
           </LocalizedClientLink>
         </div>
       </nav>

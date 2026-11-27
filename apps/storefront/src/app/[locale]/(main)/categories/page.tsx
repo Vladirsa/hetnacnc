@@ -5,6 +5,8 @@
 // SEO: sólo la pestaña sola (y su paginación) se indexa, cada una con su
 // título y descripción; una combinación de filtros es "noindex, follow" con
 // canónica a su pestaña, para que Google no la tome como página repetida.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { categoriasSugeridas } from "@/lib/hetna/catalogo"
@@ -25,7 +27,7 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params, searchParams }: Props): Promise<Metadata> {
   const { locale } = await params
   const sp = paramsDe(await searchParams)
   const pestana = leerPestana(sp.get("tipo"))
@@ -102,9 +104,9 @@ export default async function TodosLosProductos({ params, searchParams }: Props)
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-[26px] font-black leading-tight tracking-tight text-[#142033] sm:text-[32px]">{info.h1}</h1>
+        <h1 className="text-[26px] font-black leading-tight tracking-tight text-[#142033] sm:text-[32px]"><TS>{info.h1}</TS></h1>
         <LocalizedClientLink href="/tienda" className="mb-1 text-[14px] font-bold text-[#B34D07] hover:underline">
-          Ver la tienda por categorías →
+          <TS>Ver la tienda por categorías →</TS>
         </LocalizedClientLink>
       </div>
 
@@ -113,4 +115,9 @@ export default async function TodosLosProductos({ params, searchParams }: Props)
       <Explorar r={r} sp={sp} locale={locale} sugerencias={sugerencias} estados={estados} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

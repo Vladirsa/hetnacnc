@@ -4,6 +4,7 @@
 // gabinete y repisas, de ranura y espiga, listo para router CNC o láser.
 // Ver en 3D, medidas y material es gratis; la descarga de archivos va con créditos.
 // También se puede diseñar desde una foto o plano: la IA llena las medidas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
@@ -209,21 +210,21 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
       <Seccion titulo="Diseñar desde una foto o plano">
         <label className={`flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-[#2A3546] p-3 text-center hover:border-[#C2560A] ${leyendo ? "pointer-events-none opacity-60" : ""}`}>
           <span className="text-[13.5px] font-semibold text-white">{leyendo ? "Leyendo la imagen…" : "Sube una foto, boceto o plano"}</span>
-          <span className="text-[12px] text-[#8A97AB]">La IA lee el mueble y llena las medidas · 2 créditos</span>
+          <span className="text-[12px] text-[#8A97AB]"><T>La IA lee el mueble y llena las medidas · 2 créditos</T></span>
           <input type="file" accept="image/*" className="hidden" onChange={(e) => { subirImagen(e.target.files?.[0]); e.target.value = "" }} />
         </label>
         {lectura && (
           <p className={`m-0 text-[12.5px] ${lectura.tipo === "ok" ? "text-[#9FE0B5]" : lectura.tipo === "aviso" ? "text-[#F6D58E]" : "text-[#F6B8AE]"}`}>
-            {lectura.texto}{" "}
-            {lectura.login && <Link href={`/${locale}/login`} className="underline">Iniciar sesión</Link>}
-            {lectura.creditos && <Link href={`/${locale}/user/creditos`} className="underline">Comprar créditos</Link>}
-            {lectura.otroMueble && <Link href={`/${locale}/disenar/muebles-desde-imagen`} className="underline">Abrir Desde una imagen</Link>}
+            <T>{lectura.texto}</T>{" "}
+            {lectura.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
+            {lectura.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
+            {lectura.otroMueble && <Link href={`/${locale}/disenar/muebles-desde-imagen`} className="underline"><T>Abrir Desde una imagen</T></Link>}
           </p>
         )}
-        <span className="text-[11.5px] text-[#5B6880]">Si la lectura falla o la imagen no es un exhibidor, no se cobra. Después puedes ajustar cualquier medida.</span>
+        <span className="text-[11.5px] text-[#5B6880]"><T>Si la lectura falla o la imagen no es un exhibidor, no se cobra. Después puedes ajustar cualquier medida.</T></span>
       </Seccion>
       <div className="rounded-[10px] border border-[#2A3546] bg-[#141B26] p-3 text-[12.5px] text-[#C9D2E0]">
-        <b className="text-white">Exhibidor con gabinete.</b> Laterales con mortajas, repisas con espigas pasantes, frente y respaldo que lo hacen firme, travesaño trasero y divisores ranurados. Sin tornillos ni herrajes.
+        <b className="text-white"><T>Exhibidor con gabinete.</T></b> <T>Laterales con mortajas, repisas con espigas pasantes, frente y respaldo que lo hacen firme, travesaño trasero y divisores ranurados. Sin tornillos ni herrajes.</T>
       </div>
       <Seccion titulo="Medidas generales">
         <div className="grid grid-cols-2 gap-2">
@@ -278,7 +279,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
         </div>
         <Opciones opciones={FRESAS.map((f) => ({ id: f.id, nombre: f.nombre }))} valor={herr} cambiar={setHerr} />
         <span className="text-[12px] text-[#8A97AB]">
-          Mide el grosor del tablero con vernier: el triplay de «15 mm» suele medir 14.5 o 15.5. Con fresa, las mortajas y los hombros de las espigas llevan alivio en las esquinas para que asienten.
+          <T>Mide el grosor del tablero con vernier: el triplay de «15 mm» suele medir 14.5 o 15.5. Con fresa, las mortajas y los hombros de las espigas llevan alivio en las esquinas para que asienten.</T>
         </span>
         <Opciones opciones={[{ id: "no", nombre: "Sin pieza de prueba" }, { id: "si", nombre: "Con pieza de prueba" }]} valor={prueba ? "si" : "no"} cambiar={(x) => setPrueba(x === "si")} />
       </Seccion>
@@ -288,7 +289,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
         onClick={() => setVer3D(true)}
         className="rounded-[8px] bg-[#243045] px-3 py-2.5 text-[14px] font-semibold text-white ring-1 ring-[#C2560A] hover:bg-[#2C3A52] disabled:opacity-50"
       >
-        Ver armado en 3D
+        <T>Ver armado en 3D</T>
       </button>
     </div>
   )
@@ -300,21 +301,21 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
           <div className="w-full max-w-[1000px] overflow-hidden rounded-[14px] border border-[#1F2937] bg-[#0F151E]">
             <div className="flex items-center justify-between gap-3 border-b border-[#1F2937] px-4 py-2.5">
               <span className="text-[14px] font-semibold text-white">
-                Armado · {Math.round(m.medidas.ancho)} × {Math.round(m.medidas.fondo)} × {Math.round(m.medidas.alto)} mm
+                <T>Armado ·</T> {Math.round(m.medidas.ancho)} × {Math.round(m.medidas.fondo)} × {Math.round(m.medidas.alto)} <T>mm</T>
               </span>
               <button type="button" onClick={() => setVer3D(false)} className="rounded-[8px] bg-[#1C2431] px-3 py-1.5 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
-                Cerrar
+                <T>Cerrar</T>
               </button>
             </div>
             <Visor3D oscuro alto="h-[70vh]">
               <Mueble3D piezas={piezas3D} seleccion={null} explotar={explotar} rayosX={rayosX} />
               <div className="absolute top-2 left-2 flex items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0]">
                 <label className="flex items-center gap-2">
-                  Explotar
+                  <T>Explotar</T>
                   <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />
                 </label>
                 <button type="button" aria-pressed={rayosX} onClick={() => setRayosX((x) => !x)} className={`rounded-[7px] px-2 py-1 font-semibold ${rayosX ? "bg-[#C2560A] text-white" : "bg-[#1C2431] hover:bg-[#243045]"}`}>
-                  Rayos X
+                  <T>Rayos X</T>
                 </button>
               </div>
             </Visor3D>
@@ -360,7 +361,7 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
                     </button>
                   ))}
                 </div>
-                <span className="text-[12px] text-[#9FE0B5]">Pagado. Puedes bajar los tres formatos de este diseño durante 24 horas sin costo extra.</span>
+                <span className="text-[12px] text-[#9FE0B5]"><T>Pagado. Puedes bajar los tres formatos de este diseño durante 24 horas sin costo extra.</T></span>
               </div>
             )
           return (
@@ -383,12 +384,12 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
               </button>
               {avisoCobro && (
                 <span className="text-[12px] text-[#F6B8AE]">
-                  {avisoCobro.texto}{" "}
-                  {avisoCobro.login && <Link href={`/${locale}/login`} className="underline">Iniciar sesión</Link>}
-                  {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline">Comprar créditos</Link>}
+                  <T>{avisoCobro.texto}</T>{" "}
+                  {avisoCobro.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
+                  {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
                 </span>
               )}
-              <span className="text-[12px] text-[#8A97AB]">Ver el armado, las medidas y el material es gratis. Si no tienes máquina, Fabrícamelo es sin costo.</span>
+              <span className="text-[12px] text-[#8A97AB]"><T>Ver el armado, las medidas y el material es gratis. Si no tienes máquina, Fabrícamelo es sin costo.</T></span>
             </div>
           )
         }}

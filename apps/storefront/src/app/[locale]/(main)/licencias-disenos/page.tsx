@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
@@ -7,7 +9,7 @@ import { LICENCIAS, ORDEN_LICENCIAS, PIEZAS_POR_OMISION, REGLAS_COMUNES } from "
 // Las tres licencias de diseños digitales (respuesta jurídica del 14 nov 2026,
 // pregunta 8). El texto sale de lib/hetna/licencias.ts, el mismo que ve la
 // ficha de cada diseño.
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/licencias-disenos" },
   title: "Licencias de diseños digitales",
   description:
@@ -23,16 +25,16 @@ export default function LicenciasDisenos() {
       actualizado="14 de noviembre de 2026"
     >
       <p>
-        Cada diseño de la tienda trae una de estas tres licencias, elegida por quien lo vende. La ves en la ficha del
-        diseño, antes de pagar. Si un diseño no indica otra, se vende con la licencia personal.
+        <TS>Cada diseño de la tienda trae una de estas tres licencias, elegida por quien lo vende. La ves en la ficha del
+        diseño, antes de pagar. Si un diseño no indica otra, se vende con la licencia personal.</TS>
       </p>
 
       {ORDEN_LICENCIAS.map((k) => {
         const l = LICENCIAS[k]
         return (
           <section key={k}>
-            <h2>Licencia {l.nombre}</h2>
-            <p>{l.resumen}</p>
+            <h2><TS>Licencia</TS> {l.nombre}</h2>
+            <p><TS>{l.resumen}</TS></p>
             <ul>
               {l.permisos.map((p) => (
                 <li key={p.que}>
@@ -43,31 +45,36 @@ export default function LicenciasDisenos() {
             </ul>
             {k === "comercial_limitada" && (
               <p>
-                El número de piezas lo pone el vendedor en cada diseño y lo ves en la ficha. Si no indica otro, son{" "}
-                {PIEZAS_POR_OMISION} piezas en total.
+                <TS>El número de piezas lo pone el vendedor en cada diseño y lo ves en la ficha. Si no indica otro, son</TS>{" "}
+                {PIEZAS_POR_OMISION} <TS>piezas en total.</TS>
               </p>
             )}
           </section>
         )
       })}
 
-      <h2>Reglas para las tres</h2>
+      <h2><TS>Reglas para las tres</TS></h2>
       <ul>
         {REGLAS_COMUNES.map((r) => (
           <li key={r}>{r}</li>
         ))}
       </ul>
 
-      <h2>Si necesitas más</h2>
+      <h2><TS>Si necesitas más</TS></h2>
       <p>
-        ¿Quieres producir más piezas de las que permite la licencia, o usar el diseño de otra forma? Pregúntale al
-        vendedor desde la ficha del diseño, con el botón «Preguntar al taller», antes de comprar.
+        <TS>¿Quieres producir más piezas de las que permite la licencia, o usar el diseño de otra forma? Pregúntale al
+        vendedor desde la ficha del diseño, con el botón «Preguntar al taller», antes de comprar.</TS>
       </p>
       <p>
-        Las devoluciones de archivos siguen la{" "}
-        <LocalizedClientLink href="/devoluciones">política de devoluciones</LocalizedClientLink>, y el uso de la tienda los{" "}
-        <LocalizedClientLink href="/terminos-y-condiciones">términos y condiciones</LocalizedClientLink> (cláusula 8).
+        <TS>Las devoluciones de archivos siguen la</TS>{" "}
+        <LocalizedClientLink href="/devoluciones"><TS>política de devoluciones</TS></LocalizedClientLink><TS>, y el uso de la tienda los</TS>{" "}
+        <LocalizedClientLink href="/terminos-y-condiciones"><TS>términos y condiciones</TS></LocalizedClientLink> <TS>(cláusula 8).</TS>
       </p>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

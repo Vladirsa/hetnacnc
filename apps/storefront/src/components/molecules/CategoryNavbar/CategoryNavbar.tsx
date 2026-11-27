@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cn } from "@/lib/utils"
@@ -105,7 +106,7 @@ export const CategoryNavbar = ({
           )}
           data-testid="category-link-all-products"
         >
-          Todos los productos
+          <T>Todos los productos</T>
         </LocalizedClientLink>
 
         {filteredCategories.map(({ id, handle, name, category_children }) => {

@@ -4,6 +4,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useState } from "react"
@@ -54,7 +55,7 @@ export function VideoLigero({ video }: { video: Video }) {
             <path d="M8 5v14l11-7z" />
           </svg>
         </span>
-        <span className="text-white text-[13px] font-semibold drop-shadow">Ver en {NOMBRE[video.tipo]}</span>
+        <span className="text-white text-[13px] font-semibold drop-shadow"><T>Ver en</T> {NOMBRE[video.tipo]}</span>
       </span>
     </button>
   )

@@ -6,6 +6,7 @@
 // un modelo de muestra, una vista 3D que se puede girar. Sello "Descarga
 // inmediata" visible en los diseños digitales; también la usan las piezas de
 // Impresión 3D bajo pedido (digital=false: sin sello, su STL como vista 3D).
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 import dynamic from "next/dynamic"
 import { useState } from "react"
@@ -52,12 +53,12 @@ export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vist
           <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
             <path d="M10 3v10m0 0l-4-4m4 4l4-4M4 17h12" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Descarga inmediata
+          <T>Descarga inmediata</T>
         </span>}
 
         <span className={`pointer-events-none absolute ${v.tipo === "modelo" ? "right-3 top-3" : "bottom-3 left-3"} max-w-[80%] rounded bg-white/95 px-2.5 py-1 text-[12.5px] font-semibold text-[#1E2329] shadow-sm`}>
-          {v.titulo}
-          {v.tipo === "esquema" && <span className="font-normal text-[#5B6370]"> · esquema con las medidas del archivo</span>}
+          <T>{v.titulo}</T>
+          {v.tipo === "esquema" && <span className="font-normal text-[#5B6370]"> <T>· esquema con las medidas del archivo</T></span>}
           {v.tipo === "modelo" && <span className="font-normal text-[#5B6370]">{digital ? " · modelo de muestra del vendedor" : " · gírala con el dedo o el mouse"}</span>}
         </span>
 
@@ -82,7 +83,7 @@ export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vist
           </>
         )}
       </div>
-      {nota && <p className="m-0 -mt-1 text-[12.5px] text-[#6B6A63]">{nota}</p>}
+      {nota && <p className="m-0 -mt-1 text-[12.5px] text-[#6B6A63]"><T>{nota}</T></p>}
 
       {vistas.length > 1 && (
         <ul className="grid grid-cols-4 gap-2 sm:grid-cols-5" aria-label="Vistas">
@@ -100,7 +101,7 @@ export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vist
                 ) : x.tipo === "modelo" ? (
                   <span className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 bg-[#1E2329] text-white">
                     <span className="fuente-condensada text-[22px] font-bold leading-none">3D</span>
-                    <span className="text-[10.5px] font-semibold">Girar</span>
+                    <span className="text-[10.5px] font-semibold"><T>Girar</T></span>
                   </span>
                 ) : (
                   <span className="absolute inset-0 [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: x.svg }} />

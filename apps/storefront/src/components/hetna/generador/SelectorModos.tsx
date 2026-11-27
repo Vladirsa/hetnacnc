@@ -4,6 +4,7 @@
 // Letreros y placas): tarjetas con dibujo arriba del panel. Al elegir, la
 // dirección cambia a la del modo (sin recargar) para que la liga compartida
 // abra lo mismo.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useParams } from "next/navigation"
 
 export type Modo<T extends string> = { id: T; slug: string; nombre: string; nota: string; icono: React.ReactNode }
@@ -45,7 +46,7 @@ export function SelectorModos<T extends string>({
           </button>
         ))}
       </div>
-      <span className="text-[11.5px] leading-snug text-[#8A97AB]">{modos.find((m) => m.id === modo)?.nota}</span>
+      <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>{modos.find((m) => m.id === modo)?.nota}</T></span>
     </section>
   )
 }

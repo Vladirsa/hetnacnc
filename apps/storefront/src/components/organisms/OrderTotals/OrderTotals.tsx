@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Card } from "@/components/atoms/Card/Card"
 import { Divider } from "@/components/atoms/Divider/Divider"
 import { convertToLocale } from "@/lib/helpers/money"
@@ -21,7 +22,7 @@ export const OrderTotals = ({ orderGroup }: { orderGroup: any }) => {
   return (
     <Card className="mb-8 p-4">
       <p className="text-secondary label-md mb-2 flex justify-between">
-        Subtotal:
+        <TS>Subtotal:</TS>
         <span className="text-primary">
           {convertToLocale({
             amount: subtotal,
@@ -30,7 +31,7 @@ export const OrderTotals = ({ orderGroup }: { orderGroup: any }) => {
         </span>
       </p>
       <p className="text-secondary label-md flex justify-between">
-        Delivery:
+        <TS>Delivery:</TS>
         <span className="text-primary">
           {convertToLocale({
             amount: delivery,
@@ -40,7 +41,7 @@ export const OrderTotals = ({ orderGroup }: { orderGroup: any }) => {
       </p>
       <Divider className="my-4" />
       <p className="text-secondary label-md flex justify-between items-center">
-        Total:{" "}
+        <TS>Total:</TS>{" "}
         <span className="text-primary heading-md">
           {convertToLocale({
             amount: total,

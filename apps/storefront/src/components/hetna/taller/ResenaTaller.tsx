@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -51,7 +52,7 @@ function EvaluacionRecibida({ token, s }: { token: string; s: VistaSolicitud }) 
   if (!ev) return null
   if (!ev.recibida) {
     return ev.recibida_pendiente ? (
-      <p className="mt-3 text-sm text-[#6B675C]">El taller ya te evaluó como cliente. Verás su evaluación cuando tú lo evalúes (o en {ev.dias_publicacion} días).</p>
+      <p className="mt-3 text-sm text-[#6B675C]"><T>El taller ya te evaluó como cliente. Verás su evaluación cuando tú lo evalúes (o en</T> {ev.dias_publicacion} <T>días).</T></p>
     ) : null
   }
   const r = ev.recibida
@@ -65,7 +66,7 @@ function EvaluacionRecibida({ token, s }: { token: string; s: VistaSolicitud }) 
   }
   return (
     <div className="mt-4 rounded-xl bg-[#FAF9F6] p-4 text-sm">
-      <p className="font-bold text-[#142033]">Cómo te evaluó el taller como cliente: {r.promedio.toFixed(1)} / 5</p>
+      <p className="font-bold text-[#142033]"><T>Cómo te evaluó el taller como cliente:</T> {r.promedio.toFixed(1)} / 5</p>
       <p className="mt-1 text-xs text-[#6B675C]">
         {Object.entries(NOMBRES_CLIENTE)
           .filter(([k]) => r[k] != null)
@@ -73,18 +74,18 @@ function EvaluacionRecibida({ token, s }: { token: string; s: VistaSolicitud }) 
           .join(" · ")}
       </p>
       {r.comentario && <p className="mt-2 text-[#40403A]">“{r.comentario}”</p>}
-      {r.respuesta && <p className="mt-2 border-l-2 border-[#E7E4DC] pl-3 text-[#40403A]">Tu respuesta: {r.respuesta}</p>}
+      {r.respuesta && <p className="mt-2 border-l-2 border-[#E7E4DC] pl-3 text-[#40403A]"><T>Tu respuesta:</T> <T>{r.respuesta}</T></p>}
       <div className="mt-2 flex gap-3 text-xs font-semibold">
-        <button type="button" className="text-[#142033] underline" onClick={() => setModo("responder")}>Responder</button>
-        <button type="button" className="text-[#B3261E] underline" onClick={() => setModo("reclamar")}>No es correcta: pedir revisión</button>
+        <button type="button" className="text-[#142033] underline" onClick={() => setModo("responder")}><T>Responder</T></button>
+        <button type="button" className="text-[#B3261E] underline" onClick={() => setModo("reclamar")}><T>No es correcta: pedir revisión</T></button>
       </div>
       {modo && (
         <div className="mt-2 flex gap-2">
           <textarea rows={2} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} className="w-full rounded-xl border border-[#D9D5C9] px-3 py-2 text-sm" placeholder={modo === "reclamar" ? "¿Por qué no es correcta?" : "Tu respuesta pública"} />
-          <button type="button" onClick={enviar} className="rounded-xl bg-[#142033] px-4 text-sm font-semibold text-white">Enviar</button>
+          <button type="button" onClick={enviar} className="rounded-xl bg-[#142033] px-4 text-sm font-semibold text-white"><T>Enviar</T></button>
         </div>
       )}
-      {nota && <p className="mt-2 text-xs text-[#1E7B3A]">{nota}</p>}
+      {nota && <p className="mt-2 text-xs text-[#1E7B3A]"><T>{nota}</T></p>}
     </div>
   )
 }
@@ -115,14 +116,14 @@ export default function ResenaTaller({ token, s }: { token: string; s: VistaSoli
   if (!editando && s.resena) {
     return (
       <section className="mt-6 rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6EE] p-5">
-        <p className="font-extrabold text-[#1F5A2B]">¡Gracias por evaluar a {nombreTaller}!</p>
+        <p className="font-extrabold text-[#1F5A2B]"><T>¡Gracias por evaluar a</T> {nombreTaller}!</p>
         <p className="mt-1 text-sm text-[#1F5A2B]">
           {CRITERIOS.filter(([k]) => (s.resena as Record<string, unknown>)[k])
             .map(([k, n]) => `${n.split(" (")[0]} ${(s.resena as Record<string, unknown>)[k]}/5`)
             .join(" · ")}
         </p>
         <button type="button" onClick={() => setEditando(true)} className="mt-2 text-sm font-semibold text-[#142033] underline">
-          Cambiar mi evaluación
+          <T>Cambiar mi evaluación</T>
         </button>
         <EvaluacionRecibida token={token} s={s} />
       </section>
@@ -131,19 +132,19 @@ export default function ResenaTaller({ token, s }: { token: string; s: VistaSoli
 
   return (
     <section className="mt-6 rounded-2xl border-2 border-[#C2560A]/40 bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-extrabold text-[#142033]">Evalúa a {nombreTaller}</h2>
+      <h2 className="text-lg font-extrabold text-[#142033]"><T>Evalúa a</T> {nombreTaller}</h2>
       <p className="mt-1 text-sm text-[#6B675C]">
-        Tu evaluación sale en su perfil cuando los dos hayan evaluado (o en 14 días): así nadie califica condicionado por lo que dijo el otro.
+        <T>Tu evaluación sale en su perfil cuando los dos hayan evaluado (o en 14 días): así nadie califica condicionado por lo que dijo el otro.</T>
       </p>
       <div className="mt-4 grid gap-3">
         {CRITERIOS.map(([k, label]) => (
           <div key={k} className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-[#142033]">{label}</span>
+            <span className="text-sm font-semibold text-[#142033]"><T>{label}</T></span>
             <span className="flex items-center gap-3">
               {(k !== OPCIONAL || !noAplica) && <Estrellas valor={notas[k]} etiqueta={label} alCambiar={(n) => setNotas((x) => ({ ...x, [k]: n }))} />}
               {k === OPCIONAL && (
                 <label className="flex items-center gap-1 text-xs text-[#6B675C]">
-                  <input type="checkbox" checked={noAplica} onChange={(e) => setNoAplica(e.target.checked)} className="accent-[#C2560A]" /> No aplica
+                  <input type="checkbox" checked={noAplica} onChange={(e) => setNoAplica(e.target.checked)} className="accent-[#C2560A]" /> <T>No aplica</T>
                 </label>
               )}
             </span>

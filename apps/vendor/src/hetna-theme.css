@@ -197,6 +197,7 @@ main .rounded-md[role='combobox'] {
 [data-testid='sidebar-nav-item-products']     { order: 10; }
 [data-testid='sidebar-nav-item-publicar']     { order: 11; }
 [data-testid='sidebar-nav-item-ficha']        { order: 12; }
+[data-testid='sidebar-nav-item-ingles']       { order: 12; }
 [data-testid='sidebar-nav-item-volumen']      { order: 13; }
 [data-testid='sidebar-nav-item-price-lists']  { order: 14; }
 [data-testid='sidebar-nav-item-inventory']    { order: 15; }

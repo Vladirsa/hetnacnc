@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { TabsTrigger } from "@/components/atoms/TabsTrigger/TabsTrigger"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
@@ -15,7 +16,7 @@ export const TabsList = ({
       {list.map(({ label, link }) => (
         <LocalizedClientLink key={label} href={link}>
           <TabsTrigger isActive={activeTab === label.toLowerCase()}>
-            {label}
+            <TS>{label}</TS>
           </TabsTrigger>
         </LocalizedClientLink>
       ))}

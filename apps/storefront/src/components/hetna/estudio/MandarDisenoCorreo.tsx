@@ -4,6 +4,7 @@
 // se iría sin dejar contacto se manda su archivo (si es gratis y cabe) y el
 // precio aprox. de fabricarlo. Con su permiso le llega un recordatorio a los
 // 2 y 7 días (Reactivador de estimados, en el servidor).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { type DisenoCorreoInput, mandarDisenoCorreo } from "@/lib/generador/correo"
@@ -37,13 +38,13 @@ export function MandarDisenoCorreo({
   if (estado === "listo")
     return (
       <p className={`m-0 mt-2 rounded-[8px] px-3 py-2 text-[12.5px] ${oscuro ? "bg-[#12301F] text-[#9BE3B8]" : "bg-[#EEF7F0] text-[#17633A]"}`}>
-        ✓ Listo, revisa tu correo{sinArchivo ? " (el archivo es grande: descárgalo desde aquí)" : ""}.
+        <T>✓ Listo, revisa tu correo</T>{sinArchivo ? " (el archivo es grande: descárgalo desde aquí)" : ""}.
       </p>
     )
   if (!abierto)
     return (
       <button type="button" onClick={() => setAbierto(true)} className={`mt-2 text-[12.5px] font-semibold underline decoration-dotted hover:text-[#C2560A] ${texto}`}>
-        ✉️ Mándamelo por correo{dxf ? " (archivo y precio)" : ""}
+        <T>✉️ Mándamelo por correo</T>{dxf ? " (archivo y precio)" : ""}
       </button>
     )
 
@@ -87,9 +88,9 @@ export function MandarDisenoCorreo({
       <input name="sitio_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
       <label className={`flex items-start gap-2 text-[11.5px] ${texto}`}>
         <input type="checkbox" name="acepta" value="1" required className="mt-0.5 accent-[#C2560A]" />
-        <span>Mándame mi diseño y un recordatorio en unos días para fabricarlo. Puedo darme de baja cuando quiera.</span>
+        <span><T>Mándame mi diseño y un recordatorio en unos días para fabricarlo. Puedo darme de baja cuando quiera.</T></span>
       </label>
-      {estado === "error" && <p className="m-0 text-[12px] text-[#F28B82]">{mensaje}</p>}
+      {estado === "error" && <p className="m-0 text-[12px] text-[#F28B82]"><T>{mensaje}</T></p>}
       <button type="submit" disabled={estado === "enviando"} className="justify-self-start rounded-[8px] bg-[#C2560A] px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-60">
         {estado === "enviando" ? "Enviando…" : "Mandar a mi correo"}
       </button>

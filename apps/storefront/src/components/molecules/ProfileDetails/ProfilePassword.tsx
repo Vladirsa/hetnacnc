@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { InfoIcon } from "@/icons"
@@ -27,26 +28,26 @@ export const ProfilePassword = ({
     <>
       <Card className="bg-secondary p-4 flex justify-between items-center mt-8">
         <Heading level="h2" className="heading-sm uppercase">
-          Contraseña
+          <T>Contraseña</T>
         </Heading>
         <Button
           variant="tonal"
           className="uppercase flex items-center gap-2 font-semibold"
           onClick={() => setShowForm(true)}
         >
-          Cambiar contraseña
+          <T>Cambiar contraseña</T>
         </Button>
       </Card>
       <Card className="p-0">
         <div className="p-4">
-          <p className="label-md text-secondary">Contraseña actual</p>
+          <p className="label-md text-secondary"><T>Contraseña actual</T></p>
           <p className="label-lg text-primary">****************</p>
         </div>
         <Divider />
         <div className="p-4">
           <p className="label-md text-secondary flex items-center gap-4">
             <InfoIcon size={18} className="text-secondary" />
-            Usa una contraseña única para proteger tu cuenta.
+            <T>Usa una contraseña única para proteger tu cuenta.</T>
           </p>
         </div>
       </Card>
@@ -57,7 +58,7 @@ export const ProfilePassword = ({
               className="uppercase py-3 px-6 !font-semibold"
               onClick={handleSendResetPasswordEmail}
             >
-              Enviar correo para restablecer contraseña
+              <T>Enviar correo para restablecer contraseña</T>
             </Button>
           </div>
         </Modal>

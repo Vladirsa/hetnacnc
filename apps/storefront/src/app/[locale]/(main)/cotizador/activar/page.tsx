@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
@@ -8,7 +9,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 // Una sola cuenta: aquí llega el botón Cotizador cuando la cuenta de la tienda
 // todavía no tiene taller en el Cotizador (o no ha confirmado su correo). Ver
 // packages/api/src/lib/cotizador-vinculo.ts (entradaCotizador, activarCotizador).
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Activa tu Cotizador",
   robots: { index: false, follow: false },
 }
@@ -35,4 +36,9 @@ export default async function ActivarCotizadorPage() {
       />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

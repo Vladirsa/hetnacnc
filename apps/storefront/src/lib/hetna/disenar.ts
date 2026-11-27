@@ -82,6 +82,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Texturizador gratis para impresión 3D: placa o rodillo con palabras e íconos repetidos, sin costura, con mangos y guías de grosor. Descarga los STL al instante.",
   },
   {
+    slug: "patrones-3d",
+    nombre: "Patrones paramétricos 3D",
+    texto: "Sube tu maceta, florero o lámpara (STL u OBJ) y dale un patrón: Voronoi, panal, ondas, espiral, torsión.",
+    icono: "relieve",
+    acceso: "gratis",
+    titulo: "Patrones paramétricos 3D gratis: Voronoi, panal y ondas en tu STL",
+    descripcion:
+      "Sube tu modelo en STL u OBJ (una maceta, un florero, una pantalla de lámpara) o empieza con uno de los nuestros y dale un patrón paramétrico en la superficie: ondas, espiral, estrías, rombos, panal, Voronoi, burbujas u orgánico, con torsión. Mueves un número y todo se recalcula. Descarga el STL para imprimir en 3D o el relieve plano para tallar en router CNC.",
+    meta: "Diseño paramétrico gratis: aplica patrones Voronoi, panal, ondas o espiral a tu maceta o florero en STL. Descarga para impresión 3D o relieve para router CNC.",
+  },
+  {
     slug: "cortadores-galletas",
     nombre: "Cortadores de galletas",
     texto: "Corazón, estrella, nube, un nombre o tu dibujo: cortador con filo y sello para imprimir en 3D.",
@@ -565,6 +576,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "texturizador", corto: "Texturizador" },
       { slug: "cortadores-galletas", corto: "Cortadores de galletas" },
       { slug: "ferulas-3d", corto: "Férulas" },
+      { slug: "patrones-3d", corto: "Patrones paramétricos" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "moldes-3d", corto: "Moldes" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },

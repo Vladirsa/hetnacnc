@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CollapseIcon } from "@/icons"
@@ -16,7 +17,7 @@ export default async function RootLayout({
             <LocalizedClientLink href="/cart">
               <Button variant="tonal" className="flex items-center gap-2">
                 <CollapseIcon className="rotate-90" />
-                <span className="hidden lg:block">Volver al carrito</span>
+                <span className="hidden lg:block"><TS>Volver al carrito</TS></span>
               </Button>
             </LocalizedClientLink>
           </div>

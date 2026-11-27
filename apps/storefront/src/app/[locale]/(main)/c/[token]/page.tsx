@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 type Props = { params: Promise<{ token: string; locale: string }>; searchParams: Promise<{ pago?: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { token } = await params
   const c = await leerCotizacionPublica(token)
   return {
@@ -30,4 +31,9 @@ export default async function CotizacionPublicaPage({ params, searchParams }: Pr
       <CotizacionPublicaVista token={token} inicial={c} pago={pago || ""} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

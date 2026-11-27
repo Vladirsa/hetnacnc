@@ -5,6 +5,7 @@
 //   cancelado=1 si se canceló en PayPal)
 // Se pregunta al backend, que consulta al proveedor y acredita. Si el pago
 // todavía no aparece (a veces tarda unos segundos), se vuelve a preguntar.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
@@ -68,24 +69,24 @@ export function RetornoPagoCreditos() {
     <main className="container mx-auto flex max-w-xl flex-col items-center gap-4 px-4 py-16 text-center">
       {estado.tipo === "revisando" && (
         <>
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">Confirmando tu pago…</h1>
-          <p className="text-[15px] text-[#4A4943]">No cierres esta página, tarda unos segundos.</p>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>Confirmando tu pago…</T></h1>
+          <p className="text-[15px] text-[#4A4943]"><T>No cierres esta página, tarda unos segundos.</T></p>
         </>
       )}
 
       {estado.tipo === "pagado" && (
         <>
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">¡Listo! Se agregaron {estado.creditos} créditos</h1>
-          <p className="text-[15px] text-[#4A4943]">Ya están en tu cuenta y puedes usarlos en las herramientas de HETNA.</p>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>¡Listo! Se agregaron</T> {estado.creditos} <T>créditos</T></h1>
+          <p className="text-[15px] text-[#4A4943]"><T>Ya están en tu cuenta y puedes usarlos en las herramientas de HETNA.</T></p>
           <div className="flex flex-wrap justify-center gap-3">
             <LocalizedClientLink href="/user/creditos" className={BOTON}>
-              Ver mis créditos
+              <T>Ver mis créditos</T>
             </LocalizedClientLink>
             <LocalizedClientLink
               href="/disenar/imagen-a-3d"
               className="inline-flex h-11 items-center justify-center rounded-full border border-[#142033] px-5 font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
             >
-              Hacer un escaneo 3D
+              <T>Hacer un escaneo 3D</T>
             </LocalizedClientLink>
           </div>
         </>
@@ -93,37 +94,37 @@ export function RetornoPagoCreditos() {
 
       {estado.tipo === "pendiente" && (
         <>
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">Tu pago se está confirmando</h1>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>Tu pago se está confirmando</T></h1>
           <p className="text-[15px] text-[#4A4943]">
-            Todavía no recibimos la confirmación. Si ya pagaste, no vuelvas a pagar: tus créditos se agregan solos en
-            unos minutos. Si en una hora no aparecen, escríbenos con tu correo.
+            <T>Todavía no recibimos la confirmación. Si ya pagaste, no vuelvas a pagar: tus créditos se agregan solos en
+            unos minutos. Si en una hora no aparecen, escríbenos con tu correo.</T>
           </p>
           <LocalizedClientLink href="/user/creditos" className={BOTON}>
-            Ver mis créditos
+            <T>Ver mis créditos</T>
           </LocalizedClientLink>
         </>
       )}
 
       {estado.tipo === "no-pagado" && (
         <>
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">El pago no se completó</h1>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>El pago no se completó</T></h1>
           <p className="text-[15px] text-[#4A4943]">
             {estado.rechazado
               ? "El pago fue rechazado. Puedes intentar con otra tarjeta o forma de pago."
               : "No se hizo ningún cargo. Puedes volver a intentarlo cuando quieras."}
           </p>
           <LocalizedClientLink href="/user/creditos" className={BOTON}>
-            Volver a mis créditos
+            <T>Volver a mis créditos</T>
           </LocalizedClientLink>
         </>
       )}
 
       {estado.tipo === "error" && (
         <>
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">No pudimos revisar tu pago</h1>
-          <p className="text-[15px] text-[#4A4943]">{estado.mensaje}</p>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>No pudimos revisar tu pago</T></h1>
+          <p className="text-[15px] text-[#4A4943]"><T>{estado.mensaje}</T></p>
           <LocalizedClientLink href="/user/creditos" className={BOTON}>
-            Ir a mis créditos
+            <T>Ir a mis créditos</T>
           </LocalizedClientLink>
         </>
       )}

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
@@ -60,7 +61,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input
         type="text"
@@ -171,13 +172,13 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
         <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">
-          Gratis
+          <T>Gratis</T>
         </span>
         <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">
-          Convertidor y reescalador de archivos
+          <T>Convertidor y reescalador de archivos</T>
         </h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Pasa tu archivo de DXF a SVG (o al revés), de STEP a STL u OBJ y de STL a STEP, cambia su tamaño o ajústalo a otro espesor de material. Tu archivo no se sube a ningún servidor: todo se hace en tu navegador.
+          <T>Pasa tu archivo de DXF a SVG (o al revés), de STEP a STL u OBJ y de STL a STEP, cambia su tamaño o ajústalo a otro espesor de material. Tu archivo no se sube a ningún servidor: todo se hace en tu navegador.</T>
         </p>
       </section>
 
@@ -189,7 +190,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               <path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" />
             </svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{archivo ? archivo.nombre : "Sube tu archivo"}</span>
-            <span className="text-[12px] text-[#6B6A63]">DXF, SVG, STL, OBJ o STEP · hasta 30 MB</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>DXF, SVG, STL, OBJ o STEP · hasta 30 MB</T></span>
             <input type="file" accept=".dxf,.svg,.stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {cargando && <p className="m-0 text-[13px] text-[#6B6A63]">{avisoCarga || "Leyendo archivo..."}</p>}
@@ -200,18 +201,18 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               {archivo.tipo === "2d" && (
                 <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
                   <input type="checkbox" checked={juntar} onChange={(e) => setJuntar(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-                  Unir líneas sueltas en contornos
+                  <T>Unir líneas sueltas en contornos</T>
                 </label>
               )}
 
               <div className="flex flex-col gap-2">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">Tamaño</span>
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tamaño</T></span>
                 <div className="flex flex-wrap gap-2">
-                  <Opcion activa={modo === "igual"} onClick={() => setModo("igual")}>Igual</Opcion>
-                  {archivo.tipo === "2d" && <Opcion activa={modo === "espesor"} onClick={() => setModo("espesor")}>Otro espesor</Opcion>}
-                  <Opcion activa={modo === "ancho"} onClick={() => setModo("ancho")}>A un ancho</Opcion>
-                  <Opcion activa={modo === "porcentaje"} onClick={() => setModo("porcentaje")}>Porcentaje</Opcion>
-                  <Opcion activa={modo === "unidades"} onClick={() => setModo("unidades")}>Corregir unidades</Opcion>
+                  <Opcion activa={modo === "igual"} onClick={() => setModo("igual")}><T>Igual</T></Opcion>
+                  {archivo.tipo === "2d" && <Opcion activa={modo === "espesor"} onClick={() => setModo("espesor")}><T>Otro espesor</T></Opcion>}
+                  <Opcion activa={modo === "ancho"} onClick={() => setModo("ancho")}><T>A un ancho</T></Opcion>
+                  <Opcion activa={modo === "porcentaje"} onClick={() => setModo("porcentaje")}><T>Porcentaje</T></Opcion>
+                  <Opcion activa={modo === "unidades"} onClick={() => setModo("unidades")}><T>Corregir unidades</T></Opcion>
                 </div>
               </div>
 
@@ -222,7 +223,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                     <Campo etiqueta="Espesor nuevo" valor={espDespues} cambiar={setEspDespues} sufijo="mm" />
                   </div>
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                    Para diseños con ranuras y encastres: todo el dibujo crece o se achica en la misma proporción para que las ranuras midan lo mismo que tu material nuevo.
+                    <T>Para diseños con ranuras y encastres: todo el dibujo crece o se achica en la misma proporción para que las ranuras midan lo mismo que tu material nuevo.</T>
                   </p>
                 </>
               )}
@@ -230,13 +231,13 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               {modo === "porcentaje" && <Campo etiqueta="Porcentaje" valor={porcentaje} cambiar={setPorcentaje} sufijo="%" />}
               {modo === "unidades" && (
                 <div className="flex flex-wrap gap-2">
-                  <Opcion activa={factorUnidades === 25.4} onClick={() => setFactorUnidades(25.4)}>Estaba en pulgadas</Opcion>
-                  <Opcion activa={factorUnidades === 10} onClick={() => setFactorUnidades(10)}>Estaba en cm</Opcion>
-                  <Opcion activa={factorUnidades === 1000} onClick={() => setFactorUnidades(1000)}>Estaba en metros</Opcion>
-                  <Opcion activa={factorUnidades === 1 / 25.4} onClick={() => setFactorUnidades(1 / 25.4)}>Pasar mm a pulgadas</Opcion>
+                  <Opcion activa={factorUnidades === 25.4} onClick={() => setFactorUnidades(25.4)}><T>Estaba en pulgadas</T></Opcion>
+                  <Opcion activa={factorUnidades === 10} onClick={() => setFactorUnidades(10)}><T>Estaba en cm</T></Opcion>
+                  <Opcion activa={factorUnidades === 1000} onClick={() => setFactorUnidades(1000)}><T>Estaba en metros</T></Opcion>
+                  <Opcion activa={factorUnidades === 1 / 25.4} onClick={() => setFactorUnidades(1 / 25.4)}><T>Pasar mm a pulgadas</T></Opcion>
                 </div>
               )}
-              {!factorOk && <p className="m-0 text-[13px] text-[#8A1C1C]">Escribe medidas mayores que cero.</p>}
+              {!factorOk && <p className="m-0 text-[13px] text-[#8A1C1C]"><T>Escribe medidas mayores que cero.</T></p>}
             </>
           )}
         </section>
@@ -244,12 +245,12 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
         <section className="flex flex-col gap-4 min-w-0">
           {!archivo && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14px] text-[#6B6A63] flex flex-col gap-2">
-              <p className="m-0 font-semibold text-[#1B1B18]">¿Para qué sirve?</p>
+              <p className="m-0 font-semibold text-[#1B1B18]"><T>¿Para qué sirve?</T></p>
               <ul className="m-0 pl-5 flex flex-col gap-1">
-                <li>Abrir en LightBurn o VCarve un diseño que solo tienes en SVG, o en Inkscape uno que tienes en DXF.</li>
-                <li>Cortar en MDF de 6 mm un diseño hecho para 3 mm, sin que las ranuras queden flojas.</li>
-                <li>Arreglar archivos que salen diminutos o gigantes porque venían en pulgadas.</li>
-                <li>Pasar un modelo STL a OBJ (o al revés) para tu programa de 3D.</li>
+                <li><T>Abrir en LightBurn o VCarve un diseño que solo tienes en SVG, o en Inkscape uno que tienes en DXF.</T></li>
+                <li><T>Cortar en MDF de 6 mm un diseño hecho para 3 mm, sin que las ranuras queden flojas.</T></li>
+                <li><T>Arreglar archivos que salen diminutos o gigantes porque venían en pulgadas.</T></li>
+                <li><T>Pasar un modelo STL a OBJ (o al revés) para tu programa de 3D.</T></li>
               </ul>
             </div>
           )}
@@ -265,8 +266,8 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-3 lg:p-5">
                   <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[520px]" dangerouslySetInnerHTML={{ __html: vista }} />
                   <div className="mt-3 flex flex-wrap gap-4 text-[12.5px] text-[#6B6A63]">
-                    <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> Contorno cerrado</span>
-                    <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#1F5FBF]" /> Línea abierta</span>
+                    <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#C2560A]" /> <T>Contorno cerrado</T></span>
+                    <span className="flex items-center gap-2"><span className="w-6 border-t-2 border-[#1F5FBF]" /> <T>Línea abierta</T></span>
                   </div>
                 </div>
               )}
@@ -287,7 +288,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               )}
               {med && med.abiertos > 0 && (
                 <p className="m-0 text-[13px] text-[#5A3A12]">
-                  Hay {med.abiertos} líneas abiertas (en azul): en el CAM no podrás hacer corte por dentro o por fuera en ellas. Si deben cerrar, revisa el dibujo o pide el servicio de Preparación para CAM.
+                  <T>Hay</T> {med.abiertos} <T>líneas abiertas (en azul): en el CAM no podrás hacer corte por dentro o por fuera en ellas. Si deben cerrar, revisa el dibujo o pide el servicio de Preparación para CAM.</T>
                 </p>
               )}
               {salida2d && salida2d.trazos.length > 0 && (
@@ -298,7 +299,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                  Ver precio al instante en el Cotizador
+                  <T>Ver precio al instante en el Cotizador</T>
                 </button>
                 <button
                   type="button"
@@ -306,16 +307,16 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                  Fabrícamelo: que un taller la corte
+                  <T>Fabrícamelo: que un taller la corte</T>
                 </button>
                 <BotonesCam nombre={raiz} dxf={() => dibujoDXF(salida2d)} />
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.dxf`, dibujoDXF(salida2d), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                    Descargar DXF
+                    <T>Descargar DXF</T>
                   </button>
                   <button type="button" onClick={() => descargar(`${raiz}.svg`, dibujoSVG(salida2d, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                    Descargar SVG
+                    <T>Descargar SVG</T>
                   </button>
                 </div>
                 </>
@@ -328,12 +329,12 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
               {archivo.malla.avisos.length > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{archivo.malla.avisos.join(" ")}</p>}
               {archivo.formato === "step" && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-[13px] font-semibold text-[#1B1B18]">Detalle del STL u OBJ</span>
+                  <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Detalle del STL u OBJ</T></span>
                   <div className="flex flex-wrap gap-2">
-                    <Opcion activa={calidad === "normal"} onClick={() => cambiarCalidad("normal")}>Normal (0.05 mm)</Opcion>
-                    <Opcion activa={calidad === "fina"} onClick={() => cambiarCalidad("fina")}>Fino (0.01 mm)</Opcion>
+                    <Opcion activa={calidad === "normal"} onClick={() => cambiarCalidad("normal")}><T>Normal (0.05 mm)</T></Opcion>
+                    <Opcion activa={calidad === "fina"} onClick={() => cambiarCalidad("fina")}><T>Fino (0.01 mm)</T></Opcion>
                   </div>
-                  <span className="text-[12.5px] text-[#6B6A63]">Qué tanto se aparta la malla de la superficie real. Fino = curvas más lisas y archivo más grande.</span>
+                  <span className="text-[12.5px] text-[#6B6A63]"><T>Qué tanto se aparta la malla de la superficie real. Fino = curvas más lisas y archivo más grande.</T></span>
                 </div>
               )}
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 m-0">
@@ -356,7 +357,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                  Ver precio al instante en el Cotizador
+                  <T>Ver precio al instante en el Cotizador</T>
                 </button>
                 <button
                   type="button"
@@ -364,16 +365,16 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                   className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                  Fabrícamelo: que un taller la corte
+                  <T>Fabrícamelo: que un taller la corte</T>
                 </button>
                 {avisoCotizar && <p className="m-0 text-[13px] text-[#8A1C1C]">{avisoCotizar}</p>}
                 <BotonesCam nombre={raiz} stl={() => mallaSTL(salida3d)} />
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button type="button" onClick={() => descargar(`${raiz}.stl`, mallaSTL(salida3d), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                    Descargar STL
+                    <T>Descargar STL</T>
                   </button>
                   <button type="button" onClick={() => descargar(`${raiz}.obj`, mallaOBJ(salida3d), "model/obj")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                    Descargar OBJ
+                    <T>Descargar OBJ</T>
                   </button>
                   <button type="button" disabled={haciendoStep} onClick={bajarSTEP} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-60 text-white font-semibold py-3 rounded-[10px] text-[14px]">
                     {haciendoStep ? "Preparando..." : "Descargar STEP"}
@@ -381,7 +382,7 @@ export function GeneradorConvertidor({ cabecera }: { cabecera?: React.ReactNode 
                 </div>
                 {archivo.formato !== "step" && (
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                    El STEP desde STL u OBJ sale con caras planas (los mismos triángulos): lo abren SolidWorks, Fusion, FreeCAD o tu CAM, pero no recupera las curvas originales.
+                    <T>El STEP desde STL u OBJ sale con caras planas (los mismos triángulos): lo abren SolidWorks, Fusion, FreeCAD o tu CAM, pero no recupera las curvas originales.</T>
                     {salida3d.tris.length / 9 > 100000 ? " Esta malla es muy grande: el STEP puede pesar decenas de MB y tardar en abrir." : ""}
                   </p>
                 )}

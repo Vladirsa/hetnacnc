@@ -2,6 +2,7 @@
 
 // Botones y formularios de la red: seguir, avalar, recomendar, postularse y
 // editar el currículum. Todo pasa por acciones-red (el servidor decide).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -159,7 +160,7 @@ export function FormRecomendar({
   if (listo)
     return (
       <p className="m-0 rounded-[12px] bg-[#EAF6EF] px-4 py-3 text-[14px] text-[#14683F]">
-        Gracias. {nombre} verá tu recomendación y saldrá en su perfil cuando la acepte.
+        <T>Gracias.</T> {nombre} <T>verá tu recomendación y saldrá en su perfil cuando la acepte.</T>
       </p>
     )
   if (!abierto)
@@ -184,7 +185,7 @@ export function FormRecomendar({
   return (
     <form onSubmit={enviar} className="flex flex-col gap-3 rounded-[14px] border border-[#E7E4DC] bg-[#FAF9F6] p-4">
       <label className="flex flex-col gap-1 text-[13.5px] font-semibold text-[#44433D]">
-        ¿De dónde se conocen?
+        <T>¿De dónde se conocen?</T>
         <select value={relacion} onChange={(e) => setRelacion(e.target.value as Relacion)} className={CAMPO}>
           {(Object.keys(RELACIONES) as Relacion[]).map((r) => (
             <option key={r} value={r}>
@@ -194,7 +195,7 @@ export function FormRecomendar({
         </select>
       </label>
       <label className="flex flex-col gap-1 text-[13.5px] font-semibold text-[#44433D]">
-        Tu recomendación
+        <T>Tu recomendación</T>
         <textarea
           value={cuerpo}
           onChange={(e) => setCuerpo(e.target.value)}
@@ -203,7 +204,7 @@ export function FormRecomendar({
           placeholder="Qué trabajo hizo, cómo quedó, si cumplió en tiempo y por qué lo recomiendas."
           className={CAMPO}
         />
-        <span className="font-normal text-[12.5px] text-[#9A978C]">{cuerpo.trim().length}/1500 · mínimo 30 letras</span>
+        <span className="font-normal text-[12.5px] text-[#9A978C]">{cuerpo.trim().length}<T>/1500 · mínimo 30 letras</T></span>
       </label>
       {error && <PideCuenta error={error} />}
       <div className="flex gap-2">
@@ -211,7 +212,7 @@ export function FormRecomendar({
           {pendiente ? "Enviando…" : "Enviar recomendación"}
         </button>
         <button type="button" onClick={() => setAbierto(false)} className="px-3 text-[14px] font-semibold text-[#6B6A63]">
-          Cancelar
+          <T>Cancelar</T>
         </button>
       </div>
     </form>
@@ -231,10 +232,10 @@ export function DecidirRecomendacion({ id }: { id: number }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button type="button" disabled={pendiente} onClick={() => decidir("publicada")} className={`${BTN} bg-[#16794F] px-3 py-1 text-[13px] text-white`}>
-        Mostrar en mi perfil
+        <T>Mostrar en mi perfil</T>
       </button>
       <button type="button" disabled={pendiente} onClick={() => decidir("oculta")} className={`${BTN} border border-[#E0DCD2] bg-white px-3 py-1 text-[13px] text-[#44433D]`}>
-        No mostrar
+        <T>No mostrar</T>
       </button>
       {error && <span className="text-[13px] text-[#A42A2A]">{mensaje(error)}</span>}
     </div>
@@ -254,14 +255,14 @@ export function Postularme({ temaId, yaPostulado }: { temaId: number; yaPostulad
   if (hecho)
     return (
       <p className="m-0 rounded-[12px] bg-[#EAF6EF] px-4 py-3 text-[14px] font-semibold text-[#14683F]">
-        ✓ Ya te postulaste. Quien publicó la vacante ve tu mensaje y tu perfil.
+        <T>✓ Ya te postulaste. Quien publicó la vacante ve tu mensaje y tu perfil.</T>
       </p>
     )
   if (!abierto)
     return (
       <div className="flex flex-col gap-2">
         <button type="button" onClick={() => setAbierto(true)} className={`${BTN} self-start bg-[#3B46A6] px-5 py-2.5 text-[14.5px] text-white hover:brightness-110`}>
-          Postularme a esta vacante
+          <T>Postularme a esta vacante</T>
         </button>
         {error && <PideCuenta error={error} />}
       </div>
@@ -278,7 +279,7 @@ export function Postularme({ temaId, yaPostulado }: { temaId: number; yaPostulad
   return (
     <form onSubmit={enviar} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-[13.5px] font-semibold text-[#44433D]">
-        Tu mensaje (sólo lo ve quien publicó la vacante)
+        <T>Tu mensaje (sólo lo ve quien publicó la vacante)</T>
         <textarea
           value={m}
           onChange={(e) => setM(e.target.value)}
@@ -288,14 +289,14 @@ export function Postularme({ temaId, yaPostulado }: { temaId: number; yaPostulad
           className={CAMPO}
         />
       </label>
-      <p className="m-0 text-[12.5px] text-[#6B6A63]">Junto con tu mensaje se manda la liga a tu perfil: complétalo con tu trayectoria y aptitudes.</p>
+      <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Junto con tu mensaje se manda la liga a tu perfil: complétalo con tu trayectoria y aptitudes.</T></p>
       {error && <PideCuenta error={error} />}
       <div className="flex gap-2">
         <button type="submit" disabled={pendiente} className={`${BTN} bg-[#3B46A6] px-4 py-2 text-[14px] text-white`}>
           {pendiente ? "Enviando…" : "Enviar postulación"}
         </button>
         <button type="button" onClick={() => setAbierto(false)} className="px-3 text-[14px] font-semibold text-[#6B6A63]">
-          Cancelar
+          <T>Cancelar</T>
         </button>
       </div>
     </form>
@@ -350,14 +351,14 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]">Tu currículum en la red</h2>
+        <h2 className="m-0 text-[19px] font-bold text-[#1B1B18]"><T>Tu currículum en la red</T></h2>
         <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-          Lo que sabes hacer y lo que has hecho. Sale en tu perfil público; los demás pueden avalar tus aptitudes y escribirte recomendaciones.
+          <T>Lo que sabes hacer y lo que has hecho. Sale en tu perfil público; los demás pueden avalar tus aptitudes y escribirte recomendaciones.</T>
         </p>
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[15.5px] font-bold text-[#1B1B18]">Tu titular</span>
+        <span className="text-[15.5px] font-bold text-[#1B1B18]"><T>Tu titular</T></span>
         <input
           value={titular}
           onChange={(e) => {
@@ -368,7 +369,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
           placeholder="Ej. Programador CAM · 8 años en router y láser"
           className={CAMPO}
         />
-        <span className="text-[12.5px] text-[#6B6A63]">Sale junto a tu nombre en cada respuesta: así saben por qué sabes del tema.</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Sale junto a tu nombre en cada respuesta: así saben por qué sabes del tema.</T></span>
       </label>
 
       <label className="flex cursor-pointer items-start gap-3 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-4">
@@ -382,14 +383,14 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
           className="mt-1 h-4 w-4 accent-[#16794F]"
         />
         <span>
-          <strong className="block text-[14.5px] text-[#1B1B18]">Abierto a trabajo y proyectos</strong>
-          <span className="text-[13.5px] text-[#6B6A63]">Sales en “Empleos y proyectos” para que los talleres te encuentren.</span>
+          <strong className="block text-[14.5px] text-[#1B1B18]"><T>Abierto a trabajo y proyectos</T></strong>
+          <span className="text-[13.5px] text-[#6B6A63]"><T>Sales en “Empleos y proyectos” para que los talleres te encuentren.</T></span>
         </span>
       </label>
 
       <section className="flex flex-col gap-2">
         <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">
-          Aptitudes <span className="font-normal text-[13px] text-[#9A978C]">({aptitudes.length}/{MAX_APTITUDES})</span>
+          <T>Aptitudes</T> <span className="font-normal text-[13px] text-[#9A978C]">({aptitudes.length}/{MAX_APTITUDES})</span>
         </h3>
         <div className="flex flex-wrap gap-2">
           {aptitudes.map((a) => (
@@ -424,7 +425,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
             className={CAMPO}
           />
           <button type="button" onClick={() => agregarAptitud(nueva)} className={`${BTN} shrink-0 border border-[#E0DCD2] bg-white px-4 text-[14px] text-[#44433D]`}>
-            Agregar
+            <T>Agregar</T>
           </button>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -440,7 +441,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
 
       <section className="flex flex-col gap-3">
         <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">
-          Trayectoria <span className="font-normal text-[13px] text-[#9A978C]">experiencia, estudios, certificaciones y proyectos</span>
+          <T>Trayectoria</T> <span className="font-normal text-[13px] text-[#9A978C]"><T>experiencia, estudios, certificaciones y proyectos</T></span>
         </h3>
         {pasos.map((p, i) => (
           <div key={i} className="grid gap-2 rounded-[12px] border border-[#E7E4DC] p-3 sm:grid-cols-2">
@@ -467,7 +468,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
             />
             {p.tipo === "proyecto" && (
               <div className="sm:col-span-2">
-                <span className="mb-1 block text-[13px] text-[#6B6A63]">Fotos del trabajo terminado (hasta {MAX_FOTOS_PROYECTO}): así se arma tu portafolio.</span>
+                <span className="mb-1 block text-[13px] text-[#6B6A63]"><T>Fotos del trabajo terminado (hasta</T> {MAX_FOTOS_PROYECTO}<T>): así se arma tu portafolio.</T></span>
                 <SubirFotos
                   fotos={(p.fotos || []).map((id) => ({ id, url: urlFoto(id) }))}
                   onCambio={(f) => {
@@ -487,7 +488,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
               }}
               className="justify-self-start text-[13px] font-semibold text-[#A42A2A]"
             >
-              Quitar
+              <T>Quitar</T>
             </button>
           </div>
         ))}
@@ -516,7 +517,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
           }
           className={`${BTN} self-start border border-[#1F7A4D] bg-white px-4 py-2 text-[14px] text-[#1F7A4D] hover:bg-[#EAF6EF]`}
         >
-          🎓 Agregar mis cursos HETNA terminados
+          <T>🎓 Agregar mis cursos HETNA terminados</T>
         </button>
         {pasos.length < MAX_PASOS && (
           <button
@@ -527,7 +528,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
             }}
             className={`${BTN} self-start border border-dashed border-[#C9C4B8] bg-white px-4 py-2 text-[14px] text-[#44433D] hover:border-[#C2560A]`}
           >
-            + Agregar a mi trayectoria
+            <T>+ Agregar a mi trayectoria</T>
           </button>
         )}
       </section>
@@ -537,7 +538,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
         <button type="button" onClick={guardar} disabled={pendiente} className={`${BTN} rounded-[10px] bg-[#C2560A] px-5 py-3 text-[14.5px] text-white hover:bg-[#A84A08]`}>
           {pendiente ? "Guardando…" : "Guardar currículum"}
         </button>
-        {guardado && <span className="text-[14px] font-semibold text-[#16794F]">✓ Guardado</span>}
+        {guardado && <span className="text-[14px] font-semibold text-[#16794F]"><T>✓ Guardado</T></span>}
       </div>
     </div>
   )

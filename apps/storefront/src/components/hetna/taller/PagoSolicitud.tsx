@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 
 import { pagarSolicitud, type VistaSolicitud } from "@/lib/cotizar/solicitud-taller"
@@ -27,7 +28,7 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
     if (c.pagado <= 0) return null
     return (
       <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-5 text-[#1E7B3A]">
-        <p className="font-extrabold">✓ Pagado por completo · {pesos(c.pagado)} MXN</p>
+        <p className="font-extrabold"><T>✓ Pagado por completo ·</T> {pesos(c.pagado)} <T>MXN</T></p>
         <p className="mt-1 text-sm">
           {c.modo === "hetna"
             ? "HETNA guarda tu pago y se lo entrega al taller cuando confirmes que recibiste tu pedido."
@@ -52,9 +53,9 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
     <div className="mt-4 rounded-2xl border border-[#C2560A]/30 bg-[#FFF1E6] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-extrabold text-[#142033]">{titulo}</p>
+          <p className="font-extrabold text-[#142033]"><T>{titulo}</T></p>
           <p className="text-2xl font-extrabold text-[#142033]">
-            {pesos(monto)} <span className="text-sm font-semibold text-[#6B675C]">MXN</span>
+            {pesos(monto)} <span className="text-sm font-semibold text-[#6B675C]"><T>MXN</T></span>
           </p>
           <p className="mt-1 max-w-xl text-sm text-[#40403A]">{explica}</p>
         </div>
@@ -76,7 +77,7 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
               onClick={() => pagar("paypal")}
               className="rounded-xl border-2 border-[#142033] bg-white px-5 py-2.5 font-semibold text-[#142033] hover:bg-[#F3F1EA] disabled:opacity-60"
             >
-              Pagar con PayPal
+              <T>Pagar con PayPal</T>
             </button>
           )}
           {c.metodos.includes("stripe") && (
@@ -87,10 +88,10 @@ export default function PagoSolicitud({ token, s }: { token: string; s: VistaSol
               className="rounded-xl border-2 border-[#142033] bg-white px-5 py-2.5 font-semibold text-[#142033] hover:bg-[#F3F1EA] disabled:opacity-60"
               title="Tarjeta de crédito o débito sin crear cuenta, efectivo en OXXO o transferencia SPEI"
             >
-              Tarjeta, OXXO o SPEI
+              <T>Tarjeta, OXXO o SPEI</T>
             </button>
           )}
-          {!c.metodos.length && <p className="text-sm text-[#6B675C]">En breve te mandamos la liga de pago por correo.</p>}
+          {!c.metodos.length && <p className="text-sm text-[#6B675C]"><T>En breve te mandamos la liga de pago por correo.</T></p>}
         </div>
       </div>
       {error && <p className="mt-3 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}

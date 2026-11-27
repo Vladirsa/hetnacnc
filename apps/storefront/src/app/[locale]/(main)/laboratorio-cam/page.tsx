@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -17,7 +19,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 const SITIO = "https://hetnacnc.com"
 const URL = `${SITIO}/mx/laboratorio-cam`
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Laboratorio CAM gratis: simula y genera G-code",
   description:
     "Simula trayectorias CNC de 3 a 5 ejes, revisa colisiones y tiempo, y descarga G-code para Mach3, GRBL, LinuxCNC o Fanuc. Gratis y en el navegador.",
@@ -188,34 +190,34 @@ export default function LaboratorioCam() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div className="px-4 lg:px-16 pt-6 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]">Herramientas CNC</LocalizedClientLink>
+        <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]"><TS>Herramientas CNC</TS></LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Laboratorio CAM</span>
+        <span className="text-[#1B1B18] font-medium"><TS>Laboratorio CAM</TS></span>
       </div>
 
       {/* Hero */}
       <section className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-8 px-4 pt-6 lg:grid-cols-[1fr_1.15fr] lg:px-16">
         <div>
-          <p className="text-[13px] font-semibold uppercase tracking-wide text-[#B34D07]">Laboratorio CAM · simula gratis y sin cuenta</p>
+          <p className="text-[13px] font-semibold uppercase tracking-wide text-[#B34D07]"><TS>Laboratorio CAM · simula gratis y sin cuenta</TS></p>
           <h1 className="mt-2 text-[32px] lg:text-[44px] font-bold leading-[1.08] text-[#1B1B18]">
-            Aprende, prueba y prepara tus procesos CNC
+            <TS>Aprende, prueba y prepara tus procesos CNC</TS>
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-[#4A4943]">
-            Simula trayectorias, revisa estrategias de corte y valida tu pieza antes de fabricarla. Todo en el navegador, con
-            el G-code listo para tu máquina.
+            <TS>Simula trayectorias, revisa estrategias de corte y valida tu pieza antes de fabricarla. Todo en el navegador, con
+            el G-code listo para tu máquina.</TS>
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Entrar al laboratorio</LocalizedClientLink>
-            <LocalizedClientLink href="/cam/subir" className={SECUNDARIO}>Subir un DXF</LocalizedClientLink>
-            <a href="#ejemplos" className={`${BOTON} text-[#B34D07] underline underline-offset-4`}>Ver ejemplos</a>
+            <LocalizedClientLink href="/cam/lab" className={PRIMARIO}><TS>Entrar al laboratorio</TS></LocalizedClientLink>
+            <LocalizedClientLink href="/cam/subir" className={SECUNDARIO}><TS>Subir un DXF</TS></LocalizedClientLink>
+            <a href="#ejemplos" className={`${BOTON} text-[#B34D07] underline underline-offset-4`}><TS>Ver ejemplos</TS></a>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
-            <Chip>Gratis</Chip>
-            <Chip>Simula sin crear cuenta</Chip>
-            <Chip>Nada que instalar</Chip>
-            <Chip>3, 4 y 5 ejes</Chip>
+            <Chip><TS>Gratis</TS></Chip>
+            <Chip><TS>Simula sin crear cuenta</TS></Chip>
+            <Chip><TS>Nada que instalar</TS></Chip>
+            <Chip><TS>3, 4 y 5 ejes</TS></Chip>
           </div>
         </div>
         <figure className="m-0">
@@ -229,7 +231,7 @@ export default function LaboratorioCam() {
             className="h-auto w-full rounded-[14px] border border-[#E7E4DC] shadow-[0_12px_40px_rgba(20,32,51,0.12)]"
           />
           <figcaption className="mt-2 text-[12.5px] text-[#6B6A63]">
-            Captura real: álabe de turbina en 5 ejes, con 5:29 min estimados y cero colisiones sin resolver.
+            <TS>Captura real: álabe de turbina en 5 ejes, con 5:29 min estimados y cero colisiones sin resolver.</TS>
           </figcaption>
         </figure>
       </section>
@@ -237,20 +239,20 @@ export default function LaboratorioCam() {
       {/* Qué es, en 5 segundos */}
       <section className="mx-auto max-w-[1280px] px-4 pt-12 lg:px-16">
         <div className="rounded-[16px] bg-[#142033] p-6 text-white lg:p-8">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#F5B47E]">¿Qué es?</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#F5B47E]"><TS>¿Qué es?</TS></p>
           <p className="mt-2 max-w-[900px] text-[19px] lg:text-[22px] font-semibold leading-snug">
-            Un simulador CAM en línea: le das tu pieza, eliges material, herramienta y máquina, y te enseña por dónde va a
-            pasar la fresa, cuánto va a tardar y si algo choca. Cuando te convence, descargas el G-code.
+            <TS>Un simulador CAM en línea: le das tu pieza, eliges material, herramienta y máquina, y te enseña por dónde va a
+            pasar la fresa, cuánto va a tardar y si algo choca. Cuando te convence, descargas el G-code.</TS>
           </p>
           <p className="mt-4 text-[13.5px] text-white/70">
-            Genera programas para {CONTROLADORES.join(", ")}.
+            <TS>Genera programas para</TS> {CONTROLADORES.join(", ")}.
           </p>
         </div>
       </section>
 
       {/* Qué puedes hacer */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Qué puedes hacer">Lo que haces en el laboratorio</Titulo>
+        <Titulo eyebrow="Qué puedes hacer"><TS>Lo que haces en el laboratorio</TS></Titulo>
         <ul className="m-0 mt-6 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
           {PUEDES.map((x) => (
             <li key={x.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
@@ -266,7 +268,7 @@ export default function LaboratorioCam() {
 
       {/* Para quién */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Para quién es">Hecho para quien corta, diseña o aprende</Titulo>
+        <Titulo eyebrow="Para quién es"><TS>Hecho para quien corta, diseña o aprende</TS></Titulo>
         <ul className="m-0 mt-6 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
           {PARA_QUIEN.map((x) => (
             <li key={x.t} className="rounded-[12px] bg-white px-4 py-3.5 ring-1 ring-[#E7E4DC]">
@@ -279,7 +281,7 @@ export default function LaboratorioCam() {
 
       {/* Cómo funciona */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Cómo funciona">De tu archivo al G-code en 4 pasos</Titulo>
+        <Titulo eyebrow="Cómo funciona"><TS>De tu archivo al G-code en 4 pasos</TS></Titulo>
         <ol className="m-0 mt-6 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
           {PASOS.map((x, i) => (
             <li key={x.t} className="relative rounded-[14px] border border-[#E7E4DC] bg-white p-5">
@@ -290,13 +292,13 @@ export default function LaboratorioCam() {
           ))}
         </ol>
         <div className="mt-5 flex flex-wrap gap-3">
-          <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Probar ahora</LocalizedClientLink>
+          <LocalizedClientLink href="/cam/lab" className={PRIMARIO}><TS>Probar ahora</TS></LocalizedClientLink>
         </div>
       </section>
 
       {/* Modos */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Modos del laboratorio">Aprender, probar y preparar</Titulo>
+        <Titulo eyebrow="Modos del laboratorio"><TS>Aprender, probar y preparar</TS></Titulo>
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {MODOS.map((m) => (
             <div key={m.t} className="flex flex-col rounded-[16px] border border-[#E7E4DC] bg-white p-6">
@@ -312,7 +314,7 @@ export default function LaboratorioCam() {
                   </li>
                 ))}
               </ul>
-              <LocalizedClientLink href={m.href} className={`${SECUNDARIO} mt-5 self-start`}>{m.cta}</LocalizedClientLink>
+              <LocalizedClientLink href={m.href} className={`${SECUNDARIO} mt-5 self-start`}><TS>{m.cta}</TS></LocalizedClientLink>
             </div>
           ))}
         </div>
@@ -320,7 +322,7 @@ export default function LaboratorioCam() {
 
       {/* Las tres herramientas */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Elige por dónde entrar">Tres herramientas, según tu pieza</Titulo>
+        <Titulo eyebrow="Elige por dónde entrar"><TS>Tres herramientas, según tu pieza</TS></Titulo>
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {HERRAMIENTAS.map((h) => (
             <div key={h.t} className="flex flex-col rounded-[16px] border border-[#E7E4DC] bg-white p-6">
@@ -337,7 +339,7 @@ export default function LaboratorioCam() {
                   </div>
                 ))}
               </dl>
-              <LocalizedClientLink href={h.href} className={`${PRIMARIO} mt-5`}>{h.cta}</LocalizedClientLink>
+              <LocalizedClientLink href={h.href} className={`${PRIMARIO} mt-5`}><TS>{h.cta}</TS></LocalizedClientLink>
             </div>
           ))}
         </div>
@@ -345,7 +347,7 @@ export default function LaboratorioCam() {
 
       {/* Ejemplos */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Ejemplos" id="ejemplos">Lo que puedes simular y preparar hoy</Titulo>
+        <Titulo eyebrow="Ejemplos" id="ejemplos"><TS>Lo que puedes simular y preparar hoy</TS></Titulo>
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Ejemplo
             titulo="Relieve en madera · 3 ejes"
@@ -375,11 +377,11 @@ export default function LaboratorioCam() {
             <VistaColumnaTorno />
           </Ejemplo>
           <div className="flex flex-col justify-center rounded-[16px] bg-[#FDEEE1] p-6">
-            <h3 className="text-[19px] font-bold text-[#1B1B18]">¿Tu pieza es otra?</h3>
-            <p className="mt-1 text-[14px] leading-relaxed text-[#4A4943]">Súbela y simúlala. Si prefieres no hacerlo tú, un especialista te prepara el programa.</p>
+            <h3 className="text-[19px] font-bold text-[#1B1B18]"><TS>¿Tu pieza es otra?</TS></h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-[#4A4943]"><TS>Súbela y simúlala. Si prefieres no hacerlo tú, un especialista te prepara el programa.</TS></p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Simular mi pieza</LocalizedClientLink>
-              <LocalizedClientLink href="/cam/lab#precios" className={SECUNDARIO}>Ver servicio</LocalizedClientLink>
+              <LocalizedClientLink href="/cam/lab" className={PRIMARIO}><TS>Simular mi pieza</TS></LocalizedClientLink>
+              <LocalizedClientLink href="/cam/lab#precios" className={SECUNDARIO}><TS>Ver servicio</TS></LocalizedClientLink>
             </div>
           </div>
         </div>
@@ -387,10 +389,10 @@ export default function LaboratorioCam() {
 
       {/* Hoy y lo que sigue */}
       <section className="mx-auto max-w-[1280px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Sin letras chiquitas">Lo que hace hoy y lo que sigue</Titulo>
+        <Titulo eyebrow="Sin letras chiquitas"><TS>Lo que hace hoy y lo que sigue</TS></Titulo>
         <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="rounded-[16px] border border-[#CFE6D6] bg-[#F1F9F3] p-6">
-            <p className="m-0 text-[16px] font-bold text-[#14683F]">Ya funciona</p>
+            <p className="m-0 text-[16px] font-bold text-[#14683F]"><TS>Ya funciona</TS></p>
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] text-[#1B1B18]">
               {[
                 "Simulación 3D con remoción de material y colisiones",
@@ -408,15 +410,15 @@ export default function LaboratorioCam() {
             </ul>
           </div>
           <div className="rounded-[16px] border border-[#E7E4DC] bg-white p-6">
-            <p className="m-0 text-[16px] font-bold text-[#6B5A2E]">En desarrollo</p>
+            <p className="m-0 text-[16px] font-bold text-[#6B5A2E]"><TS>En desarrollo</TS></p>
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-[14px] text-[#4A4943]">
               {["Anidar piezas distintas en la misma hoja", "Simulación con remoción de material en el 2D"].map((x) => (
                 <li key={x} className="flex gap-2"><span className="text-[#B38A2E]">○</span>{x}</li>
               ))}
             </ul>
             <p className="mt-3 text-[13px] text-[#6B6A63]">
-              La simulación es de referencia: antes de cortar revisa el cero de pieza, las herramientas y la sujeción, y corre
-              el programa en vacío con avance reducido.
+              <TS>La simulación es de referencia: antes de cortar revisa el cero de pieza, las herramientas y la sujeción, y corre
+              el programa en vacío con avance reducido.</TS>
             </p>
           </div>
         </div>
@@ -424,7 +426,7 @@ export default function LaboratorioCam() {
 
       {/* Preguntas */}
       <section className="mx-auto max-w-[920px] px-4 pt-14 lg:px-16">
-        <Titulo eyebrow="Preguntas frecuentes">Antes de empezar</Titulo>
+        <Titulo eyebrow="Preguntas frecuentes"><TS>Antes de empezar</TS></Titulo>
         <div className="mt-5 flex flex-col gap-3">
           {PREGUNTAS.map((q) => (
             <details key={q.p} className="rounded-[12px] border border-[#E7E4DC] bg-white p-4">
@@ -439,13 +441,13 @@ export default function LaboratorioCam() {
       <section className="mx-auto max-w-[1280px] px-4 pb-16 pt-14 lg:px-16">
         <div className="flex flex-col items-start gap-4 rounded-[18px] bg-[#142033] p-7 text-white lg:flex-row lg:items-center lg:justify-between lg:p-9">
           <div>
-            <h2 className="text-[24px] font-bold">Valida tu pieza antes de cortarla</h2>
-            <p className="mt-1 text-[15px] text-white/75">Simula gratis en tu navegador; con tu cuenta descargas 5 programas al mes. Y si no tienes máquina, te la fabricamos.</p>
+            <h2 className="text-[24px] font-bold"><TS>Valida tu pieza antes de cortarla</TS></h2>
+            <p className="mt-1 text-[15px] text-white/75"><TS>Simula gratis en tu navegador; con tu cuenta descargas 5 programas al mes. Y si no tienes máquina, te la fabricamos.</TS></p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <LocalizedClientLink href="/cam/lab" className={PRIMARIO}>Entrar al laboratorio</LocalizedClientLink>
+            <LocalizedClientLink href="/cam/lab" className={PRIMARIO}><TS>Entrar al laboratorio</TS></LocalizedClientLink>
             <LocalizedClientLink href="/fabricacion" className={`${BOTON} border border-white/40 text-white hover:bg-white hover:text-[#142033]`}>
-              Te fabricamos la pieza
+              <TS>Te fabricamos la pieza</TS>
             </LocalizedClientLink>
           </div>
         </div>
@@ -477,11 +479,16 @@ function Ejemplo({
           {real ? "Captura real" : "Vista conceptual"}
         </span>
       </div>
-      <h3 className="mt-3 text-[17px] font-bold text-[#1B1B18]">{titulo}</h3>
-      <p className="m-0 mt-1 flex-1 text-[14px] leading-relaxed text-[#4A4943]">{texto}</p>
+      <h3 className="mt-3 text-[17px] font-bold text-[#1B1B18]"><TS>{titulo}</TS></h3>
+      <p className="m-0 mt-1 flex-1 text-[14px] leading-relaxed text-[#4A4943]"><TS>{texto}</TS></p>
       <LocalizedClientLink href={href} className="mt-3 text-[14px] font-semibold text-[#B34D07] hover:underline">
-        {cta} →
+        <TS>{cta}</TS> →
       </LocalizedClientLink>
     </div>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

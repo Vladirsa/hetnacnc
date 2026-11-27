@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Brand } from '@/types/brands';
 import { BrandCard } from '@/components/organisms/BrandCard/BrandCard'
 import { CustomCarousel as Carousel } from '@/components/cells/Carousel/Carousel'
@@ -34,7 +35,7 @@ export function HomePopularBrandsSection() {
     <section className='bg-action px-4 py-8 md:px-6 lg:px-8 w-full'>
       <div className='mb-6 flex items-center justify-between'>
         <h2 className='heading-lg text-tertiary'>
-          MARCAS POPULARES
+          <TS>MARCAS POPULARES</TS>
         </h2>
       </div>
       <Carousel

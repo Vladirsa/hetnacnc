@@ -6,6 +6,7 @@
 //   tocar uno la página se actualiza detrás y el panel sigue abierto con los
 //   números nuevos, hasta que se toca "Ver N productos".
 // - OrdenarExplorar: el orden de la lista.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ReactNode, useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
@@ -30,7 +31,7 @@ export function PanelFiltros({ children, activos, total, unidad }: { children: R
         className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#142033] text-[14px] font-bold text-white md:hidden"
         data-testid="abrir-filtros"
       >
-        ⚙ Filtros{activos ? ` (${activos})` : ""}
+        <T>⚙ Filtros</T>{activos ? ` (${activos})` : ""}
       </button>
 
       {/* Fondo oscuro del panel en celular */}
@@ -55,7 +56,7 @@ export function PanelFiltros({ children, activos, total, unidad }: { children: R
               onClick={() => setAbierto(false)}
               className="h-12 w-full rounded-xl bg-[#C2560A] text-[15px] font-extrabold text-white"
             >
-              Ver {total} {unidad}
+              <T>Ver</T> {total} <T>{unidad}</T>
             </button>
           </div>
         )}
@@ -76,7 +77,7 @@ export function OrdenarExplorar({ valor }: { valor: string }) {
   const sp = useSearchParams()
   return (
     <label className="flex items-center gap-2 text-[13px] text-[#40403A]">
-      <span className="hidden sm:inline">Ordenar:</span>
+      <span className="hidden sm:inline"><T>Ordenar:</T></span>
       <select
         value={valor}
         onChange={(e) => {

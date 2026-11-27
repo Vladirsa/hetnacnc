@@ -5,6 +5,7 @@
 // Vista 3D del sólido y vista 2D (perfil, contorno y líneas para tallar en V).
 // Sale en STL (para el Laboratorio CAM: desbaste y acabado con fresa de bola),
 // DXF, SVG y PDF, y se manda directo al Laboratorio CAM.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -175,7 +176,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
       <Seccion titulo="Créditos y mis diseños">
         <PanelCreditos costo={costo} pagado={pagado} recarga={recarga} />
         <MisDisenos herramienta="moldura" tipos={["moldura"]} actual={() => ({ nombre: modo === "moldura" ? `Moldura ${perfilDe(perfil).nombre}` : `Panel ${PATRONES.find((p) => p.id === patron)?.nombre || ""}`, resumen: nombreArchivo, datos: datosDiseno() })} abrir={(dd) => abrirDatos(dd)} />
-        <span className="text-[11.5px] text-[#8A97AB]">Diseñar y ver es gratis. Bajar los archivos o mandarlos al Laboratorio CAM: moldura {textoCreditos(1)}, panel tallado {textoCreditos(2)}. El mismo diseño no se vuelve a cobrar.{patron === "imagen" ? " El tallado de tu foto no se guarda: vuelve a subir la foto al abrirlo." : ""}</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Diseñar y ver es gratis. Bajar los archivos o mandarlos al Laboratorio CAM: moldura</T> {textoCreditos(1)}<T>, panel tallado</T> {textoCreditos(2)}<T>. El mismo diseño no se vuelve a cobrar.</T>{patron === "imagen" ? " El tallado de tu foto no se guarda: vuelve a subir la foto al abrirlo." : ""}</span>
       </Seccion>
       <Seccion titulo="Qué vas a hacer">
         <Opciones opciones={[{ id: "panel", nombre: "Panel tallado (puerta, frente)" }, { id: "moldura", nombre: "Moldura recta" }]} valor={modo} cambiar={(x) => setModo(x as "moldura" | "panel")} />
@@ -192,7 +193,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
         </div>
         {modo === "moldura" && (
           <label className="flex items-center gap-2 text-[12.5px] text-[#C9D2E0]">
-            <input type="checkbox" checked={invertir} onChange={(e) => setInvertir(e.target.checked)} className="accent-[#C2560A]" /> Voltear el perfil
+            <input type="checkbox" checked={invertir} onChange={(e) => setInvertir(e.target.checked)} className="accent-[#C2560A]" /> <T>Voltear el perfil</T>
           </label>
         )}
       </Seccion>
@@ -216,7 +217,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
               <CampoNum etiqueta="Ancho moldura" valor={v.aMold} cambiar={cambiar("aMold")} sufijo="mm" />
               <CampoNum etiqueta="Hondo moldura" valor={v.hMold} cambiar={cambiar("hMold")} sufijo="mm" />
             </div>
-            <span className="text-[11.5px] text-[#8A97AB]">La moldura corre alrededor con las esquinas a inglete; el centro queda al fondo de la moldura.</span>
+            <span className="text-[11.5px] text-[#8A97AB]"><T>La moldura corre alrededor con las esquinas a inglete; el centro queda al fondo de la moldura.</T></span>
           </Seccion>
           <Seccion titulo="Tallado del centro">
             <div className="grid grid-cols-3 gap-1.5">
@@ -235,7 +236,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
             {patron === "imagen" && (
               <label className="flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-[#2A3546] p-3 text-center hover:border-[#C2560A]">
                 <span className="text-[13px] font-semibold text-white">{imagen ? "Cambiar la imagen" : "Sube una imagen o dibujo"}</span>
-                <span className="text-[11.5px] text-[#8A97AB]">Lo claro queda alto y lo oscuro hondo. Funciona mejor con dibujos de alto contraste.</span>
+                <span className="text-[11.5px] text-[#8A97AB]"><T>Lo claro queda alto y lo oscuro hondo. Funciona mejor con dibujos de alto contraste.</T></span>
                 <input
                   type="file"
                   accept="image/*"
@@ -262,7 +263,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
         <SelectorFresa etiqueta="Acabado" tipos={["bola", "conica_bola", "v", "recta"]} valor={acabado} cambiar={(f) => setAcabado(f.id)} todas={fresas} agregar={agregar} nota={pasoAcabado ? `Paso lateral sugerido: ${pasoAcabado} mm (12 % del diámetro).` : undefined} />
         {modo === "panel" && patron !== "liso" && <SelectorFresa etiqueta="Tallado en V (2D)" tipos={["v"]} valor={tallaV} cambiar={(f) => setTallaV(f.id)} todas={fresas} agregar={agregar} nota="Para las líneas de la capa GRABADO (vista 2D)." />}
         {avisoFresa && <p className="m-0 text-[12px] text-[#F6D58E]">{avisoFresa}</p>}
-        <span className="text-[11.5px] text-[#8A97AB]">Curva más cerrada del perfil: radio {Number.isFinite(rMin) ? `${rMin.toFixed(1)} mm` : "sin curvas cóncavas"}. En el Laboratorio CAM eliges estas fresas para el desbaste y el acabado.</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Curva más cerrada del perfil: radio</T> {Number.isFinite(rMin) ? `${rMin.toFixed(1)} mm` : "sin curvas cóncavas"}<T>. En el Laboratorio CAM eliges estas fresas para el desbaste y el acabado.</T></span>
       </Seccion>
     </div>
   )
@@ -287,7 +288,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
       }
       vista3D={
         <Visor3D oscuro alto="h-full min-h-[260px]">
-          {tris.length ? <Malla3D oscuro tris={tris} color={0xd8b98e} /> : <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]">Ajusta las medidas.</div>}
+          {tris.length ? <Malla3D oscuro tris={tris} color={0xd8b98e} /> : <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]"><T>Ajusta las medidas.</T></div>}
         </Visor3D>
       }
       dibujo={d}
@@ -309,12 +310,12 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
           </button>
           {avisoCobro && (
             <span className="text-[12px] text-[#F6B8AE]">
-              {avisoCobro.texto}{" "}
-              {avisoCobro.login && <Link href={`/${locale}/login`} className="underline">Iniciar sesión</Link>}
-              {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline">Comprar créditos</Link>}
+              <T>{avisoCobro.texto}</T>{" "}
+              {avisoCobro.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
+              {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
             </span>
           )}
-          <span className="text-[12px] text-[#8A97AB]">Ver el perfil, el tallado y las medidas es gratis.</span>
+          <span className="text-[12px] text-[#8A97AB]"><T>Ver el perfil, el tallado y las medidas es gratis.</T></span>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -336,7 +337,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
           </button>
           <div className="flex gap-2">
             <button type="button" onClick={() => bajar(`${nombreArchivo}.stl`, stl())} className="flex-1 rounded-[8px] bg-[#1C2431] px-3 py-2 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
-              STL
+              <T>STL</T>
             </button>
             {(["dxf", "svg", "pdf"] as const).map((t) => (
               <button key={t} type="button" onClick={() => exportar(t)} className="flex-1 rounded-[8px] bg-[#1C2431] px-3 py-2 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
@@ -344,7 +345,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
               </button>
             ))}
           </div>
-          <span className="text-[12px] text-[#8A97AB]">STL: el sólido para desbaste y acabado en 3D. DXF: {modo === "moldura" ? "el perfil de la sección" : "el contorno de corte y las líneas para tallar en V"}.</span>
+          <span className="text-[12px] text-[#8A97AB]"><T>STL: el sólido para desbaste y acabado en 3D. DXF:</T> {modo === "moldura" ? "el perfil de la sección" : "el contorno de corte y las líneas para tallar en V"}.</span>
         </div>
       )}
     />

@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
@@ -11,7 +13,7 @@ import { estadoEntrega } from "@/lib/cuenta/reclamo"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { retrieveOrderGroup } from "@/lib/data/orders"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Detalle de tu compra",
   robots: { index: false, follow: false },
 }
@@ -40,10 +42,10 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
         <UserNavigation />
         <div className="flex min-w-0 flex-col gap-5 md:col-span-3">
           <LocalizedClientLink href="/user/orders" className="text-[14px] font-semibold text-[#B34D07] hover:underline">
-            ← Todas mis compras
+            <TS>← Todas mis compras</TS>
           </LocalizedClientLink>
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]">Compra #{orderGroup.display_id}</h1>
+            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]"><TS>Compra #</TS>{orderGroup.display_id}</h1>
             <p className="m-0 text-[14px] text-[#6B6A63]">
               {new Date(orderGroup.created_at || Date.now()).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
               {pedidos.length > 1 ? ` · ${pedidos.length} talleres` : ""}
@@ -75,4 +77,9 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

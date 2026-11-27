@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import {
   DIAS_CIERRE_AUTOMATICO,
   DIAS_CONSERVACION_ARCHIVOS,
@@ -256,7 +257,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
     <section className="mb-8 grid gap-6">
       {/* 1. Qué es y los caminos */}
       <div className="overflow-hidden rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Servicio</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><T>Servicio</T></p>
         <h2 className="mt-1 text-3xl font-extrabold sm:text-4xl">
           {raiz ? "¿Necesitas que te fabriquen algo?" : info.titulo}
         </h2>
@@ -274,9 +275,9 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
                 c.principal ? "bg-[#C2560A] hover:brightness-110" : "bg-white/10 hover:bg-white/15"
               }`}
             >
-              <span className="text-xs font-bold uppercase tracking-wide text-white/70">{c.titulo}</span>
-              <span className="text-sm text-white/90">{c.texto}</span>
-              <span className="mt-1 font-bold">{c.cta} →</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-white/70"><T>{c.titulo}</T></span>
+              <span className="text-sm text-white/90"><T>{c.texto}</T></span>
+              <span className="mt-1 font-bold"><T>{c.cta}</T> →</span>
             </LocalizedClientLink>
           ))}
         </div>
@@ -286,9 +287,9 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
       {conPaquetes && (
         <div>
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-lg font-extrabold text-[#142033]">Servicios de {info.titulo.toLowerCase()} con precio</h3>
+            <h3 className="text-lg font-extrabold text-[#142033]"><T>Servicios de</T> {info.titulo.toLowerCase()} <T>con precio</T></h3>
             <a href="/mx/talleres/unete" className="text-sm font-semibold text-[#C2560A]">
-              ¿Eres diseñador o programador CAM? Publica tus servicios →
+              <T>¿Eres diseñador o programador CAM? Publica tus servicios →</T>
             </a>
           </div>
           {paquetes.length > 0 ? (
@@ -298,11 +299,11 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
                   <TarjetaPaquete key={`${t.handle}-${p.id}`} p={p} handle={t.handle} taller={t.nombre} />
                 ))}
               </div>
-              <p className="mt-3 text-sm text-[#6B675C]">Precios de referencia: el precio final te lo manda el diseñador en su propuesta y pagas dentro de HETNA.</p>
+              <p className="mt-3 text-sm text-[#6B675C]"><T>Precios de referencia: el precio final te lo manda el diseñador en su propuesta y pagas dentro de HETNA.</T></p>
             </>
           ) : (
             <p className="rounded-2xl border border-dashed border-[#E7E4DC] bg-white p-4 text-sm text-[#6B675C]">
-              Pronto verás aquí servicios con precio de diseñadores de la red. Mientras, publica tu trabajo y te mandan su propuesta.
+              <T>Pronto verás aquí servicios con precio de diseñadores de la red. Mientras, publica tu trabajo y te mandan su propuesta.</T>
             </p>
           )}
         </div>
@@ -319,7 +320,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
               href={soloEste && servicioTrabajos ? `/trabajos?servicio=${encodeURIComponent(servicioTrabajos)}` : "/trabajos"}
               className="text-sm font-semibold text-[#C2560A]"
             >
-              Ver los {trabajos.total} →
+              <T>Ver los</T> {trabajos.total} →
             </LocalizedClientLink>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -328,11 +329,11 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
             ))}
           </div>
           <p className="mt-3 text-sm text-[#6B675C]">
-            ¿Tienes taller?{" "}
+            <T>¿Tienes taller?</T>{" "}
             <a href="/seller/solicitudes" className="font-semibold text-[#C2560A]">
-              Entra a tu panel y manda tu propuesta
+              <T>Entra a tu panel y manda tu propuesta</T>
             </a>
-            . Registrarte es gratis.
+            <T>. Registrarte es gratis.</T>
           </p>
         </div>
       )}
@@ -345,7 +346,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
               {raiz ? "Talleres de la red" : `Talleres que ofrecen ${info.titulo.toLowerCase()}`}
             </h3>
             <LocalizedClientLink href="/talleres" className="text-sm font-semibold text-[#C2560A]">
-              Ver todos →
+              <T>Ver todos →</T>
             </LocalizedClientLink>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -399,12 +400,12 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
       {/* Guías relacionadas (enlaces internos a lib/seo/guias.ts) */}
       {guias.length > 0 && (
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-          <h3 className="mb-2 text-lg font-extrabold text-[#142033]">Guías relacionadas</h3>
+          <h3 className="mb-2 text-lg font-extrabold text-[#142033]"><T>Guías relacionadas</T></h3>
           <ul className="grid gap-2 sm:grid-cols-2">
             {guias.map((g) => (
               <li key={g.slug}>
-                <LocalizedClientLink href={`/cnc/${g.slug}`} className="font-semibold text-[#C2560A] hover:underline">{g.h1}</LocalizedClientLink>
-                <span className="block text-sm text-[#6B675C]">{g.descripcion}</span>
+                <LocalizedClientLink href={`/cnc/${g.slug}`} className="font-semibold text-[#C2560A] hover:underline"><T>{g.h1}</T></LocalizedClientLink>
+                <span className="block text-sm text-[#6B675C]"><T>{g.descripcion}</T></span>
               </li>
             ))}
           </ul>
@@ -413,7 +414,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
 
       {/* 5. Preguntas frecuentes (también para Google) */}
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-        <h3 className="mb-2 text-lg font-extrabold text-[#142033]">Preguntas frecuentes</h3>
+        <h3 className="mb-2 text-lg font-extrabold text-[#142033]"><T>Preguntas frecuentes</T></h3>
         {PREGUNTAS_FABRICACION.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
             <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>

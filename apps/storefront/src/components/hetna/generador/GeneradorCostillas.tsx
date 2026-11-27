@@ -5,6 +5,7 @@
 // imagen, con ranuras o varillas para armar y las piezas numeradas en hojas.
 // El motor está en lib/generador/costillas.ts. La imagen no sale del navegador
 // (salvo si se pide la profundidad con IA, que se calcula en el servidor de HETNA).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 
@@ -167,12 +168,12 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
             <p className="mt-1 text-[12px] text-[#8A97AB]">
               {altura === "ia" ? "Para caras, mascotas y objetos: la IA calcula qué está cerca y qué lejos (la foto se procesa en el servidor de HETNA y no se guarda)." : "Lo claro sube y lo oscuro baja."}
             </p>
-            {altura === "ia" && estadoIA === "cargando" && <p className="text-[12.5px] text-[#F28A3C]">La IA está calculando la profundidad… (unos segundos)</p>}
+            {altura === "ia" && estadoIA === "cargando" && <p className="text-[12.5px] text-[#F28A3C]"><T>La IA está calculando la profundidad… (unos segundos)</T></p>}
             {altura === "ia" && estadoIA === "error" && (
               <p className="text-[12.5px] text-[#F28A3C]">
                 {errorIA}{" "}
                 <button type="button" className="underline" onClick={() => setIntentoIA((n) => n + 1)}>
-                  Reintentar
+                  <T>Reintentar</T>
                 </button>
               </p>
             )}

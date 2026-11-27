@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -25,7 +26,7 @@ const Tarjeta = ({ t }: { t: TarjetaDiseno }) => (
     </span>
     <span className="flex flex-1 flex-col p-3.5">
       <span className="text-[15px] font-bold leading-tight text-[#1B1B18] group-hover:text-[#B34D07]">{t.nombre}</span>
-      <span className="mt-1 flex-1 text-[13px] leading-snug text-[#4A4943]">{t.texto}</span>
+      <span className="mt-1 flex-1 text-[13px] leading-snug text-[#4A4943]"><T>{t.texto}</T></span>
       <span
         className={`mt-3 self-start rounded-full px-2.5 py-0.5 text-[11.5px] font-bold ${
           t.acceso === "gratis" ? "bg-[#E7F5EC] text-[#1E7B3A]" : "bg-[#FFF3D6] text-[#8A5A00]"
@@ -55,7 +56,7 @@ export const CatalogoDisenar = ({ franja }: { franja: React.ReactNode }) => {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <label className="flex flex-1 items-center gap-3">
-          <span className="shrink-0 text-[15px] font-bold text-[#1B1B18]">¿Qué quieres hacer hoy?</span>
+          <span className="shrink-0 text-[15px] font-bold text-[#1B1B18]"><T>¿Qué quieres hacer hoy?</T></span>
           <input
             type="search"
             value={q}
@@ -84,8 +85,8 @@ export const CatalogoDisenar = ({ franja }: { franja: React.ReactNode }) => {
 
       {!secciones.length && (
         <p className="rounded-xl bg-white px-4 py-6 text-center text-[14px] text-[#6B6A63]">
-          No encontramos una herramienta con eso. Prueba con «caja», «letrero», «empaque» o «escanear», o{" "}
-          <LocalizedClientLink href="/cotizar" className="font-semibold text-[#B34D07] hover:underline">pide que te lo diseñen</LocalizedClientLink>.
+          <T>No encontramos una herramienta con eso. Prueba con «caja», «letrero», «empaque» o «escanear», o</T>{" "}
+          <LocalizedClientLink href="/cotizar" className="font-semibold text-[#B34D07] hover:underline"><T>pide que te lo diseñen</T></LocalizedClientLink>.
         </p>
       )}
 
@@ -94,11 +95,11 @@ export const CatalogoDisenar = ({ franja }: { franja: React.ReactNode }) => {
           <section>
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h2 className="text-[22px] font-extrabold text-[#1B1B18]">
-                {s.titulo} <span className="ml-1 text-[13.5px] font-normal text-[#6B6A63]">{s.subtitulo}</span>
+                <T>{s.titulo}</T> <span className="ml-1 text-[13.5px] font-normal text-[#6B6A63]"><T>{s.subtitulo}</T></span>
               </h2>
               {s.ver && (
                 <LocalizedClientLink href={s.ver.href} className="text-[14px] font-bold text-[#C2560A] hover:underline">
-                  {s.ver.texto} →
+                  <T>{s.ver.texto}</T> →
                 </LocalizedClientLink>
               )}
             </div>

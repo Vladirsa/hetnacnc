@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 
@@ -16,7 +17,7 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { ruta } = await params
   const s = buscarServicio((ruta || []).join("/"))
   if (!s) return {}
@@ -91,4 +92,9 @@ async function librosAcademia(locale: string) {
   } catch {
     return []
   }
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

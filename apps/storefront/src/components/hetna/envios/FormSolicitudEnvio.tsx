@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 
 import { solicitarEnvio, type ContactoEnvio, type CotizacionGuardada } from "@/lib/envios/cotizar"
@@ -23,15 +24,15 @@ function Bloque({ titulo, lugar, v, set }: {
 }) {
   const campo = (k: keyof ContactoEnvio, label: string, extra: Record<string, unknown> = {}) => (
     <div>
-      <label className={ETIQUETA} htmlFor={`${titulo}-${k}`}>{label}</label>
+      <label className={ETIQUETA} htmlFor={`${titulo}-${k}`}><T>{label}</T></label>
       <input id={`${titulo}-${k}`} value={v[k] || ""} onChange={(e) => set({ ...v, [k]: e.target.value })} className={CAMPO} {...extra} />
     </div>
   )
   return (
     <fieldset className="grid gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4 sm:p-5">
-      <legend className="px-1 text-base font-extrabold text-[#142033]">{titulo}</legend>
+      <legend className="px-1 text-base font-extrabold text-[#142033]"><T>{titulo}</T></legend>
       <p className="rounded-xl bg-[#F3F1EA] px-3 py-2 text-sm text-[#40403A]">
-        Col. {lugar.colonia}, {[lugar.municipio, lugar.estado].filter(Boolean).join(", ")} · C.P. {lugar.cp}
+        <T>Col.</T> {lugar.colonia}, {[lugar.municipio, lugar.estado].filter(Boolean).join(", ")} · C.P. {lugar.cp}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {campo("nombre", "Nombre completo", { required: true, autoComplete: "name" })}
@@ -106,7 +107,7 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
       <Bloque titulo="Remitente (origen)" lugar={cot.origen} v={origen} set={setOrigen} />
       <Bloque titulo="Destinatario" lugar={cot.destino} v={destino} set={setDestino} />
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-4 sm:p-5">
-        <label className={ETIQUETA} htmlFor="contenido">¿Qué contiene el paquete?</label>
+        <label className={ETIQUETA} htmlFor="contenido"><T>¿Qué contiene el paquete?</T></label>
         <input
           id="contenido"
           value={contenido}
@@ -117,7 +118,7 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
           placeholder="Ej. Piezas de MDF cortadas, fresas para router…"
         />
         <fieldset className="mt-4">
-          <legend className={ETIQUETA}>Lo que envías es…</legend>
+          <legend className={ETIQUETA}><T>Lo que envías es…</T></legend>
           <div className="flex flex-wrap gap-2">
             {(
               [
@@ -137,29 +138,29 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
             ))}
           </div>
           {estado === "usado" && (
-            <p className="mt-2 text-xs text-[#6B675C]">Los artículos usados o seminuevos se pueden enviar, pero no se pueden proteger.</p>
+            <p className="mt-2 text-xs text-[#6B675C]"><T>Los artículos usados o seminuevos se pueden enviar, pero no se pueden proteger.</T></p>
           )}
         </fieldset>
         <div className="mt-4 rounded-xl border border-[#F2C98F] bg-[#FFF8EE] p-3 text-sm text-[#5A3A12]">
-          <strong>Aviso de cobros extra:</strong> la paquetería vuelve a pesar y medir el paquete. Si encuentra más peso o medidas que las
-          cotizadas ({cot.paquete.largo}×{cot.paquete.ancho}×{cot.paquete.alto} cm, {cot.paquete.peso} kg), cobra la diferencia y esa diferencia
-          la pagas tú.
+          <strong><T>Aviso de cobros extra:</T></strong> <T>la paquetería vuelve a pesar y medir el paquete. Si encuentra más peso o medidas que las
+          cotizadas (</T>{cot.paquete.largo}×{cot.paquete.ancho}×{cot.paquete.alto} <T>cm,</T> {cot.paquete.peso} <T>kg), cobra la diferencia y esa diferencia
+          la pagas tú.</T>
         </div>
         <label className="mt-3 flex items-start gap-2 text-sm text-[#40403A]">
           <input type="checkbox" checked={acepta} onChange={(e) => setAcepta(e.target.checked)} className="mt-1" required />
           <span>
-            Confirmo que las medidas y el peso son los del paquete ya embalado y que no contiene artículos prohibidos por la paquetería. Acepto
-            pagar los cobros extra (sobrepeso) si el paquete no coincide con lo cotizado.
+            <T>Confirmo que las medidas y el peso son los del paquete ya embalado y que no contiene artículos prohibidos por la paquetería. Acepto
+            pagar los cobros extra (sobrepeso) si el paquete no coincide con lo cotizado.</T>
           </span>
         </label>
         <label className="mt-3 flex items-start gap-2 text-sm text-[#40403A]">
           <input type="checkbox" checked={aceptaEvidencia} onChange={(e) => setAceptaEvidencia(e.target.checked)} className="mt-1" required />
           <span>
-            Tengo evidencia fotográfica de las medidas (alto, largo y ancho con cinta métrica) y del peso en báscula, y la subiré en{" "}
-            <strong>Mis envíos</strong> con la guía visible antes de entregar el paquete. Sin esa evidencia no se puede disputar un sobrepeso
-            ni reclamar la protección.{" "}
+            <T>Tengo evidencia fotográfica de las medidas (alto, largo y ancho con cinta métrica) y del peso en báscula, y la subiré en</T>{" "}
+            <strong><T>Mis envíos</T></strong> <T>con la guía visible antes de entregar el paquete. Sin esa evidencia no se puede disputar un sobrepeso
+            ni reclamar la protección.</T>{" "}
             <a href="/mx/servicios/envios-hetna/condiciones" target="_blank" className="font-semibold text-[#C2560A] underline">
-              Condiciones de Envíos HETNA
+              <T>Condiciones de Envíos HETNA</T>
             </a>
           </span>
         </label>
@@ -175,22 +176,22 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
               className="mt-1 h-4 w-4 accent-[#1E7B3A]"
             />
             <span>
-              <strong className="block text-[15px] text-[#142033]">Proteger mi envío</strong>
+              <strong className="block text-[15px] text-[#142033]"><T>Proteger mi envío</T></strong>
               <span className="text-sm text-[#40403A]">
-                Para piezas nuevas frágiles o de valor. Cubre daño, faltante, extravío o robo durante el traslado hasta el valor que declares
-                (máximo {pesos(p.valorMaximo)}). Cuesta alrededor de {(p.tasa * 100).toLocaleString("es-MX", { maximumFractionDigits: 2 })}% del
-                valor declarado. No es un seguro: es la SOS Protección de Skydropx y aplica según sus condiciones.{" "}
+                <T>Para piezas nuevas frágiles o de valor. Cubre daño, faltante, extravío o robo durante el traslado hasta el valor que declares
+                (máximo</T> {pesos(p.valorMaximo)}<T>). Cuesta alrededor de</T> {(p.tasa * 100).toLocaleString("es-MX", { maximumFractionDigits: 2 })}<T>% del
+                valor declarado. No es un seguro: es la SOS Protección de Skydropx y aplica según sus condiciones.</T>{" "}
                 <a href="https://www.skydropx.com/legal/proteccion-sos/" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#1E7B3A] underline">
-                  Ver condiciones
+                  <T>Ver condiciones</T>
                 </a>
               </span>
             </span>
           </label>
-          {estado === "usado" && <p className="mt-2 text-sm font-semibold text-[#8A1C14]">No disponible para artículos usados o seminuevos.</p>}
+          {estado === "usado" && <p className="mt-2 text-sm font-semibold text-[#8A1C14]"><T>No disponible para artículos usados o seminuevos.</T></p>}
           {protegido && (
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
-                <label className={ETIQUETA} htmlFor="valor">Valor de lo que envías (MXN)</label>
+                <label className={ETIQUETA} htmlFor="valor"><T>Valor de lo que envías (MXN)</T></label>
                 <input
                   id="valor"
                   value={valor}
@@ -201,32 +202,32 @@ export default function FormSolicitudEnvio({ cot, cliente, volver }: {
                   placeholder={`Entre ${pesos(p.valorMinimo)} y ${pesos(p.valorMaximo)}`}
                 />
                 <p className="mt-1 text-xs text-[#6B675C]">
-                  Declara el valor real, sin IVA, que puedas comprobar con factura: el reembolso es por lo menor entre lo declarado y la
-                  factura.
+                  <T>Declara el valor real, sin IVA, que puedas comprobar con factura: el reembolso es por lo menor entre lo declarado y la
+                  factura.</T>
                 </p>
               </div>
               <p className="text-right text-sm text-[#40403A]">
-                Protección
+                <T>Protección</T>
                 <strong className="block text-xl text-[#142033]">{valorOk ? pesos(costo) : "—"}</strong>
               </p>
               <ul className="m-0 grid gap-1 rounded-xl bg-white/70 p-3 text-xs text-[#40403A] sm:col-span-2">
                 <li>
-                  <strong>No cubre:</strong> artículos usados o de segunda mano; celulares, tablets, laptops y computadoras; equipo médico o
-                  científico; artículos prohibidos por la paquetería; paquetes con embalaje insuficiente (caja débil, sin relleno, mal sellada).
+                  <strong><T>No cubre:</T></strong> <T>artículos usados o de segunda mano; celulares, tablets, laptops y computadoras; equipo médico o
+                  científico; artículos prohibidos por la paquetería; paquetes con embalaje insuficiente (caja débil, sin relleno, mal sellada).</T>
                 </li>
                 <li>
-                  <strong>Si llega dañado o incompleto:</strong> si el empaque viene alterado, recházalo con la paquetería; toma fotos y video del
+                  <strong><T>Si llega dañado o incompleto:</T></strong> <T>si el empaque viene alterado, recházalo con la paquetería; toma fotos y video del
                   paquete con la guía visible y del contenido, y escríbenos con tu folio y la factura dentro de las 48 horas hábiles después de
-                  recibirlo. Nosotros hacemos el reclamo.
+                  recibirlo. Nosotros hacemos el reclamo.</T>
                 </li>
                 <li>
-                  <strong>Reembolso:</strong> según la resolución de Skydropx (daño leve 25%, moderado 50%, irreparable o extravío 100% de lo
-                  comprobado, sin IVA ni costo de guía). Te lo regresamos en cuanto Skydropx lo acredita.
+                  <strong><T>Reembolso:</T></strong> <T>según la resolución de Skydropx (daño leve 25%, moderado 50%, irreparable o extravío 100% de lo
+                  comprobado, sin IVA ni costo de guía). Te lo regresamos en cuanto Skydropx lo acredita.</T>
                 </li>
               </ul>
               <label className="flex items-start gap-2 text-sm text-[#40403A] sm:col-span-2">
                 <input type="checkbox" checked={aceptaProteccion} onChange={(e) => setAceptaProteccion(e.target.checked)} className="mt-1" />
-                <span>Entiendo que no es un seguro y acepto las condiciones de la protección.</span>
+                <span><T>Entiendo que no es un seguro y acepto las condiciones de la protección.</T></span>
               </label>
             </div>
           )}

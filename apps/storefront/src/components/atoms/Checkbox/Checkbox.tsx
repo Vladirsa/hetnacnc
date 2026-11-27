@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { cn } from "@/lib/utils"
 import { MinusHeavyIcon, TickThinIcon } from "@/icons"
 
@@ -45,7 +46,7 @@ export function Checkbox({
           {...props}
         />
       </span>
-      {label}
+      <T>{label}</T>
     </label>
   )
 }

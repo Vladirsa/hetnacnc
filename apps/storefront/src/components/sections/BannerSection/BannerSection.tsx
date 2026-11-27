@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import Image from "@/lib/imagenes/Imagen"
@@ -9,19 +10,19 @@ export const BannerSection = () => {
         <div className="py-6 px-6 flex flex-col h-full justify-between border border-secondary rounded-sm">
           <div className="mb-8 lg:mb-48">
             <span className="text-sm inline-block px-4 py-1 border border-secondary rounded-sm">
-              #COLLECTION
+              <TS>#COLLECTION</TS>
             </span>
             <h2 className="display-sm">
-              BOHO VIBES: WHERE COMFORT MEETS CREATIVITY
+              <TS>BOHO VIBES: WHERE COMFORT MEETS CREATIVITY</TS>
             </h2>
             <p className="text-lg text-tertiary max-w-lg">
-              Discover boho styles that inspire adventure and embrace the beauty
-              of the unconventional.
+              <TS>Discover boho styles that inspire adventure and embrace the beauty
+              of the unconventional.</TS>
             </p>
           </div>
           <LocalizedClientLink href="/collections/boho">
             <Button size="large" className="w-fit bg-secondary/10">
-              EXPLORAR
+              <TS>EXPLORAR</TS>
             </Button>
           </LocalizedClientLink>
         </div>

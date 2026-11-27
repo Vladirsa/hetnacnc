@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
@@ -8,15 +9,15 @@ export function CartEmpty() {
   return (
     <div className="col-span-12 flex justify-center py-12" data-testid="cart-empty">
       <div className="flex w-full max-w-[520px] flex-col text-center">
-        <h1 className="text-[24px] font-bold text-[#1B1B18]">Tu carrito está vacío</h1>
+        <h1 className="text-[24px] font-bold text-[#1B1B18]"><T>Tu carrito está vacío</T></h1>
         <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">
-          Nada que pagar todavía. Puedes ver lo que venden los talleres, o empezar por
-          tu propia pieza.
+          <T>Nada que pagar todavía. Puedes ver lo que venden los talleres, o empezar por
+          tu propia pieza.</T>
         </p>
 
         <LocalizedClientLink href="/categories" className="mt-6">
           <Button className="flex w-full items-center justify-center py-3">
-            Ver productos
+            <T>Ver productos</T>
           </Button>
         </LocalizedClientLink>
 
@@ -50,7 +51,7 @@ const Atajo = ({
     href={href}
     className="rounded-[12px] border border-[#E7E4DC] bg-white p-4 hover:border-[#C2560A]"
   >
-    <p className="text-[14px] font-bold text-[#1B1B18]">{titulo}</p>
-    <p className="mt-1 text-[13px] leading-relaxed text-[#4A4943]">{texto}</p>
+    <p className="text-[14px] font-bold text-[#1B1B18]"><T>{titulo}</T></p>
+    <p className="mt-1 text-[13px] leading-relaxed text-[#4A4943]"><T>{texto}</T></p>
   </LocalizedClientLink>
 )

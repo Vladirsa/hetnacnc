@@ -3,6 +3,7 @@
 // "Avísame cuando haya": guarda el interés (categoría + correo o celular)
 // dentro de HETNA para avisar al publicar el primer producto. Nada de
 // mandar a la gente a WhatsApp: todo se queda en la plataforma.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { trackAvisameCategoria } from "@/lib/analytics/events"
@@ -38,21 +39,21 @@ export function Avisame({ categoria, nombre }: { categoria: string; nombre: stri
   if (estado === "listo")
     return (
       <p className="rounded-md bg-[#EAF5EE] px-3 py-3 text-[14px] font-medium text-[#1E6B3E]" role="status">
-        Listo: te avisamos en cuanto haya {nombre.toLowerCase()}.
+        <T>Listo: te avisamos en cuanto haya</T> {nombre.toLowerCase()}.
       </p>
     )
 
   if (!abierto)
     return (
       <button type="button" onClick={() => setAbierto(true)} className={`${BTN2} w-full sm:w-auto`}>
-        Avísame cuando haya
+        <T>Avísame cuando haya</T>
       </button>
     )
 
   return (
     <form onSubmit={enviar} className="grid gap-2">
       <label className="text-[13px] font-medium text-[#1E2329]" htmlFor={`avisame-${categoria}`}>
-        Tu correo o celular
+        <T>Tu correo o celular</T>
       </label>
       <input
         id={`avisame-${categoria}`}
@@ -69,7 +70,7 @@ export function Avisame({ categoria, nombre }: { categoria: string; nombre: stri
       <button type="submit" disabled={estado === "enviando"} className={`${BTN} w-full`}>
         {estado === "enviando" ? "Guardando…" : "Avísame"}
       </button>
-      <p className="text-[12px] text-[#5B6370]">Sólo lo usamos para avisarte de esta categoría.</p>
+      <p className="text-[12px] text-[#5B6370]"><T>Sólo lo usamos para avisarte de esta categoría.</T></p>
     </form>
   )
 }

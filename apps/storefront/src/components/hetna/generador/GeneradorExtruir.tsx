@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { useMemo, useState } from "react"
 import { useParams } from "next/navigation"
@@ -42,7 +43,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
       <span className="pr-3 text-[13px] text-[#9A978C]">{sufijo}</span>
@@ -148,10 +149,10 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">SVG o DXF a STL: extruir en 3D</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>SVG o DXF a STL: extruir en 3D</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Sube un logotipo, un nombre o un archivo de corte láser en SVG o DXF, elige qué hace cada color (corte, grabado hundido o línea marcada), dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Con placa base opcional para llaveros, letreros y placas. Tu archivo no se sube a ningún servidor.
+          <T>Sube un logotipo, un nombre o un archivo de corte láser en SVG o DXF, elige qué hace cada color (corte, grabado hundido o línea marcada), dale altura y descarga el STL para imprimir en 3D o tallar en relieve. Con placa base opcional para llaveros, letreros y placas. Tu archivo no se sube a ningún servidor.</T>
         </p>
       </section>
 
@@ -165,7 +166,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
           >
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{archivo ? `${archivo.nombre} (cambiar)` : "Sube tu SVG o DXF"}</span>
-            <span className="text-[12px] text-[#6B6A63]">Logotipos, letras ya vectorizadas o archivos de corte láser con varios colores</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>Logotipos, letras ya vectorizadas o archivos de corte láser con varios colores</T></span>
             <input type="file" accept=".svg,.dxf" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
@@ -173,7 +174,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
           {archivo && grupos.length > 0 && (
             <div className="flex flex-col gap-2">
               <span className="text-[13px] font-semibold text-[#1B1B18]">
-                {grupos.some((g) => g.clave.startsWith("capa:")) ? "Capas del archivo" : "Colores del archivo"} y qué hacer con cada uno
+                {grupos.some((g) => g.clave.startsWith("capa:")) ? "Capas del archivo" : "Colores del archivo"} <T>y qué hacer con cada uno</T>
               </span>
               {grupos.map((g) => (
                 <div key={g.clave} className="flex items-center gap-2">
@@ -199,7 +200,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                 </div>
               ))}
               <p className="m-0 text-[12px] text-[#6B6A63]">
-                Corte forma las piezas y sus huecos. Grabado hunde las áreas cerradas en la cara de arriba (lo que queda dentro de un área grabada vuelve a subir). Línea marcada convierte las líneas en canales.
+                <T>Corte forma las piezas y sus huecos. Grabado hunde las áreas cerradas en la cara de arriba (lo que queda dentro de un área grabada vuelve a subir). Línea marcada convierte las líneas en canales.</T>
               </p>
               {hayRebaje && (
                 <div className="grid grid-cols-2 gap-2">
@@ -218,13 +219,13 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {[2, 3, 5, 10, 20].map((x) => (
-                  <button key={x} type="button" onClick={() => setAlto(String(x))} className="text-[12px] font-semibold bg-[#FAF9F6] border border-[#E7E4DC] hover:border-[#C2560A] px-2.5 py-1 rounded-full text-[#1B1B18]">{x} mm</button>
+                  <button key={x} type="button" onClick={() => setAlto(String(x))} className="text-[12px] font-semibold bg-[#FAF9F6] border border-[#E7E4DC] hover:border-[#C2560A] px-2.5 py-1 rounded-full text-[#1B1B18]">{x} <T>mm</T></button>
                 ))}
               </div>
 
               <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
                 <input type="checkbox" checked={conBase} onChange={(e) => setConBase(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-                Con placa base (llavero, placa, letrero)
+                <T>Con placa base (llavero, placa, letrero)</T>
               </label>
               {conBase && (
                 <div className="grid grid-cols-3 gap-2">
@@ -235,7 +236,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
               )}
               <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
                 <input type="checkbox" checked={espejo} onChange={(e) => setEspejo(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-                Espejo (para sellos y moldes)
+                <T>Espejo (para sellos y moldes)</T>
               </label>
             </>
           )}
@@ -244,12 +245,12 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
         <section className="flex flex-col gap-4 min-w-0">
           {!archivo && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14px] text-[#6B6A63] flex flex-col gap-2">
-              <p className="m-0 font-semibold text-[#1B1B18]">¿Para qué sirve?</p>
+              <p className="m-0 font-semibold text-[#1B1B18]"><T>¿Para qué sirve?</T></p>
               <ul className="m-0 pl-5 flex flex-col gap-1">
-                <li>Llaveros y placas con tu logotipo: sube el SVG, marca «placa base» y descarga el STL.</li>
-                <li>Letras en relieve para letreros: genera el nombre en «Letreros y nombres», descarga el SVG y extrúyelo aquí.</li>
-                <li>Sellos y moldes: activa «espejo» para que la impresión salga legible al estampar.</li>
-                <li>Relieves para tallar en router: el STL abre en VCarve, Aspire o Fusion.</li>
+                <li><T>Llaveros y placas con tu logotipo: sube el SVG, marca «placa base» y descarga el STL.</T></li>
+                <li><T>Letras en relieve para letreros: genera el nombre en «Letreros y nombres», descarga el SVG y extrúyelo aquí.</T></li>
+                <li><T>Sellos y moldes: activa «espejo» para que la impresión salga legible al estampar.</T></li>
+                <li><T>Relieves para tallar en router: el STL abre en VCarve, Aspire o Fusion.</T></li>
               </ul>
             </div>
           )}
@@ -263,8 +264,8 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
           {archivo && dibujo && (
             <>
               <div className="flex gap-2">
-                <Opcion activa={vista === "3d"} onClick={() => setVista("3d")}>Vista 3D</Opcion>
-                <Opcion activa={vista === "2d"} onClick={() => setVista("2d")}>Contornos</Opcion>
+                <Opcion activa={vista === "3d"} onClick={() => setVista("3d")}><T>Vista 3D</T></Opcion>
+                <Opcion activa={vista === "2d"} onClick={() => setVista("2d")}><T>Contornos</T></Opcion>
               </div>
               <div className={`bg-white border border-[#E7E4DC] rounded-[14px] overflow-hidden ${vista === "3d" && listo ? "" : "p-3 lg:p-4"}`}>
                 {vista === "3d" && listo ? (
@@ -273,7 +274,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                   <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[420px]" dangerouslySetInnerHTML={{ __html: vista2d }} />
                 )}
               </div>
-              {vista === "3d" && <p className="m-0 -mt-2 text-[12.5px] text-[#6B6A63]">Arrastra para rotar, rueda del mouse para acercar.</p>}
+              {vista === "3d" && <p className="m-0 -mt-2 text-[12.5px] text-[#6B6A63]"><T>Arrastra para rotar, rueda del mouse para acercar.</T></p>}
 
               {med && r && (
                 <dl className="grid grid-cols-2 sm:grid-cols-4 gap-2 m-0">
@@ -304,7 +305,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                     className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                    Ver precio al instante en el Cotizador
+                    <T>Ver precio al instante en el Cotizador</T>
                   </button>
                   <button
                     type="button"
@@ -312,20 +313,20 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                     className="w-full bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9H3z" /><path d="M9 20v-6h6v6" /></svg>
-                    Fabrícamelo: que un taller la imprima
+                    <T>Fabrícamelo: que un taller la imprima</T>
                   </button>
                   <BotonesCam nombre={nombre} dxf={() => dibujoDXF(dibujo)} stl={() => mallaSTL(r!.malla)} />
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
                   <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => descargar(`${nombre}.stl`, mallaSTL(r!.malla), "model/stl")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                      Descargar STL
+                      <T>Descargar STL</T>
                     </button>
                     <button type="button" onClick={() => descargar(`${nombre}.svg`, dibujoSVG(dibujo, "corte"), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                      SVG escalado
+                      <T>SVG escalado</T>
                     </button>
                   </div>
                   <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                    STL binario en milímetros, con las caras orientadas hacia afuera. Los contornos dentro de otro contorno se vuelven agujeros (la o, la a, el hueco del llavero).
+                    <T>STL binario en milímetros, con las caras orientadas hacia afuera. Los contornos dentro de otro contorno se vuelven agujeros (la o, la a, el hueco del llavero).</T>
                   </p>
                 </>
               )}

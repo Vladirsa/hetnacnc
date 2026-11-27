@@ -1,6 +1,7 @@
 "use client"
 
 // Formulario del buzón: calificación 0 a 10 (opcional) y qué mejorarías.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { enviarOpinion } from "@/lib/opinion/acciones"
@@ -34,8 +35,8 @@ export function FormOpinion({ token, puntajeInicial, quien }: { token?: string; 
   if (estado === "listo")
     return (
       <div className="rounded-[14px] border border-[#CFE6D3] bg-[#F1F8F2] p-6 text-center">
-        <p className="text-[20px] font-bold text-[#1E7B3A]">¡Gracias! Ya lo recibimos.</p>
-        <p className="mt-2 text-[15px] text-[#4A4943]">Lo leemos todo. Si nos dejaste una idea, te avisamos cuando la tengamos lista.</p>
+        <p className="text-[20px] font-bold text-[#1E7B3A]"><T>¡Gracias! Ya lo recibimos.</T></p>
+        <p className="mt-2 text-[15px] text-[#4A4943]"><T>Lo leemos todo. Si nos dejaste una idea, te avisamos cuando la tengamos lista.</T></p>
       </div>
     )
 
@@ -44,7 +45,7 @@ export function FormOpinion({ token, puntajeInicial, quien }: { token?: string; 
 
   return (
     <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-5 lg:p-6">
-      <p className="text-[15px] font-semibold text-[#1B1B18]">Del 0 al 10, ¿qué tanto recomendarías HETNA CNC a un colega o amigo?</p>
+      <p className="text-[15px] font-semibold text-[#1B1B18]"><T>Del 0 al 10, ¿qué tanto recomendarías HETNA CNC a un colega o amigo?</T></p>
       <div className="mt-3 grid grid-cols-11 gap-1" role="radiogroup" aria-label="Calificación del 0 al 10">
         {Array.from({ length: 11 }, (_, n) => (
           <button
@@ -60,8 +61,8 @@ export function FormOpinion({ token, puntajeInicial, quien }: { token?: string; 
         ))}
       </div>
       <div className="mt-1 flex justify-between text-[12px] text-[#6B6A63]">
-        <span>Nada probable</span>
-        <span>Muy probable</span>
+        <span><T>Nada probable</T></span>
+        <span><T>Muy probable</T></span>
       </div>
 
       <label htmlFor="opinion-comentario" className="mt-5 block text-[15px] font-semibold text-[#1B1B18]">

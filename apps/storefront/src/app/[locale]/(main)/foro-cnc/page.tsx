@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { BotonPublicar, Buscador, Pestanas } from "@/components/hetna/foro/ForoMarco"
@@ -25,7 +27,7 @@ type Props = {
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || ""
 const ORDENES: Orden[] = ["recientes", "populares", "sin-respuesta", "nuevos"]
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+async function generateMetadataEs({ searchParams }: Props): Promise<Metadata> {
   const q = await searchParams
   const buscar = uno(q.q)
   const indexar = !buscar && !uno(q.orden) && !uno(q.pagina)
@@ -75,7 +77,7 @@ export default async function ForoInicio({ params, searchParams }: Props) {
 
   return (
     <main className="w-full bg-[#F4F1EA]">
-      <h1 className="sr-only">Foro CNC México</h1>
+      <h1 className="sr-only"><TS>Foro CNC México</TS></h1>
       <div className="max-w-[1180px] mx-auto px-4 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-[230px_minmax(0,1fr)_290px] gap-4 lg:gap-5">
         <ColIzquierda secciones={secs} sesion={sesion} />
 
@@ -100,17 +102,17 @@ export default async function ForoInicio({ params, searchParams }: Props) {
             >
               <span>
                 <strong>
-                  {sinResponder.total} {sinResponder.total === 1 ? "pregunta espera" : "preguntas esperan"} su primera respuesta.
+                  {sinResponder.total} {sinResponder.total === 1 ? "pregunta espera" : "preguntas esperan"} <TS>su primera respuesta.</TS>
                 </strong>{" "}
-                ¿Sabes de esto? Responder suma puntos y lleva gente a tu perfil.
+                <TS>¿Sabes de esto? Responder suma puntos y lleva gente a tu perfil.</TS>
               </span>
-              <span className="shrink-0 font-semibold text-[#B34D07]">Ver →</span>
+              <span className="shrink-0 font-semibold text-[#B34D07]"><TS>Ver →</TS></span>
             </a>
           )}
           {portada && <BloqueBlog articulos={blog.articulos} />}
           {buscar ? (
             <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]">
-              {lista.total} {lista.total === 1 ? "resultado" : "resultados"} para “{buscar}”
+              {lista.total} {lista.total === 1 ? "resultado" : "resultados"} <TS>para “</TS>{buscar}”
             </h2>
           ) : null}
           <Pestanas
@@ -144,4 +146,9 @@ export default async function ForoInicio({ params, searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

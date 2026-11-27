@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import MensajeError from "@/components/molecules/ErrorMessage/ErrorMessage"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
@@ -10,16 +11,16 @@ const ErrorMessage = ({ error, "data-testid": testId }: { error?: string | null;
     <div>
       <MensajeError error={error} data-testid={testId} />
       <p className="mt-1 text-[13px] text-[#4A4943]">
-        Tu carrito sigue guardado.{" "}
+        <T>Tu carrito sigue guardado.</T>{" "}
         <a
           href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent("Hola HETNA CNC, no pude completar el pago de mi compra. ¿Me ayudan?")}`}
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-[#17803F] underline"
         >
-          Escríbenos por WhatsApp
+          <T>Escríbenos por WhatsApp</T>
         </a>{" "}
-        y lo resolvemos contigo.
+        <T>y lo resolvemos contigo.</T>
       </p>
     </div>
   ) : null
@@ -82,7 +83,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     default:
       return (
         <Button disabled className="w-full rounded-full py-3.5 text-[16px] font-bold shadow-sm">
-          Selecciona un método de pago
+          <T>Selecciona un método de pago</T>
         </Button>
       )
   }
@@ -128,7 +129,7 @@ const MercadoPagoPaymentButton = ({
         className="w-full rounded-full !bg-[#E5322D] py-3.5 text-[16px] font-bold !text-white shadow-sm hover:!bg-[#C9221D]"
         data-testid={dataTestId}
       >
-        Pagar con Mercado Pago
+        <T>Pagar con Mercado Pago</T>
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -178,7 +179,7 @@ const PayPalPaymentButton = ({
         className="w-full rounded-full !bg-[#E5322D] py-3.5 text-[16px] font-bold !text-white shadow-sm hover:!bg-[#C9221D]"
         data-testid={dataTestId}
       >
-        Pagar con PayPal
+        <T>Pagar con PayPal</T>
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -295,7 +296,7 @@ const StripePaymentButton = ({
         loading={submitting}
         className="w-full rounded-full !bg-[#E5322D] py-3.5 text-[16px] font-bold !text-white shadow-sm hover:!bg-[#C9221D]"
       >
-        Realizar pedido
+        <T>Realizar pedido</T>
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -338,7 +339,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         className="w-full rounded-full !bg-[#E5322D] py-3.5 text-[16px] font-bold !text-white shadow-sm hover:!bg-[#C9221D]"
         loading={submitting}
       >
-        Realizar pedido
+        <T>Realizar pedido</T>
       </Button>
       <ErrorMessage
         error={errorMessage}

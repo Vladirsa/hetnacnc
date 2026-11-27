@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { convertToLocale } from "@/lib/helpers/money"
 
 // "Envío gratis desde $800" — el mismo dato que la barra del carrito, pero
@@ -28,7 +29,7 @@ export const DistintivoEnvioGratis = ({
     return (
       <span className="flex items-center gap-1 text-[11px] font-semibold text-[#1F5B29]">
         <span aria-hidden>🚚</span>
-        <span className="truncate">Envío gratis desde {monto}</span>
+        <span className="truncate"><TS>Envío gratis desde</TS> {monto}</span>
       </span>
     )
   }
@@ -36,7 +37,7 @@ export const DistintivoEnvioGratis = ({
   return (
     <span className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#A8D3AC] bg-[#EDF7EE] px-2.5 py-1 text-[12.5px] font-semibold text-[#1F5B29]">
       <span aria-hidden>🚚</span>
-      Envío gratis desde {monto}
+      <TS>Envío gratis desde</TS> {monto}
     </span>
   )
 }

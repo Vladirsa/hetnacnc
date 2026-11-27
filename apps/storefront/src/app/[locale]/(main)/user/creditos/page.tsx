@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
@@ -6,7 +8,7 @@ import { ComprarPaquetes } from "@/components/hetna/creditos/ComprarPaquetes"
 import { Movimientos } from "@/components/hetna/creditos/Movimientos"
 import { listarPaquetes, obtenerSaldo } from "@/lib/creditos/acciones"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mis créditos",
   description: "Tu saldo de créditos para las herramientas de HETNA CNC.",
   robots: { index: false, follow: false },
@@ -24,15 +26,15 @@ export default async function CreditosPage({
     return (
       <main className="container">
         <div className="mx-auto max-w-[460px] py-16 text-center">
-          <h1 className="text-[24px] font-bold text-[#1B1B18]">Entra a tu cuenta</h1>
+          <h1 className="text-[24px] font-bold text-[#1B1B18]"><TS>Entra a tu cuenta</TS></h1>
           <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">
-            Los créditos viven en tu cuenta: ahí se guardan y desde ahí se gastan.
+            <TS>Los créditos viven en tu cuenta: ahí se guardan y desde ahí se gastan.</TS>
           </p>
           <LocalizedClientLink
             href="/login"
             className="mt-6 inline-block rounded-[10px] bg-[#C2560A] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
           >
-            Iniciar sesión
+            <TS>Iniciar sesión</TS>
           </LocalizedClientLink>
         </div>
       </main>
@@ -51,25 +53,25 @@ export default async function CreditosPage({
       <div className="min-w-0 md:col-span-3">
       <div className="text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
         <LocalizedClientLink href="/user" className="hover:text-[#B34D07]">
-          Mi cuenta
+          <TS>Mi cuenta</TS>
         </LocalizedClientLink>
         <span>/</span>
-        <span className="font-medium text-[#1B1B18]">Créditos</span>
+        <span className="font-medium text-[#1B1B18]"><TS>Créditos</TS></span>
       </div>
 
       <h1 className="mt-4 text-[26px] font-bold text-[#1B1B18] lg:text-[32px]">
-        Mis créditos
+        <TS>Mis créditos</TS>
       </h1>
       <p className="mt-2 max-w-[640px] text-[15px] leading-relaxed text-[#4A4943]">
-        Los créditos pagan las herramientas de HETNA: diseño de muebles y cocinas,
+        <TS>Los créditos pagan las herramientas de HETNA: diseño de muebles y cocinas,
         molduras y tallados, escaneo 3D y cotizador. No son dinero, no caducan y no se
-        pueden retirar.
+        pueden retirar.</TS>
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex flex-col gap-6">
           <section className="rounded-[14px] border border-[#E7E4DC] bg-[#142033] p-6 text-white">
-            <p className="text-[12px] uppercase tracking-wide text-[#9FB0C9]">Tu saldo</p>
+            <p className="text-[12px] uppercase tracking-wide text-[#9FB0C9]"><TS>Tu saldo</TS></p>
             <p className="mt-1 text-[40px] font-bold leading-none">
               {ilimitado ? "∞" : saldo}{" "}
               <span className="text-[18px] font-semibold text-[#9FB0C9]">
@@ -85,16 +87,16 @@ export default async function CreditosPage({
             </p>
             {!res.ok && (
               <p className="mt-3 rounded-[8px] bg-[#1F3350] px-3 py-2 text-[13px]">
-                No pudimos leer tu saldo ahorita. {res.mensaje}
+                <TS>No pudimos leer tu saldo ahorita.</TS> <TS>{res.mensaje}</TS>
               </p>
             )}
           </section>
 
           <section>
-            <h2 className="text-[18px] font-bold text-[#1B1B18]">Comprar créditos</h2>
+            <h2 className="text-[18px] font-bold text-[#1B1B18]"><TS>Comprar créditos</TS></h2>
             <p className="mt-1 text-[14px] text-[#4A4943]">
-              Eliges el paquete y pagas al momento con Mercado Pago o PayPal. Al confirmarse
-              el pago, los créditos entran solos a tu cuenta.
+              <TS>Eliges el paquete y pagas al momento con Mercado Pago o PayPal. Al confirmarse
+              el pago, los créditos entran solos a tu cuenta.</TS>
             </p>
             <ComprarPaquetes
               paquetes={paquetes}
@@ -109,25 +111,25 @@ export default async function CreditosPage({
           <Movimientos movimientos={res.ok ? res.datos.movimientos : []} />
 
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-            <h3 className="text-[14px] font-bold text-[#1B1B18]">¿En qué se gastan?</h3>
+            <h3 className="text-[14px] font-bold text-[#1B1B18]"><TS>¿En qué se gastan?</TS></h3>
             <ul className="mt-2 flex flex-col gap-2 text-[13px] leading-relaxed text-[#4A4943]">
               <li className="flex gap-2">
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>
                   <LocalizedClientLink href="/disenar/muebles-ensamble" className="font-semibold text-[#B34D07] underline">
-                    Muebles
+                    <TS>Muebles</TS>
                   </LocalizedClientLink>{" "}
                   y{" "}
                   <LocalizedClientLink href="/disenar/despiece-muebles" className="font-semibold text-[#B34D07] underline">
-                    cocina integral
+                    <TS>cocina integral</TS>
                   </LocalizedClientLink>
-                  : diseñar, editar, cotizar y guardar es gratis. Bajar archivos, planos y etiquetas: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). Leer una imagen con IA: 2 (se regresan si no sirve).
+                  <TS>: diseñar, editar, cotizar y guardar es gratis. Bajar archivos, planos y etiquetas: 1 crédito por cada 40 piezas (un mueble, 1; una cocina, unos 5). Leer una imagen con IA: 2 (se regresan si no sirve).</TS>
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>
-                  Molduras: 1 crédito; panel tallado: 2. El mismo diseño nunca se cobra dos veces.
+                  <TS>Molduras: 1 crédito; panel tallado: 2. El mismo diseño nunca se cobra dos veces.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
@@ -137,9 +139,9 @@ export default async function CreditosPage({
                     href="/disenar/imagen-a-3d"
                     className="font-semibold text-[#B34D07] underline"
                   >
-                    Escaneo 3D
+                    <TS>Escaneo 3D</TS>
                   </LocalizedClientLink>
-                  : {porEscaneo} créditos por pieza. La vista previa es gratis.
+                  : {porEscaneo} <TS>créditos por pieza. La vista previa es gratis.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
@@ -149,22 +151,22 @@ export default async function CreditosPage({
                     href="/cotizar"
                     className="font-semibold text-[#B34D07] underline"
                   >
-                    Cotizador
+                    <TS>Cotizador</TS>
                   </LocalizedClientLink>
-                  : las primeras cotizaciones no cuestan.
+                  <TS>: las primeras cotizaciones no cuestan.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="font-bold text-[#C2560A]">·</span>
                 <span>
-                  El{" "}
+                  <TS>El</TS>{" "}
                   <LocalizedClientLink
                     href="/herramientas-cnc#laboratorio-cam"
                     className="font-semibold text-[#B34D07] underline"
                   >
-                    Laboratorio CAM
+                    <TS>Laboratorio CAM</TS>
                   </LocalizedClientLink>{" "}
-                  es gratis y sin cuenta.
+                  <TS>es gratis y sin cuenta.</TS>
                 </span>
               </li>
             </ul>
@@ -175,4 +177,9 @@ export default async function CreditosPage({
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

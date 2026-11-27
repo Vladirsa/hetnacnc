@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Button } from '@/components/atoms/Button/Button'
 import { SellerReview } from '@/components/molecules/SellerReview/SellerReview'
 import { SingleProductReview } from '@/types/product';
@@ -11,14 +12,14 @@ export const ProductDetailsSellerReviews = ({
     <div className='p-4 border rounded-sm' data-testid="product-seller-reviews-section">
       <div className='flex justify-between items-center mb-5'>
         <h4 className='uppercase heading-sm'>
-          Reseñas del vendedor
+          <TS>Reseñas del vendedor</TS>
         </h4>
         <Button
           variant='tonal'
           className='uppercase label-md font-400'
           data-testid="product-seller-reviews-see-more"
         >
-          Ver más
+          <TS>Ver más</TS>
         </Button>
       </div>
       {reviews.map((review) => (

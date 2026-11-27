@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -16,7 +18,7 @@ export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const e = await empresaPorSlug(slug)
   if (!e) return { robots: { index: false } }
@@ -59,15 +61,15 @@ export default async function PerfilDirectorioPage({ params }: Props) {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 py-8 lg:px-8">
       <nav className="mb-4 text-sm text-[#6B675C]">
-        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]">Talleres</LocalizedClientLink> ›{" "}
+        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> ›{" "}
         <LocalizedClientLink href={e.estado ? `/talleres/directorio?estado=${encodeURIComponent(e.estado)}` : "/talleres/directorio"} className="hover:text-[#C2560A]">
-          Directorio{e.estado ? ` · ${e.estado}` : ""}
+          <TS>Directorio</TS>{e.estado ? ` · ${e.estado}` : ""}
         </LocalizedClientLink>
       </nav>
 
       <header className={CAJA}>
         <span className="inline-block rounded-full bg-[#F3F1EA] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]">
-          Perfil no reclamado
+          <TS>Perfil no reclamado</TS>
         </span>
         <h1 className="mt-3 text-3xl font-extrabold text-[#142033]">{e.empresa}</h1>
         <p className="mt-1 text-[#6B675C]">
@@ -80,32 +82,32 @@ export default async function PerfilDirectorioPage({ params }: Props) {
             fuera de la pantalla del celular y no había ningún botón arriba). */}
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <a href="#cotizar" className="inline-flex justify-center rounded-xl bg-[#C2560A] px-5 py-3 text-center font-bold text-white hover:brightness-110">
-            Pide cotización a {e.empresa.length > 28 ? "esta empresa" : e.empresa}
+            <TS>Pide cotización a</TS> {e.empresa.length > 28 ? "esta empresa" : e.empresa}
           </a>
           <LocalizedClientLink
             href={calculadora.href}
             className="inline-flex justify-center rounded-xl border-2 border-[#142033] px-5 py-3 text-center font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
           >
-            Precio al instante de {calculadora.nombre}
+            <TS>Precio al instante de</TS> {calculadora.nombre}
           </LocalizedClientLink>
         </div>
         <p className="mt-4 text-[13px] text-[#6B675C]">
-          Esta empresa todavía no es parte de HETNA. La información es pública y viene de su propio sitio web; no la ha
-          revisado la empresa ni HETNA la verificó.
+          <TS>Esta empresa todavía no es parte de HETNA. La información es pública y viene de su propio sitio web; no la ha
+          revisado la empresa ni HETNA la verificó.</TS>
         </p>
       </header>
 
       <section className={`${CAJA} mt-6 scroll-mt-28`} id="cotizar">
-        <h2 className="text-xl font-extrabold text-[#142033]">Pide una cotización</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>Pide una cotización</TS></h2>
         <ol className="mt-3 grid gap-2 text-sm text-[#40403A] sm:grid-cols-3">
           <li className="rounded-xl bg-[#FAF8F3] p-3">
-            <b className="text-[#142033]">1. Te responde la red HETNA.</b> Tu solicitud llega a los talleres registrados que hacen ese trabajo, para que no te quedes sin propuestas.
+            <b className="text-[#142033]"><TS>1. Te responde la red HETNA.</TS></b> <TS>Tu solicitud llega a los talleres registrados que hacen ese trabajo, para que no te quedes sin propuestas.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
-            <b className="text-[#142033]">2. Invitamos a {e.empresa}.</b> Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.
+            <b className="text-[#142033]"><TS>2. Invitamos a</TS> {e.empresa}.</b> <TS>Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
-            <b className="text-[#142033]">3. Tú eliges.</b> Comparas propuestas, pagas dentro de HETNA y el taller empieza a producir.
+            <b className="text-[#142033]"><TS>3. Tú eliges.</TS></b> <TS>Comparas propuestas, pagas dentro de HETNA y el taller empieza a producir.</TS>
           </li>
         </ol>
         <div className="mt-6">
@@ -115,7 +117,7 @@ export default async function PerfilDirectorioPage({ params }: Props) {
 
       {cercanos.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-xl font-extrabold text-[#142033]">Talleres de HETNA en {e.estado}</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> {e.estado}</h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {cercanos.map((t) => (
               <li key={t.id} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
@@ -133,16 +135,16 @@ export default async function PerfilDirectorioPage({ params }: Props) {
       )}
 
       <section className="mt-6 rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-6">
-        <h2 className="text-lg font-extrabold text-[#142033]">¿Es tu empresa?</h2>
+        <h2 className="text-lg font-extrabold text-[#142033]"><TS>¿Es tu empresa?</TS></h2>
         <p className="mt-1 text-sm text-[#40403A]">
-          Reclama tu perfil gratis: recibe las solicitudes de clientes que te buscan, cotiza sólo lo que te conviene, publica
-          tus productos y cobra seguro dentro de HETNA. Pon tus propias fotos, máquinas y servicios.
+          <TS>Reclama tu perfil gratis: recibe las solicitudes de clientes que te buscan, cotiza sólo lo que te conviene, publica
+          tus productos y cobra seguro dentro de HETNA. Pon tus propias fotos, máquinas y servicios.</TS>
         </p>
         <LocalizedClientLink
           href={`/talleres/unete?perfil=${encodeURIComponent(e.slug)}`}
           className="mt-3 inline-flex rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:brightness-110"
         >
-          Reclamar mi perfil
+          <TS>Reclamar mi perfil</TS>
         </LocalizedClientLink>
         <div className="mt-4">
           <QuitarPerfil slug={e.slug} />
@@ -150,4 +152,9 @@ export default async function PerfilDirectorioPage({ params }: Props) {
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

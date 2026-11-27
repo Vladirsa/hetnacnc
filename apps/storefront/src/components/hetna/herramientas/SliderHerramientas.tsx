@@ -3,6 +3,7 @@
 // Carrusel de la portada de /herramientas-cnc: enseña la calculadora y el
 // cotizador con capturas reales. Avanza solo cada 6 s (se pausa al pasar el
 // mouse o al tocar) y se puede cambiar con los puntos o las flechas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -68,17 +69,17 @@ export function SliderHerramientas() {
       <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div key={`t${i}`} className="animate-[aparecer_.5s_ease]">
           <span className="inline-block rounded-full px-3 py-1 text-[12px] font-extrabold uppercase tracking-wide" style={{ background: `${d.acento}22`, color: d.acento }}>
-            {d.etiqueta}
+            <T>{d.etiqueta}</T>
           </span>
-          <h2 className="m-0 mt-4 text-[30px] font-extrabold leading-[1.08] text-white lg:text-[44px]">{d.titulo}</h2>
-          <p className="m-0 mt-4 max-w-[560px] text-[16px] leading-relaxed text-white/70">{d.texto}</p>
+          <h2 className="m-0 mt-4 text-[30px] font-extrabold leading-[1.08] text-white lg:text-[44px]"><T>{d.titulo}</T></h2>
+          <p className="m-0 mt-4 max-w-[560px] text-[16px] leading-relaxed text-white/70"><T>{d.texto}</T></p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <LocalizedClientLink
               href={d.boton.href}
               className="rounded-[12px] px-6 py-3.5 text-[15.5px] font-extrabold text-white shadow-lg hover:brightness-110"
               style={{ background: d.acento }}
             >
-              {d.boton.texto} →
+              <T>{d.boton.texto}</T> →
             </LocalizedClientLink>
             <div className="flex items-center gap-2">
               <button
@@ -127,7 +128,7 @@ export function SliderHerramientas() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
                 <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
                 <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
-                <span className="ml-3 truncate rounded-md bg-white/5 px-3 py-0.5 text-[11px] text-white/50">hetnacnc.com/calculadora-cnc</span>
+                <span className="ml-3 truncate rounded-md bg-white/5 px-3 py-0.5 text-[11px] text-white/50"><T>hetnacnc.com/calculadora-cnc</T></span>
               </div>
               <Image src={d.imagen.src} alt={d.imagen.alt} width={d.imagen.ancho} height={d.imagen.alto} className="h-auto w-full" priority={i === 0} sizes="(min-width: 1024px) 640px, 100vw" />
             </div>

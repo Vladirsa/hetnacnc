@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { OrderConfirmedSection } from "@/components/sections/OrderConfirmedSection/OrderConfirmedSection"
 import { ActivarAvisos } from "@/components/hetna/push/ActivarAvisos"
 import { WhatsappCuenta } from "@/components/hetna/cuenta/WhatsappCuenta"
@@ -9,7 +10,7 @@ import { notFound } from "next/navigation"
 type Props = {
   params: Promise<{ id: string }>
 }
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Pedido confirmado",
   description: "Tu compra se realizó con éxito",
 }
@@ -40,4 +41,9 @@ export default async function OrderConfirmedPage(props: Props) {
       <OrderConfirmedSection order={order} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

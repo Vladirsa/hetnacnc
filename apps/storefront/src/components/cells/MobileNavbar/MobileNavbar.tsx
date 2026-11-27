@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from 'react';
 
 import { HttpTypes } from '@medusajs/types';
@@ -55,7 +56,7 @@ export const MobileNavbar = ({
             className="flex items-center justify-between border-b p-4"
             data-testid="mobile-menu-header"
           >
-            <h2 className="heading-md uppercase text-primary">Menú</h2>
+            <h2 className="heading-md uppercase text-primary"><T>Menú</T></h2>
             <IconButton
               icon={<CloseIcon size={20} />}
               onClick={() => closeMenuHandler()}

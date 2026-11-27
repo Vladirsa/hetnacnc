@@ -3,6 +3,7 @@
 // Lo que ve quien quiere descargar un programa y su plan no alcanza: por qué,
 // y el paso que sigue (entrar a su cuenta o ver los planes). También la línea
 // de "te quedan N este mes".
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 export type CupoVista = { incluido: boolean; limite: number | null; usadas: number; restantes: number | null }
@@ -40,15 +41,15 @@ export function CandadoCam({ negado, oscuro = false, regreso }: { negado: Negado
   const boton = "inline-flex items-center justify-center rounded-[8px] bg-[#C2560A] px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-[#A84A08]"
   return (
     <div role="alert" className={`flex flex-col gap-2 rounded-[10px] border p-3 text-[13.5px] leading-snug ${caja}`}>
-      <span>{negado.mensaje}</span>
+      <span><T>{negado.mensaje}</T></span>
       {negado.codigo === "sesion" && (
         <a href={`/mx/login?volver=${encodeURIComponent(regreso)}`} className={boton}>
-          Entrar o crear mi cuenta
+          <T>Entrar o crear mi cuenta</T>
         </a>
       )}
       {(negado.codigo === "plan" || negado.codigo === "cupo") && (
         <a href={PLANES} className={boton}>
-          Ver los planes
+          <T>Ver los planes</T>
         </a>
       )}
     </div>

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 import { AdditionalAttributeProps } from "@/types/product"
@@ -42,7 +43,7 @@ export const PuntosDestacados = ({
       icono: "🏭",
       texto: (
         <>
-          Hecho y vendido por{" "}
+          <TS>Hecho y vendido por</TS>{" "}
           {taller.handle ? (
             <a
               href={`/${locale}/sellers/${taller.handle}`}
@@ -64,8 +65,8 @@ export const PuntosDestacados = ({
           icono: "🧑‍💻",
           texto: (
             <>
-              <span className="font-semibold">Servicio en línea.</span> No te llega nada por
-              paquetería: recibes tus archivos en tu cuenta.
+              <span className="font-semibold"><TS>Servicio en línea.</TS></span> <TS>No te llega nada por
+              paquetería: recibes tus archivos en tu cuenta.</TS>
             </>
           ),
         }
@@ -74,8 +75,8 @@ export const PuntosDestacados = ({
           icono: "⬇️",
           texto: (
             <>
-              <span className="font-semibold">Descarga digital.</span> No te llega nada
-              por paquetería: el archivo se descarga al confirmarse el pago.
+              <span className="font-semibold"><TS>Descarga digital.</TS></span> <TS>No te llega nada
+              por paquetería: el archivo se descarga al confirmarse el pago.</TS>
             </>
           ),
         }
@@ -83,8 +84,8 @@ export const PuntosDestacados = ({
           icono: "📦",
           texto: (
             <>
-              <span className="font-semibold">Envío a todo México.</span> El costo y los
-              días los ves antes de pagar.
+              <span className="font-semibold"><TS>Envío a todo México.</TS></span> <TS>El costo y los
+              días los ves antes de pagar.</TS>
             </>
           ),
         }
@@ -96,9 +97,9 @@ export const PuntosDestacados = ({
       icono: "📜",
       texto: (
         <>
-          Licencia: <span className="font-semibold">{nombreLicencia(product.metadata)}</span>.{" "}
+          <TS>Licencia:</TS> <span className="font-semibold">{nombreLicencia(product.metadata)}</span>.{" "}
           <LocalizedClientLink href="/licencias-disenos" className="font-semibold text-[#B34D07] underline">
-            Qué incluye
+            <TS>Qué incluye</TS>
           </LocalizedClientLink>
         </>
       ),
@@ -106,13 +107,13 @@ export const PuntosDestacados = ({
   }
 
   if (material) {
-    puntos.push({ icono: "🪵", texto: <>Material: <span className="font-semibold">{material}</span></> })
+    puntos.push({ icono: "🪵", texto: <><TS>Material:</TS> <span className="font-semibold">{material}</span></> })
   } else if (categoria?.name) {
     puntos.push({
       icono: "🏷️",
       texto: (
         <>
-          Categoría:{" "}
+          <TS>Categoría:</TS>{" "}
           {categoria.handle ? (
             <LocalizedClientLink
               href={`/categories/${categoria.handle}`}
@@ -132,25 +133,25 @@ export const PuntosDestacados = ({
     icono: "↩️",
     texto: servicio ? (
       <>
-        Si lo que entregamos no corresponde a lo acordado, lo corregimos.{" "}
+        <TS>Si lo que entregamos no corresponde a lo acordado, lo corregimos.</TS>{" "}
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
-          Ver política
+          <TS>Ver política</TS>
         </LocalizedClientLink>
       </>
     ) : digital ? (
       <>
-        Los archivos no tienen devolución una vez descargados, salvo que estén dañados o
-        no correspondan.{" "}
+        <TS>Los archivos no tienen devolución una vez descargados, salvo que estén dañados o
+        no correspondan.</TS>{" "}
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
-          Ver política
+          <TS>Ver política</TS>
         </LocalizedClientLink>
       </>
     ) : (
       <>
-        <span className="font-semibold">{EMPRESA.diasDevolucion} días naturales</span> para
-        devolver, sin uso y en su empaque.{" "}
+        <span className="font-semibold">{EMPRESA.diasDevolucion} <TS>días naturales</TS></span> <TS>para
+        devolver, sin uso y en su empaque.</TS>{" "}
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
-          Ver política
+          <TS>Ver política</TS>
         </LocalizedClientLink>
       </>
     ),
@@ -158,7 +159,7 @@ export const PuntosDestacados = ({
 
   return (
     <section className="rounded-[14px] border border-[#E7E4DC] bg-white p-4" data-testid="product-highlights">
-      <h2 className="text-[15px] font-bold text-[#1B1B18]">Puntos destacados</h2>
+      <h2 className="text-[15px] font-bold text-[#1B1B18]"><TS>Puntos destacados</TS></h2>
       <ul className="mt-2.5 flex flex-col gap-2.5">
         {puntos.map((p, n) => (
           <li key={n} className="flex items-start gap-2.5 text-[14px] leading-relaxed text-[#4A4943]">
@@ -168,7 +169,7 @@ export const PuntosDestacados = ({
             >
               {p.icono}
             </span>
-            <span className="min-w-0 pt-0.5">{p.texto}</span>
+            <span className="min-w-0 pt-0.5"><TS>{p.texto}</TS></span>
           </li>
         ))}
       </ul>

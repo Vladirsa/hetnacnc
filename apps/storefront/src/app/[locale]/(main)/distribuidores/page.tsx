@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { FormDistribuidor } from "@/components/hetna/distribuidor/FormDistribuidor"
@@ -5,7 +7,7 @@ import { FormDistribuidor } from "@/components/hetna/distribuidor/FormDistribuid
 // Página para distribuidores de máquinas CNC (router, láser, plasma, fibra):
 // les ofrecemos un código propio para regalar meses de HETNA Taller con cada
 // máquina que venden. Los códigos se crean en HETNA Panel → Distribuidores.
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/distribuidores" },
   title: "Distribuidores de máquinas CNC: regala HETNA Taller con cada venta",
   description:
@@ -31,24 +33,24 @@ export default function DistribuidoresPage() {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1100px] px-4 py-14 lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Para distribuidores de máquinas CNC</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Para distribuidores de máquinas CNC</TS></p>
           <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">
-            Regala HETNA Taller con cada máquina que vendes
+            <TS>Regala HETNA Taller con cada máquina que vendes</TS>
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">
-            Router, láser CO₂, plasma o fibra: tu cliente recibe <strong className="text-white">hasta 3 meses del Cotizador HETNA</strong> para cotizar, controlar su taller y empezar a cobrar desde la primera semana.
+            <TS>Router, láser CO₂, plasma o fibra: tu cliente recibe</TS> <strong className="text-white"><TS>hasta 3 meses del Cotizador HETNA</TS></strong> <TS>para cotizar, controlar su taller y empezar a cobrar desde la primera semana.</TS>
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a href="#solicitud" className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white no-underline hover:brightness-110">
-              Quiero mi código de distribuidor
+              <TS>Quiero mi código de distribuidor</TS>
             </a>
-            <a href="/cotizador/" className="text-white/80 underline">Ver el Cotizador</a>
+            <a href="/cotizador/" className="text-white/80 underline"><TS>Ver el Cotizador</TS></a>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-[1100px] px-4 py-12 lg:px-6">
-        <h2 className="text-2xl font-extrabold text-[#142033]">Por qué a tu cliente le sirve (y a ti también)</h2>
+        <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Por qué a tu cliente le sirve (y a ti también)</TS></h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {POR_QUE.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
@@ -63,7 +65,7 @@ export default function DistribuidoresPage() {
       <section className="mx-auto max-w-[1100px] px-4 pb-14 lg:px-6">
         <div className="grid gap-6 rounded-3xl border border-[#E7E4DC] bg-white p-6 sm:p-10 lg:grid-cols-2">
           <div>
-            <h2 className="text-2xl font-extrabold text-[#142033]">Cómo funciona</h2>
+            <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Cómo funciona</TS></h2>
             <ol className="mt-4 grid gap-3 text-[#40403A]">
               {PASOS.map((p, i) => (
                 <li key={i}><strong>{i + 1}.</strong> {p}</li>
@@ -71,25 +73,30 @@ export default function DistribuidoresPage() {
             </ol>
           </div>
           <div className="rounded-2xl bg-[#F3F1EA] p-5 text-sm text-[#40403A]">
-            <p className="font-bold text-[#142033]">Qué incluye HETNA Taller</p>
+            <p className="font-bold text-[#142033]"><TS>Qué incluye HETNA Taller</TS></p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>Simulador de costos desde DXF, SVG y STL, con receta de corte por material.</li>
-              <li>Cotizaciones profesionales con dibujo y medidas, por PDF y WhatsApp.</li>
-              <li>Órdenes de trabajo con QR, inventario y control de producción.</li>
-              <li>Rentabilidad por máquina y mantenimiento por horas.</li>
-              <li>Liga para que su cliente acepte y pague el anticipo en línea.</li>
+              <li><TS>Simulador de costos desde DXF, SVG y STL, con receta de corte por material.</TS></li>
+              <li><TS>Cotizaciones profesionales con dibujo y medidas, por PDF y WhatsApp.</TS></li>
+              <li><TS>Órdenes de trabajo con QR, inventario y control de producción.</TS></li>
+              <li><TS>Rentabilidad por máquina y mantenimiento por horas.</TS></li>
+              <li><TS>Liga para que su cliente acepte y pague el anticipo en línea.</TS></li>
             </ul>
-            <p className="mt-3 text-[12px] text-[#6B675C]">El código vale para talleres nuevos, en sus primeros 30 días. Al terminar los días de regalo, el taller decide si sigue con un plan de pago o con el plan gratis.</p>
+            <p className="mt-3 text-[12px] text-[#6B675C]"><TS>El código vale para talleres nuevos, en sus primeros 30 días. Al terminar los días de regalo, el taller decide si sigue con un plan de pago o con el plan gratis.</TS></p>
           </div>
         </div>
       </section>
       <section id="solicitud" className="mx-auto max-w-[760px] scroll-mt-20 px-4 pb-16 lg:px-6">
-        <h2 className="text-center text-2xl font-extrabold text-[#142033]">Pide tu código de distribuidor</h2>
-        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-[#6B675C]">Sin costo. Revisamos tu solicitud y te llega tu código por correo.</p>
+        <h2 className="text-center text-2xl font-extrabold text-[#142033]"><TS>Pide tu código de distribuidor</TS></h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-[#6B675C]"><TS>Sin costo. Revisamos tu solicitud y te llega tu código por correo.</TS></p>
         <div className="mt-6 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
           <FormDistribuidor />
         </div>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

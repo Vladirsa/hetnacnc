@@ -53,6 +53,7 @@ export const HERRAMIENTAS: Record<string, [string, boolean]> = {
   "esferas-navidad": ["Esferas navideñas con nombre", false],
   "cortadores-galletas": ["Cortadores de galletas", false],
   "ferulas-3d": ["Férulas termoformables", false],
+  "patrones-3d": ["Patrones paramétricos 3D", false],
   "organizador-herramientas": ["Organizador de herramientas desde foto", false],
   "reloj-palabras": ["Reloj de palabras", false],
   "mapa-topografico": ["Mapa topográfico por capas", false],

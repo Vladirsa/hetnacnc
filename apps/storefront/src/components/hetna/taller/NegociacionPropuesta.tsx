@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -62,7 +63,7 @@ export default function NegociacionPropuesta({ token, p, abierta, compacta = fal
       {version > 1 && (
         <div>
           <button type="button" onClick={() => setVerCambios((v) => !v)} className="rounded-full bg-[#EAF1FB] px-2 py-0.5 font-semibold text-[#1F5FBF]">
-            Versión {version} · {verCambios ? "ocultar cambios" : "ver cambios"}
+            <T>Versión</T> {version} · {verCambios ? "ocultar cambios" : "ver cambios"}
           </button>
           {verCambios && (
             <ul className="mt-1 space-y-0.5 text-xs text-[#40403A]">
@@ -70,12 +71,12 @@ export default function NegociacionPropuesta({ token, p, abierta, compacta = fal
                 <li key={h.version}>
                   <b>v{h.version}</b> · {h.precio != null ? pesos(h.precio) : "—"} · {h.dias != null ? `${h.dias} días` : "—"}
                   <span className="text-[#8A867B]"> · {fecha(h.fecha)}</span>
-                  {h.origen === "contraoferta" && <span className="text-[#1E7B3A]"> · cambió por tu contraoferta</span>}
+                  {h.origen === "contraoferta" && <span className="text-[#1E7B3A]"> <T>· cambió por tu contraoferta</T></span>}
                   {h.motivo && <span className="block pl-3 italic text-[#6B675C]">“{h.motivo}”</span>}
                 </li>
               ))}
               <li>
-                <b>v{version}</b> (actual) · {pesos(p.precio)} · {p.dias} días
+                <b>v{version}</b> <T>(actual) ·</T> {pesos(p.precio)} · {p.dias} <T>días</T>
               </li>
             </ul>
           )}
@@ -87,7 +88,7 @@ export default function NegociacionPropuesta({ token, p, abierta, compacta = fal
           {contras.map((c) => (
             <li key={c.id} className="rounded-lg bg-[#FAF9F6] px-2 py-1 text-xs">
               <span className="text-[#40403A]">
-                Tu contraoferta: {[c.precio != null ? pesos(c.precio) : null, c.dias != null ? `${c.dias} días` : null].filter(Boolean).join(" · ") || "mensaje"}
+                <T>Tu contraoferta:</T> {[c.precio != null ? pesos(c.precio) : null, c.dias != null ? `${c.dias} días` : null].filter(Boolean).join(" · ") || "mensaje"}
               </span>
               <span className={`block font-semibold ${ESTADO[c.estado]?.c || ""}`}>{ESTADO[c.estado]?.t || c.estado}</span>
               {c.nota_taller && <span className="block italic text-[#6B675C]">“{c.nota_taller}”</span>}
@@ -98,22 +99,22 @@ export default function NegociacionPropuesta({ token, p, abierta, compacta = fal
 
       {puede && !abiertoForm && (
         <button type="button" onClick={() => setAbiertoForm(true)} className="mt-1.5 rounded-xl border border-[#C2560A] px-3 py-1.5 font-semibold text-[#C2560A] hover:bg-[#FFF1E6]">
-          Hacer contraoferta
+          <T>Hacer contraoferta</T>
         </button>
       )}
       {abiertoForm && (
         <div className="mt-2 space-y-2 rounded-xl border border-[#E7E4DC] bg-white p-3">
           <p className="text-xs text-[#6B675C]">
-            Propón lo que te funciona. Si el taller acepta, su propuesta se actualiza sola. Te quedan {MAX - contras.length} de {MAX}.
+            <T>Propón lo que te funciona. Si el taller acepta, su propuesta se actualiza sola. Te quedan</T> {MAX - contras.length} <T>de</T> {MAX}.
           </p>
           <div className="flex gap-2">
             <label className="flex-1 text-xs text-[#40403A]">
-              Precio que pides
+              <T>Precio que pides</T>
               <input inputMode="decimal" value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder={String(Math.round(p.precio * 0.9))}
                 className="mt-0.5 w-full rounded-lg border border-[#D9D5C9] px-2 py-1.5 text-sm" />
             </label>
             <label className="w-28 text-xs text-[#40403A]">
-              Días
+              <T>Días</T>
               <input inputMode="numeric" value={dias} onChange={(e) => setDias(e.target.value)} placeholder={String(p.dias)}
                 className="mt-0.5 w-full rounded-lg border border-[#D9D5C9] px-2 py-1.5 text-sm" />
             </label>
@@ -122,7 +123,7 @@ export default function NegociacionPropuesta({ token, p, abierta, compacta = fal
             className="w-full rounded-lg border border-[#D9D5C9] px-2 py-1.5 text-sm" />
           {error && <p className="text-xs text-[#B3261E]">{error}</p>}
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setAbiertoForm(false)} className="rounded-xl px-3 py-1.5 font-semibold text-[#40403A]">Cancelar</button>
+            <button type="button" onClick={() => setAbiertoForm(false)} className="rounded-xl px-3 py-1.5 font-semibold text-[#40403A]"><T>Cancelar</T></button>
             <button type="button" onClick={enviar} disabled={pendiente} className="rounded-xl bg-[#C2560A] px-4 py-1.5 font-semibold text-white disabled:opacity-60">
               {pendiente ? "Enviando…" : "Mandar contraoferta"}
             </button>

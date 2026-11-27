@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 
 import { pedirAvisoExistencia } from "@/lib/data/aviso-existencia"
@@ -15,7 +16,7 @@ export default function AvisoExistencia({ productId, variantId, correoInicial }:
   if (listo) {
     return (
       <p className="mt-3 rounded-[8px] bg-[#EEF7F0] px-3 py-2 text-[14px] font-semibold text-[#17633A]" data-testid="aviso-existencia-listo">
-        ✓ Te avisamos a {email} en cuanto vuelva a haber.
+        <T>✓ Te avisamos a</T> {email} <T>en cuanto vuelva a haber.</T>
       </p>
     )
   }
@@ -27,7 +28,7 @@ export default function AvisoExistencia({ productId, variantId, correoInicial }:
         className="mt-3 w-full rounded-[8px] border-2 border-[#142033] bg-white px-4 py-2.5 text-[15px] font-semibold text-[#142033] hover:bg-[#F4F2EC]"
         data-testid="aviso-existencia-abrir"
       >
-        🔔 Avísame cuando haya
+        <T>🔔 Avísame cuando haya</T>
       </button>
     )
   }
@@ -58,7 +59,7 @@ export default function AvisoExistencia({ productId, variantId, correoInicial }:
         {pendiente ? "Guardando…" : "Avísame"}
       </button>
       {error && <p className="w-full text-[13px] text-[#9B3225]">{error}</p>}
-      <p className="w-full text-[12px] text-[#6B6A63]">Sólo te escribimos para avisarte de este producto.</p>
+      <p className="w-full text-[12px] text-[#6B6A63]"><T>Sólo te escribimos para avisarte de este producto.</T></p>
     </form>
   )
 }

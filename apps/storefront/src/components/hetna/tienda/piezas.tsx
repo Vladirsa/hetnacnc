@@ -1,4 +1,5 @@
 // Piezas de la tienda (/mx/tienda) que sirven igual en servidor y navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import type { ComoSeCompra } from "@/lib/hetna/tienda"
 
 export const C = {
@@ -38,7 +39,7 @@ const ETIQUETAS: Record<string, { texto: string; clase: string }> = {
 
 export function Etiqueta({ tipo }: { tipo: keyof typeof ETIQUETAS | string }) {
   const e = ETIQUETAS[tipo] || ETIQUETAS.servicio
-  return <span className={`inline-flex items-center rounded px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] ${e.clase}`}>{e.texto}</span>
+  return <span className={`inline-flex items-center rounded px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] ${e.clase}`}><T>{e.texto}</T></span>
 }
 
 // Patrones de fondo (SVG en línea) para las tarjetas sin foto

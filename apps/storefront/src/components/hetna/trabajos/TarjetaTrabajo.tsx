@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { diasRestantes, lugarTrabajo, tituloTrabajo, type TrabajoPublico } from "@/lib/trabajos/datos"
 
@@ -15,7 +16,7 @@ export function TarjetaTrabajo({ trabajo: t }: { trabajo: TrabajoPublico }) {
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="font-bold text-[#6B675C]">
           {t.folio}
-          {t.tipo === "suministro" && <span className="ml-1.5 rounded-full bg-[#EEF6F0] px-2 py-0.5 text-[#1E7B3A]">Suministro</span>}
+          {t.tipo === "suministro" && <span className="ml-1.5 rounded-full bg-[#EEF6F0] px-2 py-0.5 text-[#1E7B3A]"><T>Suministro</T></span>}
         </span>
         {t.estado === "abierta" ? (
           <span className="rounded-full bg-[#EEF6EE] px-2 py-0.5 font-bold text-[#1F5A2B]">

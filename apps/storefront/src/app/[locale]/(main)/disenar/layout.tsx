@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { MigasDisenar } from "@/components/hetna/disenar/NavDisenar"
 
@@ -10,7 +11,7 @@ export default function DisenarLayout({ children }: { children: React.ReactNode 
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
           <MigasDisenar />
           <LocalizedClientLink href="/herramientas-cnc" className="hidden shrink-0 text-[13px] font-semibold text-[#B34D07] hover:underline sm:inline">
-            Calculadoras y cotizador
+            <TS>Calculadoras y cotizador</TS>
           </LocalizedClientLink>
         </div>
       </div>

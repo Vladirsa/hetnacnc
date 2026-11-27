@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
@@ -120,7 +121,7 @@ export function MarcoLaboratorio({
             aviso.tono === "error" ? "bg-[#FDECEC] text-[#9B1C1C]" : "bg-white text-[#1B1B18]"
           }`}
         >
-          {aviso.texto}
+          <T>{aviso.texto}</T>
         </div>
       )}
       {src ? (
@@ -133,7 +134,7 @@ export function MarcoLaboratorio({
         />
       ) : (
         <div className={`flex w-full items-center ${pantallaCompleta ? "h-[calc(100dvh-3.5rem)]" : "h-[720px]"} justify-center bg-[#0F1115] text-[14px] text-[#A5A29A]`}>
-          Cargando el laboratorio…
+          <T>Cargando el laboratorio…</T>
         </div>
       )}
     </div>

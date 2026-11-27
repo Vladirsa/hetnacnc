@@ -29,6 +29,7 @@ const MODO_LETRERO: Record<string, ModoLetrero> = { letreros: "letrero", "estenc
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorCortadores = dynamic(() => import("@/components/hetna/generador/GeneradorCortadores").then((m) => m.GeneradorCortadores))
 const GeneradorFerulas = dynamic(() => import("@/components/hetna/generador/GeneradorFerulas").then((m) => m.GeneradorFerulas))
+const GeneradorParametrico = dynamic(() => import("@/components/hetna/generador/GeneradorParametrico").then((m) => m.GeneradorParametrico))
 const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador/GeneradorTexturizador").then((m) => m.GeneradorTexturizador))
 // llaveros, etiquetas en braille y etiquetas para cajas: Llaveros y placas
 const GeneradorLlaverosPlacas = dynamic(() => import("@/components/hetna/generador/GeneradorLlaverosPlacas").then((m) => m.GeneradorLlaverosPlacas))
@@ -51,6 +52,7 @@ const GENERADORES: Record<string, React.ComponentType> = {
   texturizador: GeneradorTexturizador,
   "cortadores-galletas": GeneradorCortadores,
   "ferulas-3d": GeneradorFerulas,
+  "patrones-3d": GeneradorParametrico,
   "plantillas-empaque": GeneradorEmpaques,
   "organizador-cajon": GeneradorOrganizador,
   "partir-3d": GeneradorPartir3D,

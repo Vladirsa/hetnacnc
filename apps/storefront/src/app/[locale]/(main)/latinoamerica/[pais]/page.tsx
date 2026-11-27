@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 
@@ -10,7 +11,7 @@ export const revalidate = 300
 
 type Props = { params: Promise<{ pais: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { pais } = await params
   return metaPais(pais)
 }
@@ -20,4 +21,9 @@ export default async function PaisLatamPage({ params }: Props) {
   if (!paisPorClave(pais)) notFound()
   if (pais === "es" || pais === "us") permanentRedirect(rutaPais(pais))
   return <PaginaPais pais={pais} />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

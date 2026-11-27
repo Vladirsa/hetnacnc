@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { permanentRedirect } from "next/navigation"
 
@@ -15,7 +16,7 @@ const URL_ES = `${SITIO}/mx/servicios/cotizador-cnc`
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "HETNA CNC: quoting app for CNC shops | Router, laser, plasma" },
   description:
     "Quote CNC jobs in minutes with your real machine time, material and margin. Price from DXF, SVG, STL or OBJ files, send branded PDF quotes and track every customer. 14-day free trial.",
@@ -85,4 +86,9 @@ export default async function CotizadorEnPage({ params }: Props) {
       <CotizadorLandingEn precios={precios} />
     </>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

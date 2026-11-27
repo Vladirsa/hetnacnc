@@ -2,6 +2,7 @@
 
 // Esténcil de letras (2D Studio): plantillas con puentes para pintar con
 // aerosol cajas, bultos y señalética.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -69,11 +70,11 @@ export function GeneradorEstencil({ cabecera }: { cabecera?: React.ReactNode }) 
               className={`rounded-[8px] px-2 py-1.5 text-left text-[12.5px] font-semibold ${letra === f.id ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#232D3D]"}`}
             >
               {f.nombre}
-              {f.grupo === "Esténcil" && <span className="ml-1 text-[10.5px] font-normal opacity-80">esténcil</span>}
+              {f.grupo === "Esténcil" && <span className="ml-1 text-[10.5px] font-normal opacity-80"><T>esténcil</T></span>}
             </button>
           ))}
         </div>
-        {error && <span className="text-[12px] text-[#F6B8AE]">No se pudo cargar la letra. Revisa tu conexión.</span>}
+        {error && <span className="text-[12px] text-[#F6B8AE]"><T>No se pudo cargar la letra. Revisa tu conexión.</T></span>}
       </Seccion>
       <Seccion titulo="Tamaño">
         <div className="grid grid-cols-2 gap-2">

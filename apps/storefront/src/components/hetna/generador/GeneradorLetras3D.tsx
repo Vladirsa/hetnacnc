@@ -5,6 +5,7 @@
 //
 // 25 nov 2026: modo "Impresora 3D" (LetrasImpresion3D): letras de pie con base,
 // para colgar con plantilla de montaje, o huecas para LED. ?modo=impresion lo abre.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import dynamic from "next/dynamic"
@@ -55,7 +56,7 @@ const Etiqueta = ({ children }: { children: React.ReactNode }) => (
 
 const CampoNum = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[12.5px] text-[#C9D2E0]">{etiqueta}</span>
+    <span className="text-[12.5px] text-[#C9D2E0]"><T>{etiqueta}</T></span>
     <span className="flex items-center rounded-[8px] bg-[#1C2431] focus-within:ring-1 focus-within:ring-[#C2560A]">
       <input
         type="text"
@@ -206,7 +207,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
     <div className="flex flex-col gap-4">
       {selector}
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Texto</Etiqueta>
+        <Etiqueta><T>Texto</T></Etiqueta>
         <input
           value={texto}
           onChange={(e) => setTexto(e.target.value.slice(0, 24))}
@@ -215,7 +216,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Tipografía</Etiqueta>
+        <Etiqueta><T>Tipografía</T></Etiqueta>
         <select
           value={fuenteId}
           onChange={(e) => setFuenteId(e.target.value)}
@@ -227,11 +228,11 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
             </option>
           ))}
         </select>
-        <span className="text-[11.5px] text-[#8A97AB]">Las letras gruesas (de molde) dan más espacio para los LED.</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Las letras gruesas (de molde) dan más espacio para los LED.</T></span>
       </label>
 
       <div className="rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-3 flex flex-col gap-2">
-        <span className="text-[13px] font-bold text-white">Alto de letra (la H)</span>
+        <span className="text-[13px] font-bold text-white"><T>Alto de letra (la H)</T></span>
         <div className="flex items-center gap-3">
           <input type="range" min={50} max={800} step={5} value={numero(alto) || 50} onChange={(e) => setAlto(e.target.value)} className="flex-1 accent-[#C2560A]" />
           <span className="w-[84px]">
@@ -240,13 +241,13 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
         </div>
         {listo && (
           <span className="text-[12px] text-[#F2D29B]">
-            Ancho total {r1(r!.ancho)} mm · alto {r1(r!.alto)} mm · fondo {r1(r!.profundidadReal)} mm
+            <T>Ancho total</T> {r1(r!.ancho)} <T>mm · alto</T> {r1(r!.alto)} <T>mm · fondo</T> {r1(r!.profundidadReal)} <T>mm</T>
           </span>
         )}
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Etiqueta>Construcción</Etiqueta>
+        <Etiqueta><T>Construcción</T></Etiqueta>
         <div className="grid grid-cols-3 gap-1.5">
           {CONSTRUCCIONES.map((c) => (
             <button
@@ -274,7 +275,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Área de corte de tu máquina</Etiqueta>
+        <Etiqueta><T>Área de corte de tu máquina</T></Etiqueta>
         <select
           value={hojaId}
           onChange={(e) => {
@@ -292,7 +293,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>Separar capas (vista 3D)</Etiqueta>
+        <Etiqueta><T>Separar capas (vista 3D)</T></Etiqueta>
         <input type="range" min={0} max={20} step={1} value={separar} onChange={(e) => setSeparar(Number(e.target.value))} className="accent-[#C2560A]" />
       </label>
 
@@ -321,7 +322,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
                   k === hojaVista ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
                 }`}
               >
-                {x.material} · hoja {x.i + 1}/{x.total}
+                {x.material} <T>· hoja</T> {x.i + 1}/{x.total}
               </button>
             ))}
           </div>
@@ -340,7 +341,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
           )}
           {noCaben.length > 0 && (
             <p className="m-0 text-[13px] text-[#F2D29B]">
-              {noCaben.length} {noCaben.length === 1 ? "pieza no cabe" : "piezas no caben"} en el área de corte: elige un área más grande o baja el alto.
+              {noCaben.length} {noCaben.length === 1 ? "pieza no cabe" : "piezas no caben"} <T>en el área de corte: elige un área más grande o baja el alto.</T>
             </p>
           )}
         </>
@@ -349,12 +350,12 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
   )
 
   const exportacion = !listo ? (
-    <p className="m-0 text-[14px] text-[#8A97AB]">Completa los datos para generar los archivos.</p>
+    <p className="m-0 text-[14px] text-[#8A97AB]"><T>Completa los datos para generar los archivos.</T></p>
   ) : (
     <div className="flex flex-col gap-5 max-w-[720px]">
       <div>
-        <h3 className="m-0 text-[18px] font-bold">Archivos de corte</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">Un archivo por material, con todas sus hojas acomodadas una junto a otra.</p>
+        <h3 className="m-0 text-[18px] font-bold"><T>Archivos de corte</T></h3>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]"><T>Un archivo por material, con todas sus hojas acomodadas una junto a otra.</T></p>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
         {grupos.map((g) => {
@@ -364,15 +365,15 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
             <div key={g.material} className="rounded-[12px] bg-[#1C2431] border border-[#2B3648] p-4 flex flex-col gap-2">
               <span className="text-[15px] font-bold">{g.material}</span>
               <span className="text-[12.5px] text-[#8A97AB]">
-                {g.resultado.totalPiezas} piezas · {g.resultado.hojas.length} {g.resultado.hojas.length === 1 ? "hoja" : "hojas"} ·{" "}
-                {Math.round(g.resultado.aprovechamiento * 100)}% aprovechado
+                {g.resultado.totalPiezas} <T>piezas ·</T> {g.resultado.hojas.length} {g.resultado.hojas.length === 1 ? "hoja" : "hojas"} ·{" "}
+                {Math.round(g.resultado.aprovechamiento * 100)}<T>% aprovechado</T>
               </span>
               <div className="flex gap-2">
                 <button type="button" onClick={() => descargar(`${nombre}.dxf`, dibujoDXF(d), "application/dxf")} className="flex-1 rounded-[8px] bg-[#C2560A] hover:bg-[#A84A08] py-2 text-[13px] font-semibold">
-                  DXF
+                  <T>DXF</T>
                 </button>
                 <button type="button" onClick={() => descargar(`${nombre}.svg`, dibujoSVG(d, "corte"), "image/svg+xml")} className="flex-1 rounded-[8px] bg-[#2B3648] hover:bg-[#344158] py-2 text-[13px] font-semibold">
-                  SVG
+                  <T>SVG</T>
                 </button>
               </div>
               <BotonesCam nombre={nombre} dxf={() => dibujoDXF(d)} compacto />
@@ -382,8 +383,8 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       </div>
 
       <div className="rounded-[12px] bg-[#1C2431] border border-[#2B3648] p-4 flex flex-col gap-2">
-        <span className="text-[15px] font-bold">Modelo 3D (STL)</span>
-        <span className="text-[12.5px] text-[#8A97AB]">Para revisarlo en tu programa o imprimir una maqueta.</span>
+        <span className="text-[15px] font-bold"><T>Modelo 3D (STL)</T></span>
+        <span className="text-[12.5px] text-[#8A97AB]"><T>Para revisarlo en tu programa o imprimir una maqueta.</T></span>
         <button
           type="button"
           onClick={() => {
@@ -392,7 +393,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
           }}
           className="self-start rounded-[8px] bg-[#2B3648] hover:bg-[#344158] px-4 py-2 text-[13px] font-semibold"
         >
-          Descargar STL
+          <T>Descargar STL</T>
         </button>
         <BotonesCam
           nombre={archivo}
@@ -404,8 +405,8 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       </div>
 
       <div className="rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4 flex flex-col gap-2">
-        <span className="text-[15px] font-bold">¿No tienes láser?</span>
-        <span className="text-[13px] text-[#F2D29B]">Mándalo a cortar con un taller de HETNA: recibes precio y tiempo de entrega.</span>
+        <span className="text-[15px] font-bold"><T>¿No tienes láser?</T></span>
+        <span className="text-[13px] text-[#F2D29B]"><T>Mándalo a cortar con un taller de HETNA: recibes precio y tiempo de entrega.</T></span>
         <button
           type="button"
           onClick={() => {
@@ -420,7 +421,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
           }}
           className="self-start rounded-[8px] bg-[#C2560A] hover:bg-[#A84A08] px-4 py-2 text-[13px] font-semibold"
         >
-          Cotizar el corte
+          <T>Cotizar el corte</T>
         </button>
       </div>
     </div>
@@ -443,7 +444,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
       barra={
         listo ? (
           <span>
-            · {totalPiezas} piezas · {totalHojas} {totalHojas === 1 ? "hoja" : "hojas"} ·{" "}
+            · {totalPiezas} <T>piezas ·</T> {totalHojas} {totalHojas === 1 ? "hoja" : "hojas"} ·{" "}
             {Object.entries(resumenMateriales(r!))
               .map(([m, n]) => `${n} de ${m}`)
               .join(" · ")}
