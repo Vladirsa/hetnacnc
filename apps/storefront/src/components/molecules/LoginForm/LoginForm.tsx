@@ -16,6 +16,7 @@ import { LabeledInput } from '@/components/cells/LabeledInput/LabeledInput'
 import { login, reenviarConfirmacion, transferCart } from '@/lib/data/customer';
 import { toast } from '@/lib/helpers/toast';
 import { CampoCodigo } from '@/components/hetna/cuenta/CampoCodigo';
+import { BotonesSociales } from '@/components/hetna/cuenta/BotonesSociales';
 
 import { LoginFormData, loginFormSchema } from './schema';
 
@@ -140,6 +141,7 @@ const Form = () => {
               <CampoCodigo email={porConfirmar.email} alConfirmar={() => handleSubmit(submit)()} />
             </div>
           )}
+          <BotonesSociales destino={destino} />
           <form
             onSubmit={enviar}
             data-testid="login-form"

@@ -14,6 +14,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { registerFormSchema, RegisterFormData } from "./schema"
 import { login, signup } from "@/lib/data/customer"
 import { CampoCodigo } from "@/components/hetna/cuenta/CampoCodigo"
+import { BotonesSociales } from "@/components/hetna/cuenta/BotonesSociales"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
@@ -179,6 +180,7 @@ const Form = () => {
         <h1 className="heading-md text-primary uppercase mb-8">
           <T>Crear cuenta</T>
         </h1>
+        <BotonesSociales destino={volver || "/user"} />
         <form onSubmit={enviar} noValidate data-testid="register-form">
           {/* Trampa para robots: fuera de la vista y del teclado; si llega llena, no se crea la cuenta */}
           <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>

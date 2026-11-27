@@ -25,6 +25,7 @@ import { storeRastreoMiddlewares } from "./store/hetna-rastreo/middlewares";
 import { storeCotizadorVinculoMiddlewares } from "./store/cotizador-vinculo/middlewares";
 import { storeEnvioPerfilMiddlewares } from "./store/envio-perfil/middlewares";
 import { storeVerificacionMiddlewares } from "./store/verificacion/middlewares";
+import { storeHetnaSocialMiddlewares } from "./store/hetna-social/middlewares";
 import { storeCustomersMiddlewares } from "./store/customers/proteger-metadata";
 import { storeVendedoresMiddlewares } from "./store/proteger-vendedores";
 import { storeTextoPersonalizadoMiddlewares } from "./store/carts/texto-personalizado";
@@ -275,6 +276,7 @@ export default defineMiddlewares({
         ...storeCotizadorVinculoMiddlewares,
         ...storeEnvioPerfilMiddlewares,
         ...storeVerificacionMiddlewares,
+        ...storeHetnaSocialMiddlewares,
         ...storeCustomersMiddlewares,
         ...storeVendedoresMiddlewares,
         ...storeTextoPersonalizadoMiddlewares,
