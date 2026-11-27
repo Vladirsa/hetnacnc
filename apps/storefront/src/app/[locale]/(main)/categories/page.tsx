@@ -96,7 +96,7 @@ export default async function TodosLosProductos({ params, searchParams }: Props)
               itemListElement: migas.map((m, i) => ({ "@type": "ListItem", position: i + 1, name: m.label, item: `${SITIO_CANONICO}/mx${m.path}` })),
             },
             { "@context": "https://schema.org", "@type": "ItemList", name: info.h1, url, itemListElement: lista },
-          ]).replace(/</g, "<"),
+          ]).replace(/</g, "\\u003c"),
         }}
       />
       <div className="mb-2 hidden md:block">
