@@ -2,6 +2,7 @@
 // Server component: no client JS. Features come from the real app (repo Vladirsa/Cotizador)
 // and the Spanish landing (CotizadorLanding.tsx); prices in USD come from the backend
 // (GET /api/cotizador-suscripcion → planes.*.usd) with the same defaults as the backend.
+import { TS } from "@/i18n/TS"
 import { APP_TALLER } from "@/lib/hetna/app-taller"
 import { SoporteWhatsApp } from "./SoporteWhatsApp"
 
@@ -79,30 +80,30 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
         <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 grid lg:grid-cols-[1fr_320px] gap-8 items-center overflow-hidden">
           <div className="flex flex-col gap-4">
             <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#C2560A] px-3 py-1 rounded-full">
-              Quoting app for CNC shops
+              <TS>Quoting app for CNC shops</TS>
             </span>
             <h1 className="font-display text-[30px] lg:text-[46px] leading-[1.06] font-bold m-0 max-w-[720px]">
-              Quote CNC jobs in minutes, with your real costs
+              <TS>Quote CNC jobs in minutes, with your real costs</TS>
             </h1>
             <p className="m-0 text-[15.5px] lg:text-[17px] text-[#C9D2E0] max-w-[640px] leading-relaxed">
-              HETNA CNC is the shop app for router, laser, plasma and 3D printing shops: upload the part file, get a price from your machine time,
-              material and margin, and send a professional quote from your phone.
+              <TS>HETNA CNC is the shop app for router, laser, plasma and 3D printing shops: upload the part file, get a price from your machine time,
+              material and margin, and send a professional quote from your phone.</TS>
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <a href={REGISTRO_US} className="inline-flex items-center bg-[#C2560A] hover:brightness-110 text-white font-extrabold px-5 py-3 rounded-[10px] text-[15px]">
-                Start your 14-day free trial
+                <TS>Start your 14-day free trial</TS>
               </a>
               <a href="#pricing" className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
-                See pricing
+                <TS>See pricing</TS>
               </a>
             </div>
-            <p className="m-0 text-[13px] text-[#9FB0C8]">No credit card · Free plan after the trial · Android, iPhone and computer</p>
+            <p className="m-0 text-[13px] text-[#9FB0C8]"><TS>No credit card · Free plan after the trial · Android, iPhone and computer</TS></p>
           </div>
           <div className="hidden lg:flex flex-col gap-2 bg-[#0F1826] rounded-[14px] p-4 border border-[#2A3A55]" aria-hidden="true">
-            <span className="text-[12px] uppercase tracking-wide font-bold text-[#9FB0C8]">What your customer gets</span>
+            <span className="text-[12px] uppercase tracking-wide font-bold text-[#9FB0C8]"><TS>What your customer gets</TS></span>
             <div className="bg-white text-[#1B1B18] rounded-[10px] p-3 text-[12.5px] flex flex-col gap-1.5">
-              <span className="font-bold text-[14px]">Quote Q-0148</span>
-              <span className="text-[#6B6A63]">Aluminum bracket 6061 · 1/4&quot; · 50 pcs</span>
+              <span className="font-bold text-[14px]"><TS>Quote Q-0148</TS></span>
+              <span className="text-[#6B6A63]"><TS>Aluminum bracket 6061 · 1/4&quot; · 50 pcs</TS></span>
               <div className="grid grid-cols-3 gap-1 pt-1">
                 {[["Economy", "$1,240"], ["Standard", "$1,480"], ["Rush", "$1,890"]].map(([n, p]) => (
                   <div key={n} className={`rounded-[8px] border p-1.5 text-center ${n === "Standard" ? "border-[#C2560A] bg-[#FFF3EA]" : "border-[#E7E4DC]"}`}>
@@ -111,9 +112,9 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
                   </div>
                 ))}
               </div>
-              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5">PDF with your logo and drawings</span>
+              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5"><TS>PDF with your logo and drawings</TS></span>
             </div>
-            <span className="text-[11px] text-[#7E8DA6]">Example layout, not a real customer.</span>
+            <span className="text-[11px] text-[#7E8DA6]"><TS>Example layout, not a real customer.</TS></span>
           </div>
         </div>
       </section>
@@ -121,10 +122,10 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
       <div className="px-4 lg:px-16 pb-14 flex flex-col gap-12">
         {/* Who it's for */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Built for small and mid-size CNC shops</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Built for small and mid-size CNC shops</TS></h2>
           <p className="m-0 text-[14.5px] text-[#6B6A63] max-w-[780px]">
-            Router and sign shops, laser and plasma cutters, machine shops and 3D printing services that quote custom parts every day and lose time
-            (and margin) building prices in spreadsheets.
+            <TS>Router and sign shops, laser and plasma cutters, machine shops and 3D printing services that quote custom parts every day and lose time
+            (and margin) building prices in spreadsheets.</TS>
           </p>
           <ul className="m-0 p-0 list-none flex flex-wrap gap-2">
             {["CNC router", "Laser (CO₂ and fiber)", "Plasma", "Milling and turning", "3D printing", "Signs and woodwork"].map((x) => (
@@ -135,7 +136,7 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
 
         {/* Features */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">What it does</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>What it does</TS></h2>
           <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {FEATURES.map((v) => (
               <li key={v.t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex gap-3">
@@ -151,7 +152,7 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
 
         {/* How it works */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">How it works</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>How it works</TS></h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 md:grid-cols-3 gap-4">
             {STEPS.map(([t, d], i) => (
               <li key={t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
@@ -166,15 +167,15 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
         {/* Pricing */}
         <section id="pricing" className="flex flex-col gap-4 scroll-mt-24">
           <div>
-            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Pricing</h2>
-            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">US dollars per month. Every plan starts with a 14-day trial with everything unlocked; the Free plan never expires.</p>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Pricing</TS></h2>
+            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><TS>US dollars per month. Every plan starts with a 14-day trial with everything unlocked; the Free plan never expires.</TS></p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {planes(precios).map((p) => (
               <div key={p.name} className={`bg-white rounded-[14px] p-5 flex flex-col gap-3 border ${p.featured ? "border-[#C2560A] border-2" : "border-[#E7E4DC]"}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">{p.name}</h3>
-                  {p.featured && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full">Most popular</span>}
+                  {p.featured && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full"><TS>Most popular</TS></span>}
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[28px] font-bold text-[#1B1B18]">{p.price}</span>
@@ -193,23 +194,23 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
             ))}
           </div>
           <p className="m-0 text-[13px] text-[#6B6A63]">
-            {precios.paypal ? "Paid plans are billed monthly through PayPal (card or PayPal account). " : ""}Cancel anytime and keep your plan until the end of the paid month.
+            {precios.paypal ? "Paid plans are billed monthly through PayPal (card or PayPal account). " : ""}<TS>Cancel anytime and keep your plan until the end of the paid month.</TS>
           </p>
         </section>
 
         {/* Install */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Install it from your browser</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Install it from your browser</TS></h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[13.5px] text-[#6B6A63] leading-relaxed">
-            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]">Android:</strong> open the app in Chrome and tap <em>Install</em>. Prefer an APK? <a href={APP_TALLER.android} className="underline">Download it here</a>.</p>
-            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]">iPhone and iPad:</strong> open the app in Safari, tap <em>Share</em> and then <em>Add to Home Screen</em>.</p>
-            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]">Computer:</strong> in Chrome or Edge, use the install icon in the address bar. Same account and data as on your phone.</p>
+            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]"><TS>Android:</TS></strong> <TS>open the app in Chrome and tap</TS> <em><TS>Install</TS></em><TS>. Prefer an APK?</TS> <a href={APP_TALLER.android} className="underline"><TS>Download it here</TS></a>.</p>
+            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]"><TS>iPhone and iPad:</TS></strong> <TS>open the app in Safari, tap</TS> <em><TS>Share</TS></em> <TS>and then</TS> <em><TS>Add to Home Screen</TS></em>.</p>
+            <p className="m-0 bg-white border border-[#E7E4DC] rounded-[14px] p-5"><strong className="text-[#1B1B18]"><TS>Computer:</TS></strong> <TS>in Chrome or Edge, use the install icon in the address bar. Same account and data as on your phone.</TS></p>
           </div>
         </section>
 
         {/* FAQ */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Frequently asked questions</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Frequently asked questions</TS></h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {FAQ.map(([q, a]) => (
               <details key={q} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
@@ -223,16 +224,16 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
         {/* Final CTA */}
         <section className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-[22px] font-bold m-0">Stop pricing jobs in spreadsheets</h2>
-            <p className="m-0 mt-1 text-[14px] text-[#C9D2E0]">14 days with everything unlocked. No credit card.</p>
+            <h2 className="font-display text-[22px] font-bold m-0"><TS>Stop pricing jobs in spreadsheets</TS></h2>
+            <p className="m-0 mt-1 text-[14px] text-[#C9D2E0]"><TS>14 days with everything unlocked. No credit card.</TS></p>
           </div>
           <a href={REGISTRO_US} className="inline-flex items-center bg-[#C2560A] hover:brightness-110 text-white font-extrabold px-5 py-3 rounded-[10px] text-[15px]">
-            Start your 14-day free trial
+            <TS>Start your 14-day free trial</TS>
           </a>
         </section>
 
         <p className="m-0 text-[13px] text-[#6B6A63]">
-          ¿Hablas español? <a href="/mx/servicios/cotizador-cnc" hrefLang="es-MX" className="underline">Ver la app HETNA CNC en español</a>
+          <TS>¿Hablas español?</TS> <a href="/mx/servicios/cotizador-cnc" hrefLang="es-MX" className="underline"><TS>Ver la app HETNA CNC en español</TS></a>
         </p>
       </div>
       <SoporteWhatsApp en />
