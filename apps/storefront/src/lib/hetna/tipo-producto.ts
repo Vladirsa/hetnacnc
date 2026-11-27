@@ -123,7 +123,8 @@ export type Fila = [string, string]
 export function datosClave(p: Producto): Fila[] {
   const tipo = tipoProducto(p)
   const m = (p.metadata || {}) as Record<string, unknown>
-  const d = p.description
+  // En inglés la descripción viene traducida; los campos ("Medidas:") se leen de la original.
+  const d = (typeof m.descripcion_es === "string" ? m.descripcion_es : "") || p.description
   const filas: Fila[] = []
   const formato = tipo === "digital" ? texto(m.formatos) : ""
   const material = primero(texto(m.material), atributo(p, /^material/i), campoDeDescripcion(d, /^material$/i), tipo === "digital" ? texto(m.material_sugerido) : "")
@@ -151,7 +152,8 @@ export const skuDe = (p: Producto) => (p.variants || []).map((v) => texto(v?.sku
 export function especificaciones(p: Producto): Fila[] {
   const tipo = tipoProducto(p)
   const m = (p.metadata || {}) as Record<string, unknown>
-  const d = p.description
+  // En inglés la descripción viene traducida; los campos ("Medidas:") se leen de la original.
+  const d = (typeof m.descripcion_es === "string" ? m.descripcion_es : "") || p.description
   const filas: Fila[] = []
   const vistos = new Set<string>()
   const agrega = (etiqueta: string, valor: string) => {
