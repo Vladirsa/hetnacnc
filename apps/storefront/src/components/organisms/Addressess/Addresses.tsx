@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { AddressForm } from "@/components/molecules/AddressForm/AddressForm"
@@ -67,18 +68,18 @@ export const Addresses = ({
         )}
         data-testid="addresses-container"
       >
-        <h1 className="m-0 text-[26px] font-extrabold text-[#142033]" data-testid="addresses-heading">Direcciones</h1>
+        <h1 className="m-0 text-[26px] font-extrabold text-[#142033]" data-testid="addresses-heading"><T>Direcciones</T></h1>
         {isEmpty(user.addresses) ? (
           <div className="text-center" data-testid="addresses-empty-state">
             <h3 className="text-[20px] font-bold text-[#142033]" data-testid="addresses-empty-heading">
-              No tienes direcciones guardadas
+              <T>No tienes direcciones guardadas</T>
             </h3>
             <p className="text-lg text-secondary mt-2" data-testid="addresses-empty-description">
-              You currently have no saved shipping addresses. <br />
-              Agrega una dirección para comprar más rápido.
+              <T>You currently have no saved shipping addresses.</T> <br />
+              <T>Agrega una dirección para comprar más rápido.</T>
             </p>
             <Button onClick={handleAdd} className="mt-4" data-testid="addresses-add-button">
-              Agregar dirección
+              <T>Agregar dirección</T>
             </Button>
           </div>
         ) : (
@@ -121,21 +122,21 @@ export const Addresses = ({
                       onClick={() => setDeleteAddress(address.id)}
                       data-testid={`address-delete-button-${address.id}`}
                     >
-                      Eliminar
+                      <T>Eliminar</T>
                     </Button>
                     <Button
                       variant="tonal"
                       onClick={() => handleEdit(address.id)}
                       data-testid={`address-edit-button-${address.id}`}
                     >
-                      Editar
+                      <T>Editar</T>
                     </Button>
                   </div>
                 </Card>
               ))}
             </div>
             {user.addresses.length < 6 && (
-              <Button onClick={handleAdd} data-testid="addresses-add-button">Agregar dirección</Button>
+              <Button onClick={handleAdd} data-testid="addresses-add-button"><T>Agregar dirección</T></Button>
             )}
           </>
         )}
@@ -163,17 +164,17 @@ export const Addresses = ({
           data-testid="address-delete-modal"
         >
           <div className="px-4 flex flex-col gap-4">
-            <p>¿Seguro que quieres eliminar esta dirección?</p>
+            <p><T>¿Seguro que quieres eliminar esta dirección?</T></p>
             <div className="flex justify-end gap-4">
               <Button variant="tonal" onClick={() => setDeleteAddress(null)} data-testid="address-delete-cancel-button">
-                Cancelar
+                <T>Cancelar</T>
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => handleDelete(deleteAddress)}
                 data-testid="address-delete-confirm-button"
               >
-                Eliminar
+                <T>Eliminar</T>
               </Button>
             </div>
           </div>
