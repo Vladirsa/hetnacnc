@@ -28,7 +28,7 @@ export function SelectorModos<T extends string>({
   return (
     <section className="flex flex-col gap-2 rounded-[12px] border border-[#1F2937] bg-[#0F151E] p-3">
       <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>{titulo}</T></span>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${modos.length}, minmax(0, 1fr))` }}>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(modos.length, 3)}, minmax(0, 1fr))` }}>
         {modos.map((m) => (
           <button
             key={m.id}
