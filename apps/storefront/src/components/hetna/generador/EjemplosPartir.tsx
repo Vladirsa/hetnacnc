@@ -1,6 +1,7 @@
 // "Para qué sirve" de Partir modelo 3D (se ve antes de subir un modelo): usos,
 // ejemplos REALES hechos con esta misma herramienta (antes → después) y por qué
 // conviene. Imágenes en public/img/partir-3d (renders de la vista del generador).
+import { T } from "@/components/hetna/i18n/Idioma"
 const R = "/img/partir-3d"
 
 const USOS = [
@@ -58,8 +59,8 @@ export function EjemplosPartir() {
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5">
-        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">¿Para qué sirve?</h2>
-        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Para imprimir cosas más grandes que tu impresora. Tú eliges dónde cortar y cómo se unen las piezas.</p>
+        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><T>¿Para qué sirve?</T></h2>
+        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><T>Para imprimir cosas más grandes que tu impresora. Tú eliges dónde cortar y cómo se unen las piezas.</T></p>
         <ul className="m-0 mt-3 grid list-none gap-2 p-0 sm:grid-cols-2 xl:grid-cols-3">
           {USOS.map((u) => (
             <li key={u.t} className="flex gap-2.5 rounded-[10px] border border-[#E7E4DC] p-3">
@@ -74,8 +75,8 @@ export function EjemplosPartir() {
       </div>
 
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5">
-        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Así se ven partidos</h2>
-        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Ejemplos reales hechos con esta herramienta: los cortes y pernos que propone, y las piezas listas para imprimir.</p>
+        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><T>Así se ven partidos</T></h2>
+        <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><T>Ejemplos reales hechos con esta herramienta: los cortes y pernos que propone, y las piezas listas para imprimir.</T></p>
         <div className="mt-3 grid gap-4 lg:grid-cols-2">
           {EJEMPLOS.map((e) => (
             <article key={e.t} className="flex flex-col gap-2">
@@ -91,12 +92,12 @@ export function EjemplosPartir() {
       </div>
 
       <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5">
-        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">Así funciona</h2>
+        <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><T>Así funciona</T></h2>
         <ol className="m-0 mt-2 pl-5 list-decimal flex flex-col gap-1.5 text-[14.5px] text-[#4A4943]">
-          <li>Sube tu STL, OBJ o STEP.</li>
-          <li>Elige tu impresora: repartimos los cortes para que cada pieza quepa en la cama.</li>
-          <li>Mueve o agrega cortes (con las barras o tocando el modelo) y elige pernos, perno integrado o imanes, y cuántos por unión.</li>
-          <li>Descarga todo en un ZIP, ve el precio en el Cotizador o pide que un taller te lo imprima.</li>
+          <li><T>Sube tu STL, OBJ o STEP.</T></li>
+          <li><T>Elige tu impresora: repartimos los cortes para que cada pieza quepa en la cama.</T></li>
+          <li><T>Mueve o agrega cortes (con las barras o tocando el modelo) y elige pernos, perno integrado o imanes, y cuántos por unión.</T></li>
+          <li><T>Descarga todo en un ZIP, ve el precio en el Cotizador o pide que un taller te lo imprima.</T></li>
         </ol>
         <ul className="m-0 mt-4 grid list-none gap-2 p-0 sm:grid-cols-2">
           {PORQUE.map(([t, d]) => (
@@ -106,7 +107,7 @@ export function EjemplosPartir() {
             </li>
           ))}
         </ul>
-        <p className="m-0 mt-3 text-[13px] text-[#6B6A63]">Gratis, sin cuenta y sin marca de agua. Tu archivo no sale de tu navegador.</p>
+        <p className="m-0 mt-3 text-[13px] text-[#6B6A63]"><T>Gratis, sin cuenta y sin marca de agua. Tu archivo no sale de tu navegador.</T></p>
       </div>
     </div>
   )
