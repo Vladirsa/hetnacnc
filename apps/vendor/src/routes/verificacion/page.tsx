@@ -4,6 +4,7 @@
 // Un administrador de HETNA las revisa y, si todo está bien, el taller recibe
 // la insignia "Taller verificado" en la tienda.
 // Los documentos son privados: no se publican y solo los ve el equipo de HETNA.
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -16,6 +17,8 @@ const Escudo = (props) => (
 
 export const config: RouteConfig = {
   label: "Verificación",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Escudo,
 }
 
@@ -82,9 +85,9 @@ function Miniatura({ archivo, puedeQuitar, alQuitar }) {
   }, [archivo.id])
   return (
     <div style={S.thumb}>
-      {archivo.mime === "application/pdf" ? "PDF" : url ? <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "Cargando..."}
+      <T>{archivo.mime === "application/pdf" ? "PDF" : url ? <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "Cargando..."}</T>
       {puedeQuitar && (
-        <button type="button" aria-label="Quitar" onClick={alQuitar}
+        <button type="button" aria-label={traducir("Quitar")} onClick={alQuitar}
           style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: 0, background: "rgba(0,0,0,.65)", color: "#fff", cursor: "pointer" }}>×</button>
       )}
     </div>
@@ -108,7 +111,7 @@ function PagoVerificacion({ alPagar }) {
         .finally(cargar)
     } else cargar()
   }, [])
-  if (!info || !info.debe_pagar) return nota ? <p style={{ fontSize: 14, color: "#1E7B3A" }}>{nota}</p> : null
+  if (!info || !info.debe_pagar) return nota ? <p style={{ fontSize: 14, color: "#1E7B3A" }}><T>{nota}</T></p> : null
   const pagar = async () => {
     setCargando(true)
     setNota("")
@@ -125,14 +128,14 @@ function PagoVerificacion({ alPagar }) {
   }
   return (
     <section style={{ ...S.card, background: "#FFF8EE", borderColor: "#F2C98F" }}>
-      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>Tu plan es Gratis: la verificación cuesta ${info.precio} (una sola vez)</p>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}><T>Tu plan es Gratis: la verificación cuesta $</T>{info.precio} <T>(una sola vez)</T></p>
       <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>
-        Incluye la revisión de tu identidad, de tu empresa y de tus certificaciones. En los planes Taller, Pro e Industrial va incluida.
-        Los talleres verificados y certificados aparecen mejor posicionados ante los clientes.
+        <T>Incluye la revisión de tu identidad, de tu empresa y de tus certificaciones. En los planes Taller, Pro e Industrial va incluida.
+        Los talleres verificados y certificados aparecen mejor posicionados ante los clientes.</T>
       </p>
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
-        <button type="button" style={S.btn} disabled={cargando} onClick={pagar}>{cargando ? "Abriendo Mercado Pago..." : `Pagar $${info.precio} con Mercado Pago`}</button>
-        {nota && <span style={{ fontSize: 13, color: "#B3261E" }}>{nota}</span>}
+        <button type="button" style={S.btn} disabled={cargando} onClick={pagar}><T>{cargando ? "Abriendo Mercado Pago..." : `Pagar $${info.precio} con Mercado Pago`}</T></button>
+        {nota && <span style={{ fontSize: 13, color: "#B3261E" }}><T>{nota}</T></span>}
       </div>
     </section>
   )
@@ -177,10 +180,10 @@ function Certificaciones() {
   const COLOR = { pendiente: ["#FFF8EE", "#8A5A00", "En revisión"], aprobada: ["#E6F4EA", "#1E7B3A", "Aprobada"], rechazada: ["#FDECEA", "#B3261E", "No aprobada"] }
   return (
     <section style={S.card}>
-      <h2 style={S.h2}>Certificaciones</h2>
+      <h2 style={S.h2}><T>Certificaciones</T></h2>
       <p style={S.hint}>
-        ISO 9001, AS9100, IATF 16949, carta de distribuidor autorizado, certificación de soldadura… HETNA revisa el documento y, al aprobarlo,
-        aparece en tu perfil como <b>certificación acreditada</b>. Sube tu posicionamiento, no tu calificación (esa sólo sale de trabajos reales).
+        <T>ISO 9001, AS9100, IATF 16949, carta de distribuidor autorizado, certificación de soldadura… HETNA revisa el documento y, al aprobarlo,
+        aparece en tu perfil como</T> <b><T>certificación acreditada</T></b><T>. Sube tu posicionamiento, no tu calificación (esa sólo sale de trabajos reales).</T>
       </p>
       {datos.certificaciones.length > 0 && (
         <div style={{ display: "grid", gap: 6, margin: "8px 0 12px" }}>
@@ -189,44 +192,44 @@ function Certificaciones() {
             return (
               <div key={c.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", fontSize: 14 }}>
                 <b>{c.tipo === "otra" || c.tipo === "distribuidor" ? c.nombre || datos.tipos[c.tipo] : datos.tipos[c.tipo]}</b>
-                {c.emisor && <span style={{ color: "#6B675C" }}>· {c.emisor}</span>}
-                {c.vigencia && <span style={{ color: "#6B675C" }}>· vence {c.vigencia}</span>}
-                <span style={{ background: bg, color: col, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}>{txt}</span>
-                {c.motivo && <span style={{ color: "#B3261E", fontSize: 13 }}>{c.motivo}</span>}
-                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(c.id)}>Quitar</button>
+                {c.emisor && <span style={{ color: "#6B675C" }}>· <T>{c.emisor}</T></span>}
+                {c.vigencia && <span style={{ color: "#6B675C" }}><T>· vence</T> <T>{c.vigencia}</T></span>}
+                <span style={{ background: bg, color: col, borderRadius: 999, padding: "2px 8px", fontSize: 12, fontWeight: 700 }}><T>{txt}</T></span>
+                {c.motivo && <span style={{ color: "#B3261E", fontSize: 13 }}><T>{c.motivo}</T></span>}
+                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(c.id)}><T>Quitar</T></button>
               </div>
             )
           })}
         </div>
       )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-        <label style={{ fontSize: 13 }}>Tipo
+        <label style={{ fontSize: 13 }}><T>Tipo</T>
           <select style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })}>
             {Object.entries(datos.tipos).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
         {(f.tipo === "otra" || f.tipo === "distribuidor") && (
-          <label style={{ fontSize: 13 }}>{f.tipo === "distribuidor" ? "Marca" : "Nombre"}
+          <label style={{ fontSize: 13 }}><T>{f.tipo === "distribuidor" ? "Marca" : "Nombre"}</T>
             <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} />
           </label>
         )}
-        <label style={{ fontSize: 13 }}>Organismo que la emitió
-          <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.emisor} onChange={(e) => setF({ ...f, emisor: e.target.value })} placeholder="Ej. Bureau Veritas" />
+        <label style={{ fontSize: 13 }}><T>Organismo que la emitió</T>
+          <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.emisor} onChange={(e) => setF({ ...f, emisor: e.target.value })} placeholder={traducir("Ej. Bureau Veritas")} />
         </label>
-        <label style={{ fontSize: 13 }}>Número de certificado
+        <label style={{ fontSize: 13 }}><T>Número de certificado</T>
           <input style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.numero} onChange={(e) => setF({ ...f, numero: e.target.value })} />
         </label>
-        <label style={{ fontSize: 13 }}>Vigente hasta
+        <label style={{ fontSize: 13 }}><T>Vigente hasta</T>
           <input type="date" style={{ display: "block", width: "100%", padding: 8, marginTop: 4 }} value={f.vigencia} onChange={(e) => setF({ ...f, vigencia: e.target.value })} />
         </label>
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
         <label style={S.btn2}>
-          {archivo ? `📎 ${archivo.name}` : "+ Certificado (PDF o foto)"}
+          <T>{archivo ? `📎 ${archivo.name}` : "+ Certificado (PDF o foto)"}</T>
           <input type="file" accept="application/pdf,image/jpeg,image/png" style={{ display: "none" }} onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
         </label>
-        <button type="button" style={S.btn} disabled={enviando} onClick={enviar}>{enviando ? "Enviando..." : "Enviar a revisión"}</button>
-        {nota && <span style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</span>}
+        <button type="button" style={S.btn} disabled={enviando} onClick={enviar}><T>{enviando ? "Enviando..." : "Enviar a revisión"}</T></button>
+        {nota && <span style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}><T>{nota.t}</T></span>}
       </div>
     </section>
   )
@@ -277,35 +280,35 @@ function WhatsappTaller() {
   if (e.verificado)
     return (
       <section style={{ ...S.card, borderColor: "#BFE3CB", background: "#F3FBF6" }}>
-        <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: "#1E7B3A" }}>✓ WhatsApp verificado: +{e.numero}</p>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: "#1E7B3A" }}><T>✓ WhatsApp verificado: +</T><T>{e.numero}</T></p>
         <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>
-          Te avisamos por ahí de solicitudes de trabajo en tu zona.{e.fotos ? ` Recibimos ${e.fotos} foto(s) de tu taller por WhatsApp.` : " Si quieres, mándanos por WhatsApp 3 fotos (frente del taller, tus máquinas y un trabajo terminado) y se agregan aquí."}
-          {e.avisos === false ? " (Tienes los avisos en pausa: escribe ALTA al WhatsApp de HETNA para reactivarlos.)" : ""}
+          <T>Te avisamos por ahí de solicitudes de trabajo en tu zona.</T><T>{e.fotos ? ` Recibimos ${e.fotos} foto(s) de tu taller por WhatsApp.` : " Si quieres, mándanos por WhatsApp 3 fotos (frente del taller, tus máquinas y un trabajo terminado) y se agregan aquí."}</T>
+          <T>{e.avisos === false ? " (Tienes los avisos en pausa: escribe ALTA al WhatsApp de HETNA para reactivarlos.)" : ""}</T>
         </p>
       </section>
     )
   return (
     <section style={S.card}>
-      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>💬 Verifica tu WhatsApp y recibe trabajos ahí</p>
+      <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}><T>💬 Verifica tu WhatsApp y recibe trabajos ahí</T></p>
       <p style={{ margin: "4px 0 10px", fontSize: 14, color: "#40403A" }}>
-        Te avisamos de solicitudes en tu zona por WhatsApp (lo ves antes que el correo). Escribe tu celular y toca el botón: se abre WhatsApp con un mensaje listo para HETNA, sólo dale Enviar.
+        <T>Te avisamos de solicitudes en tu zona por WhatsApp (lo ves antes que el correo). Escribe tu celular y toca el botón: se abre WhatsApp con un mensaje listo para HETNA, sólo dale Enviar.</T>
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <input value={num} onChange={(x) => setNum(x.target.value)} placeholder="Celular a 10 dígitos" inputMode="tel" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14 }} />
-        <button type="button" style={S.btn} disabled={ocupado || num.replace(/\D/g, "").length < 10} onClick={() => hacer({ accion: "iniciar", numero: num })}>Verificar mi WhatsApp</button>
+        <input value={num} onChange={(x) => setNum(x.target.value)} placeholder={traducir("Celular a 10 dígitos")} inputMode="tel" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14 }} />
+        <button type="button" style={S.btn} disabled={ocupado || num.replace(/\D/g, "").length < 10} onClick={() => hacer({ accion: "iniciar", numero: num })}><T>Verificar mi WhatsApp</T></button>
       </div>
       {liga && (
         <div style={{ marginTop: 10, fontSize: 13, color: "#40403A" }}>
-          <p style={{ margin: 0 }}>Se abrió WhatsApp con el mensaje. Dale <b>Enviar</b> y esta tarjeta se pone en verde sola. ¿No se abrió? <a href={liga} target="_blank" rel="noreferrer">Ábrelo aquí</a>.</p>
-          <p style={{ margin: "8px 0 4px" }}>¿Estás en la computadora? Te mandamos el código a tu WhatsApp y lo escribes aquí:</p>
+          <p style={{ margin: 0 }}><T>Se abrió WhatsApp con el mensaje. Dale</T> <b><T>Enviar</T></b> <T>y esta tarjeta se pone en verde sola. ¿No se abrió?</T> <a href={liga} target="_blank" rel="noreferrer"><T>Ábrelo aquí</T></a>.</p>
+          <p style={{ margin: "8px 0 4px" }}><T>¿Estás en la computadora? Te mandamos el código a tu WhatsApp y lo escribes aquí:</T></p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "codigo", numero: num }, "Te mandamos el código por WhatsApp.")}>Mandarme el código</button>
-            <input value={codigo} onChange={(x) => setCodigo(x.target.value)} placeholder="Código de 6 dígitos" inputMode="numeric" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14, width: 150 }} />
-            <button type="button" style={S.btn2} disabled={ocupado || codigo.length !== 6} onClick={() => hacer({ accion: "confirmar", numero: num, codigo }, "✓ WhatsApp verificado")}>Confirmar</button>
+            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "codigo", numero: num }, "Te mandamos el código por WhatsApp.")}><T>Mandarme el código</T></button>
+            <input value={codigo} onChange={(x) => setCodigo(x.target.value)} placeholder={traducir("Código de 6 dígitos")} inputMode="numeric" style={{ padding: "8px 10px", border: "1px solid #E7E4DC", borderRadius: 8, fontSize: 14, width: 150 }} />
+            <button type="button" style={S.btn2} disabled={ocupado || codigo.length !== 6} onClick={() => hacer({ accion: "confirmar", numero: num, codigo }, "✓ WhatsApp verificado")}><T>Confirmar</T></button>
           </div>
         </div>
       )}
-      {nota && <p style={{ margin: "8px 0 0", fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</p>}
+      {nota && <p style={{ margin: "8px 0 0", fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}><T>{nota.t}</T></p>}
     </section>
   )
 }
@@ -366,28 +369,28 @@ export default function VerificacionPage() {
     }
   }
 
-  if (error) return <div style={S.page}>No se pudo cargar: {error}. Recarga la página.</div>
-  if (!datos) return <div style={S.page}>Cargando...</div>
+  if (error) return <div style={S.page}><T>No se pudo cargar:</T> <T>{error}</T><T>. Recarga la página.</T></div>
+  if (!datos) return <div style={S.page}><T>Cargando...</T></div>
 
   const est = ESTADO[datos.estado] || ESTADO.sin_enviar
   const editable = !["en_revision", "verificado"].includes(datos.estado)
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Verificación del taller</h1>
+      <h1 style={S.h1}><T>Verificación del taller</T></h1>
       <p style={S.sub}>
-        Los talleres verificados muestran la insignia <b>✓ Taller verificado</b> en su página y en sus productos.
-        Así los clientes saben que eres un taller real.
+        <T>Los talleres verificados muestran la insignia</T> <b><T>✓ Taller verificado</T></b> <T>en su página y en sus productos.
+        Así los clientes saben que eres un taller real.</T>
       </p>
 
       <WhatsappTaller />
       <PagoVerificacion />
 
       <section style={{ ...S.card, background: est.bg, borderColor: est.bg }}>
-        <p style={{ margin: 0, fontWeight: 700, color: est.c, fontSize: 16 }}>{est.t}</p>
-        <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}>{est.d}</p>
+        <p style={{ margin: 0, fontWeight: 700, color: est.c, fontSize: 16 }}><T>{est.t}</T></p>
+        <p style={{ margin: "4px 0 0", fontSize: 14, color: "#40403A" }}><T>{est.d}</T></p>
         {datos.estado === "rechazado" && datos.motivo && (
-          <p style={{ margin: "8px 0 0", fontSize: 14 }}><b>Qué corregir:</b> {datos.motivo}</p>
+          <p style={{ margin: "8px 0 0", fontSize: 14 }}><b><T>Qué corregir:</T></b> <T>{datos.motivo}</T></p>
         )}
       </section>
 
@@ -398,18 +401,18 @@ export default function VerificacionPage() {
         return (
           <section key={tipo} style={S.card}>
             <h2 style={S.h2}>
-              {t.nombre}
+              <T>{t.nombre}</T>
               {t.obligatorio > 0 && <span style={{ color: "#B3261E" }}> *</span>}
-              <span style={{ fontWeight: 400, color: "#6B675C", fontSize: 13 }}> ({mios.length}/{t.max})</span>
+              <span style={{ fontWeight: 400, color: "#6B675C", fontSize: 13 }}> (<T>{mios.length}</T>/<T>{t.max}</T>)</span>
             </h2>
-            <p style={S.hint}>{AYUDA[tipo]} {t.pdf ? "Foto o PDF." : "Solo fotos."} Máximo {MAX_MB} MB.</p>
+            <p style={S.hint}>{AYUDA[tipo]} <T>{t.pdf ? "Foto o PDF." : "Solo fotos."}</T> <T>Máximo</T> {MAX_MB} <T>MB.</T></p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               {mios.map((a) => (
                 <Miniatura key={a.id} archivo={a} puedeQuitar={editable} alQuitar={() => quitar(a.id)} />
               ))}
               {editable && !lleno && (
                 <label style={S.btn2}>
-                  {subiendo === tipo ? "Subiendo..." : "+ Subir"}
+                  <T>{subiendo === tipo ? "Subiendo..." : "+ Subir"}</T>
                   <input type="file" multiple={t.max > 1} disabled={!!subiendo} style={{ display: "none" }}
                     accept={t.pdf ? "image/jpeg,image/png,image/webp,application/pdf" : "image/jpeg,image/png,image/webp"}
                     onChange={(e) => {
@@ -426,8 +429,8 @@ export default function VerificacionPage() {
 
       <section style={S.card}>
         <p style={{ margin: 0, fontSize: 13, color: "#40403A" }}>
-          🔒 Tus documentos son privados. No se publican en la tienda: solo los ve el equipo de HETNA para verificar
-          tu taller, según nuestro aviso de privacidad.
+          <T>🔒 Tus documentos son privados. No se publican en la tienda: solo los ve el equipo de HETNA para verificar
+          tu taller, según nuestro aviso de privacidad.</T>
         </p>
       </section>
 
@@ -435,9 +438,9 @@ export default function VerificacionPage() {
         <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, marginBottom: 14, cursor: "pointer" }}>
           <input type="checkbox" checked={autorizo} onChange={(e) => setAutorizo(e.target.checked)} style={{ marginTop: 3 }} />
           <span>
-            Autorizo a HETNA CNC a usar mi identificación oficial y las fotos de mi taller únicamente para verificar mi
-            taller, conforme al <a href="https://hetnacnc.com/mx/aviso-de-privacidad" target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>Aviso de privacidad</a>.
-            Puedo retirar esta autorización y pedir que se borren mis documentos en cualquier momento.
+            <T>Autorizo a HETNA CNC a usar mi identificación oficial y las fotos de mi taller únicamente para verificar mi
+            taller, conforme al</T> <a href="https://hetnacnc.com/mx/aviso-de-privacidad" target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}><T>Aviso de privacidad</T></a><T>.
+            Puedo retirar esta autorización y pedir que se borren mis documentos en cualquier momento.</T>
           </span>
         </label>
       )}
@@ -446,12 +449,12 @@ export default function VerificacionPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <button type="button" style={{ ...S.btn, opacity: enviando || datos.faltan.length || !autorizo ? 0.6 : 1 }}
             disabled={enviando || datos.faltan.length > 0 || !autorizo} onClick={enviar}>
-            {enviando ? "Enviando..." : "Enviar a revisión"}
+            <T>{enviando ? "Enviando..." : "Enviar a revisión"}</T>
           </button>
-          {datos.faltan.length > 0 && <span style={{ fontSize: 13, color: "#6B675C" }}>Falta: {datos.faltan.join(" · ")}</span>}
+          {datos.faltan.length > 0 && <span style={{ fontSize: 13, color: "#6B675C" }}><T>Falta:</T> <T>{datos.faltan.join(" · ")}</T></span>}
         </div>
       )}
-      {msg && <p style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+      {msg && <p style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></p>}
 
       <Certificaciones />
     </div>
