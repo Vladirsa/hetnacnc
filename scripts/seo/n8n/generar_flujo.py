@@ -64,7 +64,7 @@ def gsc(nombre, cuerpo):
 
 def tg(var, nombre, texto):
     return f"""const {var} = node({{ type: 'n8n-nodes-base.telegram', version: 1.2, config: {{ name: '{nombre}', executeOnce: true, onError: 'continueRegularOutput',
-  parameters: {{ resource: 'message', operation: 'sendMessage', chatId: expr('{{{{ $env.TELEGRAM_ADMIN_CHAT_ID }}}}'), text: {texto}, additionalFields: {{ appendAttribution: false }} }},
+  parameters: {{ resource: 'message', operation: 'sendMessage', chatId: expr('{{{{ $env.TELEGRAM_ADMIN_CHAT_ID }}}}'), text: {texto}, additionalFields: {{ appendAttribution: false, parse_mode: 'HTML' }} }},
   credentials: {{ telegramApi: {{ id: 'bEA8sRVfpQBpl4py', name: 'Telegram account' }} }} }} }});"""
 
 

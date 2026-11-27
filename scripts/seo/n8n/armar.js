@@ -26,7 +26,10 @@ if (conError || !Array.isArray(P.rows)) {
 const r1 = (x) => Math.round(Number(x || 0) * 10) / 10;
 const r2 = (x) => Math.round(Number(x || 0) * 100) / 100;
 const periodo = f.inicio + '..' + f.fin;
-const corta = (u) => String(u || '').replace('https://hetnacnc.com', '').replace('https://www.hetnacnc.com', '') || '/';
+// Las versiones por país (/sv/, /do/, /hn/...) apuntan a /mx como la principal:
+// en el reporte se muestran y se revisan como /mx. Sin parámetros (?formato=...).
+const principal = (u) => String(u || '').split('?')[0].replace(/^https:[/][/](www[.])?hetnacnc[.]com[/][a-z][a-z][/]/, 'https://hetnacnc.com/mx/');
+const corta = (u) => principal(u).replace('https://hetnacnc.com', '').replace('https://www.hetnacnc.com', '') || '/';
 const slugDir = (u) => {
   const m = String(u || '').split('?')[0].match(/[/]talleres[/]directorio[/]([a-z0-9-]+)[/]?$/);
   return m ? m[1] : '';
@@ -97,7 +100,7 @@ const NL = String.fromCharCode(10);
 const cambio = (a, b) => (b ? (a >= b ? '▲ ' : '▼ ') + Math.round(Math.abs((a - b) / b) * 100) + '%' : 'nuevo');
 const esMarcaAjena = (c) => String(c.url_top || '').indexOf('/talleres/directorio/') >= 0;
 // Sin página conocida no se sabe si es el nombre de otra empresa: fuera
-const propia = (c) => !!c.url_top && !esMarcaAjena(c) && !/^site:|hetna/i.test(c.consulta);
+const propia = (c) => !!c.url_top && String(c.url_top).indexOf('?') < 0 && !esMarcaAjena(c) && !/^site:|hetna/i.test(c.consulta);
 const oportunidades = consultas.filter((c) => propia(c) && c.posicion >= 4 && c.posicion <= 20 && c.impresiones >= 5)
   .sort((a, b) => b.impresiones - a.impresiones).slice(0, 8);
 const lejos = consultas.filter((c) => !esMarcaAjena(c) && !/^site:|hetna/i.test(c.consulta) && c.posicion > 30 && c.impresiones >= 10)
@@ -130,7 +133,7 @@ return [{
     consultas,
     semanas: filasSemanas,
     primeraSemana: filasSemanas.length ? filasSemanas[0].semana : f.inicioComparar,
-    revisar: oportunidades.filter((c) => c.url_top).slice(0, 6).map((c) => ({ url: c.url_top, consulta: c.consulta, posicion: c.posicion, impresiones: c.impresiones })),
+    revisar: oportunidades.filter((c) => c.url_top).slice(0, 6).map((c) => ({ url: principal(c.url_top), consulta: c.consulta, posicion: c.posicion, impresiones: c.impresiones })),
     reporte: lineas.join(NL),
   },
 }];
