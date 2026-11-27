@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { convertToLocale } from "@/lib/helpers/money"
@@ -71,7 +72,7 @@ export const ReturnSummaryTab = ({
 
       <Card className="p-4">
         <p className="label-md flex justify-between mb-4">
-          Subtotal refund:
+          <T>Subtotal refund:</T>
           <span className="label-md !font-bold text-primary">
             {convertToLocale({
               amount: subtotal,
