@@ -9,7 +9,7 @@ import { revalidateTag } from "next/cache"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
-import { COOKIE_ESTADO, COOKIE_VOLVER, esRedSocial } from "@/lib/auth/social"
+import { COOKIE_ESTADO, COOKIE_VOLVER, SITIO_PUBLICO, esRedSocial } from "@/lib/auth/social"
 import { getCacheTag } from "@/lib/data/cookies"
 import { reenviarConfirmacion, transferCart } from "@/lib/data/customer"
 import { eventoSocial } from "@/lib/hetna/social-evento"
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ red:
     res.cookies.delete(COOKIE_VOLVER)
     return res
   }
-  const alLogin = (msg: string) => limpiar(NextResponse.redirect(new URL(`/login?social=${encodeURIComponent(msg)}`, req.nextUrl.origin)))
+  const alLogin = (msg: string) => limpiar(NextResponse.redirect(new URL(`/login?social=${encodeURIComponent(msg)}`, SITIO_PUBLICO)))
 
   if (!esRedSocial(red)) return alLogin("Esa forma de entrar no existe.")
   if (q.get("error")) return alLogin("Cancelaste la entrada o la red no dio permiso. Puedes intentarlo otra vez.")
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ red:
     }
     await transferCart().catch(() => undefined)
     revalidateTag(await getCacheTag("customers"))
-    return limpiar(NextResponse.redirect(new URL(volver, req.nextUrl.origin)))
+    return limpiar(NextResponse.redirect(new URL(volver, SITIO_PUBLICO)))
   } catch {
     return alLogin("No se pudo conectar con la red social. Intenta de nuevo.")
   }

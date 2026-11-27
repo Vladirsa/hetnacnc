@@ -4,7 +4,7 @@
 // Es una liga normal (no un formulario): así la política de seguridad no bloquea el viaje.
 import { NextRequest, NextResponse } from "next/server"
 
-import { COOKIE_ESTADO, COOKIE_VOLVER, esRedSocial } from "@/lib/auth/social"
+import { COOKIE_ESTADO, COOKIE_VOLVER, SITIO_PUBLICO, esRedSocial } from "@/lib/auth/social"
 import { destinoSeguro } from "@/lib/seguridad/destino-seguro"
 
 const BACKEND = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -12,7 +12,7 @@ const BACKEND = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
 export async function GET(req: NextRequest, { params }: { params: Promise<{ red: string }> }) {
   const { red } = await params
   const volver = destinoSeguro(req.nextUrl.searchParams.get("volver"), "/user")
-  const alLogin = (msg: string) => NextResponse.redirect(new URL(`/login?social=${encodeURIComponent(msg)}`, req.nextUrl.origin))
+  const alLogin = (msg: string) => NextResponse.redirect(new URL(`/login?social=${encodeURIComponent(msg)}`, SITIO_PUBLICO))
   if (!esRedSocial(red)) return alLogin("Esa forma de entrar no existe.")
   try {
     const r = await fetch(`${BACKEND}/auth/customer/${red}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", cache: "no-store" })
