@@ -18,20 +18,13 @@ export async function avisarPropuestaNueva(knex: any, logger: any, s: any, p: { 
     logger
   )
   // Por WhatsApp a quien ya platica con HETNA por ahí (respeta BAJA)
-  try {
-    const { normalizarNumero, enviarTexto, whatsappListo, T_WA } = require("./whatsapp")
-    const numero = normalizarNumero(s.contacto?.whatsapp || "")
-    if (numero && s.wa_confirmada_en && whatsappListo()) {
-      const baja = await knex(T_WA).where({ numero }).first("avisos").catch(() => null)
-      if (!baja || baja.avisos !== false)
-        await enviarTexto(
-          numero,
-          `Tiene una nueva propuesta para su solicitud *${folio}*: $${p.precio.toLocaleString("es-MX")} ${p.moneda}, entrega en ${p.dias} días.\n\nPuede compararla con las demás aquí: ${ligaPropuestas(s.token)}`
-        )
-    }
-  } catch (e) {
-    logger?.warn?.(`[licitacion] aviso de propuesta por WhatsApp: ${(e as Error).message}`)
-  }
+  const { avisarClienteWhatsapp } = require("./cliente-whatsapp")
+  await avisarClienteWhatsapp(
+    knex,
+    s,
+    `Tiene una nueva propuesta para su solicitud *${folio}*: $${p.precio.toLocaleString("es-MX")} ${p.moneda}, entrega en ${p.dias} días.\n\nPuede compararla con las demás aquí: ${ligaPropuestas(s.token)}`,
+    logger
+  )
   if (s.contacto?.email) {
     const r = await sendEmail({
       to: s.contacto.email,

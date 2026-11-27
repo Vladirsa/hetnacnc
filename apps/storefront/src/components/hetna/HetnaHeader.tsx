@@ -116,7 +116,9 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
           className="shrink-0 flex items-center"
           data-testid="header-logo-link"
         >
-          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority className="h-auto w-[110px] max-[359px]:w-[74px] md:w-[180px]" />
+          {/* unoptimized: Cloudflare guarda una sola versión de /_next/image sin mirar el formato que pide
+              el navegador; si guardaba la JPEG (sin transparencia), el logo salía con fondo negro. */}
+          <Image src="/logo-hetna.webp" width={180} height={48} alt="HETNA CNC" priority unoptimized className="h-auto w-[110px] max-[359px]:w-[74px] md:w-[180px]" />
         </LocalizedClientLink>
         <div className="hidden md:flex shrink-0">
           <EnvioA user={user} />

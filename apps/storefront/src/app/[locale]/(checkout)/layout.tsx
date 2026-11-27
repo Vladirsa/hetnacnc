@@ -25,6 +25,7 @@ export default async function RootLayout({
             <LocalizedClientLink href="/" className="text-2xl font-bold">
               <Image
                 src="/logo-hetna.webp"
+                unoptimized
                 width={126}
                 height={40}
                 alt="Logo"
