@@ -20,7 +20,7 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="talleres" />
-      {error && <Vacio><TS>No pude leer la app:</TS> {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer la app:</TS> <TS>{error}</TS></Vacio>}
       {c && (
         <Tarjeta>
           <Titulo extra={<span className="text-[11px] text-[#6B675C]"><TS>los 3 números de la semana</TS></span>}><TS>Crecimiento</TS></Titulo>
@@ -56,8 +56,8 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
                 {p.por_vencer.map((f) => (
                   <li key={f.id} className="flex items-center justify-between gap-2 py-2.5">
                     <div className="min-w-0">
-                      <p className="truncate text-[13.5px] font-bold">{f.nombre}</p>
-                      <p className="text-[11.5px] text-[#6B675C]">{f.plan}{f.prueba_dias != null ? ` · ${f.prueba_dias} días de prueba` : ""}{f.vence ? ` · vence ${fechaCorta(f.vence)}` : ""} · {f.cotizaciones_mes} <TS>cotiz. este mes</TS></p>
+                      <p className="truncate text-[13.5px] font-bold"><TS>{f.nombre}</TS></p>
+                      <p className="text-[11.5px] text-[#6B675C]"><TS>{f.plan}</TS><TS>{f.prueba_dias != null ? ` · ${f.prueba_dias} días de prueba` : ""}</TS><TS>{f.vence ? ` · vence ${fechaCorta(f.vence)}` : ""}</TS> · <TS>{f.cotizaciones_mes}</TS> <TS>cotiz. este mes</TS></p>
                     </div>
                     {f.telefono && <a href={wa(f.telefono)} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EC] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]"><TS>WhatsApp</TS></a>}
                   </li>
@@ -71,10 +71,10 @@ export default async function PanelCotizador({ params }: { params: Promise<{ loc
               {[...p.filas].sort((a, b) => String(b.registrado || "").localeCompare(String(a.registrado || ""))).slice(0, 15).map((f) => (
                 <li key={f.id} className="flex items-center justify-between gap-2 py-2">
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-semibold">{f.nombre}</p>
-                    <p className="text-[11px] text-[#6B675C]">{fechaCorta(f.registrado)} · {f.cotizaciones_mes} <TS>cotiz.</TS></p>
+                    <p className="truncate text-[13px] font-semibold"><TS>{f.nombre}</TS></p>
+                    <p className="text-[11px] text-[#6B675C]">{fechaCorta(f.registrado)} · <TS>{f.cotizaciones_mes}</TS> <TS>cotiz.</TS></p>
                   </div>
-                  <Etiqueta color={f.paga ? "verde" : f.plan === "prueba" ? "azul" : "gris"}>{f.plan}</Etiqueta>
+                  <Etiqueta color={f.paga ? "verde" : f.plan === "prueba" ? "azul" : "gris"}><TS>{f.plan}</TS></Etiqueta>
                 </li>
               ))}
             </ul>
