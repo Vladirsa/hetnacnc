@@ -8,6 +8,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { descripcionCorta } from "@/lib/helpers/seo"
 import { NOMBRE_TIPO, empresaPorSlug, nombreVisible, slugCanonico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { CIUDADES, guiaPorSlug, h1EnCiudad } from "@/lib/seo/guias"
 
 // Perfil NO RECLAMADO de una empresa del directorio (lib/hetna/directorio.ts).
 // Confianza ante todo: dice claramente que la empresa no es parte de HETNA, de
@@ -48,12 +49,27 @@ function calculadoraDe(texto: string): { href: string; nombre: string } {
   return { href: "/cotizar/router-cnc", nombre: "router CNC" }
 }
 
+// Guía de la ciudad que corresponde al estado y al servicio de la empresa
+// (/cnc/<guía>/<ciudad>). Los perfiles del directorio son las páginas que Google
+// más visita: enlazar desde aquí ayuda a que encuentre las páginas de ciudad
+// (el reporte de Search Console del 27 nov mostró «cnc router puebla» llevando a
+// la página nacional en vez de la de Puebla).
+function guiaDeCiudad(estado: string | undefined, texto: string): { href: string; texto: string } | null {
+  const ciudad = estado ? CIUDADES.find((c) => c.estado === estado) : undefined
+  if (!ciudad) return null
+  const t = texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+  const slug = /plasma|oxicorte/.test(t) ? "corte-plasma" : /laser/.test(t) ? "corte-laser-mdf" : /impresion 3d|impresora 3d|3d print/.test(t) ? "impresion-3d" : "taller-router-cnc-mexico"
+  const guia = guiaPorSlug(slug)
+  return guia ? { href: `/cnc/${slug}/${ciudad.slug}`, texto: h1EnCiudad(guia, ciudad) } : null
+}
+
 export default async function PerfilDirectorioPage({ params }: Props) {
   const { slug } = await params
   const e = await empresaPorSlug(slug)
   if (!e) notFound()
   const donde = [e.ciudad, e.estado].filter(Boolean).join(", ")
   const calculadora = calculadoraDe(`${e.empresa} ${e.servicios || ""} ${e.segmento || ""}`)
+  const guiaCiudad = guiaDeCiudad(e.estado, `${e.empresa} ${e.servicios || ""} ${e.segmento || ""}`)
   const cercanos = e.estado
     ? (await listarTalleres().catch(() => [])).filter((t) => t.perfil.estado === e.estado).slice(0, 4)
     : []
@@ -132,6 +148,15 @@ export default async function PerfilDirectorioPage({ params }: Props) {
             ))}
           </ul>
         </section>
+      )}
+
+      {guiaCiudad && (
+        <p className="mt-6 text-sm text-[#40403A]">
+          <TS>Compara con otras opciones:</TS>{" "}
+          <LocalizedClientLink href={guiaCiudad.href} className="font-semibold text-[#C2560A] hover:underline">
+            <TS>{guiaCiudad.texto}</TS>
+          </LocalizedClientLink>
+        </p>
       )}
 
       <section className="mt-6 rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-6">
