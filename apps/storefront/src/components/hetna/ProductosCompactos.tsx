@@ -3,6 +3,7 @@
 // "Descubre más productos". Caben de 3 en celular a 8 por fila en computadora,
 // para invitar a seguir viendo sin que las fotos ocupen toda la pantalla
 // (antes las dos primeras eran un carrusel de 4 fotos enormes).
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import Image from "@/lib/imagenes/Imagen"
@@ -35,11 +36,11 @@ export function ProductosCompactos({
     <section className={`w-full ${angosta ? "py-0" : "py-6"}`} aria-labelledby={idTitulo}>
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 id={idTitulo} className={`${angosta ? "text-[15px]" : "heading-md"} font-bold uppercase tracking-tight`}>
-          {titulo}
+          <TS>{titulo}</TS>
         </h2>
         {verTodos && (
           <LocalizedClientLink href={verTodos} className="shrink-0 text-[13.5px] font-bold text-[#B34D07] hover:underline">
-            Ver todos →
+            <TS>Ver todos →</TS>
           </LocalizedClientLink>
         )}
       </div>
