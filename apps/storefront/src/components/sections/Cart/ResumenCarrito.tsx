@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 
 import { Button } from "@/components/atoms/Button/Button"
@@ -46,7 +47,7 @@ export const ResumenCarrito = ({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-        <h2 className="text-[16px] font-bold text-[#1B1B18]">Resumen</h2>
+        <h2 className="text-[16px] font-bold text-[#1B1B18]"><T>Resumen</T></h2>
 
         {hayAlgo ? (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -75,7 +76,7 @@ export const ResumenCarrito = ({
           </div>
         ) : (
           <p className="mt-3 rounded-[8px] bg-[#F4F2EC] px-3 py-2.5 text-[13px] leading-relaxed text-[#4A4943]">
-            No marcaste nada. Marca los productos que quieres comprar ahora.
+            <T>No marcaste nada. Marca los productos que quieres comprar ahora.</T>
           </p>
         )}
 
@@ -115,7 +116,7 @@ export const ResumenCarrito = ({
             ) : t.envio > 0 ? (
               <span className="font-medium text-[#1B1B18]">{precio(t.envio)}</span>
             ) : (
-              <span className="text-[13px] text-[#6B6A63]">Se calcula con tu dirección</span>
+              <span className="text-[13px] text-[#6B6A63]"><T>Se calcula con tu dirección</T></span>
             )}
           </Fila>
 
@@ -127,7 +128,7 @@ export const ResumenCarrito = ({
         </dl>
 
         <div className="mt-3 flex items-baseline justify-between border-t border-[#EDEAE2] pt-3">
-          <span className="text-[14px] font-semibold text-[#1B1B18]">Estimación total</span>
+          <span className="text-[14px] font-semibold text-[#1B1B18]"><T>Estimación total</T></span>
           <span className="text-[24px] font-bold text-[#1B1B18]" data-testid="cart-total">
             {precio(t.total)}
           </span>
@@ -135,13 +136,13 @@ export const ResumenCarrito = ({
 
         {t.envio === 0 && hayAlgo && !sinEnvio && (
           <p className="mt-1 text-[12px] text-[#6B6A63]">
-            Falta el envío. Lo ves completo antes de pagar, nunca después.
+            <T>Falta el envío. Lo ves completo antes de pagar, nunca después.</T>
           </p>
         )}
 
         {t.ahorro > 0 && (
           <p className="mt-2 rounded-[8px] bg-[#FBEAE6] px-3 py-2 text-[13px] font-semibold text-[#9B3225]">
-            Ahorras {precio(t.ahorro)} en esta compra
+            <T>Ahorras</T> {precio(t.ahorro)} <T>en esta compra</T>
           </p>
         )}
 
@@ -154,7 +155,7 @@ export const ResumenCarrito = ({
               loading={trabajando}
               data-testid="cart-checkout-button"
             >
-              Continuar ({t.piezas})
+              <T>Continuar (</T>{t.piezas})
             </Button>
           ) : (
             // Se entra a /checkout sin paso: la pasarela decide. Antes se
@@ -167,25 +168,25 @@ export const ResumenCarrito = ({
                 disabled={!hayAlgo}
                 data-testid="cart-checkout-button"
               >
-                Continuar ({t.piezas})
+                <T>Continuar (</T>{t.piezas})
               </Button>
             </LocalizedClientLink>
           )}
 
           {t.ahorro > 0 && hayAlgo && (
             <p className="mt-2 text-center text-[13px] font-semibold text-[#9B3225]">
-              ♥ Ahora a menor precio
+              <T>♥ Ahora a menor precio</T>
             </p>
           )}
 
           {sinMarcar > 0 && hayAlgo && (
             <p className="mt-2 text-[12px] leading-relaxed text-[#6B5A2E]">
-              Al continuar,{" "}
+              <T>Al continuar,</T>{" "}
               {sinMarcar === 1
                 ? "el producto que no marcaste se guarda"
                 : `los ${sinMarcar} productos que no marcaste se guardan`}{" "}
-              en tus favoritos y sale{sinMarcar === 1 ? "" : "n"} del carrito, para que no
-              se te cobre{sinMarcar === 1 ? "" : "n"}.
+              <T>en tus favoritos y sale</T>{sinMarcar === 1 ? "" : "n"} <T>del carrito, para que no
+              se te cobre</T>{sinMarcar === 1 ? "" : "n"}.
             </p>
           )}
         </div>
