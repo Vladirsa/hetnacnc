@@ -62,7 +62,7 @@ const PanelHojas = ({ g }: { g: Grupo }) => (
       href={"/categories/" + g.handle}
       className="rounded-[8px] px-3 py-2 text-[13px] font-bold text-[#B34D07] hover:underline"
     >
-      <TS>Ver todo en</TS> {g.nombre}
+      <TS>Ver todo en</TS> <TS>{g.nombre}</TS>
     </LocalizedClientLink>
     <div className="grid grid-cols-2 gap-x-2">
       {g.hojas.map((h) => (
@@ -71,7 +71,7 @@ const PanelHojas = ({ g }: { g: Grupo }) => (
           href={"/categories/" + h.handle}
           className="rounded-[8px] px-3 py-2 text-[13.5px] text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
         >
-          {h.name}
+          <TS>{h.name}</TS>
         </LocalizedClientLink>
       ))}
     </div>
@@ -102,9 +102,9 @@ const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
             href={"/tienda/" + c.clave}
             className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2.5 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
           >
-            <span>{c.nombre}</span>
+            <span><TS>{c.nombre}</TS></span>
             {c.conteo > 0 ? (
-              <span className="shrink-0 font-mono text-[12px] text-[#6B6A63]">{c.conteo}</span>
+              <span className="shrink-0 font-mono text-[12px] text-[#6B6A63]"><TS>{c.conteo}</TS></span>
             ) : (
               <span className="shrink-0 rounded bg-[#FFF4EC] px-1.5 py-0.5 text-[10.5px] font-bold uppercase text-[#A84303]"><TS>Próximamente</TS></span>
             )}
@@ -152,7 +152,7 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
             {raices.map((r) => (
               <div key={r.id}>
                 <p className="px-3 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]">
-                  {r.nombre}
+                  <TS>{r.nombre}</TS>
                 </p>
                 {r.grupos.map((g) => (
                   <div key={g.id} className="grupo">
@@ -160,7 +160,7 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
                       href={"/categories/" + g.handle}
                       className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2 text-[13.5px] font-bold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
                     >
-                      {g.esRaiz ? "Ver todos" : g.nombre}
+                      <TS>{g.esRaiz ? "Ver todos" : g.nombre}</TS>
                       <FlechaDerecha />
                     </LocalizedClientLink>
                     {/* El panel del primer grupo se ve mientras no hay otro con el
@@ -181,7 +181,7 @@ const MegaCategorias = ({ raices, tienda }: { raices: Raiz[]; tienda: MenuTienda
               href="/categories"
               className="mt-2 flex items-center justify-between gap-2 rounded-[8px] border-t border-[#E7E4DC] px-3 py-3 text-[13.5px] font-bold text-[#B34D07] hover:bg-[#FAF6EF]"
             >
-              <TS>Ver todos los productos</TS>{tienda ? ` (${tienda.total})` : ""}
+              <TS>Ver todos los productos</TS><TS>{tienda ? ` (${tienda.total})` : ""}</TS>
               <FlechaDerecha />
             </LocalizedClientLink>
             <LocalizedClientLink
