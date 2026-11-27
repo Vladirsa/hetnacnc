@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { descripcionCorta } from "@/lib/helpers/seo"
 import { notFound } from "next/navigation"
@@ -25,7 +27,7 @@ const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "
 // las herramientas que juntan varias (Imagen, Archivos) ponen su propio tema
 const OSCURAS = new Set(["rompecabezas", "letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "grabado-foto", "litofania-relieve", "convertidor", "anidado-piezas", "svg-a-stl", "llaveros", "texturizador", "cortadores-galletas", "vectorizador", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "despiece-muebles", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen"])
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
   const h = buscarHerramientaDiseno(herramienta)
   if (!h) return {}
@@ -97,8 +99,8 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
   return (
     <section aria-labelledby="acerca-herramienta" className="border-t border-[#2B3648] bg-[#0D1015] px-4 py-6 text-[#C9CED6] lg:px-8">
       <div className="mx-auto max-w-[920px]">
-        <h2 id="acerca-herramienta" className="m-0 text-[16px] font-semibold text-white">{h.titulo}</h2>
-        <p className="m-0 mt-1.5 text-[14px] leading-relaxed">{h.descripcion}</p>
+        <h2 id="acerca-herramienta" className="m-0 text-[16px] font-semibold text-white"><TS>{h.titulo}</TS></h2>
+        <p className="m-0 mt-1.5 text-[14px] leading-relaxed"><TS>{h.descripcion}</TS></p>
         {GUIA_DE_HERRAMIENTA[h.slug] && (
           <p className="m-0 mt-1.5 text-[14px]">
             <LocalizedClientLink href={`/cnc/${GUIA_DE_HERRAMIENTA[h.slug][0]}`} className="font-semibold text-[#FF8A47] hover:text-white">
@@ -122,7 +124,7 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
           </div>
         )}
         <p className="m-0 mt-1.5 text-[13px] text-[#8D96A3]">
-          Herramienta {h.acceso === "gratis" ? "gratis" : "con créditos"} de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.
+          <TS>Herramienta</TS> {h.acceso === "gratis" ? "gratis" : "con créditos"} <TS>de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.</TS>
         </p>
         {otras.length > 0 && (
           <nav aria-label="Más herramientas" className="mt-3 flex flex-wrap gap-2 text-[13px]">
@@ -132,7 +134,7 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
               </LocalizedClientLink>
             ))}
             <LocalizedClientLink href="/disenar" className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
-              Todas las herramientas
+              <TS>Todas las herramientas</TS>
             </LocalizedClientLink>
           </nav>
         )}
@@ -162,4 +164,9 @@ export default async function HerramientaDiseno({ params }: Props) {
       {h && <AcercaDe h={h} />}
     </>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
