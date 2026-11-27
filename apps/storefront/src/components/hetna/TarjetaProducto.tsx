@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import Image from "@/lib/imagenes/Imagen"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -182,7 +183,7 @@ export default function TarjetaProducto({
           <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
             {esNuevo && (
               <span className="rounded-md bg-[#C2560A] px-2 py-0.5 text-[11px] font-bold text-white">
-                Nuevo
+                <TS>Nuevo</TS>
               </span>
             )}
             {hayDescuento && porcentaje > 0 && (
@@ -204,7 +205,7 @@ export default function TarjetaProducto({
 
           {agotado && (
             <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[11px] font-bold text-white">
-              Agotado
+              <TS>Agotado</TS>
             </span>
           )}
         </div>
@@ -212,15 +213,15 @@ export default function TarjetaProducto({
         <div className="flex flex-col gap-1 p-3">
           {/* Qué es y quién lo vende, de un vistazo */}
           <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-bold">
-            <span className={`rounded px-1.5 py-0.5 ${ETIQUETA_TIPO.clase}`}>{ETIQUETA_TIPO.texto}</span>
+            <span className={`rounded px-1.5 py-0.5 ${ETIQUETA_TIPO.clase}`}><TS>{ETIQUETA_TIPO.texto}</TS></span>
             {vendedor &&
               (vendedor.total > 1 ? (
-                <span className="rounded px-1.5 py-0.5 text-[#44433D] ring-1 ring-[#E0DCD2]">Varios talleres</span>
+                <span className="rounded px-1.5 py-0.5 text-[#44433D] ring-1 ring-[#E0DCD2]"><TS>Varios talleres</TS></span>
               ) : origen === "hetna" ? (
-                <span className="rounded bg-[#C2560A] px-1.5 py-0.5 text-white">HETNA oficial</span>
+                <span className="rounded bg-[#C2560A] px-1.5 py-0.5 text-white"><TS>HETNA oficial</TS></span>
               ) : (
                 <span className="max-w-[120px] truncate rounded px-1.5 py-0.5 text-[#1F4E8C] ring-1 ring-[#C3D6F0]" title={vendedor.nombre}>
-                  Taller · {vendedor.nombre}
+                  <TS>Taller ·</TS> {vendedor.nombre}
                 </span>
               ))}
           </span>
@@ -235,7 +236,7 @@ export default function TarjetaProducto({
                   {f}
                 </span>
               ))}
-              {licencia && <span className="text-[#6B6A63]">Lic. {licencia}</span>}
+              {licencia && <span className="text-[#6B6A63]"><TS>Lic.</TS> {licencia}</span>}
             </span>
           )}
 
