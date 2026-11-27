@@ -3,6 +3,7 @@
 // precios del backend (GET /store/hetna-tarifas, packages/api/src/lib/tarifas.ts)
 // para que nunca diga algo distinto a los Términos para vendedores. Si no se
 // puede leer, la sección no se muestra (no se inventa la cifra).
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -51,15 +52,15 @@ export async function ComparativaComisiones() {
   ]
   return (
     <section className="mt-12" id="comisiones">
-      <h2 className="text-2xl font-extrabold text-[#142033] sm:text-3xl">Cuánto te queda de cada venta</h2>
-      <p className="mt-1 text-[#6B675C]">Ejemplo con una venta de {pesos(VENTA)} MXN.</p>
+      <h2 className="text-2xl font-extrabold text-[#142033] sm:text-3xl"><TS>Cuánto te queda de cada venta</TS></h2>
+      <p className="mt-1 text-[#6B675C]"><TS>Ejemplo con una venta de</TS> {pesos(VENTA)} <TS>MXN.</TS></p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-[#E7E4DC] bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-[#F3F1EA] text-[#142033]">
             <tr>
-              <th className="px-4 py-3 font-bold">Dónde vendes</th>
-              <th className="hidden px-4 py-3 font-bold sm:table-cell">Cómo cobra</th>
-              <th className="px-4 py-3 text-right font-bold">Te cobra aprox.</th>
+              <th className="px-4 py-3 font-bold"><TS>Dónde vendes</TS></th>
+              <th className="hidden px-4 py-3 font-bold sm:table-cell"><TS>Cómo cobra</TS></th>
+              <th className="px-4 py-3 text-right font-bold"><TS>Te cobra aprox.</TS></th>
             </tr>
           </thead>
           <tbody>
@@ -78,15 +79,15 @@ export async function ComparativaComisiones() {
       </div>
       <ul className="mt-3 space-y-1 text-[13px] text-[#6B675C]">
         <li>
-          • Vendes con el nombre de tu taller y <b>emites tu factura (CFDI) directamente a tu cliente</b>.
+          <TS>• Vendes con el nombre de tu taller y</TS> <b><TS>emites tu factura (CFDI) directamente a tu cliente</TS></b>.
         </li>
         <li>
-          • Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión.{" "}
+          <TS>• Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión.</TS>{" "}
           <LocalizedClientLink href="/terminos-vendedores" className="font-semibold text-[#C2560A] underline">
-            Ver todas las tarifas
+            <TS>Ver todas las tarifas</TS>
           </LocalizedClientLink>
         </li>
-        <li>• Comisiones de Mercado Libre y Amazon: referencias publicadas por cada plataforma; varían por categoría y pueden cambiar.</li>
+        <li><TS>• Comisiones de Mercado Libre y Amazon: referencias publicadas por cada plataforma; varían por categoría y pueden cambiar.</TS></li>
       </ul>
     </section>
   )
