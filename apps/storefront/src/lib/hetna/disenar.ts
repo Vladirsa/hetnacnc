@@ -413,6 +413,28 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "placa-redonda",
+    nombre: "Placa redonda con texto en arco",
+    texto: "Letrero redondo: texto en arco arriba y abajo, monograma al centro y aro. DXF para láser o router.",
+    icono: "letrero",
+    acceso: "gratis",
+    titulo: "Letrero redondo con texto en arco y monograma gratis (DXF)",
+    descripcion:
+      "Haz un letrero redondo para tu negocio, casa o evento: texto en arco arriba y abajo (los dos se leen al derecho), iniciales o monograma al centro, aro en la orilla y adornos a los lados. Descarga gratis el DXF, SVG o PDF para láser o router CNC.",
+    meta: "Letrero redondo con texto en arco arriba y abajo y monograma al centro. Descarga gratis el DXF o SVG para láser o router.",
+  },
+  {
+    slug: "incrustaciones",
+    nombre: "Incrustaciones (inlay)",
+    texto: "Bolsillo y pieza que encajan, compensados por tu fresa. De un texto o tu dibujo SVG/DXF.",
+    icono: "letrero",
+    acceso: "gratis",
+    titulo: "Incrustaciones (inlay) para router CNC y láser gratis",
+    descripcion:
+      "De un texto o tu dibujo (SVG o DXF) te damos el bolsillo para vaciar en la madera base y la pieza que entra, ya compensados por el radio de tu fresa (1/16, 1/8 o 1/4 de pulgada) y con la holgura para el pegamento. Para letreros y tablas con incrustaciones de madera de contraste o acrílico.",
+    meta: "Incrustaciones (inlay) que sí encajan: bolsillo y pieza compensados por tu fresa, de un texto o tu SVG/DXF. Gratis.",
+  },
+  {
     slug: "etiquetas-braille",
     nombre: "Etiquetas en braille",
     texto: "Placas con el texto en braille español en relieve (y en letras para quien ve). STL para imprimir.",
@@ -509,6 +531,8 @@ export const PESTANA_DE_MODO: Record<string, string> = {
   // Letreros y placas
   "estencil-letras": "letreros",
   "codigo-qr": "letreros",
+  "placa-redonda": "letreros",
+  incrustaciones: "letreros",
   // Imagen
   "grabado-foto": "vectorizador",
   "litofania-relieve": "vectorizador",

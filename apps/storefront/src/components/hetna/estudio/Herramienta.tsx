@@ -19,7 +19,7 @@ const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara" | "esfera"> 
 // rompecabezas y engranes: Juegos y mecanismos
 const GeneradorJuegos = dynamic(() => import("@/components/hetna/generador/GeneradorJuegos").then((m) => m.GeneradorJuegos))
 const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas: "rompecabezas", engranes: "engranes" }
-const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr" }
+const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr" | "redonda" | "incrustacion"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr", "placa-redonda": "redonda", incrustaciones: "incrustacion" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorCortadores = dynamic(() => import("@/components/hetna/generador/GeneradorCortadores").then((m) => m.GeneradorCortadores))
 const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador/GeneradorTexturizador").then((m) => m.GeneradorTexturizador))
