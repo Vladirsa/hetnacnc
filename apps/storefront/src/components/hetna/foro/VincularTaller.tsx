@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -29,12 +30,12 @@ export function VincularTaller({
       <div id="taller" className={caja}>
         <span>
           <span className="block font-bold text-[#1B1B18]">
-            Tu perfil está ligado a {ligado.nombre} {ligado.verificado ? "· ✓ Taller verificado" : ""}
+            <T>Tu perfil está ligado a</T> {ligado.nombre} {ligado.verificado ? "· ✓ Taller verificado" : ""}
           </span>
-          <span className="text-[14px] text-[#55544D]">Tus temas y respuestas llevan a la página de tu taller.</span>
+          <span className="text-[14px] text-[#55544D]"><T>Tus temas y respuestas llevan a la página de tu taller.</T></span>
         </span>
         <LocalizedClientLink href={`/talleres/${ligado.handle}`} className="shrink-0 text-[14px] font-semibold text-[#B34D07] hover:underline">
-          Ver mi taller
+          <T>Ver mi taller</T>
         </LocalizedClientLink>
       </div>
     )
@@ -44,9 +45,9 @@ export function VincularTaller({
     return (
       <div id="taller" className={`${caja} border-[#B9DCC4] bg-[#EEF6EE]`}>
         <span>
-          <span className="block font-bold text-[#1B1B18]">Tu cuenta es de {encontrado.nombre}. ¿Lo ligamos a tu perfil?</span>
+          <span className="block font-bold text-[#1B1B18]"><T>Tu cuenta es de</T> {encontrado.nombre}<T>. ¿Lo ligamos a tu perfil?</T></span>
           <span className="text-[14px] text-[#55544D]">
-            Saldrá la insignia {encontrado.verificado ? "“✓ Taller verificado”" : "“Taller HETNA”"} en todo lo que publiques, con liga a tu taller.
+            <T>Saldrá la insignia</T> {encontrado.verificado ? "“✓ Taller verificado”" : "“Taller HETNA”"} <T>en todo lo que publiques, con liga a tu taller.</T>
           </span>
           {error && <span className="block text-[13px] text-[#B3261E]">{error}</span>}
         </span>
@@ -72,13 +73,13 @@ export function VincularTaller({
   return (
     <div id="taller" className={caja}>
       <span>
-        <span className="block font-bold text-[#1B1B18]">¿Tienes un taller CNC?</span>
+        <span className="block font-bold text-[#1B1B18]"><T>¿Tienes un taller CNC?</T></span>
         <span className="text-[14px] text-[#55544D]">
-          Regístralo en HETNA con el mismo correo de esta cuenta y vuelve aquí para ligarlo: tus respuestas llevarán clientes a tu taller.
+          <T>Regístralo en HETNA con el mismo correo de esta cuenta y vuelve aquí para ligarlo: tus respuestas llevarán clientes a tu taller.</T>
         </span>
       </span>
       <LocalizedClientLink href="/talleres/unete" className="shrink-0 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#A84A08]">
-        Registrar mi taller
+        <T>Registrar mi taller</T>
       </LocalizedClientLink>
     </div>
   )
