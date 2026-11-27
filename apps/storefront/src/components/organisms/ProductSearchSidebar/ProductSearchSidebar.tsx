@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Chip } from "@/components/atoms/Chip/Chip"
 import { Input } from "@/components/atoms/Input/Input"
@@ -45,7 +46,7 @@ export const ProductSearchSidebar = ({ facets }: { facets: SearchFacets }) => {
   return (
     <>
       <Button onClick={() => setIsOpen(true)} className="w-full uppercase mb-4 md:hidden">
-        Filtros
+        <T>Filtros</T>
       </Button>
       {isOpen && (
         <Modal heading="Filtros" onClose={() => setIsOpen(false)}>
