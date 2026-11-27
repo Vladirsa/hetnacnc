@@ -18,11 +18,11 @@ export function RevisionArchivo({ geo, proceso, espesor_mm }: { geo: GeoCad; pro
   return (
     <div className="rounded-[10px] border border-[#E7E4DC] bg-white p-3 text-left">
       <p className="m-0 text-[13px] font-bold text-[#1B1B18]">
-        <T>Revisión de tu archivo:</T>{" "}
+        <T>Revisión de tu archivo:</T><T>{" "}</T>
         {problemas ? (
-          <span className="text-[#B42318]">{problemas === 1 ? "1 cosa por corregir" : `${problemas} cosas por corregir`}</span>
+          <span className="text-[#B42318]"><T>{problemas === 1 ? "1 cosa por corregir" : `${problemas} cosas por corregir`}</T></span>
         ) : revisar ? (
-          <span className="text-[#8A6D1F]">{revisar === 1 ? "1 detalle por revisar" : `${revisar} detalles por revisar`}</span>
+          <span className="text-[#8A6D1F]"><T>{revisar === 1 ? "1 detalle por revisar" : `${revisar} detalles por revisar`}</T></span>
         ) : (
           <span className="text-[#2E7D32]"><T>todo bien</T></span>
         )}
