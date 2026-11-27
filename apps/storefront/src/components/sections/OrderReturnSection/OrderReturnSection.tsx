@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { UserNavigation } from "@/components/molecules/UserNavigation/UserNavigation"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -89,7 +90,7 @@ export const OrderReturnSection = ({
               className="label-md text-action-on-secondary uppercase flex items-center gap-2"
             >
               <ArrowLeftIcon className="size-4" />
-              Detalles del pedido
+              <T>Detalles del pedido</T>
             </Button>
           </LocalizedClientLink>
         ) : (
@@ -99,7 +100,7 @@ export const OrderReturnSection = ({
             onClick={() => setTab(0)}
           >
             <ArrowLeftIcon className="size-4" />
-            Selecciona productos
+            <T>Selecciona productos</T>
           </Button>
         )}
         <div className="grid grid-cols-1 md:grid-cols-8 gap-4 mt-8">
