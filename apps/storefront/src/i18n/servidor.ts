@@ -19,7 +19,7 @@ export const idiomaServidor = cache(async (): Promise<Idioma> => {
 /** t() para componentes de servidor y generateMetadata: `const t = await traductor()` */
 export const traductor = cache(async () => {
   if ((await idiomaServidor()) !== "en") return sinTraducir
-  const { EN, REGLAS } = await import("./en")
+  const { EN, REGLAS } = await import("./diccionario")
   return crearT(EN, REGLAS)
 })
 
