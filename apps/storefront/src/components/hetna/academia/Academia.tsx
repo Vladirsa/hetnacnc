@@ -2,6 +2,7 @@
 // Los talleres suben sus cursos (gratis o de pago) desde su panel; HETNA cobra
 // una comisión (5%, menos si el instructor escribe en el blog; ver Términos para vendedores) sólo cuando se vende uno. Los videos viven en el YouTube (oculto) o
 // Vimeo del taller, así que la Academia no le cuesta nada a HETNA.
+import { TS } from "@/i18n/TS"
 import Image from "@/lib/imagenes/Imagen"
 import type { HttpTypes } from "@medusajs/types"
 
@@ -57,7 +58,7 @@ const TarjetaLibro = ({ p }: { p: Producto }) => {
         {p.thumbnail ? (
           <Image src={p.thumbnail} alt={p.title} fill sizes="(min-width: 1024px) 200px, 45vw" className="object-cover" />
         ) : (
-          <span className="grid h-full place-items-center text-[13px] font-bold text-[#6B6A63]">PDF</span>
+          <span className="grid h-full place-items-center text-[13px] font-bold text-[#6B6A63]"><TS>PDF</TS></span>
         )}
         <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${gratis ? "bg-[#19B374] text-white" : "bg-[#142033] text-white"}`}>
           {gratis ? "Gratis" : "PDF"}
@@ -88,11 +89,11 @@ export function Academia({
   return (
     <main className="w-full bg-[#FAF9F6]">
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
+        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]"><TS>Servicios</TS></LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Academia CNC</span>
+        <span className="text-[#1B1B18] font-medium"><TS>Academia CNC</TS></span>
       </div>
 
       <section className="px-4 lg:px-16 py-5 lg:py-7">
@@ -107,25 +108,25 @@ export function Academia({
           <div className="relative grid gap-8 p-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:p-12">
             <div className="flex flex-col gap-4">
               <span className="self-start rounded-full bg-[#F07A1A]/20 px-3 py-1 text-[12px] font-extrabold uppercase tracking-wide text-[#F59A4A]">
-                Academia HETNA · cursos y libros CNC
+                <TS>Academia HETNA · cursos y libros CNC</TS>
               </span>
               <h1 className="m-0 font-display text-[32px] font-extrabold leading-[1.05] lg:text-[52px]">
-                Aprende CNC con los talleres que lo hacen todos los días
+                <TS>Aprende CNC con los talleres que lo hacen todos los días</TS>
               </h1>
               <p className="m-0 max-w-[640px] text-[16px] leading-relaxed text-white/70 lg:text-[17px]">
-                Cursos en video y libros en PDF de router, láser, plasma, torno, Fusion 360 y G-code. En español, prácticos y
-                muchos gratis.
+                <TS>Cursos en video y libros en PDF de router, láser, plasma, torno, Fusion 360 y G-code. En español, prácticos y
+                muchos gratis.</TS>
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
                 <a href="#cursos" className="rounded-[12px] bg-[#F07A1A] px-6 py-3.5 text-[15px] font-extrabold text-white hover:brightness-110">
-                  Ver cursos
+                  <TS>Ver cursos</TS>
                 </a>
                 <a href="#libros" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
-                  Libros y PDF
+                  <TS>Libros y PDF</TS>
                 </a>
                 {recursos.length > 0 && (
                   <a href="#biblioteca" className="rounded-[12px] border border-white/25 px-6 py-3.5 text-[15px] font-bold text-white hover:bg-white/10">
-                    Biblioteca gratis
+                    <TS>Biblioteca gratis</TS>
                   </a>
                 )}
               </div>
@@ -152,13 +153,13 @@ export function Academia({
             >
               <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" aria-hidden="true" />
               <span className="relative">
-                <span className="text-[12px] font-extrabold uppercase tracking-wide text-white/85">¿Tienes un taller o sabes enseñar?</span>
+                <span className="text-[12px] font-extrabold uppercase tracking-wide text-white/85"><TS>¿Tienes un taller o sabes enseñar?</TS></span>
                 <span className="mt-2 block font-display text-[26px] font-extrabold leading-tight lg:text-[30px]">
-                  Llega a más usuarios y gana con lo que sabes
+                  <TS>Llega a más usuarios y gana con lo que sabes</TS>
                 </span>
                 <span className="mt-2 block text-[14.5px] leading-relaxed text-white/90">
-                  Publica tus cursos y tus libros en PDF gratis. Te mostramos con toda la comunidad CNC y ganas al momento en que
-                  ven tus videos o compran tu libro.
+                  <TS>Publica tus cursos y tus libros en PDF gratis. Te mostramos con toda la comunidad CNC y ganas al momento en que
+                  ven tus videos o compran tu libro.</TS>
                 </span>
               </span>
               <span className="relative grid grid-cols-2 gap-2">
@@ -170,7 +171,7 @@ export function Academia({
                 ))}
               </span>
               <span className="relative self-start rounded-[10px] bg-white px-5 py-3 text-[14.5px] font-extrabold text-[#C2410C] group-hover:bg-[#FFF3E8]">
-                Quiero enseñar en HETNA →
+                <TS>Quiero enseñar en HETNA →</TS>
               </span>
             </a>
           </div>
@@ -179,7 +180,7 @@ export function Academia({
 
       <div className="px-4 lg:px-16 pb-12 flex flex-col gap-12">
         <section id="cursos" className="flex flex-col gap-4 scroll-mt-24">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Cursos</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Cursos</TS></h2>
           {cursos.length ? (
             <CatalogoCursos cursos={cursos} />
           ) : (
@@ -189,15 +190,15 @@ export function Academia({
                   <ServicioIcono nombre="aprender" size={26} />
                 </span>
                 <div>
-                  <h3 className="m-0 font-display text-[19px] font-bold text-[#1B1B18]">Los primeros cursos vienen en camino</h3>
+                  <h3 className="m-0 font-display text-[19px] font-bold text-[#1B1B18]"><TS>Los primeros cursos vienen en camino</TS></h3>
                   <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[560px]">
-                    Mientras tanto, aprende gratis con las guías de abajo y pregunta en el Foro CNC. ¿Tienes un taller?
-                    Sé de los primeros en publicar tu curso.
+                    <TS>Mientras tanto, aprende gratis con las guías de abajo y pregunta en el Foro CNC. ¿Tienes un taller?
+                    Sé de los primeros en publicar tu curso.</TS>
                   </p>
                 </div>
               </div>
               <a href="#ensena" className="shrink-0 self-start sm:self-auto bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]">
-                Publicar mi curso
+                <TS>Publicar mi curso</TS>
               </a>
             </div>
           )}
@@ -206,11 +207,11 @@ export function Academia({
         <section id="libros" className="flex flex-col gap-4 scroll-mt-24">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Libros, manuales y guías en PDF</h2>
-              <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">Descárgalos al momento y quedan guardados en tu cuenta.</p>
+              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Libros, manuales y guías en PDF</TS></h2>
+              <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]"><TS>Descárgalos al momento y quedan guardados en tu cuenta.</TS></p>
             </div>
             <a href="/seller/libros" className="text-[14px] font-semibold text-[#B34D07] hover:underline">
-              Publicar mi libro →
+              <TS>Publicar mi libro →</TS>
             </a>
           </div>
           {libros.length ? (
@@ -222,13 +223,13 @@ export function Academia({
           ) : (
             <div className="flex flex-col justify-between gap-4 rounded-[16px] border border-dashed border-[#C2560A]/50 bg-[#FFF8F1] p-6 sm:flex-row sm:items-center">
               <div>
-                <h3 className="m-0 font-display text-[19px] font-bold text-[#1B1B18]">Sé el primero en publicar un libro</h3>
+                <h3 className="m-0 font-display text-[19px] font-bold text-[#1B1B18]"><TS>Sé el primero en publicar un libro</TS></h3>
                 <p className="m-0 mt-1 max-w-[560px] text-[14.5px] text-[#6B6A63]">
-                  ¿Tienes un manual, una guía de parámetros o un libro de diseño CNC? Véndelo aquí o regálalo para atraer clientes.
+                  <TS>¿Tienes un manual, una guía de parámetros o un libro de diseño CNC? Véndelo aquí o regálalo para atraer clientes.</TS>
                 </p>
               </div>
               <a href="/seller/libros" className="shrink-0 self-start rounded-[10px] bg-[#C2560A] px-5 py-3 text-[14.5px] font-semibold text-white hover:bg-[#A84A08] sm:self-auto">
-                Publicar mi libro
+                <TS>Publicar mi libro</TS>
               </a>
             </div>
           )}
@@ -237,17 +238,17 @@ export function Academia({
         {recursos.length > 0 && (
           <section id="biblioteca" className="flex flex-col gap-4 scroll-mt-24">
             <div>
-              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Biblioteca de recursos gratis</h2>
+              <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><TS>Biblioteca de recursos gratis</TS></h2>
               <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">
-                Planos, guías, videos y programas que recomendamos de otros sitios. Se abren en su página original.
+                <TS>Planos, guías, videos y programas que recomendamos de otros sitios. Se abren en su página original.</TS>
               </p>
             </div>
             <LocalizedClientLink href="/planos" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#142033] p-5 text-white hover:bg-[#1B2A42]">
               <span>
-                <span className="block text-[16px] font-bold">Planos HETNA de muebles para taller</span>
-                <span className="block text-[13.5px] text-white/80">Lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC. Gratis.</span>
+                <span className="block text-[16px] font-bold"><TS>Planos HETNA de muebles para taller</TS></span>
+                <span className="block text-[13.5px] text-white/80"><TS>Lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC. Gratis.</TS></span>
               </span>
-              <span className="rounded-[10px] bg-[#FF6A1A] px-4 py-2 text-[14px] font-bold">Ver planos</span>
+              <span className="rounded-[10px] bg-[#FF6A1A] px-4 py-2 text-[14px] font-bold"><TS>Ver planos</TS></span>
             </LocalizedClientLink>
             <BibliotecaRecursos recursos={recursos} />
           </section>
@@ -258,15 +259,15 @@ export function Academia({
           className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#0F151E] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
         >
           <span className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Nuevo · gratis · en el navegador</span>
-            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]">Simulador CNC: aprende G-code sin romper fresas</span>
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]"><TS>Nuevo · gratis · en el navegador</TS></span>
+            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]"><TS>Simulador CNC: aprende G-code sin romper fresas</TS></span>
             <span className="max-w-[640px] text-[14.5px] leading-relaxed text-white/75">
-              Escribe o sube tu programa y mira cómo la fresa corta el material en 3D. La máquina virtual se detiene en los
-              choques y errores, como una de verdad. Con ejercicios para practicar.
+              <TS>Escribe o sube tu programa y mira cómo la fresa corta el material en 3D. La máquina virtual se detiene en los
+              choques y errores, como una de verdad. Con ejercicios para practicar.</TS>
             </span>
           </span>
           <span className="shrink-0 self-start rounded-[10px] bg-[#F07A1A] px-5 py-3 text-[14.5px] font-extrabold text-white group-hover:brightness-110 sm:self-auto">
-            Abrir el simulador →
+            <TS>Abrir el simulador →</TS>
           </span>
         </LocalizedClientLink>
 
@@ -275,20 +276,20 @@ export function Academia({
           className="group flex flex-col justify-between gap-4 rounded-[18px] bg-[#142033] p-6 text-white transition hover:-translate-y-0.5 sm:flex-row sm:items-center lg:p-8"
         >
           <span className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Gratis · sin cuenta</span>
-            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]">Planos de muebles de melamina a tu medida</span>
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]"><TS>Gratis · sin cuenta</TS></span>
+            <span className="font-display text-[22px] font-extrabold leading-tight lg:text-[26px]"><TS>Planos de muebles de melamina a tu medida</TS></span>
             <span className="max-w-[640px] text-[14.5px] leading-relaxed text-white/75">
-              Cocina, librero, ropero, cómoda, buró o mueble de TV: pon tus medidas y sale la lista de cortes con cantos, los
-              herrajes, el acomodo en hojas y el DXF. Si quieres, un taller HETNA te lo corta.
+              <TS>Cocina, librero, ropero, cómoda, buró o mueble de TV: pon tus medidas y sale la lista de cortes con cantos, los
+              herrajes, el acomodo en hojas y el DXF. Si quieres, un taller HETNA te lo corta.</TS>
             </span>
           </span>
           <span className="shrink-0 self-start rounded-[10px] bg-[#F07A1A] px-5 py-3 text-[14.5px] font-extrabold text-white group-hover:brightness-110 sm:self-auto">
-            Diseñar mi mueble →
+            <TS>Diseñar mi mueble →</TS>
           </span>
         </LocalizedClientLink>
 
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
+          <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]"><TS>Cómo funciona</TS></h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 md:grid-cols-3 gap-4">
             {PASOS_ALUMNO.map((p, i) => (
               <li key={p.t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
@@ -303,11 +304,11 @@ export function Academia({
         <section id="ensena" className="scroll-mt-24 overflow-hidden rounded-[22px] bg-[#142033] text-white">
           <div className="grid gap-8 p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:p-10">
             <div>
-              <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]">Para talleres e instructores</span>
-              <h2 className="m-0 mt-2 font-display text-[30px] font-extrabold leading-tight lg:text-[40px]">Enseña en HETNA y gana</h2>
+              <span className="text-[12px] font-extrabold uppercase tracking-wide text-[#FFC53D]"><TS>Para talleres e instructores</TS></span>
+              <h2 className="m-0 mt-2 font-display text-[30px] font-extrabold leading-tight lg:text-[40px]"><TS>Enseña en HETNA y gana</TS></h2>
               <p className="m-0 mt-3 max-w-[560px] text-[15.5px] leading-relaxed text-white/75">
-                Lo que sabes de CNC vale. Convierte tu experiencia en cursos y libros que se venden solos, y gana alumnos que
-                después se vuelven clientes de tu taller.
+                <TS>Lo que sabes de CNC vale. Convierte tu experiencia en cursos y libros que se venden solos, y gana alumnos que
+                después se vuelven clientes de tu taller.</TS>
               </p>
               <dl className="m-0 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {BENEFICIOS.map(([n, t]) => (
@@ -335,16 +336,16 @@ export function Academia({
                   <span className="flex flex-1 flex-col">
                     <span className="text-[17px] font-bold">{q.t}</span>
                     <span className="mt-1 text-[13.5px] leading-relaxed text-[#4A4943]">{q.d}</span>
-                    <span className="mt-2 text-[13.5px] font-bold text-[#C2560A] group-hover:underline">{q.boton} →</span>
+                    <span className="mt-2 text-[13.5px] font-bold text-[#C2560A] group-hover:underline"><TS>{q.boton}</TS> →</span>
                   </span>
                 </a>
               ))}
               <p className="m-0 text-[13px] text-white/60">
-                ¿Todavía no tienes cuenta de taller?{" "}
+                <TS>¿Todavía no tienes cuenta de taller?</TS>{" "}
                 <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#FFC53D] hover:underline">
-                  Regístrate gratis
+                  <TS>Regístrate gratis</TS>
                 </LocalizedClientLink>{" "}
-                y en minutos publicas.
+                <TS>y en minutos publicas.</TS>
               </p>
             </div>
           </div>
@@ -359,20 +360,20 @@ export function Academia({
               <ServicioIcono nombre="aprender" size={26} />
             </span>
             <div>
-              <h2 className="font-display text-[20px] font-bold m-0 text-[#1B1B18]">¿Una duda? Foro CNC México</h2>
+              <h2 className="font-display text-[20px] font-bold m-0 text-[#1B1B18]"><TS>¿Una duda? Foro CNC México</TS></h2>
               <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] leading-relaxed max-w-[620px]">
-                Pregunta a talleres y profesionales, comparte tus trabajos y videos. Gratis.
+                <TS>Pregunta a talleres y profesionales, comparte tus trabajos y videos. Gratis.</TS>
               </p>
             </div>
           </div>
           <span className="shrink-0 self-start sm:self-auto bg-[#C2560A] group-hover:bg-[#A84A08] text-white font-semibold px-5 py-3 rounded-[10px] text-[14.5px]">
-            Entrar al foro
+            <TS>Entrar al foro</TS>
           </span>
         </LocalizedClientLink>
 
         {articulos && articulos.length > 0 && (
           <section className="flex flex-col gap-4">
-            <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">Guías gratis</h2>
+            <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]"><TS>Guías gratis</TS></h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {articulos.map((a) => (
                 <ArticuloAprendizajeCard key={a.id} a={a} />
