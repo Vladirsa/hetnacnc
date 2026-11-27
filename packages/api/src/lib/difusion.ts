@@ -4,7 +4,7 @@
 import { sendEmail } from "./resend"
 import { pushATalleres } from "./push"
 import { cambiarEtapa } from "./seguimiento"
-import { invitadosDe, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
+import { invitadosDe, materialClaro, modalidadDe, resumenRedes, trabajoParaTaller } from "./licitacion-privacidad"
 import { puntajePosicion, tallerVerificado } from "./confianza"
 import { acabadosPedidos, haceAcabados } from "./acabados"
 import { calidadTaller } from "./asignacion"
@@ -265,7 +265,7 @@ export async function publicarSolicitudEnRedes(knex: any, s: any, logger: any, t
     {
       origen: "licitacion",
       origen_id: s.id,
-      titulo: [t.servicio, t.material].filter(Boolean).join(" - ") || "Trabajo de fabricación CNC",
+      titulo: [t.servicio, materialClaro(t.material)].filter(Boolean).join(" - ") || "Trabajo de fabricación CNC",
       resumen: resumenRedes(s),
       lugar: [t.ciudad, t.estado_mx].filter(Boolean).join(", "),
       url: ligaTrabajo(s.folio),

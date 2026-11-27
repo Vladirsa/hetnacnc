@@ -35,3 +35,21 @@ describe("solicitud registrada desde WhatsApp y su anuncio", () => {
     expect(textoCierre({ folio: 9, contacto: {} })).not.toContain("Síganos")
   })
 })
+
+import { materialClaro } from "../licitacion-privacidad"
+
+describe("material dudoso no va en el anuncio", () => {
+  it("omite lo que el cliente no sabe", () => {
+    expect(materialClaro("lo ignoro... es  como un plástico rigido")).toBe("")
+    expect(materialClaro("No sé")).toBe("")
+    expect(materialClaro("?")).toBe("")
+    expect(materialClaro("MDF natural")).toBe("MDF natural")
+    expect(materialClaro("Acrílico 3 mm")).toBe("Acrílico 3 mm")
+  })
+
+  it("el resumen queda limpio", () => {
+    const r = resumenRedes({ trabajo: { material: "lo ignoro... es como un plástico rigido", cantidad: "1" }, privacidad: null, contacto: {} })
+    expect(r).not.toMatch(/ignoro/)
+    expect(r).toContain("Un cliente busca talleres CNC.")
+  })
+})
