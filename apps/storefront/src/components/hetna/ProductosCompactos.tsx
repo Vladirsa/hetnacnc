@@ -72,9 +72,9 @@ export function ProductosCompactos({
                   ) : null}
                 </div>
                 <div className="p-1.5 sm:p-2">
-                  <p className="line-clamp-2 min-h-[2.5em] text-[11.5px] leading-tight text-[#1B1B18] sm:text-[12.5px]">{p.title}</p>
+                  <p className="line-clamp-2 min-h-[2.5em] text-[11.5px] leading-tight text-[#1B1B18] sm:text-[12.5px]"><TS>{p.title}</TS></p>
                   {(gratis || precio) && (
-                    <p className="mt-0.5 text-[12.5px] font-bold text-[#1B1B18] sm:text-[13.5px]">{gratis ? "Gratis" : precio}</p>
+                    <p className="mt-0.5 text-[12.5px] font-bold text-[#1B1B18] sm:text-[13.5px]"><TS>{gratis ? "Gratis" : precio}</TS></p>
                   )}
                 </div>
               </LocalizedClientLink>
