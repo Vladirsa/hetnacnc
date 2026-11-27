@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import type { Pack } from "@/lib/packs/acciones"
 
 import { frasePack, piezasDelPack } from "./AvisoPack"
@@ -47,14 +48,14 @@ export const AvancePack = ({
         >
           {logrado ? (
             <>
-              <span className="font-bold">¡Ya tienes el pack!</span>{" "}
+              <span className="font-bold"><T>¡Ya tienes el pack!</T></span>{" "}
               {frasePack(pack)}.
             </>
           ) : (
             <>
               <span className="font-semibold">{frasePack(pack)}</span>
               {" — "}
-              llevas <span className="font-bold">{piezas}</span>, te{" "}
+              <T>llevas</T> <span className="font-bold">{piezas}</span><T>, te</T>{" "}
               {faltan === 1 ? "falta" : "faltan"}{" "}
               <span className="font-bold">
                 {faltan} {faltan === 1 ? "pieza" : "piezas"}
