@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { Badge } from "@/components/atoms/Badge/Badge"
@@ -84,10 +85,10 @@ export const CompareOffersModal = ({
                       {offer.seller?.name || "Seller"}
                     </p>
                     {index === 0 && buyable && (
-                      <Badge className="bg-positive">Mejor precio</Badge>
+                      <Badge className="bg-positive"><T>Mejor precio</T></Badge>
                     )}
                     {offer.seller?.is_premium && (
-                      <Badge className="bg-warning">Premium</Badge>
+                      <Badge className="bg-warning"><T>Premium</T></Badge>
                     )}
                   </div>
                   <p className="label-sm text-secondary">
@@ -112,7 +113,7 @@ export const CompareOffersModal = ({
                   loading={addingId === offer.id}
                   data-testid="compare-offer-add-to-cart"
                 >
-                  Agregar al carrito
+                  <T>Agregar al carrito</T>
                 </Button>
               </div>
             </div>
