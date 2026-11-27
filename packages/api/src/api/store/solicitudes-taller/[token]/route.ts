@@ -55,8 +55,23 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     .select(
       "p.id", "p.precio", "p.dias", "p.vigencia_dias", "p.incluye_envio", "p.condiciones", "p.estado", "p.created_at", "p.anticipo_pct",
       "p.moneda", "p.materiales", "p.operaciones", "p.fecha_entrega", "p.condiciones_pago", "p.garantia", "p.observaciones", "p.adjuntos", "p.version",
-      "v.name as taller", "v.handle", "v.metadata"
+      "p.seller_id", "v.name as taller", "v.handle", "v.metadata"
     )) as any[]
+
+  // Rapidez de cada propuesta: desde que HETNA le avisó al taller (o desde que
+  // se abrió la solicitud) hasta que cotizó. La primera en llegar se marca.
+  const avisos = new Map<string, number>()
+  if (await knex.schema.hasTable("hetna_solicitud_aviso")) {
+    const filas = (await knex("hetna_solicitud_aviso").where({ solicitud_id: s.id }).groupBy("seller_id").select("seller_id").min({ t: "created_at" }).catch(() => [])) as any[]
+    for (const f of filas) avisos.set(f.seller_id, new Date(f.t).getTime())
+  }
+  const inicio = new Date(s.etapa_desde && s.etapa === "enviada_talleres" ? s.etapa_desde : s.created_at).getTime()
+  const horasCotizo = (p: any) => {
+    const desde = avisos.get(p.seller_id) ?? inicio
+    const h = (new Date(p.created_at).getTime() - desde) / 3_600_000
+    return h >= 0 && h < 24 * 30 ? Math.round(h * 10) / 10 : null
+  }
+  const primeraId = props.slice().sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0]?.id
 
   // Ligas firmadas (1 hora) a los archivos adjuntos de las propuestas
   const clavesAdj = props.flatMap((p) => (Array.isArray(p.adjuntos) ? p.adjuntos : []).map((a: any) => a.clave))
@@ -76,6 +91,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
         condiciones: p.condiciones ? ocultarContacto(p.condiciones) : "",
         estado: p.estado,
         fecha: p.created_at,
+        cotizo_en_horas: horasCotizo(p),
+        primera: p.id === primeraId && props.length > 1,
         anticipo_pct: p.anticipo_pct && p.anticipo_pct < 100 ? Number(p.anticipo_pct) : null,
         // Licitaciones 3.0 (Fase 2): propuesta formal
         moneda: p.moneda || "MXN",
@@ -103,6 +120,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
                 puntaje: perfil.medido.puntaje ?? null,
                 suficiente: perfil.medido.suficiente === true,
                 respuesta_horas: perfil.medido.respuesta_horas ?? null,
+                tasa_respuesta_pct: perfil.medido.tasa_respuesta_pct ?? null,
               }
             : null,
           verificado: p.metadata?.verificado === true || p.metadata?.verificado === "true",

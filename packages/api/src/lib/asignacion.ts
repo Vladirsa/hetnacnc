@@ -12,7 +12,8 @@
 
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null)
 
-/** 0 a 6: puntualidad o puntaje medido (hasta 3), calificación (1.5) y rapidez (1.5). */
+/** -1 a 7.5: puntualidad o puntaje medido (hasta 3), calificación (1.5), rapidez (1.5) y
+ *  tasa de respuesta (de -1 si ignora casi todo a 1.5 si contesta 80 % o más). */
 export function calidadTaller(perfil: any): number {
   const m = perfil?.medido || {}
   let q = 0
@@ -24,6 +25,9 @@ export function calidadTaller(perfil: any): number {
   if (cal != null && Number(perfil?.resenas || 0) >= 2) q += Math.max(0, (cal - 3) / 2) * 1.5
   const resp = num(m.respuesta_horas)
   if (resp != null) q += resp <= 2 ? 1.5 : resp <= 8 ? 1 : resp <= 24 ? 0.5 : 0
+  // Contesta (cotiza o dice que no) a lo que se le avisa: se entera antes que quien ignora los avisos
+  const tasa = num(m.tasa_respuesta_pct)
+  if (tasa != null) q += tasa >= 80 ? 1.5 : tasa >= 50 ? 0.75 : tasa < 20 ? -1 : 0
   return Math.round(q * 100) / 100
 }
 
@@ -37,7 +41,7 @@ export type PropuestaParaRecomendar = {
     calificacion?: number | null
     resenas?: number
     verificado?: boolean
-    medido?: { puntualidad_pct?: number | null; puntaje?: number | null; suficiente?: boolean; terminados?: number; respuesta_horas?: number | null; reclamos?: number; reclamos_resueltos?: number } | null
+    medido?: { puntualidad_pct?: number | null; puntaje?: number | null; suficiente?: boolean; terminados?: number; respuesta_horas?: number | null; tasa_respuesta_pct?: number | null; reclamos?: number; reclamos_resueltos?: number } | null
   }
 }
 

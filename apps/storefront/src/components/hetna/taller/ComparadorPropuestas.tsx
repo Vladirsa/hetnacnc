@@ -197,6 +197,13 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                         ⚡ Máquina libre{p.taller.capacidad_libre.descuento_pct ? ` · ofrece hasta ${p.taller.capacidad_libre.descuento_pct}%` : ""}
                       </span>
                     )}
+                    {p.primera && <span className="rounded-full bg-[#EAF1FB] px-2 py-0.5 text-xs font-bold text-[#1D4E89]" title="Fue el primer taller en mandarte precio">🥇 Primero en cotizar</span>}
+                    {p.cotizo_en_horas != null && p.cotizo_en_horas <= 4 && (
+                      <span className="rounded-full bg-[#EAF1FB] px-2 py-0.5 text-xs font-bold text-[#1D4E89]" title="Tiempo desde que recibió tu solicitud hasta que te cotizó">⏱ Cotizó en {textoRespuesta(p.cotizo_en_horas)}</span>
+                    )}
+                    {p.taller.medido?.respuesta_horas != null && p.taller.medido.respuesta_horas <= 4 && (p.taller.medido.tasa_respuesta_pct ?? 100) >= 70 && (
+                      <span className="rounded-full bg-[#FFF6E0] px-2 py-0.5 text-xs font-bold text-[#8A5A00]" title="Suele cotizar en menos de 4 horas y contesta casi todas las solicitudes">⚡ Responde rápido</span>
+                    )}
                     {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">{solicitud.recomendada?.hetna_elige ? "✓ HETNA la eligió para ti" : "⭐ Recomendada por HETNA"}</span>}
                     {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
                     {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
@@ -341,7 +348,7 @@ function HistorialMedido({ m, calificacion, resenas }: { m?: Propuesta["taller"]
     ["Trabajos terminados", m?.terminados ? String(m.terminados) : "0", m?.terminados ? undefined : "Todavía ninguno en HETNA"],
     ["Entregas a tiempo", m?.puntualidad_pct != null ? `${m.puntualidad_pct}%` : "—"],
     ["Calificación", calificacion ? `★ ${Number(calificacion).toFixed(1)}` : "—", resenas ? `${resenas} ${resenas === 1 ? "reseña" : "reseñas"}` : "Sin reseñas"],
-    ["Responde en", m?.respuesta_horas != null ? textoRespuesta(m.respuesta_horas) : "—"],
+    ["Responde en", m?.respuesta_horas != null ? textoRespuesta(m.respuesta_horas) : "—", m?.tasa_respuesta_pct != null ? `Contesta ${m.tasa_respuesta_pct}% de las solicitudes` : undefined],
   ]
   return (
     <div className="mt-2">
