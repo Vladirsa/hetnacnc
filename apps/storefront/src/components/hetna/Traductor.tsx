@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 
-import type * as Diccionario from "@/i18n/en"
+import type * as Diccionario from "@/i18n/diccionario"
 import { COOKIE_IDIOMA } from "@/i18n/idioma"
 import { traducirTexto } from "@/i18n/traducir"
 
@@ -80,7 +80,7 @@ export const Traductor = () => {
       if (!document.documentElement.lang.startsWith("en")) document.documentElement.lang = "en-US"
     }
 
-    import("@/i18n/en")
+    import("@/i18n/diccionario")
       .then((m) => {
         if (!activo) return
         EN = m.EN
