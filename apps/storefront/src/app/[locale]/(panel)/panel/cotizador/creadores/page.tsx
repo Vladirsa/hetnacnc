@@ -3,6 +3,7 @@
 //   · Creadores: visitas a su página, talleres registrados con su código, los
 //     que ya pagan y los meses que ganó (se aplican a mano, como los meses a
 //     favor de referidos).
+import { TS } from "@/i18n/TS"
 import { AccionesCreador, DescartarSolicitud, NuevoCreador } from "@/components/hetna/panel/Creadores"
 import { SubApp } from "@/components/hetna/panel/SubApp"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
@@ -41,18 +42,18 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="creadores" />
-      {error && <Vacio>No pude leer los creadores: {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los creadores:</TS> {error}</Vacio>}
       {d && (
         <>
           <Tarjeta>
-            <Titulo extra={<a href={`/${locale}/creadores`} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#C2560A]">Página del programa →</a>}>Creadores</Titulo>
+            <Titulo extra={<a href={`/${locale}/creadores`} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#C2560A]"><TS>Página del programa →</TS></a>}><TS>Creadores</TS></Titulo>
             <div className="grid grid-cols-3 gap-2">
               <Kpi etiqueta="Visitas (30 días)" valor={String(tot.visitas)} />
               <Kpi etiqueta="Talleres registrados" valor={String(tot.registrados)} />
               <Kpi etiqueta="Ya pagan" valor={String(tot.pagando)} antes={tot.registrados ? `${Math.round((tot.pagando / tot.registrados) * 100)} %` : undefined} />
             </div>
             <div className="mt-3">{actuar && <NuevoCreador />}</div>
-            {d.creadores.length === 0 && <div className="mt-2"><Vacio>Todavía no hay creadores. Crea el primero o espera solicitudes del formulario.</Vacio></div>}
+            {d.creadores.length === 0 && <div className="mt-2"><Vacio><TS>Todavía no hay creadores. Crea el primero o espera solicitudes del formulario.</TS></Vacio></div>}
             <ul className="mt-2 divide-y divide-[#EFEDE6]">
               {d.creadores.map((c) => (
                 <li key={c.codigo} className="py-3">
@@ -65,25 +66,25 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
                     {c.canal_url && <a href={c.canal_url} target="_blank" rel="noreferrer" className="ml-2 text-[12px] font-normal text-[#1D4F8C]">{c.red || "canal"} ↗</a>}
                   </p>
                   <p className="text-[12px] text-[#40403A]">
-                    {c.visitas_30} visitas en 30 días ({c.visitas} en total) · {c.registrados} registrados · <b>{c.pagando} pagando</b>
+                    {c.visitas_30} <TS>visitas en 30 días (</TS>{c.visitas} <TS>en total) ·</TS> {c.registrados} <TS>registrados ·</TS> <b>{c.pagando} <TS>pagando</TS></b>
                   </p>
                   <p className="text-[12px] text-[#6B675C]">
-                    Su audiencia: {c.dias_regalo} días · Él: {c.meses_por_taller} {c.meses_por_taller === 1 ? "mes" : "meses"} por taller que paga
+                    <TS>Su audiencia:</TS> {c.dias_regalo} <TS>días · Él:</TS> {c.meses_por_taller} {c.meses_por_taller === 1 ? "mes" : "meses"} <TS>por taller que paga</TS>
                     {c.comision_pct > 0 ? ` + ${c.comision_pct}% del primer pago` : ""}
-                    {c.meses_ganados > 0 && <> · <b className="text-[#0F7A4A]">ha ganado {c.meses_ganados} {c.meses_ganados === 1 ? "mes" : "meses"}</b></>}
+                    {c.meses_ganados > 0 && <> · <b className="text-[#0F7A4A]"><TS>ha ganado</TS> {c.meses_ganados} {c.meses_ganados === 1 ? "mes" : "meses"}</b></>}
                   </p>
                   {actuar && <AccionesCreador codigo={c.codigo} activo={c.activo} liga={`${SITIO}/${locale}/creadores/${c.codigo}`} meses={c.meses_por_taller} comision={c.comision_pct} />}
                 </li>
               ))}
             </ul>
             <p className="mt-2 text-[11px] text-[#6B675C]">
-              Los meses ganados se aplican a mano en su cuenta (como los meses a favor de referidos). La comisión en dinero sólo se paga si la pusiste mayor a 0.
+              <TS>Los meses ganados se aplican a mano en su cuenta (como los meses a favor de referidos). La comisión en dinero sólo se paga si la pusiste mayor a 0.</TS>
             </p>
           </Tarjeta>
 
           <Tarjeta>
-            <Titulo extra={<span className="text-[11px] text-[#6B675C]">del formulario de /creadores</span>}>Solicitudes {nuevas.length > 0 && `(${nuevas.length} nuevas)`}</Titulo>
-            {d.solicitudes.length === 0 && <Vacio>Sin solicitudes todavía.</Vacio>}
+            <Titulo extra={<span className="text-[11px] text-[#6B675C]"><TS>del formulario de /creadores</TS></span>}><TS>Solicitudes</TS> {nuevas.length > 0 && `(${nuevas.length} nuevas)`}</Titulo>
+            {d.solicitudes.length === 0 && <Vacio><TS>Sin solicitudes todavía.</TS></Vacio>}
             <ul className="divide-y divide-[#EFEDE6]">
               {d.solicitudes.map((s) => (
                 <li key={s.id} className="py-3">
@@ -93,9 +94,9 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
                   </div>
                   <p className="text-[12px] text-[#40403A]">
                     {s.correo} · {s.red}{s.seguidores ? ` · ${s.seguidores}` : ""} ·{" "}
-                    <a href={s.canal_url} target="_blank" rel="noreferrer" className="text-[#1D4F8C]">ver canal ↗</a>
+                    <a href={s.canal_url} target="_blank" rel="noreferrer" className="text-[#1D4F8C]"><TS>ver canal ↗</TS></a>
                   </p>
-                  {s.mensaje && <p className="mt-1 text-[12px] italic text-[#6B675C]">“{s.mensaje}”</p>}
+                  {s.mensaje && <p className="mt-1 text-[12px] italic text-[#6B675C]">“<TS>{s.mensaje}</TS>”</p>}
                   <p className="text-[11px] text-[#9A968B]">{hace(s.created_at)}</p>
                   {actuar && s.estado === "nueva" && (
                     <div className="mt-1.5 flex flex-wrap items-start gap-1.5">
