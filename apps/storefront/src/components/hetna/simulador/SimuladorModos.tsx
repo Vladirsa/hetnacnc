@@ -3,6 +3,7 @@
 // Elige qué ver en el simulador: fresadora/router, torno CNC o los ejercicios
 // calificados (?maquina=torno / ?maquina=ejercicios). Desde un ejercicio,
 // "Probar en el simulador" abre su programa en la máquina que corresponde.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import { EjerciciosSimulador, type Probar } from "./EjerciciosSimulador"
@@ -43,9 +44,9 @@ export function SimuladorModos() {
 
   const avisoPrueba = probando && (
     <div className="rounded-[12px] border border-[#F07A1A] bg-[#F07A1A]/10 p-3 text-[13px] text-white">
-      Probando el ejercicio <b>«{probando.ejercicio.titulo}»</b> con su material y herramienta. Los cambios que hagas aquí se guardan en tu programa.
+      <T>Probando el ejercicio</T> <b>«<T>{probando.ejercicio.titulo}</T>»</b> <T>con su material y herramienta. Los cambios que hagas aquí se guardan en tu programa.</T>
       <button type="button" onClick={() => elegir("ejercicios")} className="mt-2 block font-semibold text-[#F28A3C] hover:underline">
-        ← Volver al ejercicio para calificarlo
+        <T>← Volver al ejercicio para calificarlo</T>
       </button>
     </div>
   )
