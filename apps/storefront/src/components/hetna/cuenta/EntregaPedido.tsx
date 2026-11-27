@@ -4,6 +4,7 @@
 // "Tengo un problema" (con fotos o video). Si el cliente no hace nada, el pago
 // al taller se libera solo unos días después de la entrega. Reemplaza al
 // botón "Ya lo recibí". Ver packages/api/src/lib/reclamos-pedido.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRef, useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -66,34 +67,34 @@ function VerReclamo({ orderId, r }: { orderId: string; r: ReclamoVista }) {
     <div className={caja}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="m-0 text-[15px] font-bold text-[#142033]">
-          Tu reporte {r.folio}: {r.motivo_nombre}
+          <T>Tu reporte</T> {r.folio}: {r.motivo_nombre}
         </p>
         <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${color}`}>{r.estado_nombre}</span>
       </div>
-      <p className="m-0 whitespace-pre-line text-[14px] text-[#40403A]">{r.detalle}</p>
+      <p className="m-0 whitespace-pre-line text-[14px] text-[#40403A]"><T>{r.detalle}</T></p>
       <Evidencias orderId={orderId} lista={tuyas} />
 
       {r.estado === "abierto" && (
         <p className="m-0 text-[13px] text-[#6B6A63]">
-          El pago al taller está congelado. Le pedimos su versión{r.responder_antes ? ` (tiene hasta el ${fecha(r.responder_antes)})` : ""}; después HETNA
-          revisa la evidencia de los dos y te avisa la decisión por correo.
+          <T>El pago al taller está congelado. Le pedimos su versión</T>{r.responder_antes ? ` (tiene hasta el ${fecha(r.responder_antes)})` : ""}<T>; después HETNA
+          revisa la evidencia de los dos y te avisa la decisión por correo.</T>
         </p>
       )}
       {r.respuesta_taller && (
         <div className="rounded-[10px] bg-[#F7F6F2] px-3 py-3">
-          <p className="m-0 mb-1 text-[13px] font-bold text-[#142033]">Respuesta del taller</p>
+          <p className="m-0 mb-1 text-[13px] font-bold text-[#142033]"><T>Respuesta del taller</T></p>
           <p className="m-0 whitespace-pre-line text-[14px] text-[#40403A]">{r.respuesta_taller}</p>
           <div className="mt-2">
             <Evidencias orderId={orderId} lista={delTaller} />
           </div>
         </div>
       )}
-      {r.estado === "respondido" && <p className="m-0 text-[13px] text-[#6B6A63]">HETNA está revisando el caso. Te avisamos por correo.</p>}
+      {r.estado === "respondido" && <p className="m-0 text-[13px] text-[#6B6A63]"><T>HETNA está revisando el caso. Te avisamos por correo.</T></p>}
       {r.estado === "resuelto" && (
         <div className="rounded-[10px] border border-[#CFE8D7] bg-[#F3FAF5] px-3 py-3">
-          <p className="m-0 text-[14px] font-bold text-[#1E7B3A]">Decisión: {r.decision_nombre}</p>
+          <p className="m-0 text-[14px] font-bold text-[#1E7B3A]"><T>Decisión:</T> {r.decision_nombre}</p>
           {r.monto_reembolso ? (
-            <p className="m-0 mt-1 text-[14px] text-[#142033]">Monto a reembolsar: {dinero(r.monto_reembolso)}, por el mismo medio con el que pagaste.</p>
+            <p className="m-0 mt-1 text-[14px] text-[#142033]"><T>Monto a reembolsar:</T> {dinero(r.monto_reembolso)}<T>, por el mismo medio con el que pagaste.</T></p>
           ) : null}
           {r.decision && r.decision !== "liberar" && (
             <p className="m-0 mt-1 text-[13px] text-[#40403A]">
@@ -165,9 +166,9 @@ function Formulario({ estado, alEnviar, alCancelar }: { estado: EstadoEntrega; a
 
   return (
     <div className={caja}>
-      <p className="m-0 text-[16px] font-bold text-[#142033]">Cuéntanos qué pasó</p>
+      <p className="m-0 text-[16px] font-bold text-[#142033]"><T>Cuéntanos qué pasó</T></p>
       <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-        <legend className="mb-1 text-[13px] font-semibold text-[#40403A]">Motivo</legend>
+        <legend className="mb-1 text-[13px] font-semibold text-[#40403A]"><T>Motivo</T></legend>
         {estado.motivos.map((m) => (
           <label key={m.id} className="flex cursor-pointer items-center gap-2 text-[14px] text-[#142033]">
             <input type="radio" name={`motivo-${estado.order_id}`} value={m.id} checked={motivo === m.id} onChange={() => setMotivo(m.id)} />
@@ -177,16 +178,16 @@ function Formulario({ estado, alEnviar, alCancelar }: { estado: EstadoEntrega; a
       </fieldset>
       {CON_PLAZO_48H.includes(motivo) && (
         <p className="m-0 rounded-[8px] bg-[#FFF6DB] px-3 py-2 text-[13px] text-[#8A5A00]">
-          Daños, faltantes o algo distinto se deben reportar en las primeras 48 horas después de la entrega. Incluye fotos del producto, de la caja y de la guía.
+          <T>Daños, faltantes o algo distinto se deben reportar en las primeras 48 horas después de la entrega. Incluye fotos del producto, de la caja y de la guía.</T>
         </p>
       )}
       {motivo === "arrepentimiento" && (
         <p className="m-0 rounded-[8px] bg-[#F7F6F2] px-3 py-2 text-[13px] text-[#40403A]">
-          Debe estar sin uso, completo y en su empaque original. La guía de regreso la pagas tú. No aplica a piezas a la medida, personalizadas, consumibles abiertos ni productos de importación.
+          <T>Debe estar sin uso, completo y en su empaque original. La guía de regreso la pagas tú. No aplica a piezas a la medida, personalizadas, consumibles abiertos ni productos de importación.</T>
         </p>
       )}
       <label className="flex flex-col gap-1 text-[13px] font-semibold text-[#40403A]">
-        Explica el problema
+        <T>Explica el problema</T>
         <textarea
           value={detalle}
           onChange={(e) => setDetalle(e.target.value)}
@@ -198,7 +199,7 @@ function Formulario({ estado, alEnviar, alCancelar }: { estado: EstadoEntrega; a
       </label>
       <div className="flex flex-col gap-2">
         <p className="m-0 text-[13px] font-semibold text-[#40403A]">
-          Fotos o video {pideEvidencia ? "(obligatorio)" : "(opcional)"} · hasta {MAX_ARCHIVOS}, máx. {MAX_MB} MB cada uno
+          <T>Fotos o video</T> {pideEvidencia ? "(obligatorio)" : "(opcional)"} <T>· hasta</T> {MAX_ARCHIVOS}<T>, máx.</T> {MAX_MB} <T>MB cada uno</T>
         </p>
         <input
           ref={input}
@@ -209,7 +210,7 @@ function Formulario({ estado, alEnviar, alCancelar }: { estado: EstadoEntrega; a
           disabled={Boolean(subiendo) || pendiente}
           className="text-[13px]"
         />
-        {subiendo && <p className="m-0 text-[13px] text-[#6B6A63]">Subiendo «{subiendo}»…</p>}
+        {subiendo && <p className="m-0 text-[13px] text-[#6B6A63]"><T>Subiendo «</T>{subiendo}»…</p>}
         {archivos.length > 0 && (
           <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
             {archivos.map((a) => (
@@ -234,13 +235,13 @@ function Formulario({ estado, alEnviar, alCancelar }: { estado: EstadoEntrega; a
           {pendiente ? "Enviando…" : "Enviar reporte"}
         </button>
         <button type="button" onClick={alCancelar} disabled={pendiente} className={btnSecundario}>
-          Cancelar
+          <T>Cancelar</T>
         </button>
       </div>
       <p className="m-0 text-[12px] text-[#6B6A63]">
-        Congelamos el pago al taller, le pedimos su versión y HETNA decide con la evidencia de los dos. Ver{" "}
+        <T>Congelamos el pago al taller, le pedimos su versión y HETNA decide con la evidencia de los dos. Ver</T>{" "}
         <LocalizedClientLink href="/devoluciones" className="underline">
-          devoluciones
+          <T>devoluciones</T>
         </LocalizedClientLink>
         .
       </p>
@@ -257,7 +258,7 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
 
   if (estado.reclamo) return <VerReclamo orderId={estado.order_id} r={estado.reclamo} />
   if (vista === "problema") return <Formulario estado={estado} alEnviar={setEstado} alCancelar={() => setVista("inicio")} />
-  if (mensaje) return <p className="m-0 rounded-[10px] bg-[#E7F5EC] px-3 py-2 text-[14px] text-[#1E7B3A]">{mensaje}</p>
+  if (mensaje) return <p className="m-0 rounded-[10px] bg-[#E7F5EC] px-3 py-2 text-[14px] text-[#1E7B3A]"><T>{mensaje}</T></p>
 
   const garantia = estado.motivos.length === 1 && estado.motivos[0].id === "defecto"
   const linkProblema =
@@ -271,7 +272,7 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
     return (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3">
         <p className="m-0 text-[14px] text-[#142033]">
-          Liberaste el pago a <strong>{taller}</strong> el {fecha(estado.aceptado_en)}. ¡Gracias!
+          <T>Liberaste el pago a</T> <strong>{taller}</strong> <T>el</T> {fecha(estado.aceptado_en)}<T>. ¡Gracias!</T>
         </p>
         {linkProblema}
       </div>
@@ -281,10 +282,10 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
   if (vista === "confirmar") {
     return (
       <div className={caja}>
-        <p className="m-0 text-[15px] font-bold text-[#142033]">¿Liberar el pago a {taller}?</p>
+        <p className="m-0 text-[15px] font-bold text-[#142033]"><T>¿Liberar el pago a</T> {taller}?</p>
         <p className="m-0 text-[14px] text-[#40403A]">
-          Al liberarlo confirmas que tu pedido llegó completo y en buen estado. Después ya no podrás reportar daños ni faltantes, sólo fallas de
-          garantía. Si todavía lo vas a revisar o piensas devolverlo, no lo liberes: se libera solo
+          <T>Al liberarlo confirmas que tu pedido llegó completo y en buen estado. Después ya no podrás reportar daños ni faltantes, sólo fallas de
+          garantía. Si todavía lo vas a revisar o piensas devolverlo, no lo liberes: se libera solo</T>
           {estado.se_libera_en ? ` el ${fecha(estado.se_libera_en)}` : ` ${estado.dias_liberacion} días después de la entrega`}.
         </p>
         {error && <p className="m-0 text-[13px] text-[#B3261E]">{error}</p>}
@@ -305,7 +306,7 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
             {pendiente ? "Liberando…" : "Sí, todo llegó bien"}
           </button>
           <button type="button" disabled={pendiente} onClick={() => setVista("inicio")} className={btnSecundario}>
-            Volver
+            <T>Volver</T>
           </button>
         </div>
       </div>
@@ -315,16 +316,16 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
   if (estado.puede_liberar) {
     return (
       <div className={caja}>
-        <p className="m-0 text-[15px] font-bold text-[#142033]">¿Te llegó bien tu pedido de {taller}?</p>
+        <p className="m-0 text-[15px] font-bold text-[#142033]"><T>¿Te llegó bien tu pedido de</T> {taller}?</p>
         <p className="m-0 text-[13px] text-[#6B6A63]">
-          Tu pago está protegido: el taller no lo recibe hasta que confirmes.
+          <T>Tu pago está protegido: el taller no lo recibe hasta que confirmes.</T>
           {estado.se_libera_en
             ? ` Si no nos dices nada, se libera solo el ${fecha(estado.se_libera_en)}.`
             : ` Si no nos dices nada, se libera solo ${estado.dias_liberacion} días después de la entrega.`}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setVista("confirmar")} className={btnPrincipal}>
-            Todo bien, liberar pago
+            <T>Todo bien, liberar pago</T>
           </button>
           {linkProblema}
         </div>
@@ -340,7 +341,7 @@ export function EntregaPedido({ estadoInicial, taller }: { estadoInicial: Estado
       : "¿Algo salió mal con este pedido?"
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3">
-      <p className="m-0 text-[14px] text-[#142033]">{texto}</p>
+      <p className="m-0 text-[14px] text-[#142033]"><T>{texto}</T></p>
       {linkProblema}
     </div>
   )
