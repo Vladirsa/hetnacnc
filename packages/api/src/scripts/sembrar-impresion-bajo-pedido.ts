@@ -66,12 +66,14 @@ type Diseno = {
   handle: string
   titulo: string
   resumen: string
-  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras"
+  pieza: "pieza" | "soporte" | "cortador" | "modelo" | "llavero" | "letras" | "mapa"
+  /** mapas: el crédito de las alturas */
+  credito?: string
   /** llaveros y letras: se piden con el texto del cliente, de hasta max_texto letras */
   personalizable?: boolean
   max_texto?: number
-  /** letras 3D: cómo van (pie, pared, luz) */
-  diseno?: { estilo?: string }
+  /** letras 3D: cómo van (pie, pared, luz); mapas: capas y si la cumbre es nevada */
+  diseno?: { estilo?: string; capas?: number; nevado?: boolean }
   etiquetas: string[]
   herramienta_url: string
   foto: string
@@ -127,6 +129,14 @@ function descripcion(d: Diseno): string {
       `<ul><li>Medida del modelo de la foto: ${mm(d.medidas_mm)} (cambia según el largo del texto).</li><li>Letras en relieve y argolla para el llavero o el collar.</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
       `<p><strong>Cómo se pide:</strong> escribe el nombre o el texto (hasta ${d.max_texto || 20} letras) al agregarlo al carrito y el taller lo imprime así.</p>`,
       `<p>¿Quieres otra forma, un ícono o tu logo? Ábrelo en la herramienta de llaveros de HETNA, ajústalo y baja el archivo gratis, o pide varios.</p>`,
+    ].join("")
+  // Mapas topográficos: relieve real en capas
+  if (d.pieza === "mapa")
+    return [
+      `<p>${esc(d.resumen)}</p>`,
+      `<ul><li>Medidas: ${esc(mm(d.medidas_mm))}, en ${Math.round(Number(d.diseno?.capas)) || 10} capas de relieve sobre una base.</li><li>A dos colores, la cumbre sale de otro color${d.diseno?.nevado ? " (por ejemplo, blanca como nevada)" : ""}.</li><li>Se imprime en 3D bajo pedido con el taller que elijas: material, color, precio y días según su oferta.</li></ul>`,
+      `<p>¿Otro lugar o en MDF para corte láser? Ábrelo en la herramienta de Mapa topográfico de HETNA: baja gratis las capas en DXF o el STL para tu impresora.</p>`,
+      d.credito ? `<p><small>${esc(d.credito)}</small></p>` : "",
     ].join("")
   // Piezas de Modelos 3D: sin instrucciones de masa ni de rodillos
   if (d.pieza === "modelo")

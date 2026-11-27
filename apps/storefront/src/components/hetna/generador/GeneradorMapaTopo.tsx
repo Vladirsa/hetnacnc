@@ -3,19 +3,20 @@
 // Mapa topográfico por capas (2D Studio · Decoración). El navegador baja los
 // mosaicos de alturas (imágenes públicas) y el motor (lib/generador/mapaTopo.ts)
 // saca una pieza por capa.
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Aviso, Boton, CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
+import { Aviso, Boton, CampoNum, Interruptor, Seccion, descargar, numero } from "@/components/hetna/estudio3d/Controles"
 import { Estudio2D } from "@/components/hetna/estudio/Estudio2D"
-import { CREDITO, LUGARES, alturaTerrarium, piezasMapa, planMosaicos } from "@/lib/generador/mapaTopo"
+import { contextoMDF, precioMDF } from "@/lib/generador/aCotizador"
+import { largoCorte } from "@/lib/generador/geo2d"
+import { CREDITO_GLOBAL, LUGARES, OPCIONES_MAPA_3D, deUrlMapa, mallaMapa, piezasMapa, planMosaicos, rejillaAlturas } from "@/lib/generador/mapaTopo"
+import { mallaSTL } from "@/lib/generador/vectores"
 
 const HOJAS = [
   { nombre: "60 × 40 cm", ancho: 600, alto: 400 },
   { nombre: "90 × 60 cm", ancho: 900, alto: 600 },
   { nombre: "122 × 61 cm", ancho: 1220, alto: 610 },
 ]
-const MAX_PX = 160 // lado de la cuadrícula de alturas: detalle suficiente y rápido
-
 const imagen = (url: string) =>
   new Promise<HTMLImageElement>((ok, mal) => {
     const i = new Image()
@@ -27,30 +28,15 @@ const imagen = (url: string) =>
     i.src = url
   })
 
+/** Baja los mosaicos y saca sus píxeles; la cuadrícula la arma rejillaAlturas (la misma que usa el catálogo). */
 async function bajarAlturas(lat: number, lon: number, km: number) {
   const p = planMosaicos(lat, lon, km)
-  const xs = p.tiles.map((t) => t.x), ys = p.tiles.map((t) => t.y)
-  const cols = Math.max(...xs) - p.tx0 + 1, filas = Math.max(...ys) - p.ty0 + 1
   const lienzo = document.createElement("canvas")
-  lienzo.width = cols * 256
-  lienzo.height = filas * 256
+  lienzo.width = lienzo.height = 256
   const ctx = lienzo.getContext("2d", { willReadFrequently: true })!
   const imgs = await Promise.all(p.tiles.map((t) => imagen(t.url)))
-  p.tiles.forEach((t, i) => ctx.drawImage(imgs[i], (t.x - p.tx0) * 256, (t.y - p.ty0) * 256))
-  const rx = Math.floor(p.recorte.x0 - p.tx0 * 256), ry = Math.floor(p.recorte.y0 - p.ty0 * 256)
-  const rw = Math.ceil(p.recorte.x1 - p.recorte.x0), rh = Math.ceil(p.recorte.y1 - p.recorte.y0)
-  const { data } = ctx.getImageData(rx, ry, rw, rh)
-  // a una cuadrícula de MAX_PX de lado (promedio por bloque)
-  const k = Math.max(1, Math.max(rw, rh) / MAX_PX)
-  const w = Math.max(8, Math.round(rw / k)), h = Math.max(8, Math.round(rh / k))
-  const alt = new Float32Array(w * h)
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const px = Math.min(rw - 1, Math.floor(x * k)), py = Math.min(rh - 1, Math.floor(y * k))
-      const o = (py * rw + px) * 4
-      alt[y * w + x] = alturaTerrarium(data[o], data[o + 1], data[o + 2])
-    }
-  return { alt, w, h }
+  const pixeles = imgs.map((im) => (ctx.clearRect(0, 0, 256, 256), ctx.drawImage(im, 0, 0), ctx.getImageData(0, 0, 256, 256).data))
+  return rejillaAlturas(p, pixeles)
 }
 
 export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) {
@@ -66,8 +52,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
   const [error, setError] = useState("")
   const carga = useRef(0)
 
-  const cargar = async () => {
-    const la = numero(lat), lo = numero(lon), k = numero(km)
+  const cargar = async (la = numero(lat), lo = numero(lon), k = numero(km)) => {
     if (!(Math.abs(la) <= 84 && Math.abs(lo) <= 180 && k >= 1 && k <= 300)) return setError("Revisa la latitud, la longitud y el ancho (1 a 300 km).")
     setError("")
     setCargando(true)
@@ -82,7 +67,38 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       if (n === carga.current) setCargando(false)
     }
   }
-  const r = useMemo(() => (alturas ? piezasMapa(alturas.alt, alturas.w, alturas.h, { capas: numero(capas) || 10, ancho: numero(ancho) || 300, hoja: HOJAS[hoja], invertir }) : null), [alturas, capas, ancho, hoja, invertir])
+  // Liga con el lugar (la ficha del mapa impreso: "modificar"): lo carga solo
+  useEffect(() => {
+    const l = deUrlMapa(window.location.search)
+    if (l.capas) setCapas(String(l.capas))
+    if (l.ancho) setAncho(String(l.ancho))
+    if (l.lat !== undefined && l.lon !== undefined && l.km !== undefined) {
+      setLat(String(l.lat)), setLon(String(l.lon)), setKm(String(l.km))
+      void cargar(l.lat, l.lon, l.km)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const nCapas = numero(capas) || 10, mm = numero(ancho) || 300
+  const archivo = `mapa-topografico-${numero(lat).toFixed(2)}_${numero(lon).toFixed(2)}`
+  // para impresora 3D: las mismas capas apiladas en una pieza (base y montaña, y la cumbre de otro color)
+  const bajarSTL = () => {
+    if (!alturas) return
+    const m = mallaMapa(alturas.alt, alturas.w, alturas.h, { capas: nCapas, ancho: mm })
+    if (m.errores.length) return setError(m.errores[0])
+    descargar(`${archivo}.stl`, mallaSTL(m.malla), "model/stl")
+  }
+
+  const r = useMemo(() => (alturas ? piezasMapa(alturas.alt, alturas.w, alturas.h, { capas: nCapas, ancho: mm, hoja: HOJAS[hoja], invertir }) : null), [alturas, nCapas, mm, hoja, invertir])
+
+  // precio aprox.: corte en láser de MDF de 3 mm, por hoja de material (la guía rayada no se cobra aparte)
+  // si alguna pieza no cabe en la hoja no hay precio ni cotización (saldrían de una parte del mapa)
+  const completo = !!r && !r.errores.length && !r.noCaben
+  const corte = useMemo(() => (completo ? r!.dibujo.trazos.filter((t) => t.capa === "corte") : []), [r, completo])
+  const pedidoPrecio =
+    completo && r!.hojas > 0 && corte.length
+      ? { ...precioMDF("laser", 3), anchoMm: HOJAS[hoja].ancho - 20, largoMm: HOJAS[hoja].alto - 20, cantidad: r!.hojas, unidad: "hojas" as const, corte_mm: largoCorte(corte) / r!.hojas, perforaciones: Math.round(corte.length / r!.hojas) }
+      : undefined
 
   const panel = (
     <div className="flex flex-col gap-4">
@@ -101,7 +117,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
         <CampoNum etiqueta="Longitud" valor={lon} cambiar={setLon} sufijo="" />
         <CampoNum etiqueta="Ancho" valor={km} cambiar={setKm} sufijo="km" />
       </div>
-      <Boton tipo="primario" onClick={cargar} disabled={cargando}>
+      <Boton tipo="primario" onClick={() => void cargar()} disabled={cargando}>
         {cargando ? "Bajando alturas…" : alturas ? "Volver a cargar" : "Cargar el terreno"}
       </Boton>
       <div className="grid grid-cols-2 gap-2">
@@ -120,7 +136,16 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       <Interruptor etiqueta="Profundidad (lagos y mar) en vez de altura" activo={invertir} cambiar={setInvertir} />
       {error && <Aviso tipo="error">{error}</Aviso>}
       {r && <span className="text-[12px] text-[#F2D29B]">{r.niveles.length} capas de {Math.round(r.niveles[0] || 0)} a {Math.round(r.niveles[r.niveles.length - 1] || 0)} m · {r.hojas} {r.hojas === 1 ? "hoja" : "hojas"}</span>}
-      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada pieza trae rayada (línea punteada) la silueta de la que va encima: pégalas en orden sobre la base. {CREDITO}</span>
+      {r && !r.errores.length && !invertir && (
+        <>
+          <Boton onClick={bajarSTL}>Bajar STL para impresora 3D</Boton>
+          <span className="text-[11.5px] leading-snug text-[#8A97AB]">
+            Para impresora sale en una sola pieza: base de {OPCIONES_MAPA_3D.base} mm y capas de {OPCIONES_MAPA_3D.grosorCapa} mm (la cumbre puede ir de otro color).
+            {mm > 250 ? ` Sale de ${mm} mm: para la mayoría de las impresoras pon 250 mm o menos en «Tamaño del mapa».` : ""}
+          </span>
+        </>
+      )}
+      <span className="text-[11.5px] leading-snug text-[#8A97AB]">Cada pieza trae rayada (línea punteada) la silueta de la que va encima: pégalas en orden sobre la base. {CREDITO_GLOBAL}</span>
     </div>
   )
 
@@ -138,9 +163,11 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       panel={panel}
       dibujo={r && !r.errores.length ? r.dibujo : null}
       avisos={r ? [...r.errores, ...r.avisos] : []}
-      archivo={`mapa-topografico-${numero(lat).toFixed(2)}_${numero(lon).toFixed(2)}`}
-      pieza={`Mapa topográfico de ${numero(ancho) || 300} mm en ${numero(capas) || 10} capas`}
+      archivo={archivo}
+      pieza={`Mapa topográfico de ${mm} mm en ${nCapas} capas`}
       material="MDF o acrílico de 3 mm"
+      precio={pedidoPrecio}
+      cotizar={pedidoPrecio ? { ...contextoMDF("laser", 3), nota: `Mapa topográfico de ${mm} mm: ${r!.piezas} piezas (base y capas) en ${r!.hojas} hojas, con la silueta de la capa de encima rayada.` } : undefined}
       vacio="Escoge un lugar y carga el terreno."
     />
   )
