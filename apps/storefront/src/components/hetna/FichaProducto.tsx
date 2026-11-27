@@ -62,7 +62,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
                 key={c}
                 className="px-3 py-1.5 rounded-full bg-[#F4F2EC] text-[13px] font-medium text-[#142033] border border-[#E7E4DC]"
               >
-                {c}
+                <TS>{c}</TS>
               </li>
             ))}
           </ul>
@@ -86,7 +86,7 @@ export const FichaProducto = ({ metadata, titulo, omitirFaq = false }: { metadat
                       <path d="M12 3v12M7 11l5 5 5-5M5 21h14" />
                     </svg>
                   </span>
-                  <span className="font-medium break-words min-w-0">{a.nombre}</span>
+                  <span className="font-medium break-words min-w-0"><TS>{a.nombre}</TS></span>
                 </a>
               </li>
             ))}
