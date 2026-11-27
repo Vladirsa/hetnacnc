@@ -105,18 +105,24 @@ export const productoSchema = ({ producto: p, locale, precio, moneda, hayExisten
             },
           }
         : {}),
-      // Política de devoluciones (la misma que se publica en /devoluciones)
-      hasMerchantReturnPolicy: {
-        "@type": "MerchantReturnPolicy",
-        applicableCountry: "MX",
-        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-        merchantReturnDays: Number(EMPRESA.diasDevolucion) || 5,
-        returnMethod: "https://schema.org/ReturnByMail",
-        returnFees: "https://schema.org/ReturnShippingFees",
-      },
+      // Política de devoluciones (la misma que se publica en /devoluciones). Los
+      // diseños digitales no tienen devolución una vez descargados (sección
+      // «Diseños digitales»): a Google se le dice eso, no los días de paquetería.
+      hasMerchantReturnPolicy: esDigital(p.metadata)
+        ? { "@type": "MerchantReturnPolicy", applicableCountry: "MX", returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted" }
+        : {
+            "@type": "MerchantReturnPolicy",
+            applicableCountry: "MX",
+            returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+            merchantReturnDays: Number(EMPRESA.diasDevolucion) || 5,
+            returnMethod: "https://schema.org/ReturnByMail",
+            returnFees: "https://schema.org/ReturnShippingFees",
+          },
     },
   }
 }
+
+const esDigital = (m?: Record<string, unknown> | null) => m?.producto_digital === true || m?.producto_digital === "true"
 
 // ---------------------------------------------------------------------
 // Taller como negocio local
