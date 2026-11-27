@@ -141,7 +141,7 @@ export function TiendaVista({
               </div>
               {verTodo && !catalogo.fallo && (
                 <p className="fuente-mono mt-4 text-[13px] leading-relaxed text-[#5B6370]">
-                  <T>Total en la tienda:</T> {catalogo.total} {catalogo.total === 1 ? "producto publicado" : "productos publicados"}
+                  <T>Total en la tienda:</T> {catalogo.total} <T>{catalogo.total === 1 ? "producto publicado" : "productos publicados"}</T>
                   {conProductos.length > 1 ? ` (${conProductos.map((c) => c.conteo).join(" + ")})` : ""}<T>. Los planes del Cotizador y los talleres del
                   directorio no son productos de la tienda y no entran en la cuenta.</T>{" "}
                   <LocalizedClientLink href="/categories" className="font-semibold text-[#C24E03] underline">
@@ -223,8 +223,8 @@ function Tarjeta({ children, foto }: { children: React.ReactNode; foto: React.Re
 function Cifras({ izq, der }: { izq: string; der: string }) {
   return (
     <div className="fuente-mono mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-dashed border-[#D4D9DF] pt-3 text-[13px]">
-      <span className="text-[#1E2329]">{izq}</span>
-      <span className="font-semibold text-[#1E2329]">{der}</span>
+      <span className="text-[#1E2329]"><T>{izq}</T></span>
+      <span className="font-semibold text-[#1E2329]"><T>{der}</T></span>
     </div>
   )
 }
@@ -407,7 +407,7 @@ function Resultados({
   return (
     <section className="mt-5" aria-live="polite">
       <p className="fuente-mono text-[14px] text-[#5B6370]">
-        {r.productos.length} {r.productos.length === 1 ? "producto" : "productos"} <T>para «</T>{termino}»
+        {r.productos.length} <T>{r.productos.length === 1 ? "producto" : "productos"}</T> <T>para «</T>{termino}»
       </p>
 
       {r.productos.length > 0 && (
@@ -436,7 +436,7 @@ function Resultados({
           {r.categorias.map((c) => (
             <LocalizedClientLink key={c.clave} href={`/tienda/${c.clave}`} className="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-[#C5CCD3] bg-white px-3 text-[14px] font-semibold text-[#1E2329] hover:border-[#1E2329]">
               {c.nombre}
-              <span className="fuente-mono text-[12px] font-normal text-[#5B6370]">{c.conteo ? textoConteo(c.conteo, c.estado) : "Próximamente"}</span>
+              <span className="fuente-mono text-[12px] font-normal text-[#5B6370]"><T>{c.conteo ? textoConteo(c.conteo, c.estado) : "Próximamente"}</T></span>
             </LocalizedClientLink>
           ))}
           {r.procesos.map((p) => (
