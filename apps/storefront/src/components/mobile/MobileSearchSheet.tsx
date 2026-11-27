@@ -1,4 +1,5 @@
 'use client';
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
@@ -44,13 +45,13 @@ export function MobileSearchSheet({ onClose }: { onClose: () => void }) {
             placeholder="Buscar fresas, MDF, routers..."
             className="flex-1 min-w-0 border border-[#E7E4DC] rounded-lg px-3 py-2.5 text-base text-[#1B1B18] outline-none focus:border-[#F08A3C]"
           />
-          <button type="submit" className="bg-[#F08A3C] text-white font-semibold px-4 rounded-lg">Buscar</button>
+          <button type="submit" className="bg-[#F08A3C] text-white font-semibold px-4 rounded-lg"><T>Buscar</T></button>
         </form>
         <button
           onClick={() => setImg(true)}
           className="w-full mt-3 flex items-center justify-center gap-2 border border-[#142033] text-[#142033] font-semibold py-2.5 rounded-lg"
         >
-          📷 Buscar por imagen
+          <T>📷 Buscar por imagen</T>
         </button>
       </div>
     </div>
