@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { LIMITE_COTIZACIONES_GRATIS } from "@/lib/hetna/app-taller"
 import { useState, type FormEvent } from "react"
 
@@ -31,14 +32,14 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
     return (
       <section className={caja}>
         <p className="m-0 text-[40px] leading-none" aria-hidden="true">📧</p>
-        <h1 className="m-0 mt-3 text-[22px] font-bold text-[#142033]">Confirma tu correo para usar el Cotizador</h1>
+        <h1 className="m-0 mt-3 text-[22px] font-bold text-[#142033]"><T>Confirma tu correo para usar el Cotizador</T></h1>
         <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]">
-          Te mandamos una liga a <b>{correo}</b>. Ábrela y después vuelve a presionar <b>Cotizador</b>: entras con esta misma
-          cuenta, sin otra contraseña. Si no llega en unos minutos, revisa spam o promociones.
+          <T>Te mandamos una liga a</T> <b>{correo}</b><T>. Ábrela y después vuelve a presionar</T> <b><T>Cotizador</T></b><T>: entras con esta misma
+          cuenta, sin otra contraseña. Si no llega en unos minutos, revisa spam o promociones.</T>
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <a href="/api/app/entrar-cotizador" className={boton}>
-            Ya la abrí, entrar
+            <T>Ya la abrí, entrar</T>
           </a>
           <button
             type="button"
@@ -59,10 +60,10 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
   if (modo === "error") {
     return (
       <section className={caja}>
-        <h1 className="m-0 text-[22px] font-bold text-[#142033]">No pudimos abrir el Cotizador</h1>
-        <p className="m-0 mt-2 text-[15px] text-[#40403A]">Intenta de nuevo en un momento.</p>
+        <h1 className="m-0 text-[22px] font-bold text-[#142033]"><T>No pudimos abrir el Cotizador</T></h1>
+        <p className="m-0 mt-2 text-[15px] text-[#40403A]"><T>Intenta de nuevo en un momento.</T></p>
         <a href="/api/app/entrar-cotizador" className={`${boton} mt-5`}>
-          Intentar de nuevo
+          <T>Intentar de nuevo</T>
         </a>
       </section>
     )
@@ -91,14 +92,14 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
 
   return (
     <section className={caja}>
-      <h1 className="m-0 text-[24px] font-bold text-[#142033]">Activa tu Cotizador</h1>
+      <h1 className="m-0 text-[24px] font-bold text-[#142033]"><T>Activa tu Cotizador</T></h1>
       <p className="m-0 mt-2 text-[15px] leading-relaxed text-[#40403A]">
-        Con tu misma cuenta de HETNA CNC (<b>{correo}</b>), sin otra contraseña. Tienes <b>14 días con todo abierto</b>, sin
-        tarjeta. Después sigues gratis con {LIMITE_COTIZACIONES_GRATIS} cotizaciones al mes o eliges un plan.
+        <T>Con tu misma cuenta de HETNA CNC (</T><b>{correo}</b><T>), sin otra contraseña. Tienes</T> <b><T>14 días con todo abierto</T></b><T>, sin
+        tarjeta. Después sigues gratis con</T> {LIMITE_COTIZACIONES_GRATIS} <T>cotizaciones al mes o eliges un plan.</T>
       </p>
       <form onSubmit={activar} noValidate className="mt-5 space-y-4">
         <label className="block text-[14px] font-semibold text-[#142033]">
-          Nombre de tu taller o negocio
+          <T>Nombre de tu taller o negocio</T>
           <input
             name="taller"
             value={taller}
@@ -110,7 +111,7 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
           />
         </label>
         <label className="block text-[14px] font-semibold text-[#142033]">
-          Teléfono o WhatsApp <span className="font-normal text-[#6B6A63]">(sale en tus cotizaciones)</span>
+          <T>Teléfono o WhatsApp</T> <span className="font-normal text-[#6B6A63]"><T>(sale en tus cotizaciones)</T></span>
           <input
             name="telefono"
             value={telefono}
@@ -128,11 +129,11 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
         </button>
       </form>
       <p className="m-0 mt-4 text-[13px] leading-relaxed text-[#6B6A63]">
-        ¿Ya tienes un taller en el Cotizador con <b>otro correo</b>? Vincúlalo desde{" "}
+        <T>¿Ya tienes un taller en el Cotizador con</T> <b><T>otro correo</T></b><T>? Vincúlalo desde</T>{" "}
         <a href="/mx/user" className="font-semibold text-[#C2560A] underline">
-          Mi cuenta
+          <T>Mi cuenta</T>
         </a>{" "}
-        con un código y entras igual, sin otra contraseña.
+        <T>con un código y entras igual, sin otra contraseña.</T>
       </p>
     </section>
   )
