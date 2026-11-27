@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { HttpTypes } from "@medusajs/types"
 import Image from "@/lib/imagenes/Imagen"
 
@@ -214,7 +215,7 @@ export const CartItemsProducts = ({
                   />
                 ) : (
                   <p className="text-[13px] text-[#6B6A63]">
-                    Cantidad: <span className="text-[#1B1B18]">{product.quantity}</span>
+                    <T>Cantidad:</T> <span className="text-[#1B1B18]">{product.quantity}</span>
                   </p>
                 )}
               </div>
