@@ -29,7 +29,7 @@ export async function metaEnIdioma<M extends Record<string, any>>(m: M): Promise
   if (t === sinTraducir) return m
   const tr = (v: unknown) => (typeof v === "string" ? t(v) : v)
   const titulo = (v: any) =>
-    typeof v === "string" ? t(v) : v && typeof v === "object" ? { ...v, ...(v.default ? { default: t(v.default) } : {}), ...(v.absolute ? { absolute: t(v.absolute) } : {}) } : v
+    typeof v === "string" ? t(v) : v && typeof v === "object" ? { ...v, ...(v.default ? { default: t(v.default) } : {}), ...(typeof v.template === "string" ? { template: v.template.replace(/^%s \| (.+)$/, (_: string, r: string) => `%s | ${t(r)}`) } : {}), ...(v.absolute ? { absolute: t(v.absolute) } : {}) } : v
   return {
     ...m,
     ...(m.title !== undefined ? { title: titulo(m.title) } : {}),
