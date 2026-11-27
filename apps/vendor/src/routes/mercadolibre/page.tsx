@@ -4,6 +4,7 @@
 // antes de publicar ve la vista previa (título, categoría, precio, existencias,
 // fotos y los datos que pide la categoría) y la confirma producto por producto.
 // API: /vendor/hetna-mercadolibre (packages/api/src/lib/mercadolibre.ts)
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -17,6 +18,8 @@ const Bolsa = (props) => (
 
 export const config: RouteConfig = {
   label: "Mercado Libre",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Bolsa,
 }
 
@@ -94,18 +97,18 @@ function VistaPrevia({ productoId, alCerrar, alPublicar }) {
   return (
     <div style={{ ...S.card, borderColor: "#C2560A" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={S.h2}>Revisa antes de publicar</h2>
-        <button style={S.btn2} onClick={alCerrar}>Cerrar</button>
+        <h2 style={S.h2}><T>Revisa antes de publicar</T></h2>
+        <button style={S.btn2} onClick={alCerrar}><T>Cerrar</T></button>
       </div>
-      {error && <p style={{ ...S.error, marginTop: 12 }}>{error}</p>}
-      {!v && !error && <p style={S.hint}>Preguntando a Mercado Libre la categoría y los datos que pide…</p>}
+      {error && <p style={{ ...S.error, marginTop: 12 }}><T>{error}</T></p>}
+      {!v && !error && <p style={S.hint}><T>Preguntando a Mercado Libre la categoría y los datos que pide…</T></p>}
       {v && (
         <>
-          <label style={S.etiqueta}>Título ({titulo.length}/{v.max_titulo})</label>
+          <label style={S.etiqueta}><T>Título (</T><T>{titulo.length}</T>/<T>{v.max_titulo}</T>)</label>
           <input style={S.campo} value={titulo} maxLength={v.max_titulo} onChange={(e) => setTitulo(e.target.value)} />
-          <p style={{ ...S.hint, marginTop: 4 }}>Producto + marca + modelo + medidas. Sin "envío gratis", sin existencias y sin signos.</p>
+          <p style={{ ...S.hint, marginTop: 4 }}><T>Producto + marca + modelo + medidas. Sin "envío gratis", sin existencias y sin signos.</T></p>
 
-          <label style={S.etiqueta}>Categoría</label>
+          <label style={S.etiqueta}><T>Categoría</T></label>
           <select style={S.campo} value={categoria} onChange={(e) => { setCategoria(e.target.value); cargar(e.target.value) }}>
             {[v.categoria, ...v.categorias.filter((c) => c.id !== v.categoria.id)].map((c) => (
               <option key={c.id} value={c.id}>{c.nombre || c.id}</option>
@@ -114,29 +117,29 @@ function VistaPrevia({ productoId, alCerrar, alPublicar }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <div>
-              <label style={S.etiqueta}>Precio</label>
+              <label style={S.etiqueta}><T>Precio</T></label>
               <div>{pesos(v.precio)}</div>
             </div>
             <div>
-              <label style={S.etiqueta}>Existencias</label>
-              <div>{v.existencia}</div>
+              <label style={S.etiqueta}><T>Existencias</T></label>
+              <div><T>{v.existencia}</T></div>
             </div>
             <div>
-              <label style={S.etiqueta}>Tipo de publicación</label>
+              <label style={S.etiqueta}><T>Tipo de publicación</T></label>
               <select style={S.campo} value={tipo} onChange={(e) => setTipo(e.target.value)}>
                 <option value="gold_special">Clásica</option>
                 <option value="gold_pro">Premium (meses sin intereses)</option>
               </select>
             </div>
           </div>
-          <p style={{ ...S.hint, marginTop: 4 }}>El precio y las existencias son los de tu producto en HETNA. Mercado Libre cobra su comisión según el tipo de publicación.</p>
+          <p style={{ ...S.hint, marginTop: 4 }}><T>El precio y las existencias son los de tu producto en HETNA. Mercado Libre cobra su comisión según el tipo de publicación.</T></p>
 
           {v.requeridos.length > 0 && (
             <>
-              <h2 style={{ ...S.h2, marginTop: 16 }}>Datos que pide Mercado Libre</h2>
+              <h2 style={{ ...S.h2, marginTop: 16 }}><T>Datos que pide Mercado Libre</T></h2>
               {v.requeridos.map((a) => (
                 <div key={a.id}>
-                  <label style={S.etiqueta}>{a.nombre}{a.condicional ? " (si aplica)" : " *"}</label>
+                  <label style={S.etiqueta}><T>{a.nombre}</T><T>{a.condicional ? " (si aplica)" : " *"}</T></label>
                   {a.valores.length > 0 ? (
                     <select style={S.campo} value={valores[a.id] || ""} onChange={(e) => setValores({ ...valores, [a.id]: e.target.value })}>
                       <option value="">Elige…</option>
@@ -147,22 +150,22 @@ function VistaPrevia({ productoId, alCerrar, alPublicar }) {
                   )}
                 </div>
               ))}
-              <p style={{ ...S.hint, marginTop: 6 }}>Escribe los datos reales de tu producto. Si no tiene código de barras, en "Motivo de GTIN vacío" elige la razón que corresponda.</p>
+              <p style={{ ...S.hint, marginTop: 6 }}><T>Escribe los datos reales de tu producto. Si no tiene código de barras, en "Motivo de GTIN vacío" elige la razón que corresponda.</T></p>
             </>
           )}
 
-          <h2 style={{ ...S.h2, marginTop: 16 }}>Fotos ({v.imagenes.length})</h2>
+          <h2 style={{ ...S.h2, marginTop: 16 }}><T>Fotos (</T><T>{v.imagenes.length}</T>)</h2>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {v.imagenes.map((u) => <img key={u} src={u} alt="" style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8, border: "1px solid #E7E4DC" }} />)}
           </div>
 
-          <h2 style={{ ...S.h2, marginTop: 16 }}>Descripción</h2>
-          <p style={S.hint}>Mercado Libre no permite ligas, teléfonos ni correos: ya se quitaron.</p>
+          <h2 style={{ ...S.h2, marginTop: 16 }}><T>Descripción</T></h2>
+          <p style={S.hint}><T>Mercado Libre no permite ligas, teléfonos ni correos: ya se quitaron.</T></p>
           <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 8, padding: 10, maxHeight: 200, overflow: "auto" }}>{v.descripcion || "(sin descripción)"}</pre>
 
           <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
             <button style={{ ...S.btn, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={enviar}>
-              {enviando ? "Publicando…" : "Publicar en Mercado Libre"}
+              <T>{enviando ? "Publicando…" : "Publicar en Mercado Libre"}</T>
             </button>
           </div>
         </>
@@ -199,17 +202,17 @@ const MercadoLibrePage = () => {
     cargar()
   }
 
-  if (!d && !error) return <div style={S.page}><p style={S.sub}>Cargando…</p></div>
+  if (!d && !error) return <div style={S.page}><p style={S.sub}><T>Cargando…</T></p></div>
 
   const elegibles = (d?.productos || []).filter((p) => p.elegible)
   const otros = (d?.productos || []).filter((p) => !p.elegible)
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Mercado Libre</h1>
-      <p style={S.sub}>Publica tus productos de HETNA en tu cuenta de Mercado Libre con el mismo precio, fotos y existencias.</p>
-      {error && <p style={S.error}>{error}</p>}
-      {aviso && <p style={S.ok}>{aviso}</p>}
+      <h1 style={S.h1}><T>Mercado Libre</T></h1>
+      <p style={S.sub}><T>Publica tus productos de HETNA en tu cuenta de Mercado Libre con el mismo precio, fotos y existencias.</T></p>
+      {error && <p style={S.error}><T>{error}</T></p>}
+      {aviso && <p style={S.ok}><T>{aviso}</T></p>}
 
       {d && !d.disponible && <div style={S.card}><p style={{ margin: 0 }}>{NO_DISPONIBLE[d.motivo] || NO_DISPONIBLE.falta_app}</p></div>}
 
@@ -218,16 +221,16 @@ const MercadoLibrePage = () => {
           {d.cuenta ? (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div>
-                <h2 style={S.h2}>Cuenta conectada: {d.cuenta.apodo || d.cuenta.ml_user_id}</h2>
-                <p style={{ ...S.hint, margin: 0 }}>Solo se publica lo que tú confirmes, producto por producto.</p>
+                <h2 style={S.h2}><T>Cuenta conectada:</T> {d.cuenta.apodo || d.cuenta.ml_user_id}</h2>
+                <p style={{ ...S.hint, margin: 0 }}><T>Solo se publica lo que tú confirmes, producto por producto.</T></p>
               </div>
-              <button style={S.btn2} onClick={desconectar}>Desconectar</button>
+              <button style={S.btn2} onClick={desconectar}><T>Desconectar</T></button>
             </div>
           ) : (
             <>
-              <h2 style={S.h2}>Conecta tu cuenta de Mercado Libre</h2>
-              <p style={S.hint}>Entrarás a Mercado Libre para autorizar a HETNA a publicar en tu nombre. Puedes desconectarla cuando quieras.</p>
-              <button style={S.btn} onClick={conectar}>Conectar Mercado Libre</button>
+              <h2 style={S.h2}><T>Conecta tu cuenta de Mercado Libre</T></h2>
+              <p style={S.hint}><T>Entrarás a Mercado Libre para autorizar a HETNA a publicar en tu nombre. Puedes desconectarla cuando quieras.</T></p>
+              <button style={S.btn} onClick={conectar}><T>Conectar Mercado Libre</T></button>
             </>
           )}
         </div>
@@ -247,23 +250,23 @@ const MercadoLibrePage = () => {
 
       {d?.cuenta && (
         <div style={S.card}>
-          <h2 style={S.h2}>Productos que se pueden publicar ({elegibles.length})</h2>
-          <p style={S.hint}>Productos físicos con precio, foto y existencias. Los que se fabrican bajo pedido, digitales y servicios no aplican.</p>
-          {elegibles.length === 0 && <p style={{ margin: 0 }}>Todavía no tienes productos que cumplan. Revisa la lista de abajo para ver qué les falta.</p>}
+          <h2 style={S.h2}><T>Productos que se pueden publicar (</T><T>{elegibles.length}</T>)</h2>
+          <p style={S.hint}><T>Productos físicos con precio, foto y existencias. Los que se fabrican bajo pedido, digitales y servicios no aplican.</T></p>
+          {elegibles.length === 0 && <p style={{ margin: 0 }}><T>Todavía no tienes productos que cumplan. Revisa la lista de abajo para ver qué les falta.</T></p>}
           {elegibles.map((p) => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: "1px solid #F0EEE7" }}>
               {p.imagen ? <img src={p.imagen} alt="" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6 }} /> : <div style={{ width: 48, height: 48 }} />}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{p.titulo}</div>
-                <div style={{ fontSize: 13, color: "#6B675C" }}>{pesos(p.precio)} · {p.existencia} en existencia</div>
-                {p.publicacion?.error && <div style={{ fontSize: 12, color: "#B3261E" }}>{p.publicacion.error}</div>}
+                <div style={{ fontWeight: 600, fontSize: 14 }}><T>{p.titulo}</T></div>
+                <div style={{ fontSize: 13, color: "#6B675C" }}>{pesos(p.precio)} · <T>{p.existencia}</T> <T>en existencia</T></div>
+                {p.publicacion?.error && <div style={{ fontSize: 12, color: "#B3261E" }}><T>{p.publicacion.error}</T></div>}
               </div>
               {p.publicacion?.ml_item_id && p.publicacion.estado !== "closed" ? (
                 <a href={p.publicacion.permalink || "#"} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 600, color: "#1E7B3A" }}>
-                  Publicado ({p.publicacion.estado}) ↗
+                  <T>Publicado (</T><T>{p.publicacion.estado}</T>) ↗
                 </a>
               ) : (
-                <button style={S.btn2} onClick={() => setRevisando(p.id)}>Publicar</button>
+                <button style={S.btn2} onClick={() => setRevisando(p.id)}><T>Publicar</T></button>
               )}
             </div>
           ))}
@@ -272,11 +275,11 @@ const MercadoLibrePage = () => {
 
       {d?.cuenta && otros.length > 0 && (
         <div style={S.card}>
-          <h2 style={S.h2}>No se pueden publicar ({otros.length})</h2>
+          <h2 style={S.h2}><T>No se pueden publicar (</T><T>{otros.length}</T>)</h2>
           {otros.map((p) => (
             <div key={p.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid #F0EEE7", fontSize: 13 }}>
-              <span>{p.titulo}</span>
-              <span style={{ color: "#6B675C", textAlign: "right" }}>{p.motivo}</span>
+              <span><T>{p.titulo}</T></span>
+              <span style={{ color: "#6B675C", textAlign: "right" }}><T>{p.motivo}</T></span>
             </div>
           ))}
         </div>
