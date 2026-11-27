@@ -3,6 +3,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useMemo, useState } from "react"
@@ -139,7 +140,7 @@ export default function DirectorioTalleres({
         </select>
         <label className="flex items-center gap-2 text-sm text-[#40403A]">
           <input type="checkbox" checked={soloVerificados} onChange={(e) => setSoloVerificados(e.target.checked)} className="accent-[#C2560A]" />
-          Sólo verificados
+          <T>Sólo verificados</T>
         </label>
       </div>
 
@@ -158,7 +159,7 @@ export default function DirectorioTalleres({
             }}
             className="ml-3 font-semibold text-[#C2560A] hover:underline"
           >
-            Limpiar filtros
+            <T>Limpiar filtros</T>
           </button>
         )}
       </p>
@@ -167,7 +168,7 @@ export default function DirectorioTalleres({
         <div className="order-2 grid content-start gap-4 lg:order-1">
           {filtrados.length === 0 && (
             <div className="rounded-2xl border border-dashed border-[#E7E4DC] p-8 text-center text-[#6B675C]">
-              No hay talleres con esos filtros.
+              <T>No hay talleres con esos filtros.</T>
             </div>
           )}
           {filtrados.map((t) => (
@@ -218,13 +219,13 @@ export default function DirectorioTalleres({
                     href={`/talleres/${t.handle}`}
                     className="rounded-lg border border-[#142033] px-3 py-1.5 text-sm font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
                   >
-                    Ver taller
+                    <T>Ver taller</T>
                   </LocalizedClientLink>
                   <LocalizedClientLink
                     href={`/cotizar?taller=${t.handle}`}
                     className="rounded-lg bg-[#C2560A] px-3 py-1.5 text-sm font-semibold text-white hover:brightness-110"
                   >
-                    Solicitar cotización
+                    <T>Solicitar cotización</T>
                   </LocalizedClientLink>
                 </div>
               </div>
