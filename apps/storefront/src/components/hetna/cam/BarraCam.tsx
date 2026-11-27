@@ -39,8 +39,8 @@ export function BarraCam() {
                   activa ? "bg-[#F07A1A] text-white" : "text-white/65 hover:text-white"
                 }`}
               >
-                {p.corto}
-                <span className="hidden font-medium md:inline"> · {p.nombre}</span>
+                <T>{p.corto}</T>
+                <span className="hidden font-medium md:inline"> · <T>{p.nombre}</T></span>
               </LocalizedClientLink>
             )
           })}
