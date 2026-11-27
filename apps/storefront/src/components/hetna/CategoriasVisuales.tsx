@@ -31,14 +31,14 @@ const TEMAS: Record<
 }
 
 const quita = (t: string) =>
-  t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+  t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim()
 
 const Chip = ({ c }: { c: Cat }) => (
   <LocalizedClientLink
     href={"/categories/" + c.handle}
     className="rounded-full bg-[#FAF6EF] px-3 py-1.5 text-[12.5px] text-[#1B1B18] ring-1 ring-[#E7E4DC] hover:bg-[#F2A65A]/25 hover:text-[#8A3A05]"
   >
-    {c.name}
+    <TS>{c.name}</TS>
   </LocalizedClientLink>
 )
 
@@ -84,8 +84,8 @@ export default function CategoriasVisuales({ categorias }: { categorias: Cat[] }
                   <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
                     <Icono size={26} strokeWidth={2} />
                   </span>
-                  <h3 className="relative text-[26px] md:text-[30px] font-extrabold leading-none">{raiz.name}</h3>
-                  <p className="relative mt-2 max-w-[260px] text-[14px] leading-snug text-white/85">{tema.lema}</p>
+                  <h3 className="relative text-[26px] md:text-[30px] font-extrabold leading-none"><TS>{raiz.name}</TS></h3>
+                  <p className="relative mt-2 max-w-[260px] text-[14px] leading-snug text-white/85"><TS>{tema.lema}</TS></p>
                 </LocalizedClientLink>
 
                 <div className="flex flex-1 flex-col gap-5 p-5 md:p-6">
@@ -96,7 +96,7 @@ export default function CategoriasVisuales({ categorias }: { categorias: Cat[] }
                           href={"/categories/" + g.handle}
                           className="text-[15px] font-bold text-[#142033] hover:text-[#B34D07]"
                         >
-                          {g.name}
+                          <TS>{g.name}</TS>
                         </LocalizedClientLink>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {hijosDe(g)
@@ -118,7 +118,7 @@ export default function CategoriasVisuales({ categorias }: { categorias: Cat[] }
                     href={"/categories/" + raiz.handle}
                     className="mt-auto inline-flex w-fit items-center rounded-full bg-[#C2560A] px-5 py-2.5 text-[13.5px] font-bold text-white hover:bg-[#A84A08]"
                   >
-                    <TS>Ver todo en</TS> {raiz.name} →
+                    <TS>Ver todo en</TS> <TS>{raiz.name}</TS> →
                   </LocalizedClientLink>
                 </div>
               </div>
