@@ -17,9 +17,9 @@ export const EspecificacionesFicha = ({ product }: { product: Producto }) => {
           {filas.map(([k, v], i) => (
             <tr key={k} className={i % 2 ? "bg-white" : "bg-[#FAF9F6]"}>
               <th scope="row" className="w-[38%] px-4 py-2.5 text-left align-top font-semibold text-[#4A4943]">
-                {k}
+                <TS>{k}</TS>
               </th>
-              <td className="px-4 py-2.5 align-top text-[#1B1B18]">{v}</td>
+              <td className="px-4 py-2.5 align-top text-[#1B1B18]"><TS>{v}</TS></td>
             </tr>
           ))}
         </tbody>
@@ -40,7 +40,7 @@ export const IncluyeFicha = ({ product }: { product: Producto }) => {
             {incluye.map((t) => (
               <li key={t} className="flex gap-2 text-[14px] text-[#2E2D29]">
                 <span aria-hidden="true" className="font-bold text-[#17803F]">✓</span>
-                {t}
+                <TS>{t}</TS>
               </li>
             ))}
           </ul>
@@ -53,7 +53,7 @@ export const IncluyeFicha = ({ product }: { product: Producto }) => {
             {noIncluye.map((t) => (
               <li key={t} className="flex gap-2 text-[14px] text-[#2E2D29]">
                 <span aria-hidden="true" className="font-bold text-[#9B3225]">✕</span>
-                {t}
+                <TS>{t}</TS>
               </li>
             ))}
           </ul>
@@ -81,17 +81,17 @@ export const EntregaGarantia = ({ product }: { product: Producto }) => {
           <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]"><TS>🚚 Entrega</TS></h2>
           {produccion && (
             <p className="m-0 text-[14px] text-[#2E2D29]">
-              <strong><TS>Tiempo de producción:</TS></strong> {produccion}
+              <strong><TS>Tiempo de producción:</TS></strong> <TS>{produccion}</TS>
             </p>
           )}
-          {entrega && <p className="m-0 mt-1 text-[14px] text-[#2E2D29]">{entrega}</p>}
+          {entrega && <p className="m-0 mt-1 text-[14px] text-[#2E2D29]"><TS>{entrega}</TS></p>}
           <p className="m-0 mt-1 text-[13px] text-[#6B6A63]"><TS>El costo y los días del envío los ves con tu dirección, antes de pagar.</TS></p>
         </div>
       )}
       {garantia && (
         <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
           <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]"><TS>🛡️ Garantía</TS></h2>
-          <p className="m-0 text-[14px] text-[#2E2D29]">{garantia}</p>
+          <p className="m-0 text-[14px] text-[#2E2D29]"><TS>{garantia}</TS></p>
         </div>
       )}
     </section>
