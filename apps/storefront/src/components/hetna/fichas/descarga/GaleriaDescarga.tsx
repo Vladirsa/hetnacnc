@@ -40,7 +40,7 @@ export function GaleriaDescarga({ vistas, titulo, digital = true, nota }: { vist
             priority={i === 0}
             // La portada es lo más grande de la ficha (LCP): que el navegador la pida primero
             fetchPriority={i === 0 ? "high" : undefined}
-            sizes="(min-width: 1024px) 60vw, 100vw"
+            sizes="(min-width: 1024px) 60vw, 70vw"
             className="object-contain"
           />
         ) : v.tipo === "modelo" ? (
