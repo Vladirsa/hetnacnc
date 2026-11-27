@@ -42,7 +42,7 @@ export default async function LatinoamericaPage() {
           </p>
           {totalMundo > 0 && (
             <p className="mt-4 text-sm text-white/80">
-              <TS>Ya ubicamos</TS> {totalMundo.toLocaleString("es-MX")} <TS>empresas CNC en</TS> {grupos.length} <TS>países.</TS>{" "}
+              <TS>Ya ubicamos</TS> {totalMundo.toLocaleString("es-MX")} <TS>empresas CNC en</TS> <TS>{grupos.length}</TS> <TS>países.</TS><TS>{" "}</TS>
               <a href="/mx/talleres#directorio" className="font-semibold text-[#F2A25F] underline"><TS>Verlas en el mapa</TS></a>
             </p>
           )}
@@ -54,9 +54,9 @@ export default async function LatinoamericaPage() {
               const u = ubicadas(p)
               return (
                 <a key={p.clave} href={rutaPais(p.clave)} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
-                  {p.bandera} {p.nombre}
-                  {u > 0 ? ` · ${u} ${u === 1 ? "empresa" : "empresas"}` : ""}
-                  {n > 0 ? ` · ${n} ${n === 1 ? "registro" : "registros"}` : ""}
+                  <TS>{p.bandera}</TS> <TS>{p.nombre}</TS>
+                  <TS>{u > 0 ? ` · ${u} ${u === 1 ? "empresa" : "empresas"}` : ""}</TS>
+                  <TS>{n > 0 ? ` · ${n} ${n === 1 ? "registro" : "registros"}` : ""}</TS>
                 </a>
               )
             })}
@@ -69,8 +69,8 @@ export default async function LatinoamericaPage() {
           {QUE_ES.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-3xl">{i}</p>
-              <p className="mt-2 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-2 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
