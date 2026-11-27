@@ -148,8 +148,8 @@ export const HERRAMIENTAS: Herramienta[] = [
   },
   {
     clave: "mapa_topo", nombre: "Mapa topográfico por capas", ruta: "/mx/disenar/mapa-topografico", imagen: IMG2D("mapa-topografico.jpg"), tema: "laser", publico: "clientes_particulares",
-    gancho: "Tu montaña favorita en capas", frases: ["Pico de Orizaba, Popocatépetl, Barranca del Cobre…", "Relieve real, capa por capa", "DXF, SVG o PDF para láser"], cta: "Hazlo gratis",
-    texto: "Escoge un lugar de México (Pico de Orizaba, Popocatépetl, Nevado de Toluca, Barranca del Cobre…) o pega sus coordenadas y salen las capas del relieve real para cortar en MDF o acrílico y apilar; cada capa trae rayada la silueta de la siguiente para pegarla en su lugar. Descarga DXF, SVG o PDF gratis en HETNA 2D Studio.",
+    gancho: "Tu montaña favorita en capas", frases: ["Orizaba, Popo o Barranca del Cobre", "Relieve real, capa por capa", "DXF, SVG o PDF para láser"], cta: "Hazlo gratis",
+    texto: "Escoge un lugar de México (Pico de Orizaba, Popocatépetl, Barranca del Cobre…) y salen las capas del relieve real para cortar en MDF o acrílico y apilar; cada capa trae rayada la silueta de la siguiente para pegarla en su lugar. Descarga DXF, SVG o PDF gratis en HETNA 2D Studio.",
     en: { nombre: "Layered topographic map", gancho: "Your favorite mountain in layers", frases: ["Real terrain, layer by layer", "Each layer marks where the next one goes", "DXF, SVG or PDF for laser"], cta: "Make it free", texto: "Pick a place (or paste its coordinates) and get the real terrain as layers to laser cut in MDF or acrylic and stack; each layer has the outline of the next one scored so you glue it in place. Download the DXF, SVG or PDF for free in HETNA 2D Studio." },
   },
   {
@@ -159,21 +159,21 @@ export const HERRAMIENTAS: Herramienta[] = [
     en: { nombre: "Word clock", gancho: "A clock that spells the time", frases: ["Spanish words, every 5 minutes", "Front, grid and LED back panel", "Plus the LED wiring table"], cta: "Make it free", texto: "A clock that spells the time in Spanish every 5 minutes with letters that light up: you get the front with stencil letters cut out, the grid that keeps each letter's light apart and the back panel for the LEDs, plus the table of which LED to turn on for each word. Free DXF, SVG or PDF in HETNA 2D Studio." },
   },
   {
-    clave: "placa_redonda", nombre: "Letrero redondo con monograma", ruta: "/mx/disenar/placa-redonda", imagen: IMG2D("placa-redonda.jpg"), tema: "router", publico: "clientes_particulares",
+    clave: "placa_redonda", nombre: "Placa redonda con texto en arco", ruta: "/mx/disenar/placa-redonda", imagen: IMG2D("placa-redonda.jpg"), tema: "router", publico: "clientes_particulares",
     gancho: "El letrero redondo de tu negocio", frases: ["Texto en arco arriba y abajo", "Monograma al centro", "DXF para láser o router"], cta: "Diséñalo gratis",
     texto: "Haz un letrero redondo para tu negocio, tu casa o un evento: texto en arco arriba y abajo (los dos se leen al derecho), iniciales o monograma al centro, aro en la orilla y adornos a los lados. Descarga el DXF, SVG o PDF para láser o router CNC gratis en HETNA 2D Studio.",
     en: { nombre: "Round sign with monogram", gancho: "A round sign for your business", frases: ["Arched text top and bottom", "Monogram in the center", "DXF for laser or router"], cta: "Design it free", texto: "Make a round sign for your business, home or event: arched text at the top and bottom (both read upright), initials or a monogram in the center, a rim and side ornaments. Download the DXF, SVG or PDF for laser or CNC router for free in HETNA 2D Studio." },
   },
   {
     clave: "incrustaciones", nombre: "Incrustaciones (inlay)", ruta: "/mx/disenar/incrustaciones", imagen: IMG2D("incrustaciones.jpg"), tema: "router", publico: "talleres",
-    gancho: "Incrustaciones que sí encajan", frases: ["Bolsillo y pieza compensados por tu fresa", "De un texto o tu SVG/DXF", "Con holgura para el pegamento"], cta: "Úsala gratis",
+    gancho: "Incrustaciones que sí encajan", frases: ["Bolsillo y pieza compensados por tu fresa", "De un texto o de tu dibujo", "Con holgura para el pegamento"], cta: "Úsala gratis",
     texto: "De un texto o tu dibujo (SVG o DXF) salen el bolsillo para vaciar en la madera base y la pieza que entra, compensados por el radio de tu fresa (1/16, 1/8 o 1/4 de pulgada) y con holgura para el pegamento. Para letreros y tablas con madera de contraste o acrílico. Gratis en HETNA 2D Studio.",
     en: { nombre: "Inlay maker", gancho: "Inlays that actually fit", frases: ["Pocket and insert compensated for your bit", "From text or your SVG/DXF", "With glue clearance"], cta: "Use it free", texto: "From text or your own drawing (SVG or DXF) you get the pocket to clear in the base wood and the piece that goes in, compensated for your bit radius (1/16, 1/8 or 1/4 inch) and with clearance for glue. For signs and boards with contrasting wood or acrylic. Free in HETNA 2D Studio." },
   },
   {
     clave: "pruebas_maquina", nombre: "Pruebas de kerf y material", ruta: "/mx/disenar/pruebas-maquina", imagen: IMG2D("pruebas-maquina.jpg"), tema: "laser", publico: "talleres",
-    gancho: "Calibra tu láser en un corte", frases: ["Mide tu kerf con 10 tiras", "Encuentra la ranura que ajusta justo", "Matriz de potencia × velocidad para LightBurn"], cta: "Úsala gratis",
-    texto: "Tres pruebas para calibrar tu máquina: medir el kerf (ancho de corte) con un marco de 10 tiras, encontrar la ranura que ajusta justo con tu material y una matriz de potencia × velocidad con un color de capa de LightBurn por cuadro. SVG, DXF o PDF gratis en HETNA 2D Studio.",
+    gancho: "Calibra tu láser en un corte", frases: ["Mide tu kerf con 10 tiras", "Encuentra la ranura que ajusta justo", "Potencia y velocidad para LightBurn"], cta: "Úsala gratis",
+    texto: "Tres pruebas para calibrar tu máquina: medir el kerf (ancho de corte) con un marco de 10 tiras, encontrar la ranura que ajusta justo con tu material y una matriz de potencia y velocidad con un color de capa de LightBurn por cuadro. SVG, DXF o PDF gratis en HETNA 2D Studio.",
     en: { nombre: "Kerf and material tests", gancho: "Calibrate your laser in one cut", frases: ["Measure your kerf with 10 strips", "Find the slot that fits just right", "Power × speed grid for LightBurn"], cta: "Use it free", texto: "Three tests to calibrate your machine: measure the kerf (cut width) with a 10-strip frame, find the slot that fits your material just right, and a power × speed grid with one LightBurn layer color per square. Free SVG, DXF or PDF in HETNA 2D Studio." },
   },
   {
