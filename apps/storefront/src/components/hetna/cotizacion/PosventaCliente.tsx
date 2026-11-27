@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 // Posventa en la liga del cliente (hetnacnc.com/c/<token>), con el pedido ya
@@ -98,8 +99,8 @@ export function PosventaCliente({ token }: { token: string }) {
   if (!disponible && !casos.length) return null
   return (
     <section className={caja}>
-      <h2 className="m-0 text-[17px] font-bold text-[#142033]">¿Algún problema con tu pedido?</h2>
-      <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Reporta una falla, pide garantía o un ajuste. El taller te responde aquí mismo.</p>
+      <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>¿Algún problema con tu pedido?</T></h2>
+      <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><T>Reporta una falla, pide garantía o un ajuste. El taller te responde aquí mismo.</T></p>
 
       {casos.length ? (
         <ul className="m-0 mt-4 list-none space-y-2 p-0">
@@ -113,11 +114,11 @@ export function PosventaCliente({ token }: { token: string }) {
                   </b>
                   <span className={`text-[13px] font-semibold ${color}`}>{etq}</span>
                 </div>
-                <p className="m-0 mt-1 text-[14px] text-[#40403A]">{c.descripcion}</p>
+                <p className="m-0 mt-1 text-[14px] text-[#40403A]"><T>{c.descripcion}</T></p>
                 {c.respuesta ? (
                   <p className="m-0 mt-2 text-[14px] text-[#1B1B18]">
-                    <span className="block text-[12px] uppercase tracking-wide text-[#7A776E]">Respuesta del taller</span>
-                    {c.respuesta}
+                    <span className="block text-[12px] uppercase tracking-wide text-[#7A776E]"><T>Respuesta del taller</T></span>
+                    <T>{c.respuesta}</T>
                   </p>
                 ) : null}
               </li>
@@ -128,13 +129,13 @@ export function PosventaCliente({ token }: { token: string }) {
 
       {listo ? (
         <p className="m-0 mt-4 rounded-[12px] border border-[#CFE8D6] bg-[#EEF8F1] px-4 py-3 text-[14px] text-[#1E7B3A]">
-          Recibimos tu reporte. El taller ya tiene el aviso y te responderá aquí.
+          <T>Recibimos tu reporte. El taller ya tiene el aviso y te responderá aquí.</T>
         </p>
       ) : null}
 
       {disponible && !abierto ? (
         <button type="button" className={`${botonClaro} mt-4`} onClick={() => { setAbierto(true); setListo(false) }}>
-          Reportar un problema
+          <T>Reportar un problema</T>
         </button>
       ) : null}
 
@@ -170,7 +171,7 @@ export function PosventaCliente({ token }: { token: string }) {
             ))}
             {fotos.length < MAX_FOTOS ? (
               <label className={`${botonClaro} cursor-pointer !py-2 !text-[14px]`}>
-                Agregar fotos ({fotos.length}/{MAX_FOTOS})
+                <T>Agregar fotos (</T>{fotos.length}/{MAX_FOTOS})
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple className="hidden" onChange={(e) => { elegir(e.target.files); e.target.value = "" }} />
               </label>
             ) : null}
@@ -181,7 +182,7 @@ export function PosventaCliente({ token }: { token: string }) {
               {enviando ? "Enviando…" : "Enviar reporte"}
             </button>
             <button type="button" className={botonClaro} disabled={enviando} onClick={() => setAbierto(false)}>
-              Cancelar
+              <T>Cancelar</T>
             </button>
           </div>
         </div>
