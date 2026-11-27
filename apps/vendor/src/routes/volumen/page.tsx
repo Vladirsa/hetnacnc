@@ -4,6 +4,7 @@
 // Existe porque el panel de Mercur lee los precios por cantidad pero no tiene
 // campo para escribirlos. El mecanismo sí es nativo: el precio baja solo en el
 // carrito al subir la cantidad, sin códigos ni promociones.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -16,6 +17,8 @@ const Etiqueta = (props) => (
 
 export const config: RouteConfig = {
   label: "Precios por cantidad",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Etiqueta,
 }
 
@@ -126,14 +129,14 @@ export default function VolumenPage() {
     }
   }
 
-  if (cargando) return <div style={S.page}>Cargando...</div>
+  if (cargando) return <div style={S.page}><T>Cargando...</T></div>
 
   if (error) {
     return (
       <div style={S.page}>
-        <h1 style={S.h1}>Precios por cantidad</h1>
+        <h1 style={S.h1}><T>Precios por cantidad</T></h1>
         <div style={S.card}>
-          <p style={{ margin: 0, fontSize: 14 }}>{error}</p>
+          <p style={{ margin: 0, fontSize: 14 }}><T>{error}</T></p>
         </div>
       </div>
     )
@@ -141,18 +144,18 @@ export default function VolumenPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Precios por cantidad</h1>
+      <h1 style={S.h1}><T>Precios por cantidad</T></h1>
       <p style={S.sub}>
-        Ofrece la pieza más barata cuando el cliente lleva varias. El precio baja
+        <T>Ofrece la pieza más barata cuando el cliente lleva varias. El precio baja
         solo en su carrito: no tiene que escribir ningún código. Y se le avisa en
-        la página del producto, para que le dé por pedir más.
+        la página del producto, para que le dé por pedir más.</T>
       </p>
 
       {!ofertas.length && (
         <div style={S.card}>
           <p style={{ margin: 0, fontSize: 14 }}>
-            Todavía no tienes productos en venta. Cuando publiques el primero,
-            aquí vas a poder ponerle precio por cantidad.
+            <T>Todavía no tienes productos en venta. Cuando publiques el primero,
+            aquí vas a poder ponerle precio por cantidad.</T>
           </p>
         </div>
       )}
@@ -166,24 +169,24 @@ export default function VolumenPage() {
         return (
           <section key={o.offer_id} style={S.card}>
             <p style={S.titulo}>
-              {o.titulo}
+              <T>{o.titulo}</T>
               {o.desde ? (
                 <span style={S.activo}>
-                  {o.desde}+ a {pesos(o.precio_escalon)}
+                  <T>{o.desde}</T>+ a {pesos(o.precio_escalon)}
                 </span>
               ) : null}
             </p>
             <p style={S.base}>
-              {sinPrecio
+              <T>{sinPrecio
                 ? "Esta oferta todavía no tiene precio de una pieza. Ponlo primero en Ofertas."
-                : `Una pieza cuesta ${pesos(o.precio)}`}
+                : `Una pieza cuesta ${pesos(o.precio)}`}</T>
             </p>
 
             {!sinPrecio && (
               <>
                 <div style={S.fila}>
                   <div style={S.campo}>
-                    <label style={S.label}>Desde cuántas piezas</label>
+                    <label style={S.label}><T>Desde cuántas piezas</T></label>
                     <input
                       style={S.input}
                       type="number"
@@ -196,7 +199,7 @@ export default function VolumenPage() {
                     />
                   </div>
                   <div style={S.campo}>
-                    <label style={S.label}>Precio por pieza ($ MXN)</label>
+                    <label style={S.label}><T>Precio por pieza ($ MXN)</T></label>
                     <input
                       style={S.input}
                       type="number"
@@ -212,7 +215,7 @@ export default function VolumenPage() {
                     disabled={ocupado}
                     onClick={() => guardar(o, false)}
                   >
-                    {ocupado ? "Guardando…" : "Guardar"}
+                    <T>{ocupado ? "Guardando…" : "Guardar"}</T>
                   </button>
                   {o.desde ? (
                     <button
@@ -220,18 +223,18 @@ export default function VolumenPage() {
                       disabled={ocupado}
                       onClick={() => guardar(o, true)}
                     >
-                      Quitar
+                      <T>Quitar</T>
                     </button>
                   ) : null}
                 </div>
                 <p style={S.hint}>
-                  Tiene que ser menos de {pesos(o.precio)}, que es lo que cuesta
-                  una pieza suelta.
+                  <T>Tiene que ser menos de</T> {pesos(o.precio)}<T>, que es lo que cuesta
+                  una pieza suelta.</T>
                 </p>
               </>
             )}
 
-            {m ? <p style={m.ok ? S.ok : S.err}>{m.t}</p> : null}
+            {m ? <p style={m.ok ? S.ok : S.err}><T>{m.t}</T></p> : null}
           </section>
         )
       })}
