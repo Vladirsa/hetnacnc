@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -37,7 +38,7 @@ export function AccionesOrden({ id, puedeConfirmar, puedeMarcarEnviada, fechaPed
     <div className="mt-4 flex flex-col gap-3 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] p-4">
       {puedeConfirmar && (
         <label className="flex flex-col gap-1 text-[13.5px] font-semibold text-[#40403A]">
-          Fecha en que entregas
+          <T>Fecha en que entregas</T>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-[200px] rounded-[10px] border border-[#D9D5CC] bg-white px-3 py-2 text-[15px] font-normal outline-none focus:border-[#C2560A]" />
         </label>
       )}
@@ -57,7 +58,7 @@ export function AccionesOrden({ id, puedeConfirmar, puedeMarcarEnviada, fechaPed
         )}
         {puedeMarcarEnviada && (
           <button type="button" disabled={ocupado} onClick={() => mandar("enviada")} className="rounded-[12px] border border-[#C2560A] bg-white px-5 py-3 text-[15px] font-bold text-[#B34D07] hover:bg-[#FFF4EC] disabled:opacity-60">
-            Ya la envié
+            <T>Ya la envié</T>
           </button>
         )}
       </div>
