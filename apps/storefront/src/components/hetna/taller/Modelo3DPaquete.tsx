@@ -3,6 +3,7 @@
 // «Ver en 3D» de un servicio: carga la muestra simplificada (STL) que subió el
 // diseñador y la muestra en el visor, sin descargarla. Three.js sólo se carga
 // al tocar el botón.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useState } from "react"
 
@@ -33,7 +34,7 @@ export function Modelo3DPaquete({ url }: { url: string }) {
       <div className="mt-3">
         <VisorCad geo={geo} alto={220} />
         <button type="button" onClick={() => setEstado("cerrado")} className="mt-1 text-[12px] font-semibold text-[#6B675C] hover:underline">
-          Cerrar vista 3D
+          <T>Cerrar vista 3D</T>
         </button>
       </div>
     )
