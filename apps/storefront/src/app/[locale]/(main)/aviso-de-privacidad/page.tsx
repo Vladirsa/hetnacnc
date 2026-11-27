@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import PaginaInfo from "@/components/hetna/PaginaInfo"
@@ -9,7 +11,7 @@ import { idiomaServidor } from "@/lib/helpers/idioma-servidor"
 // El texto vive en src/lib/hetna/legal/aviso-privacidad.ts (español e inglés).
 // Esta página solo elige el idioma y lo dibuja.
 
-export async function generateMetadata(): Promise<Metadata> {
+async function generateMetadataEs(): Promise<Metadata> {
   const en = (await idiomaServidor()) === "en"
   return en
     ? {
@@ -74,7 +76,7 @@ function Bloques({ bloques }: { bloques: Bloque[] }) {
             </ul>
           )
         if ("tabla" in b) return <Tabla key={i} cab={b.tabla.cab} filas={b.tabla.filas} />
-        if ("nota" in b) return <p key={i} className="text-sm italic text-[#6B6A63]">{b.nota}</p>
+        if ("nota" in b) return <p key={i} className="text-sm italic text-[#6B6A63]"><TS>{b.nota}</TS></p>
         return (
           <p key={i}>
             <BotonPreferenciasCookies className="rounded-lg border border-[#142033] px-4 py-2 text-sm font-semibold text-[#142033] hover:bg-[#142033] hover:text-white" />
@@ -110,7 +112,7 @@ export default async function AvisoDePrivacidad() {
         <ol className="grid gap-1 text-sm sm:grid-cols-2">
           {secciones.map((s) => (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="text-[#B34D07] hover:underline">{s.titulo}</a>
+              <a href={`#${s.id}`} className="text-[#B34D07] hover:underline"><TS>{s.titulo}</TS></a>
             </li>
           ))}
         </ol>
@@ -118,7 +120,7 @@ export default async function AvisoDePrivacidad() {
 
       {secciones.map((s) => (
         <section key={s.id} id={s.id} className="scroll-mt-24">
-          <h2>{s.titulo}</h2>
+          <h2><TS>{s.titulo}</TS></h2>
           <Bloques bloques={s.bloques} />
         </section>
       ))}
@@ -135,4 +137,9 @@ export default async function AvisoDePrivacidad() {
       </ul>
     </PaginaInfo>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
