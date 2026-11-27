@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Cog, MapPin, ShoppingCart, Zap } from "lucide-react"
 
 const TARJETAS = [
@@ -29,10 +30,10 @@ export default function PorQueHetna() {
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-8 text-center">
           <h2 className="text-[30px] md:text-[44px] font-extrabold leading-[1.08] text-[#142033]">
-            ¿Por qué <span className="text-[#C2560A]">HETNA</span>?
+            <TS>¿Por qué</TS> <span className="text-[#C2560A]"><TS>HETNA</TS></span>?
           </h2>
           <p className="mt-2 text-[15px] md:text-[17px] text-[#6B6A63]">
-            Todo lo que necesitas para fabricar, en un solo lugar.
+            <TS>Todo lo que necesitas para fabricar, en un solo lugar.</TS>
           </p>
         </div>
 
@@ -47,16 +48,16 @@ export default function PorQueHetna() {
                 <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAF6EF] text-[#C2560A]">
                   <Icono size={26} strokeWidth={2.1} aria-hidden="true" />
                 </span>
-                <h3 className="text-[17px] font-bold leading-snug text-[#142033]">{t.titulo}</h3>
-                <p className="mt-1.5 text-[14px] leading-snug text-[#6B6A63]">{t.texto}</p>
+                <h3 className="text-[17px] font-bold leading-snug text-[#142033]"><TS>{t.titulo}</TS></h3>
+                <p className="mt-1.5 text-[14px] leading-snug text-[#6B6A63]"><TS>{t.texto}</TS></p>
               </div>
             )
           })}
         </div>
 
         <p className="mt-8 text-center text-[20px] md:text-[28px] font-extrabold leading-tight text-[#142033]">
-          Menos tiempo buscando proveedores.{" "}
-          <span className="text-[#C2560A]">Más tiempo fabricando.</span>
+          <TS>Menos tiempo buscando proveedores.</TS>{" "}
+          <span className="text-[#C2560A]"><TS>Más tiempo fabricando.</TS></span>
         </p>
       </div>
     </section>
