@@ -67,7 +67,7 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
           <section className="rounded-[16px] bg-[#142033] p-5 text-white sm:p-7">
             <p className="m-0 text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Red CNC de México</TS></p>
             <h1 className="m-0 mt-1 text-[26px] font-extrabold leading-tight sm:text-[30px]">
-              <TS>Profesionales CNC</TS>{estado ? ` en ${estado}` : ""}
+              <TS>Profesionales CNC</TS><TS>{estado ? ` en ${estado}` : ""}</TS>
             </h1>
             <p className="m-0 mt-2 max-w-2xl text-[15px] text-white/80">
               <TS>Operadores, programadores CAM, diseñadores y técnicos con su currículum: aptitudes avaladas por la comunidad, software, máquinas que
@@ -110,8 +110,8 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
           </section>
 
           <p className="m-0 text-[14px] text-[#6B6A63]">
-            {r.total === 1 ? "1 perfil" : `${r.total.toLocaleString("es-MX")} perfiles`}
-            {q ? ` con “${q}”` : ""}
+            <TS>{r.total === 1 ? "1 perfil" : `${r.total.toLocaleString("es-MX")} perfiles`}</TS>
+            <TS>{q ? ` con “${q}”` : ""}</TS>
           </p>
 
           {r.perfiles.length ? (
@@ -128,13 +128,13 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
                       <Avatar a={a} size={48} />
                       <div className="min-w-0 flex-1">
                         <strong className="flex items-center gap-1 text-[15.5px] text-[#1B1B18]">
-                          <span className="truncate">{a.nombre}</span>
+                          <span className="truncate"><TS>{a.nombre}</TS></span>
                           {a.verificado && <Palomita />}
                         </strong>
                         <span className="block truncate text-[13px] text-[#40403A]">{a.titular || TIPOS_CUENTA[a.tipo]?.nombre}</span>
                         <span className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B6A63]">
-                          {a.taller ? <InsigniaTaller a={a} /> : <span>{TIPOS_CUENTA[a.tipo]?.nombre}</span>}
-                          {(a.ciudad || a.estadoMx) && <span>· {[a.ciudad, a.estadoMx].filter(Boolean).join(", ")}</span>}
+                          {a.taller ? <InsigniaTaller a={a} /> : <span><TS>{TIPOS_CUENTA[a.tipo]?.nombre}</TS></span>}
+                          {(a.ciudad || a.estadoMx) && <span>· <TS>{[a.ciudad, a.estadoMx].filter(Boolean).join(", ")}</TS></span>}
                         </span>
                       </div>
                       {a.abierto && (
@@ -145,16 +145,16 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
                       <div className="flex flex-wrap gap-1.5">
                         {etiquetas.map((e) => (
                           <span key={e} className="rounded-full bg-[#F3F1EA] px-2.5 py-0.5 text-[12.5px] text-[#40403A]">
-                            {e}
+                            <TS>{e}</TS>
                           </span>
                         ))}
                       </div>
                     )}
-                    {a.maquinas.length > 0 && <span className="truncate text-[12.5px] text-[#6B6A63]"><TS>Máquinas:</TS> {a.maquinas.slice(0, 3).join(" · ")}</span>}
+                    {a.maquinas.length > 0 && <span className="truncate text-[12.5px] text-[#6B6A63]"><TS>Máquinas:</TS> <TS>{a.maquinas.slice(0, 3).join(" · ")}</TS></span>}
                     <span className="flex gap-3 text-[12.5px] text-[#6B6A63]">
-                      {a.avales > 0 && <span>✓ {a.avales} {a.avales === 1 ? "aval" : "avales"}</span>}
-                      {a.proyectos > 0 && <span>{a.proyectos} {a.proyectos === 1 ? "proyecto" : "proyectos"}</span>}
-                      {a.reputacion > 0 && <span>★ {a.reputacion} <TS>reputación</TS></span>}
+                      {a.avales > 0 && <span>✓ <TS>{a.avales}</TS> <TS>{a.avales === 1 ? "aval" : "avales"}</TS></span>}
+                      {a.proyectos > 0 && <span><TS>{a.proyectos}</TS> <TS>{a.proyectos === 1 ? "proyecto" : "proyectos"}</TS></span>}
+                      {a.reputacion > 0 && <span>★ <TS>{a.reputacion}</TS> <TS>reputación</TS></span>}
                     </span>
                   </LocalizedClientLink>
                 )
@@ -162,9 +162,9 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
             </div>
           ) : (
             <p className="m-0 rounded-[12px] border border-dashed border-[#D9D4C8] bg-white p-6 text-center text-[14.5px] text-[#6B6A63]">
-              {q || estado || tipo || abierto
+              <TS>{q || estado || tipo || abierto
                 ? "No encontramos perfiles con esos filtros. Prueba con menos filtros o con otra palabra."
-                : "Todavía no hay perfiles con currículum. Arma el tuyo y sé de los primeros en aparecer."}
+                : "Todavía no hay perfiles con currículum. Arma el tuyo y sé de los primeros en aparecer."}</TS>
             </p>
           )}
           <Paginacion pagina={pagina} total={r.total} porPagina={POR_PAGINA_PROFESIONALES} base={base} />
@@ -180,7 +180,7 @@ export default async function Profesionales({ params: ruta, searchParams }: Prop
               href={p ? "/foro-cnc/mi-perfil#curriculum" : "/register"}
               className="mt-1 inline-flex justify-center rounded-[10px] bg-[#C2560A] px-4 py-2.5 text-[14px] font-semibold text-white hover:brightness-110"
             >
-              {p ? "Armar mi currículum" : "Crear cuenta gratis"}
+              <TS>{p ? "Armar mi currículum" : "Crear cuenta gratis"}</TS>
             </LocalizedClientLink>
           </section>
           <LocalizedClientLink href="/foro-cnc/empleos" className="flex flex-col gap-1 rounded-[12px] bg-[#1E2566] p-4 text-white hover:brightness-110">

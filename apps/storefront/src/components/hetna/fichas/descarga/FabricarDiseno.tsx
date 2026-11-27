@@ -200,7 +200,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
     >
       <div className="flex items-baseline justify-between gap-2">
         <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[19px] font-bold uppercase leading-none text-[#1E2329]">
-          {fisico ? "Fabrícalo a tu medida" : "Fabrícalo con un taller"}
+          <T>{fisico ? "Fabrícalo a tu medida" : "Fabrícalo con un taller"}</T>
         </h2>
         <span className="shrink-0 text-[12px] text-[#5B6370]"><T>precio al momento</T></span>
       </div>
@@ -222,7 +222,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       <div className="mt-2 grid grid-cols-4 gap-2">
         {dims.map((d) => (
           <label key={d.clave} className="block min-w-0">
-            <span className="block truncate text-[11px] text-[#5B6370]">{d.nombre}</span>
+            <span className="block truncate text-[11px] text-[#5B6370]"><T>{d.nombre}</T></span>
             <input
               className={campo + " mt-0.5"}
               inputMode="decimal"
@@ -255,17 +255,17 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <div className="min-w-[180px] flex-1 rounded-md bg-[#F7F8FA] px-3 py-2" aria-live="polite">
           {!pieza ? (
-            <span className="text-[12.5px] text-[#5B6370]">{faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe ancho y largo para ver el precio."}</span>
+            <span className="text-[12.5px] text-[#5B6370]"><T>{faltaAlto ? "En impresión 3D escribe también el alto." : "Escribe ancho y largo para ver el precio."}</T></span>
           ) : r && r.ok ? (
             <span className="text-[12.5px] text-[#5B6370]">
-              <span className="text-[11px] font-bold uppercase tracking-wide"><T>Aprox.</T></span>{" "}
+              <span className="text-[11px] font-bold uppercase tracking-wide"><T>Aprox.</T></span><T>{" "}</T>
               <b className="text-[18px] text-[#1E2329]">
                 {pesos(r.min)} – {pesos(r.max)}
-              </b>{" "}
-              · {n} {n === 1 ? "pieza" : "pzas"}
+              </b><T>{" "}</T>
+              · {n} <T>{n === 1 ? "pieza" : "pzas"}</T>
             </span>
           ) : (
-            <span className="text-[12.5px] text-[#9A5B00]">{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</span>
+            <span className="text-[12.5px] text-[#9A5B00]"><T>{r && !r.ok ? r.motivo : "No se pudo calcular con esos datos."}</T></span>
           )}
         </div>
         <LocalizedClientLink
@@ -278,29 +278,29 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       </div>
 
       {r && r.ok && r.avisos.length > 0 && (
-        <p className="m-0 mt-1.5 text-[12px] text-[#9A5B00]">{r.avisos.join(" ")}</p>
+        <p className="m-0 mt-1.5 text-[12px] text-[#9A5B00]"><T>{r.avisos.join(" ")}</T></p>
       )}
       {verCalculo && r && r.ok && (
         <p className="m-0 mt-1.5 text-[12px] text-[#5B6370]">
-          {n > 1 ? `Unos ${pesos(r.precioPieza)} por pieza. ` : ""}<T>Material y maquinado, más IVA, sin envío.</T> {r.explicacion}.
+          <T>{n > 1 ? `Unos ${pesos(r.precioPieza)} por pieza. ` : ""}</T><T>Material y maquinado, más IVA, sin envío.</T> <T>{r.explicacion}</T>.
         </p>
       )}
       <p className="m-0 mt-1.5 text-[11.5px] leading-snug text-[#5B6370]">
         {servicio !== "impresora_3d" && (
           <>
             <button type="button" onClick={() => setConGrabado(!conGrabado)} className="font-semibold underline">
-              {conGrabado ? "Quitar grabado" : "+ Agregar grabado"}
+              <T>{conGrabado ? "Quitar grabado" : "+ Agregar grabado"}</T>
             </button>
-            {" · "}
+            <T>{" · "}</T>
           </>
         )}
         <button type="button" onClick={() => setVerCalculo(!verCalculo)} className="font-semibold underline" aria-expanded={verCalculo}>
           <T>Cómo se calculó</T>
         </button>
-        {" · "}<T>Precio orientativo; el real lo da cada taller.</T>
+        <T>{" · "}</T><T>Precio orientativo; el real lo da cada taller.</T>
         {base && k !== 1 && (
           <>
-            {" · "}
+            <T>{" · "}</T>
             <button type="button" onClick={() => setK(1)} className="font-semibold text-[#E85D04] underline">
               <T>Medidas originales</T>
             </button>
@@ -411,7 +411,7 @@ function BuscadorMaterial({
           {lista.map((x, n) => (
             <li key={x.i} role="presentation">
               {(n === 0 || lista[n - 1].grupo !== x.grupo) && (
-                <span className="block bg-[#FAF9F6] px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-[#6B6A63]">{x.grupo}</span>
+                <span className="block bg-[#FAF9F6] px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-[#6B6A63]"><T>{x.grupo}</T></span>
               )}
               <button
                 type="button"
@@ -424,7 +424,7 @@ function BuscadorMaterial({
                   x.i === elegido ? "font-semibold" : ""
                 }`}
               >
-                {x.nombre}
+                <T>{x.nombre}</T>
               </button>
             </li>
           ))}

@@ -51,14 +51,14 @@ export default async function TallerEscaneoDetalle({
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="text-[26px] lg:text-[32px] font-bold text-[#1B1B18] leading-tight">
-          {e.titulo || "Sin nombre"}
+          <TS>{e.titulo || "Sin nombre"}</TS>
         </h1>
         <span className={`px-2.5 py-1 rounded-full text-[12px] font-semibold ${ESTATUS_CLASE[e.estatus]}`}>
-          {ESTATUS_ETIQUETA[e.estatus]}
+          <TS>{ESTATUS_ETIQUETA[e.estatus]}</TS>
         </span>
       </div>
       <p className="mt-1.5 text-[14px] text-[#6B6A63]">
-        {MODO_ETIQUETA[e.modo]} · {e.n_fotos} {e.n_fotos === 1 ? "foto" : "fotos"} <TS>· pedido</TS>{" "}
+        <TS>{MODO_ETIQUETA[e.modo]}</TS> · <TS>{e.n_fotos}</TS> <TS>{e.n_fotos === 1 ? "foto" : "fotos"}</TS> <TS>· pedido</TS><TS>{" "}</TS>
         {fechaHora(e.created_at)}
       </p>
 
@@ -67,11 +67,11 @@ export default async function TallerEscaneoDetalle({
       {e.estatus === "fallido" && (
         <div className="mt-6 rounded-[12px] border border-[#E6C4BE] bg-[#FBF0EE] px-4 py-3.5 text-[14px] text-[#9B3225] leading-relaxed">
           <strong><TS>El escaneo no se pudo completar.</TS></strong>
-          {e.error ? <span className="block mt-1 font-mono text-[12px]">{e.error}</span> : null}
+          {e.error ? <span className="block mt-1 font-mono text-[12px]"><TS>{e.error}</TS></span> : null}
           {e.creditos_cobrados > 0 && (
             <span className="block mt-2">
-              <TS>Se te devolvieron</TS> {e.creditos_cobrados}{" "}
-              {e.creditos_cobrados === 1 ? "crédito" : "créditos"}.
+              <TS>Se te devolvieron</TS> <TS>{e.creditos_cobrados}</TS><TS>{" "}</TS>
+              <TS>{e.creditos_cobrados === 1 ? "crédito" : "créditos"}</TS>.
             </span>
           )}
         </div>

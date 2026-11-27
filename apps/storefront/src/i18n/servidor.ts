@@ -19,9 +19,34 @@ export const idiomaServidor = cache(async (): Promise<Idioma> => {
 /** t() para componentes de servidor y generateMetadata: `const t = await traductor()` */
 export const traductor = cache(async () => {
   if ((await idiomaServidor()) !== "en") return sinTraducir
-  const { EN, REGLAS } = await import("./diccionario")
+  const { EN, REGLAS } = await import("./diccionario-servidor")
   return crearT(EN, REGLAS)
 })
+
+// Llaves que nunca son texto visible (ligas, ids, claves): no se traducen.
+const NO_TRADUCIR = /^(id|_id|key|slug|handle|href|url|src|ruta|path|link|liga|img|imagen|imagenes|foto|fotos|video|icono|icon|color|clave|codigo|code|sku|tipo|type|estado|status|modo|valor|value|cp|lat|lng|email|correo|telefono|tel|whatsapp|fecha|date|moneda|currency)$/i
+
+/**
+ * Copia de unos datos (listas, objetos) con los textos en el idioma de la
+ * página. Sirve para pasar datos ya traducidos a componentes de cliente.
+ * En español devuelve lo mismo, sin copiar.
+ */
+export async function traducirDatos<D>(datos: D): Promise<D> {
+  const t = await traductor()
+  if (t === sinTraducir) return datos
+  const va = (v: unknown, llave?: string): unknown => {
+    if (typeof v === "string") return llave && NO_TRADUCIR.test(llave) ? v : t(v)
+    if (Array.isArray(v)) return v.map((x) => va(x, llave))
+    // Sólo objetos simples (no elementos de React, fechas ni clases)
+    if (v && typeof v === "object" && !("$$typeof" in v) && Object.getPrototypeOf(v) === Object.prototype) {
+      const out: Record<string, unknown> = {}
+      for (const [k, x] of Object.entries(v)) out[k] = NO_TRADUCIR.test(k) ? x : va(x, k)
+      return out
+    }
+    return v
+  }
+  return va(datos) as D
+}
 
 /** Traduce los textos de la metadata (título, descripción, Open Graph). */
 export async function metaEnIdioma<M extends Record<string, any>>(m: M): Promise<M> {

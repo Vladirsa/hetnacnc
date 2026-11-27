@@ -23,20 +23,20 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
       </Text>
       <Text className="mt-2 text-ui-fg-interactive">
         <span className="font-bold block"><TS>Número de pedido</TS></span> #
-        <span>{order.display_id}</span>
+        <span><TS>{order.display_id}</TS></span>
       </Text>
       {showStatus && (
         <div className="lg:col-span-2 flex items-center text-compact-small gap-x-4 mt-4">
           <>
             <Text>
-              <TS>Order status:</TS>{" "}
+              <TS>Order status:</TS><TS>{" "}</TS>
               <span className="text-ui-fg-subtle " data-testid="order-status">
                 {/* TODO: Check where the statuses should come from */}
                 {/* {formatStatus(order.fulfillment_status)} */}
               </span>
             </Text>
             <Text>
-              <TS>Payment status:</TS>{" "}
+              <TS>Payment status:</TS><TS>{" "}</TS>
               <span
                 className="text-ui-fg-subtle "
                 sata-testid="order-payment-status"

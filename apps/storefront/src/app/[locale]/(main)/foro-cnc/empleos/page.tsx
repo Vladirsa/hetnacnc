@@ -114,12 +114,12 @@ export default async function EmpleosProyectos({ searchParams }: Props) {
                 <LocalizedClientLink key={a.id} href={urlPerfil(a.usuario)} className="flex items-start gap-3 rounded-[10px] p-1 hover:bg-[#F6F4EF]">
                   <Avatar a={a} size={40} />
                   <span className="min-w-0">
-                    <strong className="block truncate text-[14.5px] text-[#1B1B18]">{a.nombre}</strong>
+                    <strong className="block truncate text-[14.5px] text-[#1B1B18]"><TS>{a.nombre}</TS></strong>
                     <span className="block truncate text-[12.5px] text-[#6B6A63]">
-                      {TIPOS_CUENTA[a.tipo]?.nombre}
-                      {a.estadoMx ? ` · ${a.estadoMx}` : ""}
+                      <TS>{TIPOS_CUENTA[a.tipo]?.nombre}</TS>
+                      <TS>{a.estadoMx ? ` · ${a.estadoMx}` : ""}</TS>
                     </span>
-                    {a.aptitudes.length > 0 && <span className="block truncate text-[12.5px] text-[#14683F]">{a.aptitudes.join(" · ")}</span>}
+                    {a.aptitudes.length > 0 && <span className="block truncate text-[12.5px] text-[#14683F]"><TS>{a.aptitudes.join(" · ")}</TS></span>}
                   </span>
                 </LocalizedClientLink>
               ))

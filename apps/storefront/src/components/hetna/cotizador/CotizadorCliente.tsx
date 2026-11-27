@@ -6,6 +6,7 @@
 // de la app, con valores de referencia de HETNA). Con "Pedir propuestas" el
 // archivo ya subido y los datos pasan a la licitación (FormSolicitudTaller) y
 // los talleres mandan su precio real.
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -149,7 +150,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
           <div className="flex flex-wrap items-center gap-2">
             <input ref={entrada} type="file" accept={EXTENSIONES_ARCHIVO.map((e) => `.${e}`).join(",")} className="hidden" onChange={(e) => elegirArchivo(e.target.files?.[0])} />
             <button type="button" onClick={() => entrada.current?.click()} className="rounded-xl border-2 border-[#C2560A] px-4 py-2.5 text-sm font-bold text-[#C2560A] hover:bg-[#FDEEE1]">
-              {archivo ? `📄 ${archivo.name}` : "Subir DXF, SVG, STL, OBJ o STEP"}
+              <Tr>{archivo ? `📄 ${archivo.name}` : "Subir DXF, SVG, STL, OBJ o STEP"}</Tr>
             </button>
             <button type="button" onClick={() => { setAMano((v) => !v); if (!aMano) setGeo(null) }} className={`rounded-xl border px-3 py-2.5 text-sm font-semibold ${aMano ? "border-[#C2560A] bg-[#FDEEE1] text-[#C2560A]" : "border-[#E7E4DC] text-[#40403A]"}`}>
               <T>Dar medidas a mano</T>
@@ -160,9 +161,9 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
           {geo && !aMano && (
             <div className="grid gap-2">
               <VisorCad geo={geo} alto={260} oscuro />
-              <p className="text-sm text-[#40403A]">{geoTexto}</p>
+              <p className="text-sm text-[#40403A]"><Tr>{geoTexto}</Tr></p>
               {geo.avisos.map((a) => (
-                <p key={a} className="text-xs text-[#B45309]">⚠ {a}</p>
+                <p key={a} className="text-xs text-[#B45309]">⚠ <Tr>{a}</Tr></p>
               ))}
             </div>
           )}
@@ -171,7 +172,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
               <div className="grid grid-cols-3 gap-2">
                 {(["largo", "ancho", "alto"] as const).map((k) => (
                   <div key={k}>
-                    <label className={ETIQUETA}>{ETIQ_MEDIDA[k]} <T>(mm)</T></label>
+                    <label className={ETIQUETA}><Tr>{ETIQ_MEDIDA[k]}</Tr> <T>(mm)</T></label>
                     <input className={CAMPO} inputMode="decimal" value={dims[k]} onChange={(e) => setDims({ ...dims, [k]: e.target.value.replace(",", ".") })} placeholder={k === "alto" ? "sólo 3D" : "300"} />
                   </div>
                 ))}
@@ -180,7 +181,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
                 <label className={ETIQUETA}><T>¿Qué tanto corte lleva?</T></label>
                 <div className="flex flex-wrap gap-2">
                   {([["sencillo", "Sencillo (sólo el contorno)"], ["normal", "Normal"], ["calado", "Calado o celosía"]] as const).map(([v, t]) => (
-                    <button key={v} type="button" onClick={() => setComplejidad(v)} className={`rounded-full border px-3 py-1.5 text-sm ${complejidad === v ? "border-[#C2560A] bg-[#FDEEE1] font-bold text-[#C2560A]" : "border-[#E7E4DC] text-[#40403A]"}`}>{t}</button>
+                    <button key={v} type="button" onClick={() => setComplejidad(v)} className={`rounded-full border px-3 py-1.5 text-sm ${complejidad === v ? "border-[#C2560A] bg-[#FDEEE1] font-bold text-[#C2560A]" : "border-[#E7E4DC] text-[#40403A]"}`}><Tr>{t}</Tr></button>
                   ))}
                 </div>
               </div>
@@ -194,14 +195,14 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {SERVICIOS.map((s) => (
               <button key={s.clave} type="button" onClick={() => setServicio(s.clave)} className={`rounded-xl border px-3 py-2.5 text-left transition ${servicio === s.clave ? "border-[#C2560A] bg-[#FDEEE1] ring-1 ring-[#C2560A]" : "border-[#E7E4DC] bg-white hover:border-[#C2560A]"}`}>
-                <span className="block text-sm font-bold text-[#142033]">{s.emoji} {s.nombre}</span>
+                <span className="block text-sm font-bold text-[#142033]"><Tr>{s.emoji}</Tr> <Tr>{s.nombre}</Tr></span>
                 <span className="block text-[11px] leading-snug text-[#6B675C]"><T>{s.descripcion}</T></span>
               </button>
             ))}
           </div>
           {servicio === "impresora_3d" && (
             <label className="flex items-center gap-3 text-sm text-[#40403A]">
-              <T>Relleno</T> {relleno} %
+              <T>Relleno</T> <Tr>{relleno}</Tr> %
               <input type="range" min={5} max={100} step={5} value={relleno} onChange={(e) => setRelleno(Number(e.target.value))} className="flex-1 accent-[#C2560A]" />
             </label>
           )}
@@ -236,13 +237,13 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
           </div>
         </fieldset>
 
-        {error && <p className="rounded-xl bg-[#FDECEA] px-4 py-3 text-sm text-[#B3261E]">{error}</p>}
+        {error && <p className="rounded-xl bg-[#FDECEA] px-4 py-3 text-sm text-[#B3261E]"><Tr>{error}</Tr></p>}
 
         {/* Resultado */}
         {!pieza ? (
           <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]"><T>Sube tu archivo o escribe las medidas y aquí aparece el estimado al instante.</T></p>
         ) : !est || !est.ok ? (
-          <p className="rounded-xl bg-[#FFF1E6] px-4 py-3 text-sm text-[#C2560A]">{est && !est.ok ? est.motivo : "Completa los datos."}</p>
+          <p className="rounded-xl bg-[#FFF1E6] px-4 py-3 text-sm text-[#C2560A]"><Tr>{est && !est.ok ? est.motivo : "Completa los datos."}</Tr></p>
         ) : (
           <div className="rounded-2xl border-2 border-[#142033] bg-[#F8F7F2] p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#6B675C]"><T>Estimado HETNA · referencia, no es un precio final</T></p>
@@ -250,22 +251,22 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
               <div>
                 <p className="text-[30px] font-extrabold leading-none text-[#142033]">{pesos(est.min)} – {pesos(est.max)}</p>
                 <p className="mt-1 text-sm text-[#40403A]">
-                  <T>por</T> {cantidad} {cantidad === 1 ? "pieza" : "piezas"} · ≈ {pesos(est.precioPieza)} <T>cada una · sin IVA ni envío</T>
+                  <T>por</T> {cantidad} <Tr>{cantidad === 1 ? "pieza" : "piezas"}</Tr> · ≈ {pesos(est.precioPieza)} <T>cada una · sin IVA ni envío</T>
                 </p>
               </div>
               <div className="text-right text-sm text-[#40403A]">
-                <p>⏱ {est.tiempoPiezaMin < 1 ? `${Math.round(est.tiempoPiezaMin * 60)} s` : `${est.tiempoPiezaMin.toFixed(1)} min`} <T>de máquina por pieza</T></p>
-                {est.hojas > 0 && <p>📐 {est.piezasPorHoja} <T>por hoja ·</T> {est.hojas} {est.hojas === 1 ? "hoja" : "hojas"} <T>de</T> {material.nombre}</p>}
-                {est.gramos > 0 && <p>⚖️ ≈ {est.gramos >= 1000 ? `${(est.gramos / 1000).toFixed(2)} kg` : `${Math.round(est.gramos)} g`} <T>de material</T></p>}
+                <p>⏱ <Tr>{est.tiempoPiezaMin < 1 ? `${Math.round(est.tiempoPiezaMin * 60)} s` : `${est.tiempoPiezaMin.toFixed(1)} min`}</Tr> <T>de máquina por pieza</T></p>
+                {est.hojas > 0 && <p>📐 <Tr>{est.piezasPorHoja}</Tr> <T>por hoja ·</T> <Tr>{est.hojas}</Tr> <Tr>{est.hojas === 1 ? "hoja" : "hojas"}</Tr> <T>de</T> <Tr>{material.nombre}</Tr></p>}
+                {est.gramos > 0 && <p>⚖️ ≈ <Tr>{est.gramos >= 1000 ? `${(est.gramos / 1000).toFixed(2)} kg` : `${Math.round(est.gramos)} g`}</Tr> <T>de material</T></p>}
               </div>
             </div>
-            <p className="mt-2 text-xs text-[#6B675C]"><T>Tiempo:</T> {est.explicacion}<T>. Costos de referencia de talleres en México; cada taller cotiza con los suyos.</T></p>
+            <p className="mt-2 text-xs text-[#6B675C]"><T>Tiempo:</T> <Tr>{est.explicacion}</Tr><T>. Costos de referencia de talleres en México; cada taller cotiza con los suyos.</T></p>
             {est.avisos.map((a) => (
-              <p key={a} className="mt-1 text-xs text-[#B45309]">⚠ {a}</p>
+              <p key={a} className="mt-1 text-xs text-[#B45309]">⚠ <Tr>{a}</Tr></p>
             ))}
             {[10, 50, 100].filter((n) => n !== cantidad).length > 0 && (
               <p className="mt-3 text-xs text-[#40403A]">
-                <T>Por volumen:</T>{" "}
+                <T>Por volumen:</T><Tr>{" "}</Tr>
                 {[1, 10, 50, 100].filter((n) => n !== cantidad).map((n) => {
                   const e = estimar({ servicio, pieza, material, cantidad: n, acabado, relleno, cfg })
                   return e.ok ? <button key={n} type="button" onClick={() => setCantidad(n)} className="mr-2 underline decoration-dotted hover:text-[#C2560A]">{n} <T>pzas ≈</T> {pesos(e.precioPieza)} c/u</button> : null
@@ -274,7 +275,7 @@ export function CotizadorCliente({ email, nombre }: { email?: string; nombre?: s
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button type="button" onClick={pedirPropuestas} disabled={subiendo !== null || pedir} className="rounded-xl bg-[#C2560A] px-5 py-3 text-[15px] font-bold text-white hover:bg-[#A84A08] disabled:opacity-60">
-                {subiendo !== null ? `Subiendo archivo… ${subiendo}%` : pedir ? "Llena tus datos abajo ↓" : "Pedir propuestas a talleres"}
+                <Tr>{subiendo !== null ? `Subiendo archivo… ${subiendo}%` : pedir ? "Llena tus datos abajo ↓" : "Pedir propuestas a talleres"}</Tr>
               </button>
               <p className="text-xs text-[#6B675C]"><T>Gratis. Los talleres verificados de HETNA te mandan su precio y tiempo real; tú eliges y pagas protegido por HETNA.</T></p>
             </div>

@@ -113,7 +113,7 @@ function CounterAnimado({ numero, label, isVisible }: CounterProps) {
   return (
     <div className="text-center">
       <div className="text-3xl md:text-4xl font-bold text-green-600 mb-1">
-        {displayNumber}
+        <TS>{displayNumber}</TS>
         {numero >= 100 && numero !== Math.floor(numero) && '%'}
       </div>
       <p className="text-gray-700 font-medium"><TS>{label}</TS></p>
@@ -142,9 +142,9 @@ function TestimonioCard({ testimonio }: { testimonio: Testimonio }) {
 
       {/* Autor */}
       <div className="border-t pt-4">
-        <p className="font-bold text-gray-900">{testimonio.nombre}</p>
-        <p className="text-sm text-gray-600">{testimonio.cargo}</p>
-        <p className="text-sm text-green-600 font-medium">{testimonio.empresa}</p>
+        <p className="font-bold text-gray-900"><TS>{testimonio.nombre}</TS></p>
+        <p className="text-sm text-gray-600"><TS>{testimonio.cargo}</TS></p>
+        <p className="text-sm text-green-600 font-medium"><TS>{testimonio.empresa}</TS></p>
       </div>
     </div>
   )
@@ -198,7 +198,7 @@ export default function EstadisticasConfianza() {
                   label={stat.label}
                   isVisible={isVisible}
                 />
-                <p className="text-gray-600 text-sm mt-2">{stat.description}</p>
+                <p className="text-gray-600 text-sm mt-2"><TS>{stat.description}</TS></p>
               </div>
             ))}
           </div>

@@ -33,13 +33,13 @@ export function GuiaCategoria({ c, nombre }: { c: ContenidoCategoria; nombre: st
             <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]"><TS>{s.titulo}</TS></h3>
             {s.parrafos?.map((p, i) => (
               <p key={i} className="m-0 text-[15px] leading-relaxed text-[#4A4943]">
-                {p}
+                <TS>{p}</TS>
               </p>
             ))}
             {s.lista && (
               <ul className="m-0 pl-5 list-disc flex flex-col gap-1 text-[15px] leading-relaxed text-[#4A4943]">
                 {s.lista.map((x, i) => (
-                  <li key={i}>{x}</li>
+                  <li key={i}><TS>{x}</TS></li>
                 ))}
               </ul>
             )}

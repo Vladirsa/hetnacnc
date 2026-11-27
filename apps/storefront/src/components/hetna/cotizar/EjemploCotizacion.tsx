@@ -39,8 +39,8 @@ export default async function EjemploCotizacion() {
           .filter(([, v]) => v)
           .map(([k, v]) => (
             <div key={k} className="contents">
-              <dt className="text-[#6B675C]">{k}</dt>
-              <dd className="m-0 font-semibold text-[#142033]">{v}</dd>
+              <dt className="text-[#6B675C]"><TS>{k}</TS></dt>
+              <dd className="m-0 font-semibold text-[#142033]"><TS>{v}</TS></dd>
             </div>
           ))}
       </dl>

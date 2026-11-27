@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { OfferCard } from "@/components/organisms/OfferCard/OfferCard"
 import { ProductsPagination } from "@/components/organisms/ProductsPagination/ProductsPagination"
 import ProductListingNoResultsView from "@/components/molecules/ProductListingNoResultsView/ProductListingNoResultsView"
@@ -28,7 +29,7 @@ export const SellerOffersListing = async ({
 
   return (
     <div className="py-4" data-testid="seller-offers-listing">
-      <div className="my-4 label-md">{`${count} ${count === 1 ? "producto" : "productos"}`}</div>
+      <div className="my-4 label-md"><TS>{`${count} ${count === 1 ? "producto" : "productos"}`}</TS></div>
       {offers.length === 0 ? (
         <ProductListingNoResultsView />
       ) : (

@@ -6,6 +6,7 @@
 //      (cargo de $10 que se devuelve al momento; HETNA no ve ni guarda el
 //      número): para cotizar licitaciones y para cobrar tus ventas.
 // Backend: /vendor/hetna-requisitos (packages/api/src/lib/requisitos-vendedor.ts)
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import { Badge, Button, Container, Heading, Text, toast } from "@medusajs/ui"
 import { ShieldCheck } from "@medusajs/icons"
@@ -15,6 +16,8 @@ import { LLAVE_TERMINOS, aceptarTerminos, leerRequisitos } from "../../lib/requi
 
 export const config: RouteConfig = {
   label: "Activa tu cuenta",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: ShieldCheck,
   rank: 2,
 }
@@ -85,63 +88,63 @@ export default function RequisitosPage() {
     }
   }
 
-  if (error) return <Container className="p-6"><Text className="text-ui-fg-error">{error}</Text></Container>
-  if (!e) return <Container className="p-6"><Text>Cargando…</Text></Container>
+  if (error) return <Container className="p-6"><Text className="text-ui-fg-error"><T>{error}</T></Text></Container>
+  if (!e) return <Container className="p-6"><Text><T>Cargando…</T></Text></Container>
 
   return (
     <div className="flex flex-col gap-3">
       <Container className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Heading>Activa tu cuenta</Heading>
+            <Heading><T>Activa tu cuenta</T></Heading>
             <Text className="mt-1 text-ui-fg-subtle">
-              Para publicar productos, cursos y libros basta con aceptar los términos. La tarjeta se verifica para cotizar licitaciones y antes
-              de cobrar tus ventas. Así los clientes saben que tratan con negocios reales.
+              <T>Para publicar productos, cursos y libros basta con aceptar los términos. La tarjeta se verifica para cotizar licitaciones y antes
+              de cobrar tus ventas. Así los clientes saben que tratan con negocios reales.</T>
             </Text>
           </div>
-          <Badge color={e.completo ? "green" : "orange"}>{e.completo ? "Cuenta activa" : "Falta completar"}</Badge>
+          <Badge color={e.completo ? "green" : "orange"}><T>{e.completo ? "Cuenta activa" : "Falta completar"}</T></Badge>
         </div>
-        {e.exento && <Text className="mt-3 text-ui-fg-subtle">Esta es una cuenta de HETNA: no necesita estos pasos.</Text>}
+        {e.exento && <Text className="mt-3 text-ui-fg-subtle"><T>Esta es una cuenta de HETNA: no necesita estos pasos.</T></Text>}
       </Container>
 
       <Container className="p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <Heading level="h2">1. Términos para vendedores</Heading>
+            <Heading level="h2"><T>1. Términos para vendedores</T></Heading>
             <Text className="mt-1 text-ui-fg-subtle">
-              Versión vigente: {e.terminos.version_vigente}. Incluyen las comisiones, cómo se te paga, envíos, devoluciones y la lista de precios.
+              <T>Versión vigente:</T> <T>{e.terminos.version_vigente}</T><T>. Incluyen las comisiones, cómo se te paga, envíos, devoluciones y la lista de precios.</T>
             </Text>
           </div>
-          <Badge color={e.terminos.ok ? "green" : "grey"}>{e.terminos.ok ? "Aceptados" : "Pendiente"}</Badge>
+          <Badge color={e.terminos.ok ? "green" : "grey"}><T>{e.terminos.ok ? "Aceptados" : "Pendiente"}</T></Badge>
         </div>
         {e.terminos.ok ? (
           <Text size="small" className="mt-2 text-ui-fg-subtle">
-            Aceptaste la versión {e.terminos.version_aceptada} el {fecha(e.terminos.en)}.
+            <T>Aceptaste la versión</T> <T>{e.terminos.version_aceptada}</T> <T>el</T> {fecha(e.terminos.en)}.
           </Text>
         ) : (
           <div className="mt-3 flex flex-col gap-3">
             {e.terminos.version_aceptada && (
               <Text size="small" className="text-ui-fg-subtle">
-                Aceptaste la versión {e.terminos.version_aceptada}; hay una versión nueva.
+                <T>Aceptaste la versión</T> <T>{e.terminos.version_aceptada}</T><T>; hay una versión nueva.</T>
               </Text>
             )}
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={acepto} onChange={(ev) => setAcepto(ev.target.checked)} className="mt-1" />
               <span>
-                He leído y acepto los{" "}
+                <T>He leído y acepto los</T><T>{" "}</T>
                 <a href={`${TIENDA}/terminos-vendedores`} target="_blank" rel="noreferrer" className="text-ui-fg-interactive font-medium">
-                  Términos para vendedores
-                </a>{" "}
-                (versión {e.terminos.version_vigente}) y el{" "}
+                  <T>Términos para vendedores</T>
+                </a><T>{" "}</T>
+                <T>(versión</T> <T>{e.terminos.version_vigente}</T><T>) y el</T><T>{" "}</T>
                 <a href={`${TIENDA}/aviso-de-privacidad`} target="_blank" rel="noreferrer" className="text-ui-fg-interactive font-medium">
-                  Aviso de privacidad
+                  <T>Aviso de privacidad</T>
                 </a>
                 .
               </span>
             </label>
             <div>
               <Button onClick={aceptar} disabled={!acepto} isLoading={ocupado === "terminos"}>
-                Aceptar términos
+                <T>Aceptar términos</T>
               </Button>
             </div>
           </div>
@@ -151,33 +154,33 @@ export default function RequisitosPage() {
       <Container className="p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <Heading level="h2">2. Verifica tu tarjeta de débito o crédito (para cotizar y cobrar)</Heading>
+            <Heading level="h2"><T>2. Verifica tu tarjeta de débito o crédito (para cotizar y cobrar)</T></Heading>
             <Text className="mt-1 text-ui-fg-subtle">
-              Se hace un cargo de ${e.monto_verificacion} MXN que se devuelve al momento (puede tardar unos días en verse en tu estado de cuenta). Sólo
-              comprueba que la tarjeta es real: HETNA no ve ni guarda el número y no se te cobra nada más.
+              <T>Se hace un cargo de $</T><T>{e.monto_verificacion}</T> <T>MXN que se devuelve al momento (puede tardar unos días en verse en tu estado de cuenta). Sólo
+              comprueba que la tarjeta es real: HETNA no ve ni guarda el número y no se te cobra nada más.</T>
             </Text>
           </div>
-          <Badge color={e.tarjeta.ok ? "green" : "grey"}>{e.tarjeta.ok ? "Verificada" : "Pendiente"}</Badge>
+          <Badge color={e.tarjeta.ok ? "green" : "grey"}><T>{e.tarjeta.ok ? "Verificada" : "Pendiente"}</T></Badge>
         </div>
         {e.tarjeta.ok ? (
           <Text size="small" className="mt-2 text-ui-fg-subtle">
-            Verificada con {e.tarjeta.proveedor === "paypal" ? "PayPal" : "Mercado Pago"}
-            {e.tarjeta.detalle ? ` (${e.tarjeta.detalle})` : ""} el {fecha(e.tarjeta.en)}.
+            <T>Verificada con</T> <T>{e.tarjeta.proveedor === "paypal" ? "PayPal" : "Mercado Pago"}</T>
+            <T>{e.tarjeta.detalle ? ` (${e.tarjeta.detalle})` : ""}</T> <T>el</T> {fecha(e.tarjeta.en)}.
           </Text>
         ) : (
           <div className="mt-4 flex flex-wrap gap-3">
             {e.metodos.mercadopago && (
               <Button onClick={() => verificar("mercadopago")} isLoading={ocupado === "mercadopago"} disabled={Boolean(ocupado)}>
-                Verificar con Mercado Pago (México)
+                <T>Verificar con Mercado Pago (México)</T>
               </Button>
             )}
             {e.metodos.paypal && (
               <Button variant="secondary" onClick={() => verificar("paypal")} isLoading={ocupado === "paypal"} disabled={Boolean(ocupado)}>
-                Verificar con PayPal (otros países)
+                <T>Verificar con PayPal (otros países)</T>
               </Button>
             )}
             {!e.metodos.mercadopago && !e.metodos.paypal && (
-              <Text className="text-ui-fg-error">Los pagos no están disponibles ahora. Intenta más tarde.</Text>
+              <Text className="text-ui-fg-error"><T>Los pagos no están disponibles ahora. Intenta más tarde.</T></Text>
             )}
           </div>
         )}

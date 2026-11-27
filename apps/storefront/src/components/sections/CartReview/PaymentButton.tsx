@@ -11,7 +11,7 @@ const ErrorMessage = ({ error, "data-testid": testId }: { error?: string | null;
     <div>
       <MensajeError error={error} data-testid={testId} />
       <p className="mt-1 text-[13px] text-[#4A4943]">
-        <T>Tu carrito sigue guardado.</T>{" "}
+        <T>Tu carrito sigue guardado.</T><T>{" "}</T>
         <a
           href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent("Hola HETNA CNC, no pude completar el pago de mi compra. ¿Me ayudan?")}`}
           target="_blank"
@@ -19,7 +19,7 @@ const ErrorMessage = ({ error, "data-testid": testId }: { error?: string | null;
           className="font-semibold text-[#17803F] underline"
         >
           <T>Escríbenos por WhatsApp</T>
-        </a>{" "}
+        </a><T>{" "}</T>
         <T>y lo resolvemos contigo.</T>
       </p>
     </div>

@@ -6,6 +6,7 @@
 //   POST   /vendor/hetna-blog        mandar uno nuevo a revisión
 //   POST   /vendor/hetna-blog/:id    editar (vuelve a revisión)
 //   DELETE /vendor/hetna-blog/:id    borrar
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import { Badge, Button, Container, Heading, Input, Label, Text, Textarea, toast } from "@medusajs/ui"
 import { DocumentText } from "@medusajs/icons"
@@ -13,6 +14,8 @@ import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 export const config: RouteConfig = {
   label: "Blog",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: DocumentText,
   rank: 22,
 }
@@ -186,60 +189,60 @@ export default function BlogTallerPage() {
   return (
     <div className="flex flex-col gap-4">
       <Container className="flex flex-col gap-3 p-6">
-        <Heading level="h1">Escribe en el blog y paga menos comisión por tus cursos</Heading>
+        <Heading level="h1"><T>Escribe en el blog y paga menos comisión por tus cursos</T></Heading>
         <Text className="text-ui-fg-subtle">
-          Comparte lo que sabes: innovaciones, técnicas, casos de tu taller, cómo elegir una fresa o configurar una máquina. Cada
-          artículo que aprobamos se publica en el blog de HETNA con tu nombre, te trae alumnos y baja la comisión de tus cursos.
+          <T>Comparte lo que sabes: innovaciones, técnicas, casos de tu taller, cómo elegir una fresa o configurar una máquina. Cada
+          artículo que aprobamos se publica en el blog de HETNA con tu nombre, te trae alumnos y baja la comisión de tus cursos.</T>
         </Text>
         {c && c.base != null && (
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-ui-border-base p-3">
-              <Text size="small" className="text-ui-fg-subtle">Tu comisión por curso vendido hoy</Text>
-              <Text className="text-2xl font-semibold">{c.actual}%</Text>
-              {c.actual != null && c.actual < c.base && <Text size="small" className="text-ui-fg-subtle">La normal es {c.base}%</Text>}
+              <Text size="small" className="text-ui-fg-subtle"><T>Tu comisión por curso vendido hoy</T></Text>
+              <Text className="text-2xl font-semibold"><T>{c.actual}</T>%</Text>
+              {c.actual != null && c.actual < c.base && <Text size="small" className="text-ui-fg-subtle"><T>La normal es</T> <T>{c.base}</T>%</Text>}
             </div>
             <div className="rounded-lg border border-ui-border-base p-3">
-              <Text size="small" className="text-ui-fg-subtle">Artículos que cuentan (últimos {c.dias} días)</Text>
-              <Text className="text-2xl font-semibold">{c.articulos}</Text>
-              {c.vence && <Text size="small" className="text-ui-fg-subtle">El más viejo deja de contar el {new Date(c.vence).toLocaleDateString("es-MX")}</Text>}
+              <Text size="small" className="text-ui-fg-subtle"><T>Artículos que cuentan (últimos</T> <T>{c.dias}</T> <T>días)</T></Text>
+              <Text className="text-2xl font-semibold"><T>{c.articulos}</T></Text>
+              {c.vence && <Text size="small" className="text-ui-fg-subtle"><T>El más viejo deja de contar el</T> {new Date(c.vence).toLocaleDateString("es-MX")}</Text>}
             </div>
             <div className="rounded-lg border border-ui-border-base p-3">
-              <Text size="small" className="text-ui-fg-subtle">Así baja</Text>
+              <Text size="small" className="text-ui-fg-subtle"><T>Así baja</T></Text>
               {c.escalones.filter((e) => c.base != null && e.pct < c.base).map((e) => (
                 <Text key={e.articulos} size="small">
-                  {e.articulos} {e.articulos === 1 ? "artículo" : "artículos o más"}: <strong>{e.pct}%</strong>
+                  <T>{e.articulos}</T> <T>{e.articulos === 1 ? "artículo" : "artículos o más"}</T>: <strong><T>{e.pct}</T>%</strong>
                 </Text>
               ))}
               {c.siguiente && (
                 <Text size="small" className="text-ui-fg-interactive">
-                  Te falta{c.siguiente.articulos - c.articulos === 1 ? "" : "n"} {c.siguiente.articulos - c.articulos} para pagar {c.siguiente.pct}%
+                  <T>Te falta</T><T>{c.siguiente.articulos - c.articulos === 1 ? "" : "n"}</T> {c.siguiente.articulos - c.articulos} <T>para pagar</T> <T>{c.siguiente.pct}</T>%
                 </Text>
               )}
             </div>
           </div>
         )}
         <Text size="small" className="text-ui-fg-subtle">
-          Cuenta cada artículo aprobado durante {c?.dias ?? 90} días desde que lo aprobamos. Aplica a ventas nuevas de tus cursos; los
+          <T>Cuenta cada artículo aprobado durante</T> {c?.dias ?? 90} <T>días desde que lo aprobamos. Aplica a ventas nuevas de tus cursos; los
           libros y tus demás productos siguen igual. Tienen que ser tuyos (no copiados) y útiles, no un anuncio: los anuncios y el
-          contenido copiado se rechazan.
+          contenido copiado se rechazan.</T>
         </Text>
         {!abierto && (
           <div>
-            <Button onClick={nuevo}>Escribir un artículo</Button>
+            <Button onClick={nuevo}><T>Escribir un artículo</T></Button>
           </div>
         )}
       </Container>
 
       {abierto && (
         <Container className="flex flex-col gap-3 p-6">
-          <Heading level="h2">{f.id ? "Editar artículo" : "Artículo nuevo"}</Heading>
+          <Heading level="h2"><T>{f.id ? "Editar artículo" : "Artículo nuevo"}</T></Heading>
           <div className="flex flex-col gap-1">
-            <Label>Título *</Label>
-            <Input value={f.titulo} maxLength={160} onChange={(e) => setF({ ...f, titulo: e.target.value })} placeholder="Cómo fresar aluminio en router CNC sin romper fresas" />
+            <Label><T>Título *</T></Label>
+            <Input value={f.titulo} maxLength={160} onChange={(e) => setF({ ...f, titulo: e.target.value })} placeholder={traducir("Cómo fresar aluminio en router CNC sin romper fresas")} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <Label>Tema</Label>
+              <Label><T>Tema</T></Label>
               <select className="rounded-md border border-ui-border-base bg-ui-bg-field px-2 py-1.5 text-sm" value={f.categoria} onChange={(e) => setF({ ...f, categoria: e.target.value })}>
                 {SECCIONES.map(([v, t]) => (
                   <option key={v} value={v}>{t}</option>
@@ -247,7 +250,7 @@ export default function BlogTallerPage() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label>Portada (opcional)</Label>
+              <Label><T>Portada (opcional)</T></Label>
               <div className="flex items-center gap-2">
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={elegirPortada} disabled={ocupado} className="text-sm" />
                 {f.portada && <img src={f.portada} alt="" className="h-10 w-16 rounded object-cover" />}
@@ -255,62 +258,62 @@ export default function BlogTallerPage() {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Label>Resumen (opcional, sale en la lista y en Google)</Label>
+            <Label><T>Resumen (opcional, sale en la lista y en Google)</T></Label>
             <Input value={f.resumen} maxLength={300} onChange={(e) => setF({ ...f, resumen: e.target.value })} />
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <Label>Artículo *</Label>
+              <Label><T>Artículo *</T></Label>
               <div className="flex items-center gap-3">
                 <label className="cursor-pointer text-xs text-ui-fg-interactive">
-                  Agregar foto
+                  <T>Agregar foto</T>
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={agregarFoto} disabled={ocupado} className="hidden" />
                 </label>
                 <button type="button" className="text-xs text-ui-fg-interactive" onClick={() => setAyuda(!ayuda)}>
-                  {ayuda ? "Ocultar ayuda" : "¿Cómo doy formato?"}
+                  <T>{ayuda ? "Ocultar ayuda" : "¿Cómo doy formato?"}</T>
                 </button>
               </div>
             </div>
             {ayuda && <pre className="whitespace-pre-wrap rounded-md bg-ui-bg-subtle p-3 text-xs">{AYUDA}</pre>}
-            <Textarea rows={18} value={f.texto} onChange={(e) => setF({ ...f, texto: e.target.value })} placeholder="Escribe aquí. Deja una línea vacía entre párrafos." />
+            <Textarea rows={18} value={f.texto} onChange={(e) => setF({ ...f, texto: e.target.value })} placeholder={traducir("Escribe aquí. Deja una línea vacía entre párrafos.")} />
             <Text size="small" className={f.texto.trim().length < reglas.min_letras ? "text-ui-fg-subtle" : "text-ui-fg-interactive"}>
-              {f.texto.trim().length} letras · mínimo {reglas.min_letras}
+              <T>{f.texto.trim().length}</T> <T>letras · mínimo</T> <T>{reglas.min_letras}</T>
             </Text>
           </div>
-          {error && <Text className="text-ui-fg-error">{error}</Text>}
+          {error && <Text className="text-ui-fg-error"><T>{error}</T></Text>}
           <div className="flex gap-2">
-            <Button onClick={enviar} isLoading={ocupado}>{f.id ? "Guardar y mandar a revisión" : "Mandar a revisión"}</Button>
-            <Button variant="secondary" onClick={() => setAbierto(false)}>Cancelar</Button>
+            <Button onClick={enviar} isLoading={ocupado}><T>{f.id ? "Guardar y mandar a revisión" : "Mandar a revisión"}</T></Button>
+            <Button variant="secondary" onClick={() => setAbierto(false)}><T>Cancelar</T></Button>
           </div>
         </Container>
       )}
 
       <Container className="flex flex-col gap-2 p-6">
-        <Heading level="h2">Mis artículos</Heading>
+        <Heading level="h2"><T>Mis artículos</T></Heading>
         {articulos === null ? (
-          <Text className="text-ui-fg-subtle">Cargando…</Text>
+          <Text className="text-ui-fg-subtle"><T>Cargando…</T></Text>
         ) : articulos.length === 0 ? (
-          <Text className="text-ui-fg-subtle">Todavía no escribes ninguno. El primero ya baja tu comisión.</Text>
+          <Text className="text-ui-fg-subtle"><T>Todavía no escribes ninguno. El primero ya baja tu comisión.</T></Text>
         ) : (
           articulos.map((a) => (
             <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-ui-border-base py-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <Text className="font-medium">{a.title}</Text>
-                  <Badge color={ESTADO[a.estado].color} size="2xsmall">{ESTADO[a.estado].texto}</Badge>
+                  <Text className="font-medium"><T>{a.title}</T></Text>
+                  <Badge color={ESTADO[a.estado].color} size="2xsmall"><T>{ESTADO[a.estado].texto}</T></Badge>
                 </div>
                 {a.estado === "rechazado" && a.motivo_revision && (
-                  <Text size="small" className="text-ui-fg-error">Qué corregir: {a.motivo_revision}</Text>
+                  <Text size="small" className="text-ui-fg-error"><T>Qué corregir:</T> <T>{a.motivo_revision}</T></Text>
                 )}
               </div>
               <div className="flex gap-2">
                 {a.estado === "publicado" && (
                   <a href={BLOG + a.slug} target="_blank" rel="noreferrer">
-                    <Button variant="secondary" size="small">Ver</Button>
+                    <Button variant="secondary" size="small"><T>Ver</T></Button>
                   </a>
                 )}
-                <Button variant="secondary" size="small" onClick={() => editar(a)}>Editar</Button>
-                <Button variant="danger" size="small" onClick={() => void borrar(a)}>Borrar</Button>
+                <Button variant="secondary" size="small" onClick={() => editar(a)}><T>Editar</T></Button>
+                <Button variant="danger" size="small" onClick={() => void borrar(a)}><T>Borrar</T></Button>
               </div>
             </div>
           ))

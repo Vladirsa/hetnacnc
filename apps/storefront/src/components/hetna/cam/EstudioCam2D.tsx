@@ -709,7 +709,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           }}
           className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[12px] border-2 border-dashed border-[#2B3648] p-4 text-center hover:border-[#C2560A] hover:bg-[#C2560A]/5"
         >
-          <span className="text-[14px] font-semibold">{archivo ? `${archivo.name} (cambiar)` : "Sube tu DXF o SVG"}</span>
+          <span className="text-[14px] font-semibold"><T>{archivo ? `${archivo.name} (cambiar)` : "Sube tu DXF o SVG"}</T></span>
           <span className="text-[11.5px] text-[#8A97AB]"><T>Una capa por operación ayuda · no guardamos tu archivo</T></span>
           <input type="file" accept=".dxf,.svg,image/vnd.dxf,application/dxf,image/svg+xml" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
@@ -747,7 +747,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             </optgroup>
           </Select>
           <button type="button" onClick={() => setEditar(!editar)} className="self-start text-[12.5px] font-semibold text-[#F28A3C] hover:underline">
-            {editar ? "Cerrar mis máquinas y fresas" : "Mis máquinas y fresas"}
+            <T>{editar ? "Cerrar mis máquinas y fresas" : "Mis máquinas y fresas"}</T>
           </button>
           {editar && <EditorMias datos={mias} guardar={guardarMias} sesion={sesion} aviso={guardado} />}
           {!laser && (
@@ -774,7 +774,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             {extras.map((x, k) => (
               <div key={x.id} className="flex items-end gap-2 rounded-[8px] bg-[#1C2431] px-2.5 py-2">
                 <span className="min-w-0 flex-1 truncate text-[12.5px] text-white" title={x.nombre}>
-                  {x.nombre}
+                  <T>{x.nombre}</T>
                 </span>
                 <label className="flex items-center gap-1.5 text-[12px] text-[#8A97AB]">
                   <T>Copias</T>
@@ -806,7 +806,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               {variasCopias && `Se acomodaron ${acomodo.puestas}: ocupan ${Math.round(acomodo.ocupa[0])} × ${Math.round(acomodo.ocupa[1])} mm. La separación debe ser mayor que el diámetro de la fresa.`}
             </span>
           )}
-          {!anidarHojas && acomodo?.aviso && <Aviso>{acomodo.aviso}</Aviso>}
+          {!anidarHojas && acomodo?.aviso && <Aviso><T>{acomodo.aviso}</T></Aviso>}
           <div className="flex flex-col gap-2 rounded-[10px] border border-[#2B3648] bg-[#0F151E] p-2.5">
             <Interruptor
               etiqueta="Anidar en varias hojas"
@@ -824,9 +824,9 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             {anidarHojas && anidado && (
               <>
                 <p className="m-0 rounded-[8px] bg-[#C2560A]/10 px-2.5 py-2 text-[12px] leading-snug text-[#F2D29B]">
-                  {anidado.totalPiezas} <T>piezas en</T> <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> <T>de</T> {numero(hoja.ancho) || 1220} × {numero(hoja.largo) || 2440} <T>mm · aprovechamiento</T>{" "}
+                  <T>{anidado.totalPiezas}</T> <T>piezas en</T> <b className="text-white"><T>{anidado.hojas.length}</T> <T>{anidado.hojas.length === 1 ? "hoja" : "hojas"}</T></b> <T>de</T> {numero(hoja.ancho) || 1220} × {numero(hoja.largo) || 2440} <T>mm · aprovechamiento</T><T>{" "}</T>
                   <b className="text-white">{Math.round(anidado.aprovechamiento * 100)}%</b>
-                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en la hoja:</T> {anidado.noCaben.slice(0, 3).join(", ")}.</span>}
+                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en la hoja:</T> <T>{anidado.noCaben.slice(0, 3).join(", ")}</T>.</span>}
                 </p>
                 {anidado.hojas.length > 1 && (
                   <div className="flex flex-col gap-1.5">
@@ -844,7 +844,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                           }}
                           className={`rounded-[8px] px-2.5 py-1 text-[12px] font-semibold ${hojaActual === i ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
                         >
-                          <T>Hoja</T> {i + 1} · {h.colocaciones.length}
+                          <T>Hoja</T> {i + 1} · <T>{h.colocaciones.length}</T>
                         </button>
                       ))}
                     </div>
@@ -982,7 +982,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     </div>
                     {o.tipo !== "grabado_v" && o.largoCorte > 0 && numero(o.profundidad) > o.largoCorte && (
                       <span className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">
-                        <T>La profundidad es mayor que el largo de corte de esta fresa (</T>{o.largoCorte} <T>mm): el zanco rozaría el material.</T>
+                        <T>La profundidad es mayor que el largo de corte de esta fresa (</T><T>{o.largoCorte}</T> <T>mm): el zanco rozaría el material.</T>
                       </span>
                     )}
                     {o.tipo === "acanalado" && <CampoNum etiqueta="Largo de la rampa en cada punta" valor={o.rampa} cambiar={(v) => cambiarOp(i, { rampa: v })} />}
@@ -999,9 +999,9 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                         <Interruptor etiqueta="Rosca exterior (sobre un perno)" activo={o.roscaExt} cambiar={(v) => cambiarOp(i, { roscaExt: v })} />
                         <Interruptor etiqueta="Rosca izquierda" activo={o.roscaIzq} cambiar={(v) => cambiarOp(i, { roscaIzq: v })} />
                         <span className="text-[11.5px] leading-snug text-[#8A97AB]">
-                          {o.roscaExt
+                          <T>{o.roscaExt
                             ? "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm). El perno ya debe estar cilindrado a ese diámetro y con el material de alrededor retirado: la fresa baja por fuera, a un lado del perno."
-                            : "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso)."}{" "}
+                            : "Dibuja el círculo con el diámetro nominal de la rosca (M10 = círculo de 10 mm) y haz antes el barreno previo (diámetro nominal menos el paso)."}</T><T>{" "}</T>
                           <T>En "Ø fresa" va el diámetro de corte de tu fresa de roscar de un solo perfil.</T>
                         </span>
                       </>
@@ -1035,7 +1035,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                     )}
                     <details className="rounded-[8px] bg-[#151C27] px-2.5 py-2">
                       <summary className="cursor-pointer text-[12px] text-[#C9D2E0]">
-                        <T>Parámetros de corte</T>{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}
+                        <T>Parámetros de corte</T><T>{[o.pasada, o.rpm, o.avance, o.penetracion, o.traslape].some((v) => numero(v) > 0) ? " · propios" : " · automáticos por material"}</T>
                       </summary>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         <CampoNum etiqueta="Prof. por pasada" valor={o.pasada} cambiar={(v) => cambiarOp(i, { pasada: v })} />
@@ -1075,11 +1075,11 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           disabled={trabajando || !archivo}
           className="rounded-[10px] bg-[#C2560A] px-4 py-3 text-[14px] font-bold text-white hover:bg-[#A84A08] disabled:opacity-50"
         >
-          {trabajando ? "Calculando…" : "Calcular trayectoria"}
+          <T>{trabajando ? "Calculando…" : "Calcular trayectoria"}</T>
         </button>
         {error && (
           <Aviso tipo="error">
-            <b><T>{error.mensaje}</T></b> {error.remedio}
+            <b><T>{error.mensaje}</T></b> <T>{error.remedio}</T>
           </Aviso>
         )}
       </aside>
@@ -1096,7 +1096,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               aria-pressed={vista === v}
               className={`rounded-[7px] px-3 py-1 font-semibold disabled:opacity-40 ${vista === v ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "text-[#8A97AB] hover:text-white"}`}
             >
-              {v === "pieza" ? "Pieza" : v === "trayectoria" ? "Trayectoria" : "Material quitado"}
+              <T>{v === "pieza" ? "Pieza" : v === "trayectoria" ? "Trayectoria" : "Material quitado"}</T>
             </button>
           ))}
           {vista === "pieza" && capas.length > 1 && (
@@ -1104,7 +1104,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
               {capas.map((c, i) => (
                 <span key={c} className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full" style={{ background: COLORES_CAPA[i % COLORES_CAPA.length] }} />
-                  {c}
+                  <T>{c}</T>
                 </span>
               ))}
             </span>
@@ -1112,11 +1112,11 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           {plan && (
             <span className="ml-auto flex flex-wrap gap-1.5">
               <span className="rounded-full border border-[#1F5A3A] px-2 py-0.5 text-[11px] text-[#9BE3B8]">
-                {plan.operaciones.length} {plan.operaciones.length === 1 ? "operación" : "operaciones"}
+                <T>{plan.operaciones.length}</T> <T>{plan.operaciones.length === 1 ? "operación" : "operaciones"}</T>
               </span>
               {plan.advertencias.length > 0 && (
                 <span className="rounded-full border border-[#6a3a14] px-2 py-0.5 text-[11px] text-[#F28A3C]">
-                  {plan.advertencias.length} {plan.advertencias.length === 1 ? "aviso" : "avisos"}
+                  <T>{plan.advertencias.length}</T> <T>{plan.advertencias.length === 1 ? "aviso" : "avisos"}</T>
                 </span>
               )}
             </span>
@@ -1163,7 +1163,7 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                 className="grid h-7 w-7 place-items-center rounded-full bg-[#C2560A] text-white"
                 aria-label={corriendo ? "Pausar simulación" : "Simular corte"}
               >
-                {corriendo ? "❚❚" : "▶"}
+                <T>{corriendo ? "❚❚" : "▶"}</T>
               </button>
               <input
                 type="range"
@@ -1191,11 +1191,11 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
           )}
           {dibujo && (
             <span>
-              <T>Trazos:</T> <b className="text-white">{dibujo.trazos.length}</b> <T>· Capas:</T> <b className="text-white">{capas.length}</b>
+              <T>Trazos:</T> <b className="text-white"><T>{dibujo.trazos.length}</T></b> <T>· Capas:</T> <b className="text-white"><T>{capas.length}</T></b>
             </span>
           )}
           <span><T>Unidades: mm</T></span>
-          <span><T>Origen:</T> {origen || esSVG ? "esquina inferior izquierda de la pieza" : "el del archivo"}<T>, cara superior</T></span>
+          <span><T>Origen:</T> <T>{origen || esSVG ? "esquina inferior izquierda de la pieza" : "el del archivo"}</T><T>, cara superior</T></span>
         </div>
       </section>
 
@@ -1221,8 +1221,8 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
                   <li key={i} className="flex list-none items-baseline justify-between gap-2 rounded-[8px] bg-[#151C27] px-2.5 py-1.5 text-[12.5px]">
                     <span>
                       <b>{i + 1}.</b> {NOMBRE_OP[o.tipo] || o.nombre}
-                      {o.capa && <span className="text-[#8A97AB]"> · {o.capa}</span>}
-                      <span className="block text-[11px] text-[#8A97AB]">{o.figuras} <T>figura(s)</T></span>
+                      {o.capa && <span className="text-[#8A97AB]"> · <T>{o.capa}</T></span>}
+                      <span className="block text-[11px] text-[#8A97AB]"><T>{o.figuras}</T> <T>figura(s)</T></span>
                     </span>
                     <span className="shrink-0 tabular-nums text-[#C9D2E0]">{reloj(o.minutos)}</span>
                   </li>
@@ -1236,17 +1236,17 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             <div className="flex flex-col gap-1.5">
               <Boton onClick={hojaDeTrabajo}><T>Hoja de trabajo para el operador</T></Boton>
               <Boton tipo="verde" onClick={cotizar}><T>Cotizar con mi tarifa</T></Boton>
-              {avisoDoc && <span className="text-[12px] text-[#F28A3C]">{avisoDoc}</span>}
+              {avisoDoc && <span className="text-[12px] text-[#F28A3C]"><T>{avisoDoc}</T></span>}
             </div>
           )}
         </Seccion>
         {plan?.advertencias.map((a) => (
-          <Aviso key={a}>{a}</Aviso>
+          <Aviso key={a}><T>{a}</T></Aviso>
         ))}
         {gcode && (
           <Seccion titulo="G-code" nota="Pruébalo primero en vacío y con avance reducido: los parámetros dependen de tu máquina.">
             <Boton tipo="primario" onClick={descargar}>
-              {bajando ? "Preparando…" : `Descargar .${EXTENSION[maquina.post]}`}
+              <T>{bajando ? "Preparando…" : `Descargar .${EXTENSION[maquina.post]}`}</T>
             </Boton>
             {negado ? (
               <CandadoCam negado={negado} oscuro regreso="/mx/cam/subir" />
@@ -1255,10 +1255,10 @@ ${plan.advertencias.length ? `<h2>Avisos</h2><ul>${plan.advertencias.map((a) => 
             )}
             {bajado && sesion && ultimoGcode.current && (
               <div className="flex flex-col gap-1.5">
-                <Boton onClick={guardarEnNube}>{nube.estado === "guardando" ? "Guardando…" : nube.estado === "ok" ? "✓ En tu HetNa Cloud" : "☁️ Guardar en HetNa Cloud"}</Boton>
+                <Boton onClick={guardarEnNube}><T>{nube.estado === "guardando" ? "Guardando…" : nube.estado === "ok" ? "✓ En tu HetNa Cloud" : "☁️ Guardar en HetNa Cloud"}</T></Boton>
                 {nube.texto && (
                   <span className={`text-[12px] leading-snug ${nube.estado === "ok" ? "text-[#9BE3B8]" : "text-[#F28A3C]"}`}>
-                    <T>{nube.texto}</T>{" "}
+                    <T>{nube.texto}</T><T>{" "}</T>
                     {nube.estado === "ok" && <a href="/seller/nube" className="underline"><T>Abrir mi nube</T></a>}
                     {nube.sinTaller && <a href="/mx/talleres/unete" className="underline"><T>Abrir mi taller</T></a>}
                   </span>
@@ -1300,7 +1300,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
   const [ficha, setFicha] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-[#2B3648] bg-[#151C27] p-3">
-      <span className="text-[12px] text-[#8A97AB]">{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</span>
+      <span className="text-[12px] text-[#8A97AB]"><T>{sesion ? "Se guardan en tu cuenta." : "Sin sesión se guardan en este navegador. Inicia sesión para tenerlas en tu cuenta."}</T></span>
       <b className="text-[12.5px]"><T>Máquinas</T></b>
       {datos.maquinas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
@@ -1333,22 +1333,22 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
       {datos.fresas.length > 0 && (
         <ul className="m-0 flex flex-col gap-1 p-0">
           {porGrupo(datos.fresas).flatMap(([g, lista]) => [
-            ...(g || porGrupo(datos.fresas).length > 1 ? [<li key={`g-${g}`} className="list-none pt-1 text-[11px] font-bold uppercase tracking-wide text-[#8A97AB]">{g || "Sin grupo"}</li>] : []),
+            ...(g || porGrupo(datos.fresas).length > 1 ? [<li key={`g-${g}`} className="list-none pt-1 text-[11px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>{g || "Sin grupo"}</T></li>] : []),
             ...lista.map((x) => (
             <li key={x.id} className="flex list-none items-center justify-between gap-2 rounded-[6px] bg-[#1C2431] px-2 py-1.5 text-[12.5px]">
               <button type="button" onClick={() => setFicha(x.id)} className="min-w-0 flex-1 text-left hover:text-[#F28A3C]" title="Editar">
                 <span className="block truncate font-semibold">
-                  {x.numero ? `T${x.numero} · ` : ""}
-                  {x.nombre}
+                  <T>{x.numero ? `T${x.numero} · ` : ""}</T>
+                  <T>{x.nombre}</T>
                 </span>
                 <span className="block truncate text-[11.5px] text-[#8A97AB]">
-                  Ø{x.diametro}
-                  {x.tipo === "v" ? ` · ${x.angulo}°` : ""}
-                  {x.zanco ? ` · zanco Ø${x.zanco}` : ""}
-                  {x.largoCorte ? ` · filo ${x.largoCorte}` : ""}
-                  {x.filos ? ` · ${x.filos} ${x.filos === 1 ? "filo" : "filos"}` : ""}
-                  {x.rpm ? ` · ${x.rpm} rpm` : ""}
-                  {x.avance ? ` · ${x.avance} mm/min` : ""}
+                  Ø<T>{x.diametro}</T>
+                  <T>{x.tipo === "v" ? ` · ${x.angulo}°` : ""}</T>
+                  <T>{x.zanco ? ` · zanco Ø${x.zanco}` : ""}</T>
+                  <T>{x.largoCorte ? ` · filo ${x.largoCorte}` : ""}</T>
+                  <T>{x.filos ? ` · ${x.filos} ${x.filos === 1 ? "filo" : "filos"}` : ""}</T>
+                  <T>{x.rpm ? ` · ${x.rpm} rpm` : ""}</T>
+                  <T>{x.avance ? ` · ${x.avance} mm/min` : ""}</T>
                 </span>
               </button>
               <button type="button" onClick={() => guardar({ ...datos, fresas: datos.fresas.filter((y) => y.id !== x.id) })} className="text-[#F6B8AE] hover:text-white" aria-label="Quitar">
@@ -1374,7 +1374,7 @@ function EditorMias({ datos, guardar, sesion, aviso }: { datos: DatosCam; guarda
           }}
         />
       )}
-      {aviso && <span className="text-[12px] text-[#9BE3B8]">{aviso}</span>}
+      {aviso && <span className="text-[12px] text-[#9BE3B8]"><T>{aviso}</T></span>}
     </div>
   )
 }

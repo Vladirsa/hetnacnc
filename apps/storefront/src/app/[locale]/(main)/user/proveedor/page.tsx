@@ -35,8 +35,8 @@ function Orden({ o }: { o: OrdenProveedor }) {
     <article className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <span className="text-[12px] font-bold text-[#6B6A63]">{o.folio}</span>
-          <span className="ml-2 text-[16px] font-semibold text-[#1B1B18]">{o.taller}</span>
+          <span className="text-[12px] font-bold text-[#6B6A63]"><TS>{o.folio}</TS></span>
+          <span className="ml-2 text-[16px] font-semibold text-[#1B1B18]"><TS>{o.taller}</TS></span>
         </div>
         <Estado o={o} />
       </header>
@@ -57,23 +57,23 @@ function Orden({ o }: { o: OrdenProveedor }) {
           {o.renglones.map((r, i) => (
             <tr key={i} className="border-t border-[#F1F0EC]">
               <td className="py-1.5 pr-2 align-top whitespace-nowrap">
-                {cant(r.cantidad)} {r.unidad || ""}
+                {cant(r.cantidad)} <TS>{r.unidad || ""}</TS>
                 {r.recibido > 0 && <span className="block text-[12px] text-[#0F7A4A]"><TS>recibido</TS> {cant(r.recibido)}</span>}
               </td>
               <td className="py-1.5 pr-2 align-top"><TS>{r.descripcion}</TS></td>
-              <td className="py-1.5 text-right align-top whitespace-nowrap">{r.costo_unitario > 0 ? `${PESOS.format(r.costo_unitario)} c/u` : "—"}</td>
+              <td className="py-1.5 text-right align-top whitespace-nowrap"><TS>{r.costo_unitario > 0 ? `${PESOS.format(r.costo_unitario)} c/u` : "—"}</TS></td>
             </tr>
           ))}
         </tbody>
       </table>
       {o.total > 0 && <p className="m-0 mt-2 text-right text-[15px] font-bold text-[#1B1B18]"><TS>Total</TS> {PESOS.format(o.total)}</p>}
-      {o.notas && <p className="m-0 mt-2 rounded-[10px] bg-[#FAF9F6] px-3 py-2 text-[13.5px] text-[#40403A]"><TS>Nota del taller:</TS> {o.notas}</p>}
+      {o.notas && <p className="m-0 mt-2 rounded-[10px] bg-[#FAF9F6] px-3 py-2 text-[13.5px] text-[#40403A]"><TS>Nota del taller:</TS> <TS>{o.notas}</TS></p>}
 
       {(o.confirmada_en || o.marcada_enviada_en) && (
         <p className="m-0 mt-3 text-[13.5px] text-[#0E2A5C]">
           {o.fecha_compromiso && <><TS>Te comprometiste a entregar el</TS> {fechaSegura(DIA, o.fecha_compromiso)}. </>}
           {o.marcada_enviada_en && <><TS>Marcaste que la enviaste el</TS> {fechaSegura(MOMENTO, o.marcada_enviada_en)}.</>}
-          {o.nota_proveedor && <span className="block text-[#40403A]"><TS>Tu nota:</TS> {o.nota_proveedor}</span>}
+          {o.nota_proveedor && <span className="block text-[#40403A]"><TS>Tu nota:</TS> <TS>{o.nota_proveedor}</TS></span>}
         </p>
       )}
 
@@ -118,14 +118,14 @@ export default async function ProveedorPage() {
   if (!d.correo_confirmado) {
     return (
       <Caja titulo="Confirma tu correo">
-        <p><TS>Para ver órdenes de compra necesitas confirmar tu correo</TS>{d.correo ? ` (${d.correo})` : ""}<TS>. Abre la liga que te mandamos al crear tu cuenta.</TS></p>
+        <p><TS>Para ver órdenes de compra necesitas confirmar tu correo</TS><TS>{d.correo ? ` (${d.correo})` : ""}</TS><TS>. Abre la liga que te mandamos al crear tu cuenta.</TS></p>
       </Caja>
     )
   }
   if (!d.es_proveedor) {
     return (
       <Caja titulo="Todavía no tienes órdenes">
-        <p><TS>Ningún taller ha dado de alta el correo</TS> <b>{d.correo}</b> <TS>como proveedor. Pídele al taller que lo ponga tal cual en su lista de proveedores de la app HETNA Cotizador.</TS></p>
+        <p><TS>Ningún taller ha dado de alta el correo</TS> <b><TS>{d.correo}</TS></b> <TS>como proveedor. Pídele al taller que lo ponga tal cual en su lista de proveedores de la app HETNA Cotizador.</TS></p>
       </Caja>
     )
   }
@@ -143,7 +143,7 @@ export default async function ProveedorPage() {
           <p className="mt-3 rounded-[10px] border border-[#F2D9C4] bg-[#FFF8F1] px-4 py-3 text-[13.5px] text-[#6B4A2B]"><TS>Por ahora sólo puedes consultar las órdenes; las confirmaciones en línea se activan pronto.</TS></p>
         )}
         <section className="mt-8">
-          <h2 className="text-[19px] font-bold text-[#1B1B18]"><TS>Por surtir (</TS>{abiertas.length})</h2>
+          <h2 className="text-[19px] font-bold text-[#1B1B18]"><TS>Por surtir (</TS><TS>{abiertas.length}</TS>)</h2>
           {abiertas.length === 0 && <p className="text-[14.5px] text-[#6B6A63]"><TS>No tienes órdenes pendientes.</TS></p>}
           <div className="mt-3 flex flex-col gap-3">{abiertas.map((o) => <Orden key={o.id} o={o} />)}</div>
         </section>

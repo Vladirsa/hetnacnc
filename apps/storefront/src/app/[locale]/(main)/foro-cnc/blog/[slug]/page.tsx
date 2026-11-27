@@ -86,13 +86,13 @@ export default async function ArticuloBlog({ params }: Props) {
           />
           <article className="bg-white border border-[#E7E4DC] rounded-[16px] p-5 sm:p-8 flex flex-col gap-4">
             <p className="m-0 text-[12px] font-bold uppercase tracking-wide">
-              <span className={a.guia ? "text-[#16794F]" : "text-[#C2560A]"}>{a.guia ? "Guía" : "Artículo"}</span>
+              <span className={a.guia ? "text-[#16794F]" : "text-[#C2560A]"}><TS>{a.guia ? "Guía" : "Artículo"}</TS></span>
               <span className="text-[#9A978C] font-medium normal-case tracking-normal">
-                {" "}· {a.autor || "HETNA CNC"} · {new Date(a.published_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
+                <TS>{" "}</TS>· <TS>{a.autor || "HETNA CNC"}</TS> · {new Date(a.published_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
               </span>
             </p>
-            <h1 className="m-0 font-display text-[26px] sm:text-[34px] leading-[1.2] font-bold text-[#1B1B18]">{a.title}</h1>
-            <p className="m-0 text-[16px] text-[#55544D] leading-relaxed">{a.excerpt}</p>
+            <h1 className="m-0 font-display text-[26px] sm:text-[34px] leading-[1.2] font-bold text-[#1B1B18]"><TS>{a.title}</TS></h1>
+            <p className="m-0 text-[16px] text-[#55544D] leading-relaxed"><TS>{a.excerpt}</TS></p>
             {video ? (
               <VideoLigero video={video} />
             ) : (
@@ -114,7 +114,7 @@ export default async function ArticuloBlog({ params }: Props) {
             <span>
               <span className="block font-bold text-[#1B1B18]"><TS>¿Te quedó una duda?</TS></span>
               <span className="text-[14px] text-[#55544D]">
-                <TS>Pregúntala en el foro</TS>{seccion ? ` de ${seccion.nombre}` : ""}<TS>: talleres y makers de México te ayudan.</TS>
+                <TS>Pregúntala en el foro</TS><TS>{seccion ? ` de ${seccion.nombre}` : ""}</TS><TS>: talleres y makers de México te ayudan.</TS>
               </span>
             </span>
             <LocalizedClientLink
@@ -129,7 +129,7 @@ export default async function ArticuloBlog({ params }: Props) {
         <aside className={`flex flex-col gap-4 ${LATERAL_FIJO}`}>
           {talleres && (
             <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
-              <strong className="text-[14.5px]"><TS>Talleres de</TS> {talleres.proceso}</strong>
+              <strong className="text-[14.5px]"><TS>Talleres de</TS> <TS>{talleres.proceso}</TS></strong>
               <span className="text-[13px] text-[#C9D2E0]"><TS>Ve quién hace esto cerca de ti y pídele cotización.</TS></span>
             </LocalizedClientLink>
           )}
@@ -153,7 +153,7 @@ export default async function ArticuloBlog({ params }: Props) {
           )}
           {seccion && (
             <LocalizedClientLink href={`/foro-cnc/${seccion.slug}`} className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 hover:border-[#C2560A]">
-              <strong className="block text-[14px] text-[#1B1B18]"><TS>Preguntas de</TS> {seccion.nombre}</strong>
+              <strong className="block text-[14px] text-[#1B1B18]"><TS>Preguntas de</TS> <TS>{seccion.nombre}</TS></strong>
               <span className="text-[13px] text-[#6B6A63]"><TS>Lo que la comunidad está resolviendo ahora.</TS></span>
             </LocalizedClientLink>
           )}

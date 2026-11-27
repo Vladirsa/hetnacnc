@@ -19,7 +19,7 @@ export default function CamStudioTorno() {
     <div className="tema-estudio flex-1 px-3 py-4 lg:px-5">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="m-0 text-[16px] font-bold">
-          <TS>Torno</TS> <span className="text-[#F28A3C]"><TS>4 ejes</TS></span>{" "}
+          <TS>Torno</TS> <span className="text-[#F28A3C]"><TS>4 ejes</TS></span><TS>{" "}</TS>
           <span className="text-[12.5px] font-normal text-[#8A97AB]"><TS>balaustres, patas y columnas con tu eje rotativo</TS></span>
         </h1>
         <LocalizedClientLink href="/cam/lab" className="text-[12.5px] font-semibold text-[#F28A3C] hover:underline">

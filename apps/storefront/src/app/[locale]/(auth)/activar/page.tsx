@@ -39,10 +39,10 @@ export default async function ActivarPage({ searchParams }: Props) {
         </div>
       ) : datos.cuenta_existe ? (
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#9A4A06]"><TS>Afiliado</TS> {datos.numero}</p>
+          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#9A4A06]"><TS>Afiliado</TS> <TS>{datos.numero}</TS></p>
           <h1 className="mt-1 text-2xl font-extrabold text-[#142033]"><TS>Ya tienes cuenta</TS></h1>
           <p className="mt-2 text-[#40403A]">
-            {datos.email} <TS>ya está registrado. Inicia sesión para ver tus solicitudes y pedidos.</TS>
+            <TS>{datos.email}</TS> <TS>ya está registrado. Inicia sesión para ver tus solicitudes y pedidos.</TS>
           </p>
           <LocalizedClientLink href="/login" className="mt-5 inline-flex rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white">
             <TS>Iniciar sesión</TS>

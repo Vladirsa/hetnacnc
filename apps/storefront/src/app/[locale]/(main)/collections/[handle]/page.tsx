@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { metaEnIdioma } from "@/i18n/servidor"
 import NotFound from "@/app/not-found"
 import { Breadcrumbs } from "@/components/atoms/Breadcrumbs/Breadcrumbs"
@@ -94,7 +95,7 @@ const SingleCollectionsPage = async ({
         <Breadcrumbs items={breadcrumbsItems} />
       </div>
 
-      <h1 className="heading-xl uppercase">{collection.title}</h1>
+      <h1 className="heading-xl uppercase"><TS>{collection.title}</TS></h1>
 
       <Suspense fallback={<div data-testid="collection-page-loading"><ProductListingSkeleton /></div>}>
         {bot ? (

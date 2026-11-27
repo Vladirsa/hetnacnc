@@ -63,16 +63,16 @@ export const TarjetaServicio = ({ s }: { s: Servicio }) => (
       <span className="w-11 h-11 rounded-[10px] bg-[#FDEEE1] text-[#C2560A] flex items-center justify-center">
         <ServicioIcono nombre={s.icono} size={24} />
       </span>
-      <span className="text-[12px] font-bold text-[#9A978C]">{s.numero}</span>
+      <span className="text-[12px] font-bold text-[#9A978C]"><T>{s.numero}</T></span>
     </div>
-    <h3 className="font-display text-[18px] font-bold m-0 text-[#1B1B18]">{s.nombre}</h3>
+    <h3 className="font-display text-[18px] font-bold m-0 text-[#1B1B18]"><T>{s.nombre}</T></h3>
     <p className="m-0 text-[14px] text-[#6B6A63] leading-relaxed"><T>{s.resumen}</T></p>
     {subServicios(s.slug).length > 0 && (
       <ul className="m-0 p-0 list-none flex flex-col gap-1">
         {subServicios(s.slug).map((h) => (
           <li key={h.slug} className="text-[13px] text-[#1B1B18] flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C2560A]" />
-            {h.nombre}
+            <T>{h.nombre}</T>
           </li>
         ))}
       </ul>
@@ -113,9 +113,9 @@ export const ArticuloAprendizajeCard = ({ a }: { a: LearningArticle }) => (
     )}
     <div className="p-4 flex flex-col gap-2">
       <h3 className="font-display text-[16px] font-bold m-0 text-[#1B1B18] line-clamp-2">
-        {a.title}
+        <T>{a.title}</T>
       </h3>
-      <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{a.excerpt}</p>
+      <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2"><T>{a.excerpt}</T></p>
       <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
         <T>Leer más</T>
       </span>
@@ -149,13 +149,13 @@ export const CursoCard = ({ c }: { c: Course }) => {
           {NIVEL_ETIQUETA[c.level] || c.level}
         </span>
         <h3 className="font-display text-[16px] font-bold m-0 text-[#1B1B18] line-clamp-2">
-          {c.title}
+          <T>{c.title}</T>
         </h3>
         {c.description && (
-          <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2">{c.description}</p>
+          <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed line-clamp-2"><T>{c.description}</T></p>
         )}
         {totalLecciones > 0 && (
-          <span className="text-[12.5px] text-[#9A978C]">{totalLecciones} <T>lecciones</T></span>
+          <span className="text-[12.5px] text-[#9A978C]"><T>{totalLecciones}</T> <T>lecciones</T></span>
         )}
         <span className="mt-1 text-[13px] font-semibold text-[#B34D07] group-hover:underline">
           <T>Ver curso</T>
@@ -188,12 +188,12 @@ export const ServicioPagina = ({
           <>
             <span>/</span>
             <LocalizedClientLink href={enlaceServicio(padre.slug)} className="hover:text-[#B34D07]">
-              {padre.nombre}
+              <T>{padre.nombre}</T>
             </LocalizedClientLink>
           </>
         )}
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">{s.nombre}</span>
+        <span className="text-[#1B1B18] font-medium"><T>{s.nombre}</T></span>
       </div>
 
       {/* Portada del servicio */}
@@ -201,7 +201,7 @@ export const ServicioPagina = ({
         <div className="bg-[#142033] text-white rounded-[18px] overflow-hidden grid lg:grid-cols-[1.4fr_1fr]">
           <div className="p-6 lg:p-10 flex flex-col gap-4">
             <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#C2560A] px-3 py-1 rounded-full">
-              {s.nombre}
+              <T>{s.nombre}</T>
             </span>
             <h1 className="font-display text-[30px] lg:text-[42px] leading-[1.1] font-bold m-0">
               <T>{s.titulo}</T>
@@ -243,7 +243,7 @@ export const ServicioPagina = ({
               <div className="flex flex-wrap justify-center gap-2 max-w-[260px]">
                 {s.formatos.map((f) => (
                   <span key={f} className="text-[12px] font-semibold bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">
-                    {f}
+                    <T>{f}</T>
                   </span>
                 ))}
               </div>
@@ -259,7 +259,7 @@ export const ServicioPagina = ({
               <T>En desarrollo</T>
             </span>
             <p className="m-0 text-[14px] text-[#5A3A12]">
-              <span>{s.proximo}</span> <span><T>Mientras tanto, te atendemos por WhatsApp.</T></span>
+              <span><T>{s.proximo}</T></span> <span><T>Mientras tanto, te atendemos por WhatsApp.</T></span>
             </p>
           </div>
         )}
@@ -315,7 +315,7 @@ export const ServicioPagina = ({
         {hijos.length > 0 && (
           <section className="flex flex-col gap-4">
             <h2 className="font-display text-[22px] font-bold m-0 text-[#1B1B18]">
-              {s.slug === "laboratorio-cam" ? "Servicios de este laboratorio" : "Herramientas y servicios"}
+              <T>{s.slug === "laboratorio-cam" ? "Servicios de este laboratorio" : "Herramientas y servicios"}</T>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {hijos.map((h) => (
@@ -336,7 +336,7 @@ export const ServicioPagina = ({
                 <span className="text-[#16794F] mt-0.5 shrink-0">
                   <Check />
                 </span>
-                {x}
+                <T>{x}</T>
               </li>
             ))}
           </ul>
@@ -362,7 +362,7 @@ export const ServicioPagina = ({
           <div className="flex flex-wrap gap-2">
             {s.formatos.map((f) => (
               <span key={f} className="text-[12.5px] font-semibold bg-white border border-[#E7E4DC] px-3 py-1 rounded-full">
-                {f}
+                <T>{f}</T>
               </span>
             ))}
           </div>

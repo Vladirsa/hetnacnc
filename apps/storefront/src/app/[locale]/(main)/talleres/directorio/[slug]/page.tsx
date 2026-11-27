@@ -61,9 +61,9 @@ export default async function PerfilDirectorioPage({ params }: Props) {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 py-8 lg:px-8">
       <nav className="mb-4 text-sm text-[#6B675C]">
-        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> ›{" "}
+        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> ›<TS>{" "}</TS>
         <LocalizedClientLink href={e.estado ? `/talleres/directorio?estado=${encodeURIComponent(e.estado)}` : "/talleres/directorio"} className="hover:text-[#C2560A]">
-          <TS>Directorio</TS>{e.estado ? ` · ${e.estado}` : ""}
+          <TS>Directorio</TS><TS>{e.estado ? ` · ${e.estado}` : ""}</TS>
         </LocalizedClientLink>
       </nav>
 
@@ -71,24 +71,24 @@ export default async function PerfilDirectorioPage({ params }: Props) {
         <span className="inline-block rounded-full bg-[#F3F1EA] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]">
           <TS>Perfil no reclamado</TS>
         </span>
-        <h1 className="mt-3 text-3xl font-extrabold text-[#142033]">{e.empresa}</h1>
+        <h1 className="mt-3 text-3xl font-extrabold text-[#142033]"><TS>{e.empresa}</TS></h1>
         <p className="mt-1 text-[#6B675C]">
-          {NOMBRE_TIPO[e.tipo]}
-          {donde ? ` · ${donde}` : ""}
-          {e.tamano ? ` · Empresa ${e.tamano.toLowerCase()}` : ""}
+          <TS>{NOMBRE_TIPO[e.tipo]}</TS>
+          <TS>{donde ? ` · ${donde}` : ""}</TS>
+          <TS>{e.tamano ? ` · Empresa ${e.tamano.toLowerCase()}` : ""}</TS>
         </p>
-        {e.servicios && <p className="mt-4 text-[#1B1B18]">{e.servicios}</p>}
+        {e.servicios && <p className="mt-4 text-[#1B1B18]"><TS>{e.servicios}</TS></p>}
         {/* Quien llega desde Google ve aquí mismo qué hacer (antes el formulario quedaba
             fuera de la pantalla del celular y no había ningún botón arriba). */}
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <a href="#cotizar" className="inline-flex justify-center rounded-xl bg-[#C2560A] px-5 py-3 text-center font-bold text-white hover:brightness-110">
-            <TS>Pide cotización a</TS> {e.empresa.length > 28 ? "esta empresa" : e.empresa}
+            <TS>Pide cotización a</TS> <TS>{e.empresa.length > 28 ? "esta empresa" : e.empresa}</TS>
           </a>
           <LocalizedClientLink
             href={calculadora.href}
             className="inline-flex justify-center rounded-xl border-2 border-[#142033] px-5 py-3 text-center font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
           >
-            <TS>Precio al instante de</TS> {calculadora.nombre}
+            <TS>Precio al instante de</TS> <TS>{calculadora.nombre}</TS>
           </LocalizedClientLink>
         </div>
         <p className="mt-4 text-[13px] text-[#6B675C]">
@@ -104,7 +104,7 @@ export default async function PerfilDirectorioPage({ params }: Props) {
             <b className="text-[#142033]"><TS>1. Te responde la red HETNA.</TS></b> <TS>Tu solicitud llega a los talleres registrados que hacen ese trabajo, para que no te quedes sin propuestas.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
-            <b className="text-[#142033]"><TS>2. Invitamos a</TS> {e.empresa}.</b> <TS>Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.</TS>
+            <b className="text-[#142033]"><TS>2. Invitamos a</TS> <TS>{e.empresa}</TS>.</b> <TS>Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
             <b className="text-[#142033]"><TS>3. Tú eliges.</TS></b> <TS>Comparas propuestas, pagas dentro de HETNA y el taller empieza a producir.</TS>
@@ -117,16 +117,16 @@ export default async function PerfilDirectorioPage({ params }: Props) {
 
       {cercanos.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> {e.estado}</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> <TS>{e.estado}</TS></h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {cercanos.map((t) => (
               <li key={t.id} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
                 <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                  {t.nombre}
+                  <TS>{t.nombre}</TS>
                 </LocalizedClientLink>
                 <p className="text-[13px] text-[#6B675C]">
-                  {[t.perfil.ciudad, t.perfil.estado].filter(Boolean).join(", ")}
-                  {t.verificado ? " · ✓ Verificado" : ""}
+                  <TS>{[t.perfil.ciudad, t.perfil.estado].filter(Boolean).join(", ")}</TS>
+                  <TS>{t.verificado ? " · ✓ Verificado" : ""}</TS>
                 </p>
               </li>
             ))}

@@ -136,45 +136,45 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             </div>
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="m-0 font-display text-[24px] sm:text-[26px] font-bold text-[#1B1B18] break-words">{p.nombre}</h1>
+                <h1 className="m-0 font-display text-[24px] sm:text-[26px] font-bold text-[#1B1B18] break-words"><TS>{p.nombre}</TS></h1>
                 {p.verificado && <Palomita />}
                 {p.taller ? <InsigniaTaller a={p} /> : <InsigniaCuenta tipo={p.tipo} />}
                 {p.abierto && <Abierto />}
               </div>
-              {p.titular && <p className="m-0 text-[16px] text-[#23231F]">{p.titular}</p>}
+              {p.titular && <p className="m-0 text-[16px] text-[#23231F]"><TS>{p.titular}</TS></p>}
               {p.taller && (
                 <LocalizedClientLink
                   href={`/talleres/${p.taller.handle}`}
                   className="self-start mt-1 inline-flex items-center gap-1.5 rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
                 >
-                  <TS>Ver el taller</TS> {p.taller.nombre} <TS>y pedir cotización →</TS>
+                  <TS>Ver el taller</TS> <TS>{p.taller.nombre}</TS> <TS>y pedir cotización →</TS>
                 </LocalizedClientLink>
               )}
               <span className="text-[14px] text-[#6B6A63]">
-                {lugar ? `📍 ${lugar} · ` : ""}
-                {zonas ? `${zonas} · ` : ""}<TS>Miembro desde</TS>{" "}
+                <TS>{lugar ? `📍 ${lugar} · ` : ""}</TS>
+                <TS>{zonas ? `${zonas} · ` : ""}</TS><TS>Miembro desde</TS><TS>{" "}</TS>
                 {new Date(p.creado).toLocaleDateString("es-MX", { month: "long", year: "numeric", timeZone: "America/Mexico_City" })}
               </span>
             </div>
 
             <div className="flex gap-6 flex-wrap text-[14px]">
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{red.seguidores}</strong> <span className="text-[#6B6A63]"><TS>seguidores</TS></span>
+                <strong className="text-[18px] text-[#1B1B18]"><TS>{red.seguidores}</TS></strong> <span className="text-[#6B6A63]"><TS>seguidores</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{cuentas.siguiendo}</strong> <span className="text-[#6B6A63]"><TS>siguiendo</TS></span>
+                <strong className="text-[18px] text-[#1B1B18]"><TS>{cuentas.siguiendo}</TS></strong> <span className="text-[#6B6A63]"><TS>siguiendo</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.reputacion}</strong> <span className="text-[#6B6A63]"><TS>puntos</TS></span>
+                <strong className="text-[18px] text-[#1B1B18]"><TS>{p.reputacion}</TS></strong> <span className="text-[#6B6A63]"><TS>puntos</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.temas}</strong> <span className="text-[#6B6A63]"><TS>temas</TS></span>
+                <strong className="text-[18px] text-[#1B1B18]"><TS>{p.temas}</TS></strong> <span className="text-[#6B6A63]"><TS>temas</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#1B1B18]">{p.respuestas}</strong> <span className="text-[#6B6A63]"><TS>respuestas</TS></span>
+                <strong className="text-[18px] text-[#1B1B18]"><TS>{p.respuestas}</TS></strong> <span className="text-[#6B6A63]"><TS>respuestas</TS></span>
               </span>
               <span>
-                <strong className="text-[18px] text-[#16794F]">{p.mejores}</strong> <span className="text-[#6B6A63]"><TS>mejores respuestas</TS></span>
+                <strong className="text-[18px] text-[#16794F]"><TS>{p.mejores}</TS></strong> <span className="text-[#6B6A63]"><TS>mejores respuestas</TS></span>
               </span>
             </div>
 
@@ -186,7 +186,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                     <span className="text-[13px] font-bold text-[#44433D] w-[88px]"><TS>Máquinas</TS></span>
                     {p.maquinas.map((m) => (
                       <span key={m} className="text-[13px] bg-[#F4F1EA] px-2.5 py-1 rounded-full">
-                        {m}
+                        <TS>{m}</TS>
                       </span>
                     ))}
                   </div>
@@ -196,7 +196,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                     <span className="text-[13px] font-bold text-[#44433D] w-[88px]"><TS>Programas</TS></span>
                     {p.software.map((m) => (
                       <span key={m} className="text-[13px] bg-[#EEF4FB] px-2.5 py-1 rounded-full">
-                        {m}
+                        <TS>{m}</TS>
                       </span>
                     ))}
                   </div>
@@ -212,7 +212,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
             {p.bio && (
               <div className={`${CAJA_RED} flex flex-col gap-2`}>
                 <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Acerca de</TS></h2>
-                <p className="m-0 text-[15px] text-[#23231F] leading-relaxed whitespace-pre-line break-words">{p.bio}</p>
+                <p className="m-0 text-[15px] text-[#23231F] leading-relaxed whitespace-pre-line break-words"><TS>{p.bio}</TS></p>
               </div>
             )}
             {p.portafolio.length > 0 && (
@@ -237,7 +237,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
               <div className={`${CAJA_RED} flex flex-col gap-2`}>
                 <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Muestra tu taller</TS></h2>
                 <p className="m-0 text-[14px] text-[#6B6A63]">
-                  <TS>Agrega tus máquinas, los materiales que cortas y fotos de tus trabajos: es lo que más convence a un cliente.</TS>{" "}
+                  <TS>Agrega tus máquinas, los materiales que cortas y fotos de tus trabajos: es lo que más convence a un cliente.</TS><TS>{" "}</TS>
                   <LocalizedClientLink href="/foro-cnc/mi-perfil#taller" className="font-semibold text-[#B34D07] hover:underline">
                     <TS>Completar mi perfil</TS>
                   </LocalizedClientLink>
@@ -258,7 +258,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                   <Aptitudes perfilId={p.id} avales={avales} puedeAvalar={Boolean(yo) && !propio} />
                 ) : (
                   <p className="m-0 text-[14px] text-[#6B6A63]">
-                    <TS>Agrega lo que sabes hacer para que la comunidad lo avale.</TS>{" "}
+                    <TS>Agrega lo que sabes hacer para que la comunidad lo avale.</TS><TS>{" "}</TS>
                     <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
                       <TS>Agregar aptitudes</TS>
                     </LocalizedClientLink>
@@ -273,7 +273,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
                   <Trayectoria pasos={p.trayectoria} />
                 ) : (
                   <p className="m-0 text-[14px] text-[#6B6A63]">
-                    <TS>Tu experiencia, estudios, certificaciones y proyectos.</TS>{" "}
+                    <TS>Tu experiencia, estudios, certificaciones y proyectos.</TS><TS>{" "}</TS>
                     <LocalizedClientLink href="/foro-cnc/mi-perfil#curriculum" className="font-semibold text-[#B34D07] hover:underline">
                       <TS>Armar mi currículum</TS>
                     </LocalizedClientLink>
@@ -294,7 +294,7 @@ export default async function ForoPerfil({ params, searchParams }: Props) {
               temas.temas.map((t) => <TarjetaTema key={t.id} t={t} />)
             ) : (
               <p className="m-0 bg-white border border-dashed border-[#D9D4C8] rounded-[14px] p-6 text-center text-[14.5px] text-[#6B6A63]">
-                {propio ? "Aún no publicas. Presume tu primer trabajo o haz una pregunta." : "Aún no tiene publicaciones."}
+                <TS>{propio ? "Aún no publicas. Presume tu primer trabajo o haz una pregunta." : "Aún no tiene publicaciones."}</TS>
               </p>
             )}
             {temas && <Paginacion pagina={pagina} total={temas.total} porPagina={POR_PAGINA} base={urlPerfil(p.usuario)} />}

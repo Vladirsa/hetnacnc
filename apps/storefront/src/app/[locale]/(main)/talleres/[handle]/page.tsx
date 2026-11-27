@@ -124,22 +124,22 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
             )}
           </div>
           <div className="min-w-0 flex-1 pt-2">
-            <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-extrabold text-[#142033] sm:text-3xl">{t.nombre}</h1>{t.verificado ? (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><TS>✓ Taller verificado</TS></span>) : (<span className="rounded-full bg-[#F1F0EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller"><TS>Registrado · sin verificar</TS></span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal"><TS>🏢 Empresa verificada</TS></span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]"><TS>★ Taller fundador</TS></span>)}{t.capacidadLibre && (<span className="rounded-full bg-[#FFF6E0] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#8A5A00]" title={t.capacidadLibre.nota || "Tiene máquina libre esta semana"}>{textoCapacidad(t.capacidadLibre)}</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA"><TS>🤝 Taller embajador</TS></span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]">{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</span>)}{t.perfil.importacion && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Envía puerta a puerta con impuestos de importación incluidos"><TS>🌏 Importación desde</TS> {t.perfil.importacion.pais}</span>)}</div>
+            <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-extrabold text-[#142033] sm:text-3xl"><TS>{t.nombre}</TS></h1>{t.verificado ? (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><TS>✓ Taller verificado</TS></span>) : (<span className="rounded-full bg-[#F1F0EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller"><TS>Registrado · sin verificar</TS></span>)}{t.empresaVerificada && (<span className="rounded-full bg-[#E7F5EC] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1E7B3A]" title="HETNA revisó su constancia de situación fiscal"><TS>🏢 Empresa verificada</TS></span>)}{t.fundador && (<span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#C2560A]"><TS>★ Taller fundador</TS></span>)}{t.capacidadLibre && (<span className="rounded-full bg-[#FFF6E0] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#8A5A00]" title={t.capacidadLibre.nota || "Tiene máquina libre esta semana"}>{textoCapacidad(t.capacidadLibre)}</span>)}{t.embajador && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Invitó a otro taller de confianza que ya vende en HETNA"><TS>🤝 Taller embajador</TS></span>)}{t.perfil.tipo_cuenta && t.perfil.tipo_cuenta !== "taller" && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]"><TS>{t.perfil.tipo_cuenta === "ambos" ? "🏭📦 Taller y proveedor" : "📦 Proveedor"}</TS></span>)}{t.perfil.importacion && (<span className="rounded-full bg-[#EEF2FB] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#1a3a5c]" title="Envía puerta a puerta con impuestos de importación incluidos"><TS>🌏 Importación desde</TS> <TS>{t.perfil.importacion.pais}</TS></span>)}</div>
             {t.certificaciones.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2" aria-label="Certificaciones acreditadas">
                 {t.certificaciones.map((c) => (
                   <li key={c.tipo + c.nombre} className="rounded-full border border-[#CFE3D6] bg-white px-3 py-1 text-xs font-semibold text-[#1E7B3A]" title={[c.emisor && `Emitida por ${c.emisor}`, c.vigencia && `vigente hasta ${c.vigencia}`, "Documento revisado por HETNA"].filter(Boolean).join(" · ")}>
-                    🎖 {c.nombre}
+                    🎖 <TS>{c.nombre}</TS>
                   </li>
                 ))}
               </ul>
             )}
-            {p.lema && <p className="mt-0.5 text-[#40403A]">{p.lema}</p>}
-            {p.marcas && p.marcas.length > 0 && <p className="mt-1 text-sm text-[#40403A]"><b><TS>Marcas que distribuye:</TS></b> {p.marcas.join(", ")}</p>}
+            {p.lema && <p className="mt-0.5 text-[#40403A]"><TS>{p.lema}</TS></p>}
+            {p.marcas && p.marcas.length > 0 && <p className="mt-1 text-sm text-[#40403A]"><b><TS>Marcas que distribuye:</TS></b> <TS>{p.marcas.join(", ")}</TS></p>}
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6B675C]">
-              {donde && <span>📍 {donde}</span>}
+              {donde && <span>📍 <TS>{donde}</TS></span>}
               {p.servicios.slice(0, 3).map((s) => (
-                <span key={s}>· {s}</span>
+                <span key={s}>· <TS>{s}</TS></span>
               ))}
             </div>
           </div>
@@ -200,7 +200,7 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
         {tab === "productos" && (
           <section className={CAJA}>
-            <h2 className={H2}><TS>Productos de</TS> {t.nombre}</h2>
+            <h2 className={H2}><TS>Productos de</TS> <TS>{t.nombre}</TS></h2>
             <Suspense key={page} fallback={<ProductListingSkeleton />}>
               <SellerOffersListing seller_id={t.id} locale={locale} page={page} />
             </Suspense>
@@ -213,14 +213,14 @@ export default async function MiniSitioTaller({ params, searchParams }: Props) {
 
         {tab === "cotizar" && (
           <section>
-            <h2 className={H2}><TS>Cotiza con</TS> {t.nombre}</h2>
+            <h2 className={H2}><TS>Cotiza con</TS> <TS>{t.nombre}</TS></h2>
             <p className="mb-4 text-sm text-[#6B675C]">
-              <TS>Describe tu trabajo y</TS> {t.nombre} <TS>te manda su propuesta por HETNA. Tú comparas, eliges y pagas dentro de la plataforma.</TS>
+              <TS>Describe tu trabajo y</TS> <TS>{t.nombre}</TS> <TS>te manda su propuesta por HETNA. Tú comparas, eliges y pagas dentro de la plataforma.</TS>
             </p>
             {paquete && (
               <p className="mb-4 rounded-xl bg-[#FFF1E6] px-4 py-3 text-sm text-[#142033]">
                 <TS>Servicio:</TS> <strong><TS>{paquete.titulo}</TS></strong> <TS>· desde $</TS>{paquete.desde.toLocaleString("es-MX")} <TS>MXN</TS>
-                {paquete.entrega_dias ? ` · ${paquete.entrega_dias} días hábiles` : ""}
+                <TS>{paquete.entrega_dias ? ` · ${paquete.entrega_dias} días hábiles` : ""}</TS>
               </p>
             )}
             <FormSolicitudTaller
@@ -254,8 +254,8 @@ function Inicio({
       <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border border-[#E7E4DC] bg-white sm:grid-cols-4">
         {datos.map(([k, v]) => (
           <div key={k} className="border-b border-r border-[#E7E4DC] px-5 py-4 sm:border-b-0">
-            <dt className="text-xs uppercase tracking-wider text-[#6B675C]">{k}</dt>
-            <dd className="mt-1 text-lg font-bold text-[#142033]">{v}</dd>
+            <dt className="text-xs uppercase tracking-wider text-[#6B675C]"><TS>{k}</TS></dt>
+            <dd className="mt-1 text-lg font-bold text-[#142033]"><TS>{v}</TS></dd>
           </div>
         ))}
       </dl>
@@ -267,32 +267,32 @@ function Inicio({
           <h2 className={H2}><TS>Reputación en HETNA</TS></h2>
           {!p.historial_suficiente && (
             <p className="-mt-2 mb-3 rounded-lg bg-[#FFF8EE] px-3 py-2 text-xs text-[#8A5A00]">
-              <TS>Perfil nuevo: todavía no tiene suficiente historial (</TS>{p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}<TS>). Toma la calificación con cautela.</TS>
+              <TS>Perfil nuevo: todavía no tiene suficiente historial (</TS><TS>{p.resenas}</TS> <TS>{p.resenas === 1 ? "evaluación" : "evaluaciones"}</TS><TS>). Toma la calificación con cautela.</TS>
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-[#FAF9F5] p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Reputación comercial</TS></p>
-              <p className="text-2xl font-extrabold text-[#142033]">{p.reputacion_comercial ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
+              <p className="text-2xl font-extrabold text-[#142033]"><TS>{p.reputacion_comercial ?? "—"}</TS><span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
               <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
                 {[["tiempo", "Cumplimiento de entregas"], ["comunicacion", "Comunicación"], ["precio", "Precio"], ["profesionalismo", "Profesionalismo"], ["posventa", "Servicio posventa"]]
                   .filter(([k]) => p.indicadores?.[k] != null)
                   .map(([k, n]) => (
-                    <li key={k} className="flex justify-between"><span>{n}</span><b>{p.indicadores?.[k]}</b></li>
+                    <li key={k} className="flex justify-between"><span>{n}</span><b><TS>{p.indicadores?.[k]}</TS></b></li>
                   ))}
               </ul>
             </div>
             <div className="rounded-xl bg-[#FAF9F5] p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Capacidad técnica</TS></p>
-              <p className="text-2xl font-extrabold text-[#142033]">{p.capacidad_tecnica ?? "—"}<span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
+              <p className="text-2xl font-extrabold text-[#142033]"><TS>{p.capacidad_tecnica ?? "—"}</TS><span className="text-sm font-semibold text-[#6B675C]"> / 5</span></p>
               <ul className="mt-2 grid gap-1 text-sm text-[#40403A]">
                 {[["calidad", "Calidad de fabricación"], ["capacidad", "Cumple especificaciones"]]
                   .filter(([k]) => p.indicadores?.[k] != null)
                   .map(([k, n]) => (
-                    <li key={k} className="flex justify-between"><span>{n}</span><b>{p.indicadores?.[k]}</b></li>
+                    <li key={k} className="flex justify-between"><span>{n}</span><b><TS>{p.indicadores?.[k]}</TS></b></li>
                   ))}
               </ul>
-              {t.certificaciones.length > 0 && <p className="mt-2 text-xs text-[#1E7B3A]">+ {t.certificaciones.length} <TS>certificación(es) acreditada(s)</TS></p>}
+              {t.certificaciones.length > 0 && <p className="mt-2 text-xs text-[#1E7B3A]">+ <TS>{t.certificaciones.length}</TS> <TS>certificación(es) acreditada(s)</TS></p>}
             </div>
           </div>
           <p className="mt-3 text-xs text-[#6B675C]">
@@ -310,18 +310,18 @@ function Inicio({
               <li key={i} className="rounded-xl bg-[#FAF9F5] p-4 text-sm">
                 <p className="font-bold text-[#142033]">
                   <span className="text-[#C2560A]">{"★".repeat(Math.round(r.promedio))}</span>
-                  <span className="text-[#D9D5C9]">{"★".repeat(5 - Math.round(r.promedio))}</span>{" "}
-                  {r.autor || "Cliente"}
-                  {r.trabajo ? <span className="font-normal text-[#6B675C]"> · {r.trabajo}</span> : null}
+                  <span className="text-[#D9D5C9]">{"★".repeat(5 - Math.round(r.promedio))}</span><TS>{" "}</TS>
+                  <TS>{r.autor || "Cliente"}</TS>
+                  {r.trabajo ? <span className="font-normal text-[#6B675C]"> · <TS>{r.trabajo}</TS></span> : null}
                 </p>
                 <p className="mt-0.5 text-xs text-[#6B675C]">
-                  <TS>Calidad</TS> {r.calidad}<TS>/5 · Tiempo</TS> {r.tiempo}<TS>/5 · Trato</TS> {r.trato}/5 ·{" "}
+                  <TS>Calidad</TS> <TS>{r.calidad}</TS><TS>/5 · Tiempo</TS> <TS>{r.tiempo}</TS><TS>/5 · Trato</TS> <TS>{r.trato}</TS>/5 ·<TS>{" "}</TS>
                   {new Date(r.fecha).toLocaleDateString("es-MX", { month: "short", year: "numeric" })}
                 </p>
-                {r.comentario && <p className="mt-2 text-[#40403A]">{r.comentario}</p>}
+                {r.comentario && <p className="mt-2 text-[#40403A]"><TS>{r.comentario}</TS></p>}
                 {r.respuesta_taller && (
                   <p className="mt-2 border-l-2 border-[#E7E4DC] pl-3 text-[#40403A]">
-                    <span className="font-semibold">{t.nombre}:</span> {r.respuesta_taller}
+                    <span className="font-semibold"><TS>{t.nombre}</TS>:</span> <TS>{r.respuesta_taller}</TS>
                   </p>
                 )}
               </li>
@@ -347,7 +347,7 @@ function Inicio({
       <section className={CAJA}>
         <h2 className={H2}><TS>Sobre el taller</TS></h2>
         <p className="line-clamp-6 whitespace-pre-line leading-relaxed text-[#40403A]">
-          {t.descripcion || "Este taller está completando su perfil. Solicita una cotización y te responderá por HETNA."}
+          <TS>{t.descripcion || "Este taller está completando su perfil. Solicita una cotización y te responderá por HETNA."}</TS>
         </p>
         <LocalizedClientLink href={`/talleres/${t.handle}?tab=nosotros`} className="mt-3 inline-block text-sm font-semibold text-[#C2560A]">
           <TS>Conocer más →</TS>
@@ -371,7 +371,7 @@ function Inicio({
           <div className="flex flex-wrap gap-2">
             {p.servicios.map((x) => (
               <span key={x} className="rounded-full bg-[#142033] px-3 py-1 text-sm font-medium text-white">
-                {x}
+                <TS>{x}</TS>
               </span>
             ))}
           </div>
@@ -379,8 +379,8 @@ function Inicio({
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {p.maquinas.slice(0, 3).map((m) => (
                 <div key={m.nombre} className="rounded-xl border border-[#E7E4DC] p-4">
-                  <p className="font-bold text-[#142033]">{m.nombre}</p>
-                  {m.area && <p className="text-sm text-[#C2560A]"><TS>Área:</TS> {m.area}</p>}
+                  <p className="font-bold text-[#142033]"><TS>{m.nombre}</TS></p>
+                  {m.area && <p className="text-sm text-[#C2560A]"><TS>Área:</TS> <TS>{m.area}</TS></p>}
                 </div>
               ))}
             </div>
@@ -403,25 +403,25 @@ function Nosotros({ t, donde }: { t: Taller; donde: string }) {
       <section className={CAJA}>
         <h2 className={H2}><TS>Quiénes somos</TS></h2>
         <p className="whitespace-pre-line leading-relaxed text-[#40403A]">
-          {t.descripcion || "Este taller está completando su perfil."}
+          <TS>{t.descripcion || "Este taller está completando su perfil."}</TS>
         </p>
         <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
           {p.anos !== undefined && (
             <div>
               <dt className="text-[#6B675C]"><TS>Años de experiencia</TS></dt>
-              <dd className="font-semibold text-[#142033]">{p.anos}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{p.anos}</TS></dd>
             </div>
           )}
           {p.entrega && (
             <div>
               <dt className="text-[#6B675C]"><TS>Entrega típica</TS></dt>
-              <dd className="font-semibold text-[#142033]">{p.entrega}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{p.entrega}</TS></dd>
             </div>
           )}
           {donde && (
             <div>
               <dt className="text-[#6B675C]"><TS>Zona de servicio</TS></dt>
-              <dd className="font-semibold text-[#142033]">{donde} <TS>· envíos a todo México</TS></dd>
+              <dd className="font-semibold text-[#142033]"><TS>{donde}</TS> <TS>· envíos a todo México</TS></dd>
             </div>
           )}
         </dl>
@@ -453,7 +453,7 @@ function Capacidades({ t }: { t: Taller }) {
             <div className="mb-4 flex flex-wrap gap-2">
               {p.servicios.map((x) => (
                 <span key={x} className="rounded-full bg-[#142033] px-3 py-1 text-sm font-medium text-white">
-                  {x}
+                  <TS>{x}</TS>
                 </span>
               ))}
             </div>
@@ -462,7 +462,7 @@ function Capacidades({ t }: { t: Taller }) {
             {p.capacidades.map((x) => (
               <li key={x} className="flex gap-2 text-[#40403A]">
                 <span className="font-bold text-[#C2560A]">✓</span>
-                {x}
+                <TS>{x}</TS>
               </li>
             ))}
           </ul>
@@ -474,7 +474,7 @@ function Capacidades({ t }: { t: Taller }) {
           <ul className="grid gap-2 sm:grid-cols-2">
             {p.acabados.map((a) => (
               <li key={a.clave} className="flex items-baseline justify-between gap-3 rounded-xl bg-[#FAF9F5] px-3 py-2 text-[#40403A]">
-                <span><span className="font-bold text-[#C2560A]">✓</span> {a.nombre}</span>
+                <span><span className="font-bold text-[#C2560A]">✓</span> <TS>{a.nombre}</TS></span>
                 {a.precio && <span className="text-sm font-semibold text-[#142033]">{a.precio}</span>}
               </li>
             ))}
@@ -490,12 +490,12 @@ function Capacidades({ t }: { t: Taller }) {
               <div key={`${m.nombre}-${i}`} className="rounded-xl border border-[#E7E4DC] p-4">
                 {m.tipo && <p className="text-xs font-semibold uppercase tracking-wider text-[#6B675C]">{nombreTipoMaquina(m.tipo)}</p>}
                 <p className="font-bold text-[#142033]">
-                  {m.nombre}
-                  {m.marca ? <span className="font-normal text-[#6B675C]"> · {m.marca}</span> : null}
+                  <TS>{m.nombre}</TS>
+                  {m.marca ? <span className="font-normal text-[#6B675C]"> · <TS>{m.marca}</TS></span> : null}
                 </p>
                 {areaTexto(m) && <p className="text-sm text-[#C2560A]"><TS>Área:</TS> {areaTexto(m)}</p>}
                 {(m.potencia || m.controlador) && (
-                  <p className="mt-1 text-sm text-[#40403A]">{[m.potencia, m.controlador && `Control ${m.controlador}`].filter(Boolean).join(" · ")}</p>
+                  <p className="mt-1 text-sm text-[#40403A]"><TS>{[m.potencia, m.controlador && `Control ${m.controlador}`].filter(Boolean).join(" · ")}</TS></p>
                 )}
                 {m.detalle && <p className="mt-1 text-sm text-[#6B675C]"><TS>{m.detalle}</TS></p>}
               </div>
@@ -509,7 +509,7 @@ function Capacidades({ t }: { t: Taller }) {
           <div className="flex flex-wrap gap-2">
             {p.materiales.map((x) => (
               <span key={x} className={CHIP}>
-                {x}
+                <TS>{x}</TS>
               </span>
             ))}
           </div>
@@ -525,7 +525,7 @@ function CtaCotizar({ t }: { t: Taller }) {
     <section className="rounded-2xl bg-[#142033] p-8 text-center text-white">
       <h2 className="text-2xl font-extrabold"><TS>¿Tienes una pieza para fabricar?</TS></h2>
       <p className="mx-auto mt-2 max-w-md text-white/70">
-        <TS>Describe tu trabajo y</TS> {t.nombre} <TS>te cotiza. El envío lo manejas con Envíos HETNA.</TS>
+        <TS>Describe tu trabajo y</TS> <TS>{t.nombre}</TS> <TS>te cotiza. El envío lo manejas con Envíos HETNA.</TS>
       </p>
       <LocalizedClientLink
         href={`/talleres/${t.handle}?tab=cotizar`}
@@ -553,15 +553,15 @@ function Cumplimiento({ m }: { m: Medido }) {
           <span
             className={`rounded-full px-3 py-1 text-sm font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
           >
-            {m.puntaje}/100
+            <TS>{m.puntaje}</TS>/100
           </span>
         )}
       </div>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {datos.map(([k, v, nota]) => (
           <div key={k} className="rounded-xl bg-[#FAF9F5] p-3">
-            <dt className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">{k}</dt>
-            <dd className="m-0 mt-1 text-xl font-extrabold text-[#142033]">{v}</dd>
+            <dt className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>{k}</TS></dt>
+            <dd className="m-0 mt-1 text-xl font-extrabold text-[#142033]"><TS>{v}</TS></dd>
             {nota && <dd className="m-0 text-xs text-[#6B675C]"><TS>{nota}</TS></dd>}
           </div>
         ))}
@@ -569,7 +569,7 @@ function Cumplimiento({ m }: { m: Medido }) {
       <p className="mt-3 text-xs text-[#6B675C]">
         <TS>Datos reales de sus pedidos en HETNA, recalculados cada día. El puntaje pesa trabajos terminados 30%, calidad calificada por clientes
         30%, entregas a tiempo 25%, tiempo de respuesta 10% y reclamos 5%. Pagar un plan o la verificación no lo cambia.</TS>
-        {m.suficiente ? "" : ` El puntaje aparece a partir de 3 trabajos terminados.`}
+        <TS>{m.suficiente ? "" : ` El puntaje aparece a partir de 3 trabajos terminados.`}</TS>
       </p>
     </section>
   )

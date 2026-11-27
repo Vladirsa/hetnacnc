@@ -16,6 +16,8 @@ import {
   setAuthToken
 } from './cookies';
 import { eventoSocial } from '@/lib/hetna/social-evento';
+import { idiomaServidor } from '@/i18n/servidor';
+import { avisarIdiomaCorreo } from './idioma-correo';
 
 export const retrieveCustomer = async (): Promise<HttpTypes.StoreCustomer | null> => {
   const authHeaders = await getAuthHeaders();
@@ -90,9 +92,12 @@ async function asegurarCliente(
   if (existente) return existente;
 
   const headers = { ...(await getAuthHeaders()) };
+  // El idioma va desde la creación: el correo de confirmación sale al instante
+  const idioma = await idiomaServidor().catch(() => 'es' as const);
   const { customer } = await (sdk.store.customers.mutate({
     email,
     ...datos,
+    ...(idioma === 'en' ? { metadata: { idioma: 'en' } } : {}),
     fetchOptions: { headers }
   } as never) as unknown as Promise<{ customer: HttpTypes.StoreCustomer }>);
 
@@ -267,6 +272,7 @@ export async function login(formData: FormData) {
 
     const customerCacheTag = await getCacheTag('customers');
     revalidateTag(customerCacheTag);
+    await avisarIdiomaCorreo();
 
     return { success: true };
   } catch (error: unknown) {

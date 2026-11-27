@@ -39,11 +39,11 @@ export function MaquinasTaller({ equipos }: { equipos: Equipo[] }) {
             </span>
           )}
           <div className="min-w-0">
-            <p className="m-0 text-[15px] font-bold text-[#1B1B18]">{TIPOS_MAQUINA[e.tipo]}</p>
-            {e.modelo && <p className="m-0 text-[13.5px] text-[#44433D]">{e.modelo}</p>}
+            <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>{TIPOS_MAQUINA[e.tipo]}</TS></p>
+            {e.modelo && <p className="m-0 text-[13.5px] text-[#44433D]"><TS>{e.modelo}</TS></p>}
             {(areaTrabajo(e) || e.potencia) && (
               <p className="m-0 text-[13px] text-[#6B6A63]">
-                {[areaTrabajo(e) && `Área ${areaTrabajo(e)}`, e.potencia && `${e.potencia.toLocaleString("es-MX")} ${e.unidad}`].filter(Boolean).join(" · ")}
+                <TS>{[areaTrabajo(e) && `Área ${areaTrabajo(e)}`, e.potencia && `${e.potencia.toLocaleString("es-MX")} ${e.unidad}`].filter(Boolean).join(" · ")}</TS>
               </p>
             )}
           </div>
@@ -58,7 +58,7 @@ export function MaterialesTaller({ materiales }: { materiales: MaterialEspesor[]
     <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
       {materiales.map((m) => (
         <li key={m.material} className="rounded-full bg-[#F4F1EA] px-3 py-1.5 text-[14px] text-[#1B1B18]">
-          <strong className="font-semibold">{MATERIALES_TALLER[m.material]}</strong>
+          <strong className="font-semibold"><TS>{MATERIALES_TALLER[m.material]}</TS></strong>
           {rangoEspesor(m) && <span className="text-[#6B6A63]"> · {rangoEspesor(m)}</span>}
         </li>
       ))}
@@ -87,9 +87,9 @@ export function PortafolioTrabajos({ trabajos }: { trabajos: Trabajo[] }) {
             <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>{t.titulo}</TS></p>
             {(t.material || t.espesor || t.maquina) && (
               <p className="m-0 text-[13px] text-[#6B6A63]">
-                {[t.material && MATERIALES_TALLER[t.material], etiquetaEspesor(t.material, t.espesor), t.maquina && TIPOS_MAQUINA[t.maquina]]
+                <TS>{[t.material && MATERIALES_TALLER[t.material], etiquetaEspesor(t.material, t.espesor), t.maquina && TIPOS_MAQUINA[t.maquina]]
                   .filter(Boolean)
-                  .join(" · ")}
+                  .join(" · ")}</TS>
               </p>
             )}
             {t.detalle && <p className="m-0 whitespace-pre-line text-[14px] leading-relaxed text-[#23231F]"><TS>{t.detalle}</TS></p>}

@@ -52,10 +52,10 @@ export default async function PropuestasPage({
 
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 pb-16 pt-8 lg:px-6">
-      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Folio</TS> {s.folio}</p>
+      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Folio</TS> <TS>{s.folio}</TS></p>
       <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Tu solicitud de fabricación</TS></h1>
       <p className="mt-2 text-[#6B675C]">
-        {s.estado === "revision"
+        <TS>{s.estado === "revision"
           ? "Estamos revisando tu solicitud. En cuanto la aprobemos la enviamos a los talleres y te avisamos por correo."
           : s.estado === "cerrada"
             ? s.etapa_explica || "Esta solicitud está cerrada."
@@ -63,7 +63,7 @@ export default async function PropuestasPage({
           ? `Compara precio, tiempo y condiciones. ${s.modo === "abierta" && cierra ? `Los talleres pueden enviar propuestas hasta el ${cierra}.` : ""}`
           : s.pago_estado === "pagado"
             ? s.etapa_explica || "Pago recibido. El taller está fabricando tu pedido."
-            : "Ya elegiste una propuesta. Completa tu pago para que el taller empiece."}
+            : "Ya elegiste una propuesta. Completa tu pago para que el taller empiece."}</TS>
       </p>
 
       {pago === "ok" && (
@@ -115,19 +115,19 @@ export default async function PropuestasPage({
           {ETIQUETAS.filter(([k]) => t[k]).map(([k, label]) => (
             <div key={k}>
               <dt className="text-[#6B675C]"><TS>{label}</TS></dt>
-              <dd className="font-semibold text-[#142033]">{t[k]}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{t[k]}</TS></dd>
             </div>
           ))}
           {entrega && (
             <div>
               <dt className="text-[#6B675C]"><TS>Entrega en</TS></dt>
-              <dd className="font-semibold text-[#142033]">{entrega}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{entrega}</TS></dd>
             </div>
           )}
         </dl>
         {archivos.length > 0 && (
           <p className="mt-4 text-sm text-[#6B675C]">
-            <TS>Archivos que subiste:</TS> <span className="font-semibold text-[#142033]">{archivos.map((a) => a.nombre).join(", ")}</span>
+            <TS>Archivos que subiste:</TS> <span className="font-semibold text-[#142033]"><TS>{archivos.map((a) => a.nombre).join(", ")}</TS></span>
           </p>
         )}
       </section>
@@ -139,7 +139,7 @@ export default async function PropuestasPage({
       {s.estado !== "revision" && <ComparadorPropuestas token={token} solicitud={s} />}
 
       <p className="mt-8 text-center text-sm text-[#6B675C]">
-        <TS>¿Dudas? Escríbenos desde</TS> <LocalizedClientLink href="/contacto" className="text-[#C2560A] underline"><TS>Contacto</TS></LocalizedClientLink> <TS>con tu folio</TS> {s.folio}.
+        <TS>¿Dudas? Escríbenos desde</TS> <LocalizedClientLink href="/contacto" className="text-[#C2560A] underline"><TS>Contacto</TS></LocalizedClientLink> <TS>con tu folio</TS> <TS>{s.folio}</TS>.
       </p>
     </main>
   )

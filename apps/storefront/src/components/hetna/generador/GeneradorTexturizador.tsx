@@ -272,7 +272,7 @@ export function GeneradorTexturizador() {
               onClick={() => elegirModelo(m)}
               className="rounded-[8px] bg-[#1C2431] px-1.5 py-2 text-[11.5px] font-semibold leading-tight text-[#C9D2E0] hover:bg-[#243045] hover:text-white"
             >
-              {m.nombre}
+              <T>{m.nombre}</T>
             </button>
           ))}
         </div>
@@ -302,8 +302,8 @@ export function GeneradorTexturizador() {
               title={i.nombre}
               className={botonSel(iconos.includes(i.id))}
             >
-              <span className="block text-[18px] leading-none">{i.simbolo}</span>
-              <span className="mt-1 block text-[10.5px]">{i.nombre}</span>
+              <span className="block text-[18px] leading-none"><T>{i.simbolo}</T></span>
+              <span className="mt-1 block text-[10.5px]"><T>{i.nombre}</T></span>
             </button>
           ))}
         </div>
@@ -324,7 +324,7 @@ export function GeneradorTexturizador() {
                     fuenteId === t.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
                   }`}
                 >
-                  {t.nombre}
+                  <T>{t.nombre}</T>
                 </button>
               ))}
             </div>
@@ -394,20 +394,20 @@ export function GeneradorTexturizador() {
       </Seccion>
       <PanelColores mc={mc} />
 
-      {conTexto && error && <Aviso tipo="error">{error}</Aviso>}
+      {conTexto && error && <Aviso tipo="error"><T>{error}</T></Aviso>}
       {r?.errores.map((e) => (
         <Aviso key={e} tipo="error">
-          {e}
+          <T>{e}</T>
         </Aviso>
       ))}
-      {listo && r!.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
+      {listo && r!.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
   const diseno2d = (
     <div className="flex h-full flex-col gap-3 p-4">
       {!listo ? (
-        <p className="m-0 text-[14px] text-[#8A97AB]">{cargando ? "Cargando tipografía…" : "Escribe una palabra o elige un ícono."}</p>
+        <p className="m-0 text-[14px] text-[#8A97AB]"><T>{cargando ? "Cargando tipografía…" : "Escribe una palabra o elige un ícono."}</T></p>
       ) : (
         <>
           <Datos
@@ -432,8 +432,8 @@ export function GeneradorTexturizador() {
             dangerouslySetInnerHTML={{ __html: vista2d }}
           />
           <p className="m-0 text-[12.5px] text-[#8A97AB]">
-            {rodillo ? "Así se ve el patrón desenrollado: una vuelta completa del rodillo. " : ""}
-            {espejo ? "Se ve al revés a propósito: al presionarla, la marca queda al derecho." : "Sin espejo: se lee al derecho en la placa."}
+            <T>{rodillo ? "Así se ve el patrón desenrollado: una vuelta completa del rodillo. " : ""}</T>
+            <T>{espejo ? "Se ve al revés a propósito: al presionarla, la marca queda al derecho." : "Sin espejo: se lee al derecho en la placa."}</T>
           </p>
         </>
       )}
@@ -545,7 +545,7 @@ export function GeneradorTexturizador() {
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </div>
   )
 
@@ -561,7 +561,7 @@ export function GeneradorTexturizador() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {medidas} · {r!.piezas} <T>piezas</T></span> : null}
+      barra={listo ? <span>· <T>{medidas}</T> · <T>{r!.piezas}</T> <T>piezas</T></span> : null}
     />
   )
 }

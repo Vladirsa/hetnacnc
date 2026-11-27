@@ -33,7 +33,7 @@ export default async function Planos() {
 
         {CATEGORIAS_PLANO.map((cat) => (
           <section key={cat} className="mt-8">
-            <h2 className="font-display m-0 text-[22px] font-bold text-[#142033]">{cat === "Taller" ? "Para tu taller" : "Para tu casa"}</h2>
+            <h2 className="font-display m-0 text-[22px] font-bold text-[#142033]"><TS>{cat === "Taller" ? "Para tu taller" : "Para tu casa"}</TS></h2>
           <div className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PLANOS.filter((pl) => pl.categoria === cat).map((pl) => {
             const m = medidasGenerales(pl)
@@ -44,10 +44,10 @@ export default async function Planos() {
               <LocalizedClientLink key={pl.slug} href={`/planos/${pl.slug}`} className="group flex flex-col overflow-hidden rounded-2xl border border-[#E7E4DC] bg-white hover:border-[#FF6A1A]">
                 <div className="flex h-[250px] items-center justify-center bg-[#F6F1E7] p-4 [&_svg]:max-h-full [&_svg]:w-auto" dangerouslySetInnerHTML={{ __html: svgArmado(pl.piezas, pl.nombre, cajasRuedas(pl.piezas, pl.ruedas)) }} />
                 <div className="flex flex-1 flex-col gap-1.5 p-4">
-                  <h3 className="m-0 text-[18px] font-bold text-[#142033] group-hover:text-[#B34D07]">{pl.nombre}</h3>
+                  <h3 className="m-0 text-[18px] font-bold text-[#142033] group-hover:text-[#B34D07]"><TS>{pl.nombre}</TS></h3>
                   <p className="m-0 text-[14px] text-[#40403A]"><TS>{pl.resumen}</TS></p>
                   <p className="m-0 mt-auto pt-2 text-[12.5px] text-[#6B6A63]">
-                    {m.ancho} × {m.fondo} × {m.alto} <TS>mm ·</TS> {piezas} <TS>piezas ·</TS> {hojas} {hojas === 1 ? "hoja" : "hojas"} · {pl.nivel} · {pl.horas}
+                    <TS>{m.ancho}</TS> × <TS>{m.fondo}</TS> × <TS>{m.alto}</TS> <TS>mm ·</TS> <TS>{piezas}</TS> <TS>piezas ·</TS> <TS>{hojas}</TS> <TS>{hojas === 1 ? "hoja" : "hojas"}</TS> · <TS>{pl.nivel}</TS> · <TS>{pl.horas}</TS>
                   </p>
                 </div>
               </LocalizedClientLink>

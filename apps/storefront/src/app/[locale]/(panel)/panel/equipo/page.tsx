@@ -19,7 +19,7 @@ export default async function PanelEquipo({ params }: { params: Promise<{ locale
       <Tarjeta>
         <Titulo><TS>Roles del panel</TS></Titulo>
         <ul className="grid gap-1 text-[12.5px] text-[#40403A]">
-          {Object.entries(ROLES).filter(([k]) => k !== "sin_acceso").map(([k, r]) => <li key={k}><b>{r.nombre}:</b> {r.que}</li>)}
+          {Object.entries(ROLES).filter(([k]) => k !== "sin_acceso").map(([k, r]) => <li key={k}><b><TS>{r.nombre}</TS>:</b> <TS>{r.que}</TS></li>)}
         </ul>
       </Tarjeta>
       <Equipo usuarios={lista} error={error} />

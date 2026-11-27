@@ -59,7 +59,7 @@ export default async function DescargasPage({ params }: { params: Promise<{ loca
                       {c.handle ? <LocalizedClientLink href={`/products/${c.handle}`}><TS>{c.titulo}</TS></LocalizedClientLink> : c.titulo}
                     </p>
                     <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">
-                      {c.formato ? `${c.formato} · ` : ""}<TS>Pedido #</TS>{c.display_id} · {fecha(c.fecha)}
+                      <TS>{c.formato ? `${c.formato} · ` : ""}</TS><TS>Pedido #</TS><TS>{c.display_id}</TS> · {fecha(c.fecha)}
                     </p>
                   </div>
                   <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">

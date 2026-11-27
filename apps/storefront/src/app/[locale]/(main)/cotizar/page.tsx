@@ -111,14 +111,14 @@ export default async function CotizarPage({
         <header className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><TS>Cotización</TS></p>
           <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-            {t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado?.proceso === "Impresión 3D" ? "Fabrícamelo: elige quién la imprime" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}
+            <TS>{t ? `Cotiza con ${t.nombre}` : prellenado?.desde === "producto" ? "Fabrica este diseño con un taller" : prellenado?.proceso === "Impresión 3D" ? "Fabrícamelo: elige quién la imprime" : prellenado ? "Fabrícamelo: elige quién la corta" : "Solicita tu trabajo CNC"}</TS>
           </h1>
           <p className="mt-2 max-w-2xl text-[#6B675C]">
-            {t
+            <TS>{t
               ? `Describe tu trabajo y ${t.nombre} te manda su propuesta. Te llega una liga por correo para verla, elegir y pagar dentro de HETNA.`
               : prellenado
                 ? `Cuéntanos qué necesitas, sube tu archivo (o descríbelo si no tienes) y los talleres de la red te mandan propuestas durante ${DIAS_SOLICITUD_ABIERTA} días. Te llega una liga por correo para compararlas, elegir y pagar dentro de HETNA.`
-                : `Sube tu archivo o escribe las medidas y ve un precio aproximado al instante. Si te conviene, pide propuestas: los talleres de la red te cotizan durante ${DIAS_SOLICITUD_ABIERTA} días y tú eliges y pagas dentro de HETNA.`}
+                : `Sube tu archivo o escribe las medidas y ve un precio aproximado al instante. Si te conviene, pide propuestas: los talleres de la red te cotizan durante ${DIAS_SOLICITUD_ABIERTA} días y tú eliges y pagas dentro de HETNA.`}</TS>
           </p>
           {/* Tarea 6 de la auditoría de mejoras: el plazo, visible antes del formulario */}
           <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#EEF7F0] px-3 py-1.5 text-[14px] font-semibold text-[#17633A]" data-testid="plazo-respuesta">

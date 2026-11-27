@@ -33,13 +33,13 @@ export const ParcelAccordion = ({
           className="heading-sm truncate"
           data-testid="order-display-id"
         >
-          <TS>ORDER SET</TS> {orderDisplayId}
+          <TS>ORDER SET</TS> <TS>{orderDisplayId}</TS>
         </h2>
         <h2
           className="label-md"
           data-testid="order-date"
         >
-          <TS>Order date:</TS>{' '}
+          <TS>Order date:</TS><TS>{' '}</TS>
           <span className="text-primary lg:block xl:inline-block">
             {format(createdAt || '', 'yyyy-MM-dd')}
           </span>
@@ -48,7 +48,7 @@ export const ParcelAccordion = ({
           className="label-md"
           data-testid="order-total"
         >
-          <TS>Total:</TS>{' '}
+          <TS>Total:</TS><TS>{' '}</TS>
           <span
             className="text-primary lg:block xl:inline-block"
             data-testid={`order-${orderId}-price`}

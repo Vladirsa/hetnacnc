@@ -61,12 +61,12 @@ const TarjetaLibro = ({ p }: { p: Producto }) => {
           <span className="grid h-full place-items-center text-[13px] font-bold text-[#6B6A63]"><TS>PDF</TS></span>
         )}
         <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-bold ${gratis ? "bg-[#19B374] text-white" : "bg-[#142033] text-white"}`}>
-          {gratis ? "Gratis" : "PDF"}
+          <TS>{gratis ? "Gratis" : "PDF"}</TS>
         </span>
       </span>
-      <span className="line-clamp-2 text-[14px] font-bold leading-snug text-[#1B1B18] group-hover:text-[#B34D07]">{p.title}</span>
-      {p.subtitle && <span className="line-clamp-1 text-[12.5px] text-[#6B6A63]">{p.subtitle}</span>}
-      <span className="text-[14px] font-extrabold text-[#1B1B18]">{gratis ? "Descarga gratis" : precio || ""}</span>
+      <span className="line-clamp-2 text-[14px] font-bold leading-snug text-[#1B1B18] group-hover:text-[#B34D07]"><TS>{p.title}</TS></span>
+      {p.subtitle && <span className="line-clamp-1 text-[12.5px] text-[#6B6A63]"><TS>{p.subtitle}</TS></span>}
+      <span className="text-[14px] font-extrabold text-[#1B1B18]"><TS>{gratis ? "Descarga gratis" : precio || ""}</TS></span>
     </LocalizedClientLink>
   )
 }
@@ -138,9 +138,9 @@ export function Academia({
                     [gratis, "gratis"],
                   ].map(([n, t]) => (
                     <div key={String(t)} className="rounded-[12px] border border-white/10 bg-white/[0.05] px-3 py-2">
-                      <dt className="sr-only">{t}</dt>
+                      <dt className="sr-only"><TS>{t}</TS></dt>
                       <dd className="m-0 text-[22px] font-extrabold leading-none">{n}</dd>
-                      <span className="text-[12px] text-white/60">{t}</span>
+                      <span className="text-[12px] text-white/60"><TS>{t}</TS></span>
                     </div>
                   ))}
                 </dl>
@@ -166,7 +166,7 @@ export function Academia({
                 {BENEFICIOS.slice(0, 2).map(([n, t]) => (
                   <span key={t} className="rounded-[12px] bg-black/15 px-3 py-2">
                     <span className="block text-[18px] font-extrabold leading-tight">{n}</span>
-                    <span className="text-[12px] text-white/85">{t}</span>
+                    <span className="text-[12px] text-white/85"><TS>{t}</TS></span>
                   </span>
                 ))}
               </span>
@@ -294,8 +294,8 @@ export function Academia({
             {PASOS_ALUMNO.map((p, i) => (
               <li key={p.t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
                 <span className="w-8 h-8 rounded-full bg-[#142033] text-white text-[14px] font-bold flex items-center justify-center">{i + 1}</span>
-                <h3 className="m-0 text-[16px] font-bold text-[#1B1B18]">{p.t}</h3>
-                <p className="m-0 text-[14px] text-[#6B6A63] leading-relaxed">{p.d}</p>
+                <h3 className="m-0 text-[16px] font-bold text-[#1B1B18]"><TS>{p.t}</TS></h3>
+                <p className="m-0 text-[14px] text-[#6B6A63] leading-relaxed"><TS>{p.d}</TS></p>
               </li>
             ))}
           </ol>
@@ -314,7 +314,7 @@ export function Academia({
                 {BENEFICIOS.map(([n, t]) => (
                   <div key={t} className="rounded-[12px] border border-white/10 bg-white/[0.05] px-3 py-2.5">
                     <dt className="text-[17px] font-extrabold leading-tight text-[#FFC53D]">{n}</dt>
-                    <dd className="m-0 mt-1 text-[12px] leading-snug text-white/70">{t}</dd>
+                    <dd className="m-0 mt-1 text-[12px] leading-snug text-white/70"><TS>{t}</TS></dd>
                   </div>
                 ))}
               </dl>
@@ -322,7 +322,7 @@ export function Academia({
                 {PASOS_TALLER.map((t, i) => (
                   <li key={t} className="flex items-start gap-3 text-[14.5px] leading-relaxed text-white/90">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F07A1A] text-[13px] font-bold">{i + 1}</span>
-                    <span>{t}</span>
+                    <span><TS>{t}</TS></span>
                   </li>
                 ))}
               </ol>
@@ -334,17 +334,17 @@ export function Academia({
                     <ServicioIcono nombre={q.icono} size={26} />
                   </span>
                   <span className="flex flex-1 flex-col">
-                    <span className="text-[17px] font-bold">{q.t}</span>
-                    <span className="mt-1 text-[13.5px] leading-relaxed text-[#4A4943]">{q.d}</span>
+                    <span className="text-[17px] font-bold"><TS>{q.t}</TS></span>
+                    <span className="mt-1 text-[13.5px] leading-relaxed text-[#4A4943]"><TS>{q.d}</TS></span>
                     <span className="mt-2 text-[13.5px] font-bold text-[#C2560A] group-hover:underline"><TS>{q.boton}</TS> →</span>
                   </span>
                 </a>
               ))}
               <p className="m-0 text-[13px] text-white/60">
-                <TS>¿Todavía no tienes cuenta de taller?</TS>{" "}
+                <TS>¿Todavía no tienes cuenta de taller?</TS><TS>{" "}</TS>
                 <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#FFC53D] hover:underline">
                   <TS>Regístrate gratis</TS>
-                </LocalizedClientLink>{" "}
+                </LocalizedClientLink><TS>{" "}</TS>
                 <TS>y en minutos publicas.</TS>
               </p>
             </div>

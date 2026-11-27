@@ -167,7 +167,7 @@ export const NavbarSearch = ({ className }: Props) => {
                 <span className="h-8 w-8 shrink-0 rounded bg-[#F4F1EA]" aria-hidden="true" />
               )}
               <span className="min-w-0 flex-1 truncate text-[14px] text-[#1B1B18]"><T>{s.texto}</T></span>
-              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#8A887F]">{ETIQUETA[s.tipo]}</span>
+              <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#8A887F]"><T>{ETIQUETA[s.tipo]}</T></span>
             </li>
           ))}
           <li

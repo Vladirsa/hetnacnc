@@ -4,6 +4,7 @@
 // HETNA), sus días de entrega y si da envío gratis. El cliente ve las ofertas
 // de todos los talleres juntas en la página del producto.
 // Backend: packages/api/src/lib/planos-ofertas.ts (/vendor/hetna-planos)
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -16,6 +17,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Ofertar en planos",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -77,10 +80,10 @@ function Editor({ plano, limites, alGuardar }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
         <thead>
           <tr style={{ textAlign: "left", color: "#6B675C", fontSize: 12 }}>
-            <th style={{ padding: "4px 6px" }}>Lo hago</th>
-            <th>Acabado</th>
-            <th>Recomendado HETNA (con IVA)</th>
-            <th>Tu precio</th>
+            <th style={{ padding: "4px 6px" }}><T>Lo hago</T></th>
+            <th><T>Acabado</T></th>
+            <th><T>Recomendado HETNA (con IVA)</T></th>
+            <th><T>Tu precio</T></th>
             <th></th>
           </tr>
         </thead>
@@ -93,13 +96,13 @@ function Editor({ plano, limites, alGuardar }) {
                 <td style={{ padding: "6px" }}>
                   <input type="checkbox" checked={v.activa} onChange={(e) => cambiar({ activa: e.target.checked })} />
                 </td>
-                <td>{v.titulo}</td>
+                <td><T>{v.titulo}</T></td>
                 <td style={{ color: "#6B675C" }}>{pesos(v.recomendado)}</td>
                 <td>
                   <input type="number" min={limites.precio.min} step={10} disabled={!v.activa} value={v.precio} onChange={(e) => cambiar({ precio: e.target.value })} style={S.input} />
                 </td>
                 <td style={{ fontSize: 12, color: dif == null ? "#6B675C" : dif > 0 ? "#8A5A00" : "#1E7B3A" }}>
-                  {v.activa && dif != null ? (dif === 0 ? "igual al recomendado" : `${dif > 0 ? "+" : ""}${dif} %`) : ""}
+                  <T>{v.activa && dif != null ? (dif === 0 ? "igual al recomendado" : `${dif > 0 ? "+" : ""}${dif} %`) : ""}</T>
                 </td>
               </tr>
             )
@@ -108,18 +111,18 @@ function Editor({ plano, limites, alGuardar }) {
       </table>
       <div style={{ ...S.fila, marginTop: 12 }}>
         <label style={{ fontSize: 14 }}>
-          Días hábiles para entregar{" "}
+          <T>Días hábiles para entregar</T><T>{" "}</T>
           <input type="number" min={limites.dias.min} max={limites.dias.max} value={dias} onChange={(e) => setDias(e.target.value)} style={{ ...S.input, width: 70 }} />
         </label>
         <label style={{ fontSize: 14, display: "flex", gap: 6, alignItems: "center" }}>
           <input type="checkbox" checked={envio} onChange={(e) => setEnvio(e.target.checked)} />
-          Ofrezco envío gratis por paquetería (yo pago la guía)
+          <T>Ofrezco envío gratis por paquetería (yo pago la guía)</T>
         </label>
         <button type="button" style={S.btn} disabled={guardando} onClick={guardar}>
-          {guardando ? "Guardando…" : "Guardar oferta"}
+          <T>{guardando ? "Guardando…" : "Guardar oferta"}</T>
         </button>
       </div>
-      {estado ? <div style={S.aviso(estado.ok)}>{estado.texto}</div> : null}
+      {estado ? <div style={S.aviso(estado.ok)}><T>{estado.texto}</T></div> : null}
     </div>
   )
 }
@@ -182,36 +185,36 @@ export default function OfertarPlanos() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Ofertar en planos</h1>
+      <h1 style={S.h1}><T>Ofertar en planos</T></h1>
       <p style={S.sub}>
-        Fabrica muebles de la Biblioteca de planos HETNA y véndelos en la tienda. Marca los acabados que haces y pon tu precio: te enseñamos el precio recomendado por HETNA (kit de piezas cortadas en CNC y lijadas, sin herrajes ni armado). El cliente ve las ofertas de todos los talleres juntas, con tu precio, tus días de entrega y si das envío gratis. Tu precio es el precio final que paga el cliente (con IVA), sin el envío.
+        <T>Fabrica muebles de la Biblioteca de planos HETNA y véndelos en la tienda. Marca los acabados que haces y pon tu precio: te enseñamos el precio recomendado por HETNA (kit de piezas cortadas en CNC y lijadas, sin herrajes ni armado). El cliente ve las ofertas de todos los talleres juntas, con tu precio, tus días de entrega y si das envío gratis. Tu precio es el precio final que paga el cliente (con IVA), sin el envío.</T>
       </p>
-      {aviso ? <div style={S.aviso(aviso.ok)}>{aviso.texto}</div> : null}
-      {error ? <div style={S.aviso(false)}>{error}</div> : null}
+      {aviso ? <div style={S.aviso(aviso.ok)}><T>{aviso.texto}</T></div> : null}
+      {error ? <div style={S.aviso(false)}><T>{error}</T></div> : null}
       {datos?.destacado ? (
         <div style={{ ...S.card, background: "#FFF8F1", borderColor: "#FFD3B0" }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>⭐ Sal primero: taller destacado en planos</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}><T>⭐ Sal primero: taller destacado en planos</T></div>
           <p style={{ ...S.sub, margin: "4px 0 10px" }}>
-            Por {pesos(datos.destacado.precio)} cada {datos.destacado.dias} días sales primero, con la insignia <b>Destacado</b>, en todos los planos donde tienes oferta.
+            <T>Por</T> {pesos(datos.destacado.precio)} <T>cada</T> <T>{datos.destacado.dias}</T> <T>días sales primero, con la insignia</T> <b><T>Destacado</T></b><T>, en todos los planos donde tienes oferta.</T>
           </p>
           {datos.destacado.hasta ? (
             <p style={{ fontSize: 14, margin: "0 0 10px" }}>
-              Eres destacado hasta el <b>{fecha(datos.destacado.hasta)}</b>. Si pagas otra vez, se suman {datos.destacado.dias} días.
+              <T>Eres destacado hasta el</T> <b>{fecha(datos.destacado.hasta)}</b><T>. Si pagas otra vez, se suman</T> <T>{datos.destacado.dias}</T> <T>días.</T>
             </p>
           ) : null}
           <button type="button" style={S.btn} disabled={pagando} onClick={destacar}>
-            {pagando ? "Abriendo Mercado Pago…" : datos.destacado.hasta ? `Sumar ${datos.destacado.dias} días` : `Destacarme por ${pesos(datos.destacado.precio)}`}
+            <T>{pagando ? "Abriendo Mercado Pago…" : datos.destacado.hasta ? `Sumar ${datos.destacado.dias} días` : `Destacarme por ${pesos(datos.destacado.precio)}`}</T>
           </button>
-          {!ofertasActivas ? <div style={{ fontSize: 13, color: "#8A5A00", marginTop: 8 }}>Primero pon tu oferta en al menos un plano: el destacado sólo se ve donde ofertas.</div> : null}
+          {!ofertasActivas ? <div style={{ fontSize: 13, color: "#8A5A00", marginTop: 8 }}><T>Primero pon tu oferta en al menos un plano: el destacado sólo se ve donde ofertas.</T></div> : null}
         </div>
       ) : null}
-      {!datos && !error ? <p style={S.sub}>Cargando planos…</p> : null}
-      {datos && !datos.planos.length ? <p style={S.sub}>Todavía no hay planos en la tienda. Pronto los verás aquí.</p> : null}
+      {!datos && !error ? <p style={S.sub}><T>Cargando planos…</T></p> : null}
+      {datos && !datos.planos.length ? <p style={S.sub}><T>Todavía no hay planos en la tienda. Pronto los verás aquí.</T></p> : null}
       {datos?.planos.length ? (
         <div style={{ ...S.fila, marginBottom: 12 }}>
-          <input placeholder="Buscar plano…" value={q} onChange={(e) => setQ(e.target.value)} style={S.buscar} />
+          <input placeholder={traducir("Buscar plano…")} value={q} onChange={(e) => setQ(e.target.value)} style={S.buscar} />
           <label style={{ fontSize: 14, display: "flex", gap: 6, alignItems: "center" }}>
-            <input type="checkbox" checked={soloMias} onChange={(e) => setSoloMias(e.target.checked)} /> Sólo donde ya oferto
+            <input type="checkbox" checked={soloMias} onChange={(e) => setSoloMias(e.target.checked)} /> <T>Sólo donde ya oferto</T>
           </label>
         </div>
       ) : null}
@@ -222,24 +225,24 @@ export default function OfertarPlanos() {
             <div style={S.fila}>
               {p.thumbnail ? <img src={p.thumbnail} alt="" style={S.img} /> : <div style={S.img} />}
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{p.titulo}</div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}><T>{p.titulo}</T></div>
                 <div style={{ fontSize: 13, color: "#6B675C", marginTop: 2 }}>
-                  Recomendado desde {pesos(Math.min(...p.variantes.map((v) => v.recomendado || Infinity)))}
+                  <T>Recomendado desde</T> {pesos(Math.min(...p.variantes.map((v) => v.recomendado || Infinity)))}
                   {p.slug ? (
                     <>
-                      {" · "}
-                      <a href={`https://hetnacnc.com/mx/planos/${p.slug}`} target="_blank" rel="noreferrer" style={{ color: "#C2560A" }}>ver plano</a>
+                      <T>{" · "}</T>
+                      <a href={`https://hetnacnc.com/mx/planos/${p.slug}`} target="_blank" rel="noreferrer" style={{ color: "#C2560A" }}><T>ver plano</T></a>
                     </>
                   ) : null}
                 </div>
                 <div style={{ ...S.fila, gap: 6, marginTop: 6 }}>
-                  {mias.length ? <span style={S.chip("#1E7B3A", "#E6F4EA")}>Ofertas {mias.length} {mias.length === 1 ? "acabado" : "acabados"}</span> : null}
-                  {p.envio_gratis ? <span style={S.chip("#142033", "#EEF1F6")}>Envío gratis</span> : null}
-                  {!p.publicado ? <span style={S.chip("#8A5A00", "#FFF8EE")}>Aún no visible en la tienda</span> : null}
+                  {mias.length ? <span style={S.chip("#1E7B3A", "#E6F4EA")}><T>Ofertas</T> <T>{mias.length}</T> <T>{mias.length === 1 ? "acabado" : "acabados"}</T></span> : null}
+                  {p.envio_gratis ? <span style={S.chip("#142033", "#EEF1F6")}><T>Envío gratis</T></span> : null}
+                  {!p.publicado ? <span style={S.chip("#8A5A00", "#FFF8EE")}><T>Aún no visible en la tienda</T></span> : null}
                 </div>
               </div>
               <button type="button" style={S.btn2} onClick={() => setAbierto(abierto === p.product_id ? null : p.product_id)}>
-                {abierto === p.product_id ? "Cerrar" : mias.length ? "Editar oferta" : "Ofertar"}
+                <T>{abierto === p.product_id ? "Cerrar" : mias.length ? "Editar oferta" : "Ofertar"}</T>
               </button>
             </div>
             {abierto === p.product_id ? <Editor plano={p} limites={datos.limites} alGuardar={cargar} /> : null}

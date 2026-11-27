@@ -91,7 +91,7 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
             {["6 procesos en una sola herramienta", "Se ajusta a los límites de tu máquina", "Te avisa lo que puede salir mal"].map((t) => (
               <li key={t} className="flex items-center gap-1.5">
                 <span className="text-[#3FD08A]">✓</span>
-                {t}
+                <TS>{t}</TS>
               </li>
             ))}
           </ul>
@@ -126,8 +126,8 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
           {COMO.map((c) => (
             <div key={c.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
               <span className="font-mono text-[12px] font-bold text-[#C2560A]">{c.n}</span>
-              <h3 className="m-0 mt-1 text-[15px] font-bold text-[#142033]">{c.t}</h3>
-              <p className="m-0 mt-1.5 text-[13px] leading-relaxed text-[#6B6A63]">{c.d}</p>
+              <h3 className="m-0 mt-1 text-[15px] font-bold text-[#142033]"><TS>{c.t}</TS></h3>
+              <p className="m-0 mt-1.5 text-[13px] leading-relaxed text-[#6B6A63]"><TS>{c.d}</TS></p>
             </div>
           ))}
         </div>
@@ -138,17 +138,17 @@ export default async function CalculadoraCncPage({ searchParams }: { searchParam
         <div className="flex flex-col gap-2">
           {PREGUNTAS.map((q) => (
             <details key={q.p} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
-              <summary className="cursor-pointer text-[15px] font-semibold text-[#1B1B18]">{q.p}</summary>
-              <p className="m-0 mt-2 text-[14px] text-[#6B6A63]">{q.r}</p>
+              <summary className="cursor-pointer text-[15px] font-semibold text-[#1B1B18]"><TS>{q.p}</TS></summary>
+              <p className="m-0 mt-2 text-[14px] text-[#6B6A63]"><TS>{q.r}</TS></p>
             </details>
           ))}
         </div>
         <p className="m-0 mt-4 text-[14px] text-[#6B6A63]">
-          <TS>¿Quieres el precio de una pieza?</TS>{" "}
+          <TS>¿Quieres el precio de una pieza?</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/cotizar" className="font-semibold text-[#C2560A]">
             <TS>Calculadoras de precio</TS>
-          </LocalizedClientLink>{" "}
-          <TS>· ¿Más herramientas?</TS>{" "}
+          </LocalizedClientLink><TS>{" "}</TS>
+          <TS>· ¿Más herramientas?</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/herramientas-cnc" className="font-semibold text-[#C2560A]">
             <TS>Todas las herramientas CNC</TS>
           </LocalizedClientLink>

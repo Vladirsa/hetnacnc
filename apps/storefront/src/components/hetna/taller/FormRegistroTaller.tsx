@@ -59,8 +59,8 @@ function Chips({ opciones, elegidas, alCambiar }: { opciones: string[]; elegidas
               activa ? "border-[#C2560A] bg-[#FDEEE1] font-semibold text-[#B34D07]" : "border-[#E7E4DC] bg-white text-[#2B2A26] hover:border-[#C2560A]"
             }`}
           >
-            {activa ? "✓ " : ""}
-            {o}
+            <T>{activa ? "✓ " : ""}</T>
+            <T>{o}</T>
           </button>
         )
       })}
@@ -156,7 +156,7 @@ export default function FormRegistroTaller() {
           <T>Crear mi cuenta de taller</T>
         </a>
         <p className="mt-3 text-xs text-[#6B675C]">
-          <T>¿Dudas?</T>{" "}
+          <T>¿Dudas?</T><T>{" "}</T>
           <a href={ligaWhatsApp("Hola HETNA, acabo de registrar mi taller y tengo una duda")} target="_blank" rel="noreferrer" className="font-semibold text-[#1FA855]">
             <T>Escríbenos por WhatsApp</T>
           </a>
@@ -265,9 +265,9 @@ export default function FormRegistroTaller() {
               {fotos.map((f) => (
                 <li key={f.id} className="flex items-center gap-3 rounded-xl border border-[#E7E4DC] px-3 py-2 text-sm">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-[#142033]">{f.nombre}</span>
+                    <span className="block truncate font-semibold text-[#142033]"><T>{f.nombre}</T></span>
                     {f.error ? (
-                      <span className="block text-xs text-[#B3261E]">{f.error}</span>
+                      <span className="block text-xs text-[#B3261E]"><T>{f.error}</T></span>
                     ) : f.subida ? (
                       <span className="block text-xs text-[#2E7D32]"><T>Lista</T></span>
                     ) : (
@@ -325,7 +325,7 @@ export default function FormRegistroTaller() {
           disabled={estado === "enviando" || subiendo}
           className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110 disabled:opacity-60"
         >
-          {estado === "enviando" ? "Enviando…" : subiendo ? "Subiendo fotos…" : "Registrar mi taller"}
+          <T>{estado === "enviando" ? "Enviando…" : subiendo ? "Subiendo fotos…" : "Registrar mi taller"}</T>
         </button>
         <span className="text-xs text-[#6B675C]"><T>Es gratis. Tu WhatsApp y correo no se muestran a los clientes.</T></span>
       </div>

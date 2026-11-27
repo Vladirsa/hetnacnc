@@ -44,13 +44,13 @@ export default async function ImportacionPage() {
           </p>
           {total > 0 && (
             <p className="mt-3 text-sm text-[#F2C9A5]">
-              <TS>Ya ubicamos</TS> {total} {total === 1 ? "proveedor" : "proveedores"} <TS>en</TS> {grupos.length} {grupos.length === 1 ? "país" : "países"}.
+              <TS>Ya ubicamos</TS> {total} <TS>{total === 1 ? "proveedor" : "proveedores"}</TS> <TS>en</TS> <TS>{grupos.length}</TS> <TS>{grupos.length === 1 ? "país" : "países"}</TS>.
             </p>
           )}
           <div className="mt-5 flex flex-wrap gap-2">
             {grupos.map((g) => (
               <a key={g.pais} href={`#${idPais(g.pais)}`} className="rounded-full bg-white/10 px-3 py-1.5 text-sm text-white no-underline hover:bg-white/20">
-                {BANDERAS[g.pais] || "🌎"} {g.pais} · {g.empresas.length}
+                <TS>{BANDERAS[g.pais] || "🌎"}</TS> <TS>{g.pais}</TS> · <TS>{g.empresas.length}</TS>
               </a>
             ))}
           </div>
@@ -76,17 +76,17 @@ export default async function ImportacionPage() {
         {grupos.map((g) => (
           <div key={g.pais} id={idPais(g.pais)} className="mt-10 scroll-mt-20">
             <h2 className="border-b border-[#E7E4DC] pb-2 text-2xl font-extrabold text-[#142033]">
-              {BANDERAS[g.pais] || "🌎"} {g.pais} <span className="text-base font-semibold text-[#6B675C]">· {g.empresas.length}</span>
+              <TS>{BANDERAS[g.pais] || "🌎"}</TS> <TS>{g.pais}</TS> <span className="text-base font-semibold text-[#6B675C]">· <TS>{g.empresas.length}</TS></span>
             </h2>
             <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {g.empresas.map((e) => (
                 <li key={e.slug} className="rounded-xl border border-[#E7E4DC] bg-white p-3">
-                  <p className="font-bold text-[#142033]">{e.empresa}</p>
+                  <p className="font-bold text-[#142033]"><TS>{e.empresa}</TS></p>
                   <p className="mt-0.5 text-xs text-[#6B675C]">
-                    {e.ciudad ? `${e.ciudad} · ` : ""}
+                    <TS>{e.ciudad ? `${e.ciudad} · ` : ""}</TS>
                     <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5"><TS>Perfil no reclamado</TS></span>
                   </p>
-                  {e.servicios && <p className="mt-2 line-clamp-3 text-sm text-[#40403A]">{e.servicios}</p>}
+                  {e.servicios && <p className="mt-2 line-clamp-3 text-sm text-[#40403A]"><TS>{e.servicios}</TS></p>}
                   <div className="mt-1 text-[11px]">
                     <QuitarPerfil slug={e.slug} />
                   </div>

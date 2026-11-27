@@ -2,6 +2,7 @@
 
 // Celosías y paneles decorativos (2D Studio): panel con marco y patrón calado
 // para divisores, puertas de closet, plafones y fachadas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, Interruptor, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -54,7 +55,7 @@ export function GeneradorCelosias({ cabecera }: { cabecera?: React.ReactNode }) 
               aria-pressed={patron === p.id}
               className={`rounded-[8px] px-2.5 py-2 text-left text-[13px] font-semibold ${patron === p.id ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#232D3D]"}`}
             >
-              {p.nombre}
+              <T>{p.nombre}</T>
             </button>
           ))}
         </div>
@@ -71,7 +72,7 @@ export function GeneradorCelosias({ cabecera }: { cabecera?: React.ReactNode }) 
               }}
               className="rounded-full bg-[#1C2431] px-2.5 py-1 text-[12px] text-[#C9D2E0] hover:bg-[#232D3D]"
             >
-              {m.nombre}
+              <T>{m.nombre}</T>
             </button>
           ))}
         </div>
@@ -110,8 +111,8 @@ export function GeneradorCelosias({ cabecera }: { cabecera?: React.ReactNode }) 
       }
       panel={
         <>
-          {cabecera}
-          {panel}
+          <T>{cabecera}</T>
+          <T>{panel}</T>
         </>
       }
       dibujo={r.dibujo}

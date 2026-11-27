@@ -74,7 +74,7 @@ export default async function PaginaPrograma({ params }: Props) {
           <span>/</span>
           <LocalizedClientLink href="/herramientas-cnc" className="hover:text-[#B34D07]"><TS>Herramientas</TS></LocalizedClientLink>
           <span>/</span>
-          <span className="font-medium text-[#1B1B18]">{p.herramienta.nombre}</span>
+          <span className="font-medium text-[#1B1B18]"><TS>{p.herramienta.nombre}</TS></span>
         </nav>
         <h1 className="mt-4 max-w-[900px] text-[32px] font-bold leading-[1.1] tracking-[-0.01em] text-[#0E2A5C] md:text-[46px]"><TS>{p.titulo}</TS></h1>
         <p className="mt-4 max-w-[760px] text-[17px] leading-relaxed text-[#40403A]"><TS>{p.intro}</TS></p>
@@ -91,8 +91,8 @@ export default async function PaginaPrograma({ params }: Props) {
           {p.pasos.map((s, i) => (
             <div key={s.t} className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
               <span className="text-[13px] font-bold text-[#C2560A]"><TS>Paso</TS> {i + 1}</span>
-              <h2 className="mt-1 text-[19px] font-bold text-[#1B1B18]">{s.t}</h2>
-              <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">{s.d}</p>
+              <h2 className="mt-1 text-[19px] font-bold text-[#1B1B18]"><TS>{s.t}</TS></h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]"><TS>{s.d}</TS></p>
             </div>
           ))}
         </div>
@@ -105,7 +105,7 @@ export default async function PaginaPrograma({ params }: Props) {
             {p.incluye.map((x) => (
               <li key={x} className="flex list-none gap-2.5 text-[16px] leading-relaxed text-[#40403A]">
                 <span className="mt-[9px] h-2 w-2 shrink-0 rounded-full bg-[#C2560A]" aria-hidden="true" />
-                {x}
+                <TS>{x}</TS>
               </li>
             ))}
           </ul>
@@ -122,8 +122,8 @@ export default async function PaginaPrograma({ params }: Props) {
         <div className="mt-4 flex flex-col gap-3">
           {p.preguntas.map((q) => (
             <details key={q.p} className="rounded-[12px] border border-[#E7E4DC] bg-white px-5 py-4">
-              <summary className="cursor-pointer text-[17px] font-semibold text-[#1B1B18]">{q.p}</summary>
-              <p className="mt-2 text-[15.5px] leading-relaxed text-[#4A4943]">{q.r}</p>
+              <summary className="cursor-pointer text-[17px] font-semibold text-[#1B1B18]"><TS>{q.p}</TS></summary>
+              <p className="mt-2 text-[15.5px] leading-relaxed text-[#4A4943]"><TS>{q.r}</TS></p>
             </details>
           ))}
         </div>

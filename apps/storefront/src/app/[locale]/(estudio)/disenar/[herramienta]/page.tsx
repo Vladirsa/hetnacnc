@@ -106,7 +106,7 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
         {GUIA_DE_HERRAMIENTA[h.slug] && (
           <p className="m-0 mt-1.5 text-[14px]">
             <LocalizedClientLink href={`/cnc/${GUIA_DE_HERRAMIENTA[h.slug][0]}`} className="font-semibold text-[#FF8A47] hover:text-white">
-              {GUIA_DE_HERRAMIENTA[h.slug][1]} →
+              <TS>{GUIA_DE_HERRAMIENTA[h.slug][1]}</TS> →
             </LocalizedClientLink>
           </p>
         )}
@@ -115,10 +115,10 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
           <div className="mt-3">
             {CATEGORIAS.map((c) => (
               <nav key={c.id} aria-label={c.nombre} className="mt-2 flex flex-wrap items-center gap-2 text-[13px]">
-                <span className="w-[120px] shrink-0 font-semibold text-white">{c.nombre}</span>
+                <span className="w-[120px] shrink-0 font-semibold text-white"><TS>{c.nombre}</TS></span>
                 {MODELOS.filter((m) => m.categoria === c.id).map((m) => (
                   <LocalizedClientLink key={m.id} href={`/disenar/modelos-3d/${m.id}`} className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
-                    {m.nombre}
+                    <TS>{m.nombre}</TS>
                   </LocalizedClientLink>
                 ))}
               </nav>
@@ -126,13 +126,13 @@ function AcercaDe({ h }: { h: HerramientaDiseno }) {
           </div>
         )}
         <p className="m-0 mt-1.5 text-[13px] text-[#8D96A3]">
-          <TS>Herramienta</TS> {h.acceso === "gratis" ? "gratis" : "con créditos"} <TS>de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.</TS>
+          <TS>Herramienta</TS> <TS>{h.acceso === "gratis" ? "gratis" : "con créditos"}</TS> <TS>de HETNA CNC, el marketplace mexicano de CNC. Funciona en el navegador, sin instalar nada.</TS>
         </p>
         {otras.length > 0 && (
           <nav aria-label="Más herramientas" className="mt-3 flex flex-wrap gap-2 text-[13px]">
             {otras.map((o) => (
               <LocalizedClientLink key={o.slug} href={`/disenar/${o.slug}`} className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
-                {o.corto}
+                <TS>{o.corto}</TS>
               </LocalizedClientLink>
             ))}
             <LocalizedClientLink href="/disenar" className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">

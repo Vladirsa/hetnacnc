@@ -279,7 +279,7 @@ export default async function FabricacionPage() {
               href={pedir(n.valor)}
               className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20"
             >
-              {n.valor === "Diseño" ? "Diseñar algo antes" : n.valor}
+              <TS>{n.valor === "Diseño" ? "Diseñar algo antes" : n.valor}</TS>
             </LocalizedClientLink>
           ))}
         </div>
@@ -303,8 +303,8 @@ export default async function FabricacionPage() {
               href={pedir(f.necesidad)}
               className="rounded-2xl border border-[#E7E4DC] bg-white p-4 transition hover:-translate-y-0.5 hover:border-[#C2560A] hover:shadow-md"
             >
-              <span className="block font-bold text-[#142033]">{f.que}</span>
-              <span className="mt-1 block text-[13px] text-[#6B675C]">{f.ej}</span>
+              <span className="block font-bold text-[#142033]"><TS>{f.que}</TS></span>
+              <span className="mt-1 block text-[13px] text-[#6B675C]"><TS>{f.ej}</TS></span>
             </LocalizedClientLink>
           ))}
           <a
@@ -327,23 +327,23 @@ export default async function FabricacionPage() {
           {SERVICIOS.map((s) => (
             <article key={s.titulo} className="flex flex-col rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <h3 className="text-lg font-extrabold text-[#142033]"><TS>{s.titulo}</TS></h3>
-              <p className="mt-1 text-sm text-[#2B2A26]">{s.que}</p>
+              <p className="mt-1 text-sm text-[#2B2A26]"><TS>{s.que}</TS></p>
               <dl className="mt-3 grid gap-2 text-[13px]">
                 <div>
                   <dt className="font-bold text-[#44433D]"><TS>Para quién</TS></dt>
-                  <dd className="text-[#6B675C]">{s.para}</dd>
+                  <dd className="text-[#6B675C]"><TS>{s.para}</TS></dd>
                 </div>
                 <div>
                   <dt className="font-bold text-[#44433D]"><TS>Qué incluye</TS></dt>
-                  <dd className="text-[#6B675C]">{s.incluye}</dd>
+                  <dd className="text-[#6B675C]"><TS>{s.incluye}</TS></dd>
                 </div>
                 <div>
                   <dt className="font-bold text-[#44433D]"><TS>Qué necesitas</TS></dt>
-                  <dd className="text-[#6B675C]">{s.necesitas}</dd>
+                  <dd className="text-[#6B675C]"><TS>{s.necesitas}</TS></dd>
                 </div>
                 <div>
                   <dt className="font-bold text-[#44433D]"><TS>Tiempo típico</TS></dt>
-                  <dd className="font-semibold text-[#C2560A]">{s.tiempo}</dd>
+                  <dd className="font-semibold text-[#C2560A]"><TS>{s.tiempo}</TS></dd>
                 </div>
               </dl>
               <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
@@ -382,8 +382,8 @@ export default async function FabricacionPage() {
             <li key={t} className="flex gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#FFF1E6] font-extrabold text-[#C2560A]">{i + 1}</span>
               <span>
-                <span className="block font-bold text-[#142033]">{t}</span>
-                <span className="text-sm text-[#6B675C]">{d}</span>
+                <span className="block font-bold text-[#142033]"><TS>{t}</TS></span>
+                <span className="text-sm text-[#6B675C]"><TS>{d}</TS></span>
               </span>
             </li>
           ))}
@@ -434,8 +434,8 @@ export default async function FabricacionPage() {
           ].map(([t, d], i) => (
             <li key={t} className="rounded-2xl bg-[#FAF9F6] p-4">
               <span className="text-xs font-bold uppercase tracking-wider text-[#C2560A]"><TS>Paso</TS> {i + 1}</span>
-              <span className="mt-1 block font-bold text-[#142033]">{t}</span>
-              <span className="mt-1 block text-sm text-[#6B675C]">{d}</span>
+              <span className="mt-1 block font-bold text-[#142033]"><TS>{t}</TS></span>
+              <span className="mt-1 block text-sm text-[#6B675C]"><TS>{d}</TS></span>
             </li>
           ))}
         </ol>
@@ -451,7 +451,7 @@ export default async function FabricacionPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {OPERACIONES.map((o) => (
             <div key={o.que} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <p className="font-bold text-[#142033]">✓ {o.que}</p>
+              <p className="font-bold text-[#142033]">✓ <TS>{o.que}</TS></p>
               <p className="mt-1 text-sm text-[#6B675C]"><TS>{o.detalle}</TS></p>
             </div>
           ))}
@@ -501,10 +501,10 @@ export default async function FabricacionPage() {
           <tbody className="divide-y divide-[#E7E4DC] text-[#44433D]">
             {CAPACIDADES.map((c) => (
               <tr key={c.proceso}>
-                <td className="px-4 py-3 font-semibold text-[#142033]">{c.proceso}</td>
-                <td className="px-4 py-3">{c.tamano}</td>
-                <td className="px-4 py-3">{c.grosor}</td>
-                <td className="px-4 py-3">{c.tolerancia}</td>
+                <td className="px-4 py-3 font-semibold text-[#142033]"><TS>{c.proceso}</TS></td>
+                <td className="px-4 py-3"><TS>{c.tamano}</TS></td>
+                <td className="px-4 py-3"><TS>{c.grosor}</TS></td>
+                <td className="px-4 py-3"><TS>{c.tolerancia}</TS></td>
               </tr>
             ))}
           </tbody>
@@ -519,7 +519,7 @@ export default async function FabricacionPage() {
           <p className="font-extrabold text-[#142033]"><TS>Acabados</TS></p>
           <div className="mt-3 flex flex-wrap gap-2">
             {ACABADOS_TEXTO.map((a) => (
-              <span key={a} className="rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm text-[#2B2A26]">{a}</span>
+              <span key={a} className="rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm text-[#2B2A26]"><TS>{a}</TS></span>
             ))}
           </div>
           <p className="mt-3 text-sm text-[#6B675C]"><TS>Producción por volumen: desde una pieza hasta pedidos recurrentes cada mes.</TS></p>
@@ -529,7 +529,7 @@ export default async function FabricacionPage() {
             <p className="font-extrabold text-[#142033]"><TS>Máquinas registradas por talleres de la red</TS></p>
             <div className="mt-3 flex flex-wrap gap-2">
               {maquinas.map((m) => (
-                <span key={m} className="rounded-full border border-[#E7E4DC] px-3 py-1.5 text-sm text-[#2B2A26]">{m}</span>
+                <span key={m} className="rounded-full border border-[#E7E4DC] px-3 py-1.5 text-sm text-[#2B2A26]"><TS>{m}</TS></span>
               ))}
             </div>
           </div>
@@ -546,9 +546,9 @@ export default async function FabricacionPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {MATERIALES.map((m) => (
             <div key={m.nombre} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <p className="font-bold text-[#142033]">{m.nombre}</p>
+              <p className="font-bold text-[#142033]"><TS>{m.nombre}</TS></p>
               <p className="mt-1 text-sm text-[#6B675C]">
-                <span className="font-semibold text-[#44433D]"><TS>Ideal para:</TS></span> {m.ideal}
+                <span className="font-semibold text-[#44433D]"><TS>Ideal para:</TS></span> <TS>{m.ideal}</TS>
               </p>
             </div>
           ))}
@@ -584,7 +584,7 @@ export default async function FabricacionPage() {
                       />
                     </span>
                     <span className="block truncate px-3 py-2 text-xs font-semibold text-[#142033]">
-                      {f.taller.nombre} · {ubicacion(f.taller.perfil) || "México"}
+                      <TS>{f.taller.nombre}</TS> · <TS>{ubicacion(f.taller.perfil) || "México"}</TS>
                     </span>
                   </LocalizedClientLink>
                 ))}
@@ -621,8 +621,8 @@ export default async function FabricacionPage() {
           <dl className="mt-3 divide-y divide-[#E7E4DC]">
             {TIEMPOS.map((t) => (
               <div key={t.que} className="flex items-center justify-between gap-4 py-2.5">
-                <dt className="text-[#2B2A26]">{t.que}</dt>
-                <dd className="font-bold text-[#C2560A]">{t.rango}</dd>
+                <dt className="text-[#2B2A26]"><TS>{t.que}</TS></dt>
+                <dd className="font-bold text-[#C2560A]"><TS>{t.rango}</TS></dd>
               </div>
             ))}
           </dl>
@@ -660,8 +660,8 @@ export default async function FabricacionPage() {
             ["Envíos a todo el país", "Cada propuesta dice si incluye el envío. También puedes recoger con el taller."],
           ].map(([t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <p className="font-bold text-[#142033]">✓ {t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="font-bold text-[#142033]">✓ <TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
@@ -678,10 +678,10 @@ export default async function FabricacionPage() {
                 </span>
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5">
-                    <span className="truncate font-bold text-[#142033]">{t.nombre}</span>
+                    <span className="truncate font-bold text-[#142033]"><TS>{t.nombre}</TS></span>
                     {t.verificado && <span title="Verificado por HETNA" className="text-xs font-bold text-[#1F5A2B]">✓</span>}
                   </span>
-                  <span className="block truncate text-xs text-[#6B675C]">{ubicacion(t.perfil) || "México"}</span>
+                  <span className="block truncate text-xs text-[#6B675C]"><TS>{ubicacion(t.perfil) || "México"}</TS></span>
                 </span>
               </LocalizedClientLink>
             ))}
@@ -694,8 +694,8 @@ export default async function FabricacionPage() {
         <h2 className="mb-2 text-xl font-extrabold text-[#142033]"><TS>Preguntas frecuentes</TS></h2>
         {PREGUNTAS_FABRICACION.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
-            <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
-            <p className="mt-2 text-sm text-[#44433D]">{q.r}</p>
+            <summary className="cursor-pointer font-semibold text-[#142033]"><TS>{q.p}</TS></summary>
+            <p className="mt-2 text-sm text-[#44433D]"><TS>{q.r}</TS></p>
           </details>
         ))}
         <script
@@ -724,7 +724,7 @@ export default async function FabricacionPage() {
         </div>
         <FormSolicitudTaller />
         <p className="mt-4 text-center text-sm text-white/70">
-          <TS>¿Prefieres hablar primero?</TS>{" "}
+          <TS>¿Prefieres hablar primero?</TS><TS>{" "}</TS>
           <a
             href={ligaWhatsApp("Hola HETNA, quiero cotizar una fabricación CNC. Tipo de pieza: , material: , cantidad: , medidas: , ciudad: ")}
             target="_blank"
@@ -741,9 +741,9 @@ export default async function FabricacionPage() {
         <div>
           <h2 className="text-lg font-extrabold text-[#142033]"><TS>¿Tienes taller?</TS></h2>
           <p className="text-sm text-[#44433D]">
-            {total > 0
+            <TS>{total > 0
               ? `Hay ${total === 1 ? "1 trabajo" : `${total} trabajos`} esperando precio. Regístrate gratis y manda tu propuesta.`
-              : "Regístrate gratis y te avisamos de cada trabajo nuevo de tu servicio."}
+              : "Regístrate gratis y te avisamos de cada trabajo nuevo de tu servicio."}</TS>
           </p>
         </div>
         <div className="flex flex-wrap gap-3">

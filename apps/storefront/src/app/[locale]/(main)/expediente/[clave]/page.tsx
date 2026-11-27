@@ -66,9 +66,9 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Expediente digital de fabricación</TS></p>
-          <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Proyecto</TS> {e.folio}</h1>
+          <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Proyecto</TS> <TS>{e.folio}</TS></h1>
           <p className="mt-1 text-sm text-[#6B675C]">
-            {e.etapa_nombre} <TS>· creado el</TS> {fecha(e.creada, false)} · {e.visor === "taller" ? "vista del taller" : "vista del cliente"}
+            <TS>{e.etapa_nombre}</TS> <TS>· creado el</TS> {fecha(e.creada, false)} · <TS>{e.visor === "taller" ? "vista del taller" : "vista del cliente"}</TS>
           </p>
         </div>
         <div className="flex gap-2 print:hidden">
@@ -88,8 +88,8 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
           <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
             {TRABAJO.filter(([k]) => e.trabajo[k]).map(([k, l]) => (
               <div key={k}>
-                <dt className="text-[#6B675C]">{l}</dt>
-                <dd className="font-semibold text-[#142033]">{e.trabajo[k]}</dd>
+                <dt className="text-[#6B675C]"><TS>{l}</TS></dt>
+                <dd className="font-semibold text-[#142033]"><TS>{e.trabajo[k]}</TS></dd>
               </div>
             ))}
           </dl>
@@ -99,23 +99,23 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
           <dl className="mt-2 grid gap-2 text-sm">
             <div>
               <dt className="text-[#6B675C]"><TS>Cliente</TS></dt>
-              <dd className="font-semibold text-[#142033]">{e.responsables.cliente}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{e.responsables.cliente}</TS></dd>
             </div>
             <div>
               <dt className="text-[#6B675C]"><TS>Taller</TS></dt>
               <dd className="font-semibold text-[#142033]">
-                {e.responsables.taller ? (
+                <TS>{e.responsables.taller ? (
                   <LocalizedClientLink href={`/talleres/${e.responsables.taller.handle}`} className="hover:text-[#C2560A]">
-                    {e.responsables.taller.nombre}
+                    <TS>{e.responsables.taller.nombre}</TS>
                   </LocalizedClientLink>
                 ) : (
                   "Sin elegir todavía"
-                )}
+                )}</TS>
               </dd>
             </div>
             <div>
               <dt className="text-[#6B675C]"><TS>Plataforma</TS></dt>
-              <dd className="font-semibold text-[#142033]">{e.responsables.plataforma}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{e.responsables.plataforma}</TS></dd>
             </div>
           </dl>
         </section>
@@ -131,23 +131,23 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
             </div>
             <div>
               <dt className="text-[#6B675C]"><TS>Entrega</TS></dt>
-              <dd className="font-semibold text-[#142033]">{e.propuesta.fecha_entrega ? fecha(e.propuesta.fecha_entrega, false) : `${e.propuesta.dias} días`}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{e.propuesta.fecha_entrega ? fecha(e.propuesta.fecha_entrega, false) : `${e.propuesta.dias} días`}</TS></dd>
             </div>
             <div>
               <dt className="text-[#6B675C]"><TS>Anticipo</TS></dt>
-              <dd className="font-semibold text-[#142033]">{e.propuesta.anticipo_pct != null ? `${e.propuesta.anticipo_pct} %` : "—"}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{e.propuesta.anticipo_pct != null ? `${e.propuesta.anticipo_pct} %` : "—"}</TS></dd>
             </div>
             <div>
               <dt className="text-[#6B675C]"><TS>Envío</TS></dt>
-              <dd className="font-semibold text-[#142033]">{e.propuesta.incluye_envio ? "Incluido" : "Aparte"}</dd>
+              <dd className="font-semibold text-[#142033]"><TS>{e.propuesta.incluye_envio ? "Incluido" : "Aparte"}</TS></dd>
             </div>
           </dl>
-          {e.propuesta.garantia && <p className="mt-2 text-sm text-[#40403A]"><strong><TS>Garantía:</TS></strong> {e.propuesta.garantia}</p>}
-          {e.propuesta.condiciones && <p className="mt-1 text-sm text-[#40403A]"><strong><TS>Condiciones:</TS></strong> {e.propuesta.condiciones}</p>}
+          {e.propuesta.garantia && <p className="mt-2 text-sm text-[#40403A]"><strong><TS>Garantía:</TS></strong> <TS>{e.propuesta.garantia}</TS></p>}
+          {e.propuesta.condiciones && <p className="mt-1 text-sm text-[#40403A]"><strong><TS>Condiciones:</TS></strong> <TS>{e.propuesta.condiciones}</TS></p>}
           {e.contrato && (
             <p className="mt-2 text-sm text-[#40403A]">
-              <strong><TS>Acuerdo SafeDeal</TS></strong> v{e.contrato.version}: {e.contrato.estado}
-              {e.contrato.firmado_en ? ` (firmado el ${fecha(e.contrato.firmado_en, false)})` : ""}
+              <strong><TS>Acuerdo SafeDeal</TS></strong> v<TS>{e.contrato.version}</TS>: <TS>{e.contrato.estado}</TS>
+              <TS>{e.contrato.firmado_en ? ` (firmado el ${fecha(e.contrato.firmado_en, false)})` : ""}</TS>
             </p>
           )}
         </section>
@@ -171,12 +171,12 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
               {e.archivos.map((a, i) => (
                 <tr key={i} className="border-t border-[#E7E4DC]">
                   <td className="py-1.5 pr-2 text-[#142033]">
-                    {a.nombre} <span className="text-[#6B675C]">({peso(a.tamano)})</span>
+                    <TS>{a.nombre}</TS> <span className="text-[#6B675C]">({peso(a.tamano)})</span>
                     {a.borrado && <span className="ml-1 text-xs text-[#B3261E]"><TS>borrado</TS></span>}
                   </td>
-                  <td className="py-1.5 pr-2 text-[#40403A]">{a.de}</td>
+                  <td className="py-1.5 pr-2 text-[#40403A]"><TS>{a.de}</TS></td>
                   <td className="py-1.5 pr-2 text-[#40403A]">{fecha(a.fecha, false)}</td>
-                  <td className="py-1.5 font-mono text-xs text-[#6B675C]">{a.huella || "—"}</td>
+                  <td className="py-1.5 font-mono text-xs text-[#6B675C]"><TS>{a.huella || "—"}</TS></td>
                 </tr>
               ))}
             </tbody>
@@ -191,7 +191,7 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
         <section className="mt-4 rounded-2xl border border-[#E7E4DC] bg-white p-4 text-sm">
           <h2 className="text-base font-extrabold text-[#142033]"><TS>Entrega</TS></h2>
           <p className="mt-1 text-[#40403A]">
-            {e.entrega.paqueteria || "Paquetería"} <TS>· guía</TS> <span className="font-mono">{e.entrega.guia || "—"}</span>
+            <TS>{e.entrega.paqueteria || "Paquetería"}</TS> <TS>· guía</TS> <span className="font-mono"><TS>{e.entrega.guia || "—"}</TS></span>
           </p>
         </section>
       )}
@@ -201,9 +201,9 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
         <ol className="mt-3 grid gap-2.5">
           {e.linea.map((s, i) => (
             <li key={i} className="grid grid-cols-[28px_1fr] gap-2 text-sm">
-              <span aria-hidden="true">{ICONO[s.tipo] || "•"}</span>
+              <span aria-hidden="true"><TS>{ICONO[s.tipo] || "•"}</TS></span>
               <span>
-                <span className="text-xs text-[#6B675C]">{fecha(s.fecha)} · {s.quien}</span>
+                <span className="text-xs text-[#6B675C]">{fecha(s.fecha)} · <TS>{s.quien}</TS></span>
                 <span className="block text-[#142033]"><TS>{s.texto}</TS></span>
               </span>
             </li>
@@ -212,7 +212,7 @@ export default async function PaginaExpediente({ params }: { params: Promise<{ c
       </section>
 
       <p className="mt-6 text-xs text-[#6B675C]">
-        <TS>Generado el</TS> {fecha(e.generado)} <TS>por HETNA CNC. Huella del expediente:</TS> <span className="break-all font-mono">{e.huella}</span><TS>. Si dos copias tienen la misma
+        <TS>Generado el</TS> {fecha(e.generado)} <TS>por HETNA CNC. Huella del expediente:</TS> <span className="break-all font-mono"><TS>{e.huella}</TS></span><TS>. Si dos copias tienen la misma
         huella, dicen lo mismo.</TS>
       </p>
     </main>

@@ -23,18 +23,18 @@ export default async function PanelLicitaciones({ params, searchParams }: { para
       <Pestanas base={`/${locale}/panel/licitaciones`} actual={etapa} opciones={ETAPAS.map(([k, n]) => ({ clave: k, nombre: n, n: k === "todas" ? undefined : data.totales[k] }))} />
       <Tarjeta>
         <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/solicitudes`} target="_blank" rel="noreferrer"><TS>Dashboard →</TS></a>}><TS>Solicitudes de fabricación</TS></Titulo>
-        {error && <Vacio><TS>No pude leer las solicitudes:</TS> {error}</Vacio>}
+        {error && <Vacio><TS>No pude leer las solicitudes:</TS> <TS>{error}</TS></Vacio>}
         {!error && data.solicitudes.length === 0 && <Vacio><TS>Nada en esta etapa.</TS></Vacio>}
         <ul className="divide-y divide-[#EFEDE6]">
           {data.solicitudes.map((s) => (
             <li key={s.id} className="py-3">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[14px] font-extrabold text-[#142033]">{s.folio} <span className="font-semibold text-[#6B675C]">· {s.trabajo?.servicio || s.modo}</span></p>
-                <Etiqueta color={s.etapa === "en_revision" ? "ambar" : s.etapa === "entregada" ? "verde" : "azul"}>{s.etapa_nombre}</Etiqueta>
+                <p className="text-[14px] font-extrabold text-[#142033]"><TS>{s.folio}</TS> <span className="font-semibold text-[#6B675C]">· {s.trabajo?.servicio || s.modo}</span></p>
+                <Etiqueta color={s.etapa === "en_revision" ? "ambar" : s.etapa === "entregada" ? "verde" : "azul"}><TS>{s.etapa_nombre}</TS></Etiqueta>
               </div>
-              <p className="mt-0.5 text-[12.5px] text-[#40403A]">{[s.contacto?.empresa || s.contacto?.nombre, s.trabajo?.ciudad || s.contacto?.ciudad, s.trabajo?.material, s.trabajo?.cantidad].filter(Boolean).join(" · ")}</p>
+              <p className="mt-0.5 text-[12.5px] text-[#40403A]"><TS>{[s.contacto?.empresa || s.contacto?.nombre, s.trabajo?.ciudad || s.contacto?.ciudad, s.trabajo?.material, s.trabajo?.cantidad].filter(Boolean).join(" · ")}</TS></p>
               {s.trabajo?.descripcion && <p className="mt-0.5 line-clamp-2 text-[12px] text-[#6B675C]"><TS>{s.trabajo.descripcion}</TS></p>}
-              <p className="mt-1 text-[11px] text-[#9A968B]">{hace(s.creada)} · {s.propuestas} <TS>propuesta(s)</TS>{s.pago_monto ? ` · pago ${pesos(s.pago_monto)} ${s.pago_estado || ""}` : ""}{s.trabajo?.archivos?.length ? ` · ${s.trabajo.archivos.length} archivo(s)` : ""}</p>
+              <p className="mt-1 text-[11px] text-[#9A968B]">{hace(s.creada)} · <TS>{s.propuestas}</TS> <TS>propuesta(s)</TS><TS>{s.pago_monto ? ` · pago ${pesos(s.pago_monto)} ${s.pago_estado || ""}` : ""}</TS><TS>{s.trabajo?.archivos?.length ? ` · ${s.trabajo.archivos.length} archivo(s)` : ""}</TS></p>
               <div className="mt-1.5 flex gap-3 text-[12px] font-semibold">
                 {s.contacto?.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(s.contacto.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer"><TS>WhatsApp</TS></a>}
                 {s.contacto?.correo && <a className="text-[#40403A]" href={`mailto:${s.contacto.correo}`}><TS>Correo</TS></a>}

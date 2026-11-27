@@ -59,9 +59,9 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
         <LocalizedClientLink href="/user/escanear" className="text-[14px] font-semibold text-[#B34D07]"><TS>← Mis piezas</TS></LocalizedClientLink>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="m-0 text-[27px] font-bold text-[#0E2A5C]"><TS>{s.titulo}</TS></h1>
-          <span className="text-[14px] font-bold text-[#6B6A63]">{s.folio_texto}</span>
+          <span className="text-[14px] font-bold text-[#6B6A63]"><TS>{s.folio_texto}</TS></span>
         </div>
-        <p className="mt-3 rounded-[10px] border border-[#F2D9C4] bg-[#FFF8F1] px-4 py-3 text-[13.5px] leading-relaxed text-[#6B4A2B]">{s.aviso}</p>
+        <p className="mt-3 rounded-[10px] border border-[#F2D9C4] bg-[#FFF8F1] px-4 py-3 text-[13.5px] leading-relaxed text-[#6B4A2B]"><TS>{s.aviso}</TS></p>
 
         {/* Estados */}
         {s.estado === "cancelada" ? (
@@ -70,7 +70,7 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
           <ol className="mt-5 grid grid-cols-2 gap-2 p-0 sm:grid-cols-4 lg:grid-cols-8">
             {PASOS.map(([e, nombre], i) => (
               <li key={e} className={`list-none rounded-[10px] px-2.5 py-2 text-center text-[12.5px] font-semibold ${i < indice ? "bg-[#E7F6EE] text-[#0F7A4A]" : i === indice ? "bg-[#C2560A] text-white" : "bg-[#F3F3F1] text-[#8A8880]"}`}>
-                {nombre}
+                <TS>{nombre}</TS>
                 {s.tiempos[e] && <span className="block text-[11px] font-normal opacity-80">{fechaSegura(FECHA, s.tiempos[e])}</span>}
               </li>
             ))}
@@ -101,7 +101,7 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
               <ul className="mt-3 flex flex-col gap-1 p-0">
                 {modelos.map((a) => (
                   <li key={a.id} className="list-none text-[14px]">
-                    <a href={`${ruta(a)}?descargar=1`} className="font-semibold text-[#B34D07] underline">{a.nombre}</a> <span className="text-[#6B6A63]">· {mb(a.tamano)}</span>
+                    <a href={`${ruta(a)}?descargar=1`} className="font-semibold text-[#B34D07] underline"><TS>{a.nombre}</TS></a> <span className="text-[#6B6A63]">· {mb(a.tamano)}</span>
                   </li>
                 ))}
               </ul>
@@ -113,7 +113,7 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
                   <thead><tr className="text-left text-[#6B6A63]"><th className="py-1"><TS>Medida</TS></th><th><TS>Esperada</TS></th><th><TS>Medida real</TS></th><th><TS>Tolerancia</TS></th><th></th></tr></thead>
                   <tbody>
                     {s.verificacion.map((v, i) => (
-                      <tr key={i} className="border-t border-[#EEEAE2]"><td className="py-1">{v.medida}</td><td>{v.esperado_mm} <TS>mm</TS></td><td>{v.medido_mm} <TS>mm</TS></td><td>±{v.tolerancia_mm} <TS>mm</TS></td><td className={v.ok ? "text-[#0F7A4A]" : "text-[#9B1C1C]"}>{v.ok ? "✓" : "Fuera"}</td></tr>
+                      <tr key={i} className="border-t border-[#EEEAE2]"><td className="py-1"><TS>{v.medida}</TS></td><td><TS>{v.esperado_mm}</TS> <TS>mm</TS></td><td><TS>{v.medido_mm}</TS> <TS>mm</TS></td><td>±<TS>{v.tolerancia_mm}</TS> <TS>mm</TS></td><td className={v.ok ? "text-[#0F7A4A]" : "text-[#9B1C1C]"}><TS>{v.ok ? "✓" : "Fuera"}</TS></td></tr>
                     ))}
                   </tbody>
                 </table>
@@ -124,7 +124,7 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
 
         {aprobada && (
           <section className="mt-6 rounded-[14px] border border-[#CDEBD9] bg-[#F3FBF6] p-5">
-            <h2 className="m-0 text-[18px] font-bold text-[#0F7A4A]">{s.estado === "terminada" ? "Volver a fabricar" : "Aprobada: cotiza la fabricación"}</h2>
+            <h2 className="m-0 text-[18px] font-bold text-[#0F7A4A]"><TS>{s.estado === "terminada" ? "Volver a fabricar" : "Aprobada: cotiza la fabricación"}</TS></h2>
             <div className="mt-3">
               <CotizarEscanear id={s.id} locale={locale} modelo={ultimoModelo ? { id: ultimoModelo.id, nombre: ultimoModelo.nombre } : null} pieza={s.titulo} material={s.material_deseado || s.material_original} salida={SALIDA[s.salida] || s.salida} folio={s.folio_texto} />
             </div>
@@ -134,13 +134,13 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
         {/* Comentarios y aprobación */}
         {!cerrada && (
           <section className="mt-6 rounded-[14px] border border-[#E7E4DC] bg-white p-5">
-            <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">{s.estado === "render_listo" ? "¿Apruebas el render?" : "Comentarios"}</h2>
+            <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>{s.estado === "render_listo" ? "¿Apruebas el render?" : "Comentarios"}</TS></h2>
             {s.comentarios.length > 0 && (
               <ul className="mt-3 flex flex-col gap-2 p-0">
                 {s.comentarios.map((c, i) => (
                   <li key={i} className={`list-none rounded-[10px] px-3 py-2 text-[14px] ${c.de === "equipo" ? "bg-[#EEF1F6]" : "bg-[#FAF8F4]"}`}>
-                    <b>{c.de === "equipo" ? "HETNA" : "Tú"}</b>
-                    {c.accion === "aprobar" ? " · aprobó" : c.accion === "ajuste" ? " · pidió ajuste" : ""} <span className="text-[12px] text-[#6B6A63]">{fechaSegura(FECHA, c.creado)}</span>
+                    <b><TS>{c.de === "equipo" ? "HETNA" : "Tú"}</TS></b>
+                    <TS>{c.accion === "aprobar" ? " · aprobó" : c.accion === "ajuste" ? " · pidió ajuste" : ""}</TS> <span className="text-[12px] text-[#6B6A63]">{fechaSegura(FECHA, c.creado)}</span>
                     <p className="m-0 mt-1 whitespace-pre-line"><TS>{c.texto}</TS></p>
                   </li>
                 ))}
@@ -158,14 +158,14 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
             <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Tu solicitud</TS></h2>
             <p className="m-0 mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-[#40403A]"><TS>{s.descripcion}</TS></p>
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[14px]">
-              <dt className="text-[#6B6A63]"><TS>Tipo</TS></dt><dd className="m-0">{USO[s.uso]}</dd>
-              <dt className="text-[#6B6A63]"><TS>Salida</TS></dt><dd className="m-0">{SALIDA[s.salida]}</dd>
-              {s.material_original && <><dt className="text-[#6B6A63]"><TS>Material original</TS></dt><dd className="m-0">{s.material_original}</dd></>}
-              {s.material_deseado && <><dt className="text-[#6B6A63]"><TS>Material deseado</TS></dt><dd className="m-0">{s.material_deseado}</dd></>}
-              {s.zona && <><dt className="text-[#6B6A63]"><TS>Zona</TS></dt><dd className="m-0">{s.zona}</dd></>}
+              <dt className="text-[#6B6A63]"><TS>Tipo</TS></dt><dd className="m-0"><TS>{USO[s.uso]}</TS></dd>
+              <dt className="text-[#6B6A63]"><TS>Salida</TS></dt><dd className="m-0"><TS>{SALIDA[s.salida]}</TS></dd>
+              {s.material_original && <><dt className="text-[#6B6A63]"><TS>Material original</TS></dt><dd className="m-0"><TS>{s.material_original}</TS></dd></>}
+              {s.material_deseado && <><dt className="text-[#6B6A63]"><TS>Material deseado</TS></dt><dd className="m-0"><TS>{s.material_deseado}</TS></dd></>}
+              {s.zona && <><dt className="text-[#6B6A63]"><TS>Zona</TS></dt><dd className="m-0"><TS>{s.zona}</TS></dd></>}
             </dl>
             <h3 className="m-0 mt-3 text-[14px] font-bold"><TS>Medidas a mano</TS></h3>
-            <ul className="m-0 mt-1 p-0 text-[14px]">{s.medidas.map((m, i) => <li key={i} className="list-none">{m.nombre}: <b>{m.mm} <TS>mm</TS></b></li>)}</ul>
+            <ul className="m-0 mt-1 p-0 text-[14px]">{s.medidas.map((m, i) => <li key={i} className="list-none"><TS>{m.nombre}</TS>: <b><TS>{m.mm}</TS> <TS>mm</TS></b></li>)}</ul>
           </div>
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
             <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]"><TS>Escaneo y fotos</TS></h2>
@@ -173,8 +173,8 @@ export default async function SolicitudEscanearPage({ params }: { params: Promis
               <ul className="mt-2 flex flex-col gap-1 p-0">
                 {propios.map((a) => (
                   <li key={a.id} className="list-none text-[14px]">
-                    <span className="mr-1 rounded bg-[#F3F3F1] px-1.5 py-0.5 text-[11px] font-bold uppercase text-[#6B6A63]">{a.tipo}</span>
-                    <a href={`${ruta(a)}?descargar=1`} className="font-semibold text-[#1B1B18] underline">{a.nombre}</a> <span className="text-[#6B6A63]">· {mb(a.tamano)}</span>
+                    <span className="mr-1 rounded bg-[#F3F3F1] px-1.5 py-0.5 text-[11px] font-bold uppercase text-[#6B6A63]"><TS>{a.tipo}</TS></span>
+                    <a href={`${ruta(a)}?descargar=1`} className="font-semibold text-[#1B1B18] underline"><TS>{a.nombre}</TS></a> <span className="text-[#6B6A63]">· {mb(a.tamano)}</span>
                   </li>
                 ))}
               </ul>

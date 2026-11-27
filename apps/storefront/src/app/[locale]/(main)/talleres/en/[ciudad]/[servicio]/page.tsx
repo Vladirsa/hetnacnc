@@ -144,18 +144,18 @@ export default async function ServicioEnEstado({ params }: Props) {
         <span>/</span>
         <LocalizedClientLink href="/talleres" className="hover:text-[#B34D07]"><TS>Talleres</TS></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href={rutaEstado(c)} className="hover:text-[#B34D07]">{c.estado}</LocalizedClientLink>
+        <LocalizedClientLink href={rutaEstado(c)} className="hover:text-[#B34D07]"><TS>{c.estado}</TS></LocalizedClientLink>
         <span>/</span>
-        <span className="font-medium text-[#1B1B18]">{pag.nombre}</span>
+        <span className="font-medium text-[#1B1B18]"><TS>{pag.nombre}</TS></span>
       </nav>
 
       <section className="mt-4 rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
         <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">
-          {pag.nombre} <TS>en</TS> {c.estado}
+          <TS>{pag.nombre}</TS> <TS>en</TS> <TS>{c.estado}</TS>
         </h1>
         <p className="mt-3 max-w-2xl text-[#F2C9A5]">
           {plural(f.total, "taller", "talleres")} <TS>de</TS> {pag.nombre.toLowerCase()}
-          {top.length ? ` en ${top.slice(0, 3).join(", ")}${f.municipios.length > 3 ? " y más municipios" : ""}` : ` en ${c.estado}`}.
+          <TS>{top.length ? ` en ${top.slice(0, 3).join(", ")}${f.municipios.length > 3 ? " y más municipios" : ""}` : ` en ${c.estado}`}</TS>.
         </p>
         <p className="mt-3 max-w-2xl text-white/80">
           <TS>Publica tu trabajo gratis y recibe propuestas de varios talleres con precio y tiempo de entrega. Sin pagar por contacto: comparas, eliges y pagas dentro de HETNA.</TS>
@@ -175,13 +175,13 @@ export default async function ServicioEnEstado({ params }: Props) {
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div>
           <h2 className="text-xl font-extrabold text-[#142033]"><TS>Qué hacen los talleres de</TS> {pag.nombre.toLowerCase()}</h2>
-          <p className="mt-2 text-[#40403A]"><TS>En</TS> {c.estado} <TS>encuentras</TS> {pag.queHacen}.</p>
+          <p className="mt-2 text-[#40403A]"><TS>En</TS> <TS>{c.estado}</TS> <TS>encuentras</TS> <TS>{pag.queHacen}</TS>.</p>
         </div>
         <div>
           <h2 className="text-xl font-extrabold text-[#142033]"><TS>Qué mandar para recibir un buen precio</TS></h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-[#40403A]">
             {pag.enviar.map((e) => (
-              <li key={e}>{e}</li>
+              <li key={e}><TS>{e}</TS></li>
             ))}
           </ul>
         </div>
@@ -196,8 +196,8 @@ export default async function ServicioEnEstado({ params }: Props) {
             ["3. Eliges y pagas en HETNA", "Comparas, eliges la que te convence y pagas dentro de HETNA. Tus datos no se comparten."],
           ].map(([t, r]) => (
             <li key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
-              <p className="font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#40403A]">{r}</p>
+              <p className="font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#40403A]"><TS>{r}</TS></p>
             </li>
           ))}
         </ol>
@@ -221,16 +221,16 @@ export default async function ServicioEnEstado({ params }: Props) {
 
       {f.talleres.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> {c.estado}</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> <TS>{c.estado}</TS></h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {f.talleres.map((t) => (
               <li key={t.id} className="rounded-2xl border-2 border-[#C2560A] bg-white p-4">
                 <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                  {t.nombre}
-                  {t.verificado ? " ✓" : ""}
+                  <TS>{t.nombre}</TS>
+                  <TS>{t.verificado ? " ✓" : ""}</TS>
                 </LocalizedClientLink>
                 <p className="mt-0.5 text-[13px] text-[#6B675C]">{ubicacion(t.perfil) || c.estado}</p>
-                {t.perfil.servicios.length > 0 && <p className="mt-2 text-sm text-[#40403A]">{t.perfil.servicios.join(" · ")}</p>}
+                {t.perfil.servicios.length > 0 && <p className="mt-2 text-sm text-[#40403A]"><TS>{t.perfil.servicios.join(" · ")}</TS></p>}
                 <LocalizedClientLink
                   href={`/cotizar?taller=${encodeURIComponent(t.handle)}&servicio=${encodeURIComponent(pag.servicioSolicitud)}`}
                   className="mt-2 inline-block rounded-full bg-[#FDEEE1] px-2.5 py-1 text-[12px] font-semibold text-[#C2560A] hover:bg-[#FBDDC4]"
@@ -246,7 +246,7 @@ export default async function ServicioEnEstado({ params }: Props) {
       {f.empresas.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xl font-extrabold text-[#142033]">
-            <TS>Más talleres de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> {c.estado}
+            <TS>Más talleres de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> <TS>{c.estado}</TS>
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-[#6B675C]">
             <TS>Empresas que todavía no forman parte de HETNA, con datos públicos de su sitio web. Si pides cotización desde su perfil, tu solicitud llega a la red de talleres y además invitamos a esa empresa a responderte.</TS>
@@ -257,7 +257,7 @@ export default async function ServicioEnEstado({ params }: Props) {
               return (
                 <li key={e.slug} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
                   <LocalizedClientLink href={`/talleres/directorio/${e.slug}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                    {e.empresa}
+                    <TS>{e.empresa}</TS>
                   </LocalizedClientLink>
                   <p className="mt-0.5 text-[13px] text-[#6B675C]">{e.ciudad || c.estado}</p>
                   {texto && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]"><TS>{texto}</TS></p>}
@@ -272,12 +272,12 @@ export default async function ServicioEnEstado({ params }: Props) {
       {f.municipios.length > 1 && (
         <section className="mt-8">
           <h2 className="text-xl font-extrabold text-[#142033]">
-            {pag.nombre} <TS>por</TS> {c.slug === "cdmx" ? "alcaldía" : "municipio"}
+            <TS>{pag.nombre}</TS> <TS>por</TS> <TS>{c.slug === "cdmx" ? "alcaldía" : "municipio"}</TS>
           </h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {f.municipios.map(([m, n]) => (
               <li key={m} className="rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033]">
-                {pag.nombre} <TS>en</TS> {m} <span className="text-[#6B675C]">({n})</span>
+                <TS>{pag.nombre}</TS> <TS>en</TS> <TS>{m}</TS> <span className="text-[#6B675C]">({n})</span>
               </li>
             ))}
           </ul>
@@ -285,7 +285,7 @@ export default async function ServicioEnEstado({ params }: Props) {
       )}
 
       <section className="mt-8 rounded-3xl border border-[#E7E4DC] bg-[#FDF6EF] p-6">
-        <h2 className="text-xl font-extrabold text-[#142033]"><TS>¿Tienes un taller de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> {c.estado}?</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>¿Tienes un taller de</TS> {pag.nombre.toLowerCase()} <TS>en</TS> <TS>{c.estado}</TS>?</h2>
         <p className="mt-2 max-w-3xl text-[#40403A]">
           <TS>En HETNA te llegan trabajos de clientes de tu zona sin pagar por cada contacto: las licitaciones no cobran comisión. Registra tu taller gratis y empieza a mandar propuestas.</TS>
         </p>
@@ -298,8 +298,8 @@ export default async function ServicioEnEstado({ params }: Props) {
         <h2 className="text-xl font-extrabold text-[#142033]"><TS>Preguntas frecuentes</TS></h2>
         {faqs.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
-            <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
-            <p className="mt-2 text-[#40403A]">{q.r}</p>
+            <summary className="cursor-pointer font-semibold text-[#142033]"><TS>{q.p}</TS></summary>
+            <p className="mt-2 text-[#40403A]"><TS>{q.r}</TS></p>
           </details>
         ))}
       </section>
@@ -308,7 +308,7 @@ export default async function ServicioEnEstado({ params }: Props) {
         <section className="mt-10 grid gap-6 sm:grid-cols-2">
           {otrosServicios.length > 0 && (
             <div>
-              <h2 className="text-lg font-extrabold text-[#142033]"><TS>Otros servicios en</TS> {c.estado}</h2>
+              <h2 className="text-lg font-extrabold text-[#142033]"><TS>Otros servicios en</TS> <TS>{c.estado}</TS></h2>
               <ul className="mt-3 flex flex-wrap gap-2">
                 <li>
                   <LocalizedClientLink href={rutaEstado(c)} className="inline-block rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]">
@@ -321,7 +321,7 @@ export default async function ServicioEnEstado({ params }: Props) {
                       href={rutaServicioEstado(c, o.clave)}
                       className="inline-block rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]"
                     >
-                      {PAGINAS_SERVICIO[o.clave].nombre}
+                      <TS>{PAGINAS_SERVICIO[o.clave].nombre}</TS>
                     </LocalizedClientLink>
                   </li>
                 ))}
@@ -330,7 +330,7 @@ export default async function ServicioEnEstado({ params }: Props) {
           )}
           {otrosEstados.length > 0 && (
             <div>
-              <h2 className="text-lg font-extrabold text-[#142033]">{pag.nombre} <TS>en otros estados</TS></h2>
+              <h2 className="text-lg font-extrabold text-[#142033]"><TS>{pag.nombre}</TS> <TS>en otros estados</TS></h2>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {otrosEstados.map((o) => (
                   <li key={o.ciudad.slug}>
@@ -338,7 +338,7 @@ export default async function ServicioEnEstado({ params }: Props) {
                       href={rutaServicioEstado(o.ciudad, o.clave)}
                       className="inline-block rounded-full border border-[#E7E4DC] bg-white px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]"
                     >
-                      {o.ciudad.estado} <span className="text-[#6B675C]">({o.total})</span>
+                      <TS>{o.ciudad.estado}</TS> <span className="text-[#6B675C]">({o.total})</span>
                     </LocalizedClientLink>
                   </li>
                 ))}

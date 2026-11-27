@@ -40,7 +40,7 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="distribuidores" />
-      {error && <Vacio><TS>No pude leer los referidos:</TS> {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los referidos:</TS> <TS>{error}</TS></Vacio>}
       {d && !d.instalado && (
         <Vacio><TS>Falta correr</TS> <b><TS>supabase/referidos.sql</TS></b> <TS>en el Supabase del Cotizador. Mientras, aquí no hay datos.</TS></Vacio>
       )}
@@ -51,11 +51,11 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
             {(d.solicitudes || []).map((s) => (
               <li key={s.id} className="py-3">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-[14px] font-extrabold">{s.empresa}</p>
+                  <p className="text-[14px] font-extrabold"><TS>{s.empresa}</TS></p>
                   <Etiqueta color={s.estado === "nueva" ? "ambar" : s.estado === "atendida" ? "verde" : "gris"}>{s.estado === "atendida" && s.codigo ? s.codigo : s.estado}</Etiqueta>
                 </div>
-                <p className="text-[12px] text-[#40403A]">{s.contacto} · {s.correo}{s.telefono ? ` · ${s.telefono}` : ""}</p>
-                <p className="text-[12px] text-[#6B675C]">{[s.maquinas, s.ventas_mes ? `${s.ventas_mes} al mes` : "", s.ciudad].filter(Boolean).join(" · ")}</p>
+                <p className="text-[12px] text-[#40403A]"><TS>{s.contacto}</TS> · <TS>{s.correo}</TS><TS>{s.telefono ? ` · ${s.telefono}` : ""}</TS></p>
+                <p className="text-[12px] text-[#6B675C]"><TS>{[s.maquinas, s.ventas_mes ? `${s.ventas_mes} al mes` : "", s.ciudad].filter(Boolean).join(" · ")}</TS></p>
                 {s.mensaje && <p className="mt-1 text-[12px] italic text-[#6B675C]">“<TS>{s.mensaje}</TS>”</p>}
                 <p className="text-[11px] text-[#9A968B]">{hace(s.created_at)}</p>
                 {actuar && s.estado === "nueva" && <AtenderSolicitud id={s.id} empresa={s.empresa} />}
@@ -79,8 +79,8 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
                 <ul className="mt-1 divide-y divide-[#EFEDE6]">
                   {d.referidos.por_taller.slice(0, 10).map((t) => (
                     <li key={t.id} className="flex items-center justify-between py-2 text-[13px]">
-                      <span className="font-semibold">{t.nombre}</span>
-                      <span className="text-[#6B675C]">{t.invitados} <TS>invitados ·</TS> {t.completaron} <TS>completaron</TS></span>
+                      <span className="font-semibold"><TS>{t.nombre}</TS></span>
+                      <span className="text-[#6B675C]"><TS>{t.invitados}</TS> <TS>invitados ·</TS> <TS>{t.completaron}</TS> <TS>completaron</TS></span>
                     </li>
                   ))}
                 </ul>
@@ -93,10 +93,10 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
                   {d.referidos.ultimos.map((r, i) => (
                     <li key={i} className="py-2 text-[13px]">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold">{r.nombre}</span>
-                        <Etiqueta color={r.completo ? "verde" : "gris"}>{r.completo ? "completó" : "en arranque"}</Etiqueta>
+                        <span className="font-semibold"><TS>{r.nombre}</TS></span>
+                        <Etiqueta color={r.completo ? "verde" : "gris"}><TS>{r.completo ? "completó" : "en arranque"}</TS></Etiqueta>
                       </div>
-                      <p className="text-[11px] text-[#9A968B]"><TS>vía</TS> {r.de} ({r.codigo}) · {hace(r.fecha)}</p>
+                      <p className="text-[11px] text-[#9A968B]"><TS>vía</TS> <TS>{r.de}</TS> (<TS>{r.codigo}</TS>) · {hace(r.fecha)}</p>
                     </li>
                   ))}
                 </ul>
@@ -117,14 +117,14 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
                 return (
                   <li key={c.codigo} className="py-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-[15px] font-black tracking-wider text-[#142033]">{c.codigo}</p>
+                      <p className="text-[15px] font-black tracking-wider text-[#142033]"><TS>{c.codigo}</TS></p>
                       <Etiqueta color={!c.activo ? "gris" : agotado || vencido ? "ambar" : "verde"}>
-                        {!c.activo ? "pausado" : agotado ? "agotado" : vencido ? "vencido" : "activo"}
+                        <TS>{!c.activo ? "pausado" : agotado ? "agotado" : vencido ? "vencido" : "activo"}</TS>
                       </Etiqueta>
                     </div>
-                    <p className="text-[13px] font-semibold">{c.nombre}</p>
+                    <p className="text-[13px] font-semibold"><TS>{c.nombre}</TS></p>
                     <p className="text-[12px] text-[#6B675C]">
-                      {c.dias_regalo} <TS>días ·</TS> {c.usos}{c.max_usos != null ? ` de ${c.max_usos}` : ""} <TS>usos</TS>{c.vence ? ` · vence ${fechaCorta(c.vence)}` : ""}
+                      <TS>{c.dias_regalo}</TS> <TS>días ·</TS> <TS>{c.usos}</TS><TS>{c.max_usos != null ? ` de ${c.max_usos}` : ""}</TS> <TS>usos</TS><TS>{c.vence ? ` · vence ${fechaCorta(c.vence)}` : ""}</TS>
                     </p>
                     {actuar && <BotonCodigo codigo={c.codigo} activo={c.activo} liga={liga} />}
                   </li>
@@ -143,10 +143,10 @@ export default async function PanelDistribuidores({ params }: { params: Promise<
               {d.meses_a_favor.map((n) => (
                 <li key={n.id} className="py-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-[14px] font-extrabold">{n.nombre}</p>
-                    <Etiqueta color="azul">{n.meses} {n.meses === 1 ? "mes" : "meses"}</Etiqueta>
+                    <p className="text-[14px] font-extrabold"><TS>{n.nombre}</TS></p>
+                    <Etiqueta color="azul"><TS>{n.meses}</TS> <TS>{n.meses === 1 ? "mes" : "meses"}</TS></Etiqueta>
                   </div>
-                  <p className="text-[12px] text-[#6B675C]"><TS>plan</TS> {n.plan}{n.correo ? ` · ${n.correo}` : ""}</p>
+                  <p className="text-[12px] text-[#6B675C]"><TS>plan</TS> <TS>{n.plan}</TS><TS>{n.correo ? ` · ${n.correo}` : ""}</TS></p>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {n.telefono && <a href={wa(n.telefono)} target="_blank" rel="noreferrer" className="rounded-lg bg-[#E6F4EA] px-3 py-1.5 text-[12px] font-bold text-[#0F7A4A]"><TS>WhatsApp</TS></a>}
                     {actuar && <MesAplicado id={n.id} nombre={n.nombre} />}

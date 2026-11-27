@@ -3,6 +3,7 @@
 // pieza de Impresión 3D bajo pedido (color, colores de cada parte en las piezas
 // "· 2 colores" y el texto de llaveros y letras), para imprimirla tal cual.
 // Backend: packages/api/src/api/vendor/hetna-impresion/pedido/[id].
+import { T } from "../lib/idioma"
 import { useEffect, useState } from "react"
 import { defineWidgetConfig } from "@mercurjs/dashboard-sdk"
 
@@ -28,18 +29,18 @@ function PedidoPersonalizado({ data }) {
   if (!piezas.length) return null
   return (
     <div style={{ background: "#FFF7EC", border: "1px solid #F2C98F", borderRadius: 12, padding: 16 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>Cómo lo quiere el cliente</div>
-      <div style={{ fontSize: 13, color: "#6B675C", marginBottom: 10 }}>Imprímelo tal cual: colores y texto que eligió al comprar.</div>
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}><T>Cómo lo quiere el cliente</T></div>
+      <div style={{ fontSize: 13, color: "#6B675C", marginBottom: 10 }}><T>Imprímelo tal cual: colores y texto que eligió al comprar.</T></div>
       {piezas.map((p) => (
         <div key={p.id} style={{ borderTop: "1px solid #F2C98F", padding: "8px 0" }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>
-            {p.titulo}
-            {p.variante ? <span style={{ fontWeight: 400, color: "#6B675C" }}> · {p.variante}</span> : null}
-            {p.cantidad > 1 ? <span style={{ fontWeight: 400, color: "#6B675C" }}> · {p.cantidad} piezas</span> : null}
+            <T>{p.titulo}</T>
+            {p.variante ? <span style={{ fontWeight: 400, color: "#6B675C" }}> · <T>{p.variante}</T></span> : null}
+            {p.cantidad > 1 ? <span style={{ fontWeight: 400, color: "#6B675C" }}> · {p.cantidad} <T>piezas</T></span> : null}
           </div>
           {p.detalle.map(([k, v]) => (
             <div key={k} style={{ fontSize: 14, marginTop: 2 }}>
-              <span style={{ color: "#6B675C" }}>{k}:</span> <b>{v}</b>
+              <span style={{ color: "#6B675C" }}><T>{k}</T>:</span> <b><T>{v}</T></b>
             </div>
           ))}
         </div>

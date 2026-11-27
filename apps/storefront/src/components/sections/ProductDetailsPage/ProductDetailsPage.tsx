@@ -326,13 +326,13 @@ export const ProductDetailsPage = async ({
             <li className="flex items-center gap-1">
               <span aria-hidden="true">›</span>
               <LocalizedClientLink href={`/categories/${categoria.handle}`} className="hover:text-[#B34D07] hover:underline">
-                {categoria.name}
+                <TS>{categoria.name}</TS>
               </LocalizedClientLink>
             </li>
           )}
           <li className="flex min-w-0 items-center gap-1">
             <span aria-hidden="true">›</span>
-            <span aria-current="page" className="truncate text-[#1B1B18]">{prod.title}</span>
+            <span aria-current="page" className="truncate text-[#1B1B18]"><TS>{prod.title}</TS></span>
           </li>
         </ol>
       </nav>
@@ -379,7 +379,7 @@ export const ProductDetailsPage = async ({
         </div>
 
         <div className="order-3 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-2 lg:self-start">
-            {fabricar}
+            <TS>{fabricar}</TS>
             {/* Diseños: pedir una modificación o cotizar la fabricación */}
             {descarga && <ModificarDiseno product={prod as never} vendedor={vendedor ? { handle: vendedor.handle, name: vendedor.name } : null} />}
             {/* Publicidad en el hueco de la izquierda (solo computadora: en
@@ -402,7 +402,7 @@ export const ProductDetailsPage = async ({
 
         {/* Ficha larga a todo lo ancho, en pestañas */}
         <div className="order-5 min-w-0 lg:col-span-2 lg:row-start-4 lg:mt-2">
-          {largosDescarga}
+          <TS>{largosDescarga}</TS>
           {!descarga && <ProductDetallesLargos
             product={prod}
             locale={locale}

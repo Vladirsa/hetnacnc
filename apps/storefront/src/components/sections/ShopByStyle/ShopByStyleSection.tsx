@@ -44,7 +44,7 @@ export function ShopByStyleSection() {
               href={style.href}
               className="group flex items-center gap-4 text-primary hover:text-action transition-colors border-b border-transparent hover:border-primary w-fit pb-2 mb-8"
             >
-              <span className="heading-lg">{style.name}</span>
+              <span className="heading-lg"><TS>{style.name}</TS></span>
               <ArrowRightIcon className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
             </LocalizedClientLink>
           ))}

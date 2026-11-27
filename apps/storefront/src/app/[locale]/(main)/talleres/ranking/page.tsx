@@ -87,8 +87,8 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
     <main className="mx-auto w-full max-w-[1100px] px-4 py-8 lg:px-8">
       <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#C2560A]"><TS>HETNA Trust & Ranking</TS></p>
       <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
-        {proveedores ? "Proveedores con mayor cumplimiento" : `Mejores talleres${esp ? ` de ${esp.nombre.toLowerCase()}` : " CNC"}`}
-        {estado ? ` en ${estado}` : " en México"}
+        <TS>{proveedores ? "Proveedores con mayor cumplimiento" : `Mejores talleres${esp ? ` de ${esp.nombre.toLowerCase()}` : " CNC"}`}</TS>
+        <TS>{estado ? ` en ${estado}` : " en México"}</TS>
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[#6B675C]">
         <TS>Calculado sólo con evaluaciones de clientes en trabajos pagados y entregados dentro de HETNA. Pagar un plan o una membresía no cambia el lugar en
@@ -105,14 +105,14 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
             <LocalizedClientLink href={liga({ esp: undefined })} className={chip(!esp)}><TS>Todas</TS></LocalizedClientLink>
             {ESPECIALIDADES.map((e) => (
               <LocalizedClientLink key={e.clave} href={liga({ esp: e.clave })} className={chip(esp?.clave === e.clave)}>
-                {e.nombre}
+                <TS>{e.nombre}</TS>
               </LocalizedClientLink>
             ))}
           </nav>
           <nav className="mt-3 flex flex-wrap gap-2" aria-label="Ordenar por">
             {(Object.keys(ORDENES) as Orden[]).map((o) => (
               <LocalizedClientLink key={o} href={liga({ orden: o === "general" ? undefined : o })} className={chip(orden === o)}>
-                {ORDENES[o]}
+                <TS>{ORDENES[o]}</TS>
               </LocalizedClientLink>
             ))}
           </nav>
@@ -123,7 +123,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
           <LocalizedClientLink href={liga({ estado: undefined })} className={chip(!estado)}><TS>Todo México</TS></LocalizedClientLink>
           {estados.map((e) => (
             <LocalizedClientLink key={e} href={liga({ estado: e })} className={chip(estado === e)}>
-              {e}
+              <TS>{e}</TS>
             </LocalizedClientLink>
           ))}
         </nav>
@@ -133,7 +133,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
         <div className="mt-8 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[#40403A]">
           <p className="font-bold text-[#142033]"><TS>Todavía no hay evaluaciones suficientes para este ranking.</TS></p>
           <p className="mt-1 text-sm">
-            <TS>El ranking se llena con trabajos reales: cuando un cliente recibe su pedido, evalúa al taller.</TS>{" "}
+            <TS>El ranking se llena con trabajos reales: cuando un cliente recibe su pedido, evalúa al taller.</TS><TS>{" "}</TS>
             {sinHistorial > 0 && `Hay ${sinHistorial} ${sinHistorial === 1 ? "taller" : "talleres"} aquí que aún no tienen evaluaciones. `}
             <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline"><TS>Ver el directorio</TS></LocalizedClientLink>
           </p>
@@ -147,21 +147,21 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-extrabold ${i < 3 ? "bg-[#C2560A] text-white" : "bg-[#F3F1EA] text-[#142033]"}`}>{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                    {t.nombre}
+                    <TS>{t.nombre}</TS>
                   </LocalizedClientLink>
                   {t.verificado ? <span className="ml-2 text-xs font-bold text-[#1E7B3A]"><TS>✓ Verificado</TS></span> : <span className="ml-2 text-xs font-semibold text-[#8A877E]"><TS>Registrado</TS></span>}
                   <p className="text-xs text-[#6B675C]">
-                    {[p.ciudad, p.estado].filter(Boolean).join(", ")}
-                    {p.servicios.length ? ` · ${p.servicios.slice(0, 3).join(", ")}` : ""}
+                    <TS>{[p.ciudad, p.estado].filter(Boolean).join(", ")}</TS>
+                    <TS>{p.servicios.length ? ` · ${p.servicios.slice(0, 3).join(", ")}` : ""}</TS>
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center text-xs text-[#6B675C]">
-                  <div><b className="block text-lg text-[#142033]">{p.calificacion ?? "—"}</b><TS>General</TS></div>
-                  <div><b className="block text-lg text-[#142033]">{p.reputacion_comercial ?? "—"}</b><TS>Comercial</TS></div>
-                  <div><b className="block text-lg text-[#142033]">{p.capacidad_tecnica ?? "—"}</b><TS>Técnica</TS></div>
+                  <div><b className="block text-lg text-[#142033]"><TS>{p.calificacion ?? "—"}</TS></b><TS>General</TS></div>
+                  <div><b className="block text-lg text-[#142033]"><TS>{p.reputacion_comercial ?? "—"}</TS></b><TS>Comercial</TS></div>
+                  <div><b className="block text-lg text-[#142033]"><TS>{p.capacidad_tecnica ?? "—"}</TS></b><TS>Técnica</TS></div>
                 </div>
                 <span className="w-full text-xs text-[#6B675C] sm:w-auto">
-                  {p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}
+                  <TS>{p.resenas}</TS> <TS>{p.resenas === 1 ? "evaluación" : "evaluaciones"}</TS>
                   {!p.historial_suficiente && " · historial aún corto"}
                   {t.certificaciones.length > 0 && ` · 🎖 ${t.certificaciones.length} certificación(es)`}
                   {p.medido?.puntualidad_pct != null && p.medido.con_fecha >= 3 && ` · ⏱ ${p.medido.puntualidad_pct}% a tiempo`}
@@ -174,7 +174,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       )}
       {evaluados.length > 0 && sinHistorial > 0 && (
         <p className="mt-4 text-sm text-[#6B675C]">
-          {sinHistorial} {sinHistorial === 1 ? "taller más aún no tiene" : "talleres más aún no tienen"} <TS>evaluaciones y no aparecen en el ranking.</TS>{" "}
+          <TS>{sinHistorial}</TS> <TS>{sinHistorial === 1 ? "taller más aún no tiene" : "talleres más aún no tienen"}</TS> <TS>evaluaciones y no aparecen en el ranking.</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline"><TS>Ver directorio completo</TS></LocalizedClientLink>
         </p>
       )}

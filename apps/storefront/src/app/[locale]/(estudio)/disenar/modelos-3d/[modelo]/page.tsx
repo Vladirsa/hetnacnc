@@ -77,13 +77,13 @@ export default async function PaginaModelo3D({ params }: Props) {
       </div>
       <section aria-labelledby="acerca-modelo" className="border-t border-[#2B3648] bg-[#0D1015] px-4 py-6 text-[#C9CED6] lg:px-8">
         <div className="mx-auto max-w-[920px]">
-          <h2 id="acerca-modelo" className="m-0 text-[16px] font-semibold text-white">{m.nombre} <TS>para imprimir en 3D</TS></h2>
+          <h2 id="acerca-modelo" className="m-0 text-[16px] font-semibold text-white"><TS>{m.nombre}</TS> <TS>para imprimir en 3D</TS></h2>
           <p className="m-0 mt-1.5 text-[14px] leading-relaxed"><TS>{m.texto}</TS></p>
           <h3 className="m-0 mt-4 text-[14px] font-semibold text-white"><TS>Medidas que puedes cambiar</TS></h3>
           <ul className="m-0 mt-1.5 list-disc pl-5 text-[14px] leading-relaxed">
             {m.params.map((p) => (
               <li key={p.k}>
-                {p.nombre}<TS>: de</TS> {rango(p)} <TS>(de fábrica,</TS> {p.def}{p.unidad ?? " mm"})
+                <TS>{p.nombre}</TS><TS>: de</TS> {rango(p)} <TS>(de fábrica,</TS> <TS>{p.def}</TS><TS>{p.unidad ?? " mm"}</TS>)
               </li>
             ))}
           </ul>
@@ -102,7 +102,7 @@ export default async function PaginaModelo3D({ params }: Props) {
               <nav aria-label="Modelos parecidos" className="mt-2 flex flex-wrap gap-2 text-[13px]">
                 {parecidos.map((o) => (
                   <LocalizedClientLink key={o.id} href={`/disenar/modelos-3d/${o.id}`} className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">
-                    {o.nombre}
+                    <TS>{o.nombre}</TS>
                   </LocalizedClientLink>
                 ))}
                 <LocalizedClientLink href="/disenar/modelos-3d" className="rounded-full border border-[#2B3648] px-3 py-1 hover:border-[#FF6A1A] hover:text-white">

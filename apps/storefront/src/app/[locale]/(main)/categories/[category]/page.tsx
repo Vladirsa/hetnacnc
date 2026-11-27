@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { metaEnIdioma } from "@/i18n/servidor"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { GuiaCategoria, IntroCategoria } from "@/components/hetna/TextoCategoria"
@@ -204,12 +205,12 @@ async function Category({
 
       {esCategoriaServicio(categoryHandle) ? (
         <>
-          <h1 className="sr-only">{category.name}</h1>
+          <h1 className="sr-only"><TS>{category.name}</TS></h1>
           <ServicioCategoria handle={categoryHandle} />
         </>
       ) : (
         <>
-          <h1 className="heading-xl uppercase">{category.name}</h1>
+          <h1 className="heading-xl uppercase"><TS>{category.name}</TS></h1>
           {texto && <IntroCategoria c={texto} />}
         </>
       )}

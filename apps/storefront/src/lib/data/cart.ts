@@ -8,6 +8,7 @@ import medusaError from '@/lib/helpers/medusa-error';
 import { parseVariantIdsFromError } from '@/lib/helpers/parse-variant-error';
 
 import { sdk } from '../client';
+import { avisarIdiomaCorreo } from './idioma-correo';
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -151,6 +152,8 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
     .then(async ({ cart }) => {
       const cartCacheTag = await getCacheTag('carts');
       await revalidateTag(cartCacheTag);
+      // Al poner su correo en el pago: sus correos del pedido en su idioma
+      if (data.email) await avisarIdiomaCorreo({ conCarrito: true });
       return cart;
     })
     .catch(medusaError);

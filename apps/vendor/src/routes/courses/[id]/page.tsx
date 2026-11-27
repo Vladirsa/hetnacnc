@@ -1,3 +1,4 @@
+import { T, traducir } from "../../../lib/idioma"
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -52,18 +53,18 @@ const NuevaLeccionForm = ({ courseId, sectionId }: { courseId: string; sectionId
         onClick={() => setAbierto(true)}
         className="flex items-center gap-1 text-ui-fg-interactive text-sm px-4 py-2"
       >
-        <Plus /> Agregar lección
+        <Plus /> <T>Agregar lección</T>
       </button>
     )
   }
 
   return (
     <div className="px-4 py-3 flex flex-col gap-2 border-t">
-      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título de la lección" />
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={traducir("Título de la lección")} />
       <Input
         value={videoUrl}
         onChange={(e) => setVideoUrl(e.target.value)}
-        placeholder="Enlace del video: YouTube (oculto) o Vimeo"
+        placeholder={traducir("Enlace del video: YouTube (oculto) o Vimeo")}
       />
       <div className="flex gap-2 items-center">
         <Input
@@ -71,20 +72,20 @@ const NuevaLeccionForm = ({ courseId, sectionId }: { courseId: string; sectionId
           min={0}
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          placeholder="Duración (minutos)"
+          placeholder={traducir("Duración (minutos)")}
           className="w-48"
         />
         <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle">
           <input type="checkbox" checked={isPreview} onChange={(e) => setIsPreview(e.target.checked)} />
-          Vista previa gratis
+          <T>Vista previa gratis</T>
         </label>
       </div>
       <div className="flex gap-2 justify-end">
         <Button variant="secondary" size="small" onClick={() => setAbierto(false)}>
-          Cancelar
+          <T>Cancelar</T>
         </Button>
         <Button size="small" disabled={!title} isLoading={crear.isPending} onClick={() => crear.mutate()}>
-          Guardar
+          <T>Guardar</T>
         </Button>
       </div>
     </div>
@@ -113,7 +114,7 @@ const SectionCard = ({ course, section }: { course: Course; section: Section }) 
     <div className="border rounded-md overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 bg-ui-bg-subtle">
         <Text weight="plus" size="small">
-          {section.title}
+          <T>{section.title}</T>
         </Text>
         <IconButton size="small" variant="transparent" onClick={() => eliminarSeccion.mutate()}>
           <Trash />
@@ -123,19 +124,19 @@ const SectionCard = ({ course, section }: { course: Course; section: Section }) 
         {section.lessons.map((lesson) => (
           <li key={lesson.id} className="flex items-center justify-between px-4 py-2.5">
             <div className="flex items-center gap-2">
-              <Text size="small">{lesson.title}</Text>
+              <Text size="small"><T>{lesson.title}</T></Text>
               {lesson.is_preview && (
                 <Badge size="2xsmall" color="orange">
-                  Vista previa
+                  <T>Vista previa</T>
                 </Badge>
               )}
               {(lesson as any).video_url ? (
                 <a href={(lesson as any).video_url} target="_blank" rel="noreferrer" className="text-xs text-ui-fg-interactive">
-                  ▶ video
+                  <T>▶ video</T>
                 </a>
               ) : (
                 <Badge size="2xsmall" color="red">
-                  Sin video
+                  <T>Sin video</T>
                 </Badge>
               )}
             </div>
@@ -189,24 +190,24 @@ const PortadaCurso = ({ courseId, url }: { courseId: string; url?: string | null
 
   return (
     <div className="flex flex-col gap-2">
-      <Label size="small">Portada del curso</Label>
+      <Label size="small"><T>Portada del curso</T></Label>
       <div className="flex items-start gap-4 flex-wrap">
         {url ? (
-          <img src={url} alt="Portada" className="w-64 aspect-video object-cover rounded-md border" />
+          <img src={url} alt={traducir("Portada")} className="w-64 aspect-video object-cover rounded-md border" />
         ) : (
           <div className="w-64 aspect-video rounded-md border border-dashed flex items-center justify-center text-ui-fg-subtle text-sm">
-            Sin portada
+            <T>Sin portada</T>
           </div>
         )}
         <div className="flex flex-col gap-1">
           <label className="inline-flex">
             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={elegir} disabled={subiendo} />
             <span className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-ui-bg-subtle">
-              {subiendo ? "Subiendo…" : url ? "Cambiar portada" : "Subir portada"}
+              <T>{subiendo ? "Subiendo…" : url ? "Cambiar portada" : "Subir portada"}</T>
             </span>
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle max-w-xs">
-            Horizontal 16:9, por ejemplo 1280×720 px. Es lo primero que ven los alumnos y la que sale en Facebook e Instagram.
+            <T>Horizontal 16:9, por ejemplo 1280×720 px. Es lo primero que ven los alumnos y la que sale en Facebook e Instagram.</T>
           </Text>
         </div>
       </div>
@@ -229,9 +230,9 @@ const NuevaSeccionForm = ({ courseId }: { courseId: string }) => {
 
   return (
     <div className="flex gap-2">
-      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nombre del módulo/sección" />
+      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={traducir("Nombre del módulo/sección")} />
       <Button disabled={!title} isLoading={crear.isPending} onClick={() => crear.mutate()}>
-        Agregar sección
+        <T>Agregar sección</T>
       </Button>
     </div>
   )
@@ -291,7 +292,7 @@ export default function CourseDetailPage() {
   if (isLoading || !course) {
     return (
       <Container className="p-6">
-        <Text size="small">Cargando...</Text>
+        <Text size="small"><T>Cargando...</T></Text>
       </Container>
     )
   }
@@ -306,17 +307,17 @@ export default function CourseDetailPage() {
             </IconButton>
           </Link>
           <div>
-            <Heading>{course.title}</Heading>
+            <Heading><T>{course.title}</T></Heading>
             {course.product?.handle && (
               <Text size="small" className="text-ui-fg-subtle">
-                Producto: {course.product.handle}
+                <T>Producto:</T> <T>{course.product.handle}</T>
               </Text>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge color={course.status === "published" ? "green" : "grey"}>
-            {course.status === "published" ? "Publicado" : "Borrador"}
+            <T>{course.status === "published" ? "Publicado" : "Borrador"}</T>
           </Badge>
           <Button
             size="small"
@@ -324,7 +325,7 @@ export default function CourseDetailPage() {
             isLoading={togglePublicar.isPending}
             onClick={() => togglePublicar.mutate()}
           >
-            {course.status === "published" ? "Despublicar" : "Publicar curso"}
+            <T>{course.status === "published" ? "Despublicar" : "Publicar curso"}</T>
           </Button>
         </div>
       </div>
@@ -332,15 +333,15 @@ export default function CourseDetailPage() {
       <div className="px-6 py-4 flex flex-col gap-4">
         <PortadaCurso courseId={course.id} url={course.thumbnail_url} />
         <div className="flex flex-col gap-1">
-          <Label size="small">Título</Label>
+          <Label size="small"><T>Título</T></Label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1">
-          <Label size="small">Descripción</Label>
+          <Label size="small"><T>Descripción</T></Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
         </div>
         <div className="flex flex-col gap-1 max-w-xs">
-          <Label size="small">Precio (MXN)</Label>
+          <Label size="small"><T>Precio (MXN)</T></Label>
           <Input
             type="number"
             min={0}
@@ -351,10 +352,10 @@ export default function CourseDetailPage() {
           />
           <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle mt-1">
             <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} />
-            Curso gratis
+            <T>Curso gratis</T>
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle">
-            Cada venta llega a tu saldo, menos la comisión de HETNA (ver Términos para vendedores). Las lecciones de "vista previa" las ve cualquiera; las demás, sólo tus alumnos.
+            <T>Cada venta llega a tu saldo, menos la comisión de HETNA (ver Términos para vendedores). Las lecciones de "vista previa" las ve cualquiera; las demás, sólo tus alumnos.</T>
           </Text>
         </div>
         <div>
@@ -364,13 +365,13 @@ export default function CourseDetailPage() {
             isLoading={guardar.isPending}
             onClick={() => guardar.mutate()}
           >
-            Guardar cambios
+            <T>Guardar cambios</T>
           </Button>
         </div>
       </div>
 
       <div className="px-6 py-4 flex flex-col gap-4">
-        <Heading level="h2">Temario</Heading>
+        <Heading level="h2"><T>Temario</T></Heading>
         <div className="flex flex-col gap-3">
           {(course.sections || []).map((section) => (
             <SectionCard key={section.id} course={course} section={section} />

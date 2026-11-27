@@ -28,7 +28,7 @@ export async function CifrasHetna() {
         {cifras.map((c) => (
           <div key={c.t}>
             <dd className="m-0 font-display text-[30px] lg:text-[36px] font-bold text-[#C2560A] leading-none">{c.n}</dd>
-            <dt className="mt-1 text-[13.5px] text-[#4A4943]">{c.t}</dt>
+            <dt className="mt-1 text-[13.5px] text-[#4A4943]"><TS>{c.t}</TS></dt>
           </div>
         ))}
       </dl>

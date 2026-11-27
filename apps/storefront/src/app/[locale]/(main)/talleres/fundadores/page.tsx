@@ -43,7 +43,7 @@ export default async function FundadoresPage() {
               <TS>Registrar mi taller</TS>
             </LocalizedClientLink>
             {quedan > 0 ? (
-              <span className="text-white/80"><TS>Quedan</TS> <strong className="text-white">{quedan}</strong> <TS>lugares de fundador</TS></span>
+              <span className="text-white/80"><TS>Quedan</TS> <strong className="text-white"><TS>{quedan}</TS></strong> <TS>lugares de fundador</TS></span>
             ) : (
               <span className="text-white/80"><TS>El cupo de fundadores se llenó, pero puedes registrarte gratis.</TS></span>
             )}
@@ -57,8 +57,8 @@ export default async function FundadoresPage() {
           {BENEFICIOS.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-2xl">{i}</p>
-              <p className="mt-2 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-2 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>

@@ -42,12 +42,12 @@ export const OrderConfirmedSection = ({
             </Heading>
 
             <Text>
-              <TS>Te enviamos los detalles de tu pedido a</TS>{" "}
+              <TS>Te enviamos los detalles de tu pedido a</TS><TS>{" "}</TS>
               <span
                 className="text-ui-fg-medium-plus font-semibold"
                 data-testid="order-email"
               >
-                {order.email}
+                <TS>{order.email}</TS>
               </span>
               .
             </Text>

@@ -41,7 +41,7 @@ export const OrderTotals = ({ orderGroup }: { orderGroup: any }) => {
       </p>
       <Divider className="my-4" />
       <p className="text-secondary label-md flex justify-between items-center">
-        <TS>Total:</TS>{" "}
+        <TS>Total:</TS><TS>{" "}</TS>
         <span className="text-primary heading-md">
           {convertToLocale({
             amount: total,

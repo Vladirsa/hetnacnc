@@ -70,7 +70,7 @@ export const ConfianzaCompra = ({ conPaypal = false, soloDigital = false }: { co
         <li key={p.href} className="flex gap-2 text-[13px] leading-relaxed text-[#4A4943]">
           <span className="font-bold text-[#1E7A52]">✓</span>
           <span>
-            <T>{p.texto}</T>{" "}
+            <T>{p.texto}</T><T>{" "}</T>
             <LocalizedClientLink href={p.href} className="font-semibold text-[#B34D07] underline">
               <T>Ver</T>
             </LocalizedClientLink>

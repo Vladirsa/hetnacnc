@@ -1,5 +1,6 @@
 // @ts-nocheck
 // Pantalla simple de Envíos para el taller: 3 datos y un botón. Nada técnico.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -13,6 +14,8 @@ const Camion = (props) => (
 
 export const config: RouteConfig = {
   label: "Envíos",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Camion,
 }
 
@@ -90,14 +93,14 @@ export default function EnviosPage() {
     }
   }
 
-  if (cargando) return <div style={S.page}>Cargando...</div>
+  if (cargando) return <div style={S.page}><T>Cargando...</T></div>
 
   if (!listo && aviso) {
     return (
       <div style={S.page}>
-        <h1 style={S.h1}>Envíos</h1>
+        <h1 style={S.h1}><T>Envíos</T></h1>
         <div style={S.card}>
-          <p style={{ margin: 0, fontSize: 14 }}>{aviso}</p>
+          <p style={{ margin: 0, fontSize: 14 }}><T>{aviso}</T></p>
         </div>
       </div>
     )
@@ -105,52 +108,52 @@ export default function EnviosPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Envíos</h1>
-      <p style={S.sub}>Define cuánto cobras de envío en pesos mexicanos. Solo son tres datos.</p>
+      <h1 style={S.h1}><T>Envíos</T></h1>
+      <p style={S.sub}><T>Define cuánto cobras de envío en pesos mexicanos. Solo son tres datos.</T></p>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Precio de tu envío</h2>
-        <label style={S.label}>Cuánto cobras por envío ($ MXN)</label>
+        <h2 style={S.h2}><T>Precio de tu envío</T></h2>
+        <label style={S.label}><T>Cuánto cobras por envío ($ MXN)</T></label>
         <input style={S.input} type="number" min="0" inputMode="decimal" value={precio} onChange={(e) => setPrecio(e.target.value)} placeholder="150" />
-        <p style={S.hint}>Es un precio fijo por pedido. Pon 0 si el envío siempre es gratis.</p>
+        <p style={S.hint}><T>Es un precio fijo por pedido. Pon 0 si el envío siempre es gratis.</T></p>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Envío gratis</h2>
+        <h2 style={S.h2}><T>Envío gratis</T></h2>
         <label style={S.fila}>
           <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} style={{ width: 20, height: 20 }} />
-          Ofrecer envío gratis en pedidos grandes
+          <T>Ofrecer envío gratis en pedidos grandes</T>
         </label>
         {gratis && (
           <div style={{ marginTop: 12 }}>
-            <label style={S.label}>Gratis cuando el pedido pase de ($ MXN)</label>
+            <label style={S.label}><T>Gratis cuando el pedido pase de ($ MXN)</T></label>
             <input style={S.input} type="number" min="1" inputMode="decimal" value={gratisDesde} onChange={(e) => setGratisDesde(e.target.value)} placeholder="1500" />
-            <p style={S.hint}>Se cuenta el total de los productos del carrito del cliente.</p>
+            <p style={S.hint}><T>Se cuenta el total de los productos del carrito del cliente.</T></p>
           </div>
         )}
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Recoger en tu taller</h2>
+        <h2 style={S.h2}><T>Recoger en tu taller</T></h2>
         <label style={S.fila}>
           <input type="checkbox" checked={recoger} onChange={(e) => setRecoger(e.target.checked)} style={{ width: 20, height: 20 }} />
-          Permitir que el cliente pase por su pedido (sin costo de envío)
+          <T>Permitir que el cliente pase por su pedido (sin costo de envío)</T>
         </label>
       </section>
 
       <section style={{ ...S.card, background: "#F7F5EE" }}>
-        <h2 style={S.h2}>Productos digitales</h2>
+        <h2 style={S.h2}><T>Productos digitales</T></h2>
         <p style={{ margin: 0, fontSize: 14 }}>
-          {digital ? "Ya está activa la entrega digital sin costo. " : "En unos minutos se activa la entrega digital sin costo. "}
-          Para que un producto sea digital, en su formulario pon el <b>Tipo</b> como <b>Digital</b>.
+          <T>{digital ? "Ya está activa la entrega digital sin costo. " : "En unos minutos se activa la entrega digital sin costo. "}</T>
+          <T>Para que un producto sea digital, en su formulario pon el</T> <b><T>Tipo</T></b> <T>como</T> <b><T>Digital</T></b>.
         </p>
       </section>
 
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button type="button" style={{ ...S.btn, opacity: guardando ? 0.6 : 1 }} disabled={guardando} onClick={guardar}>
-          {guardando ? "Guardando..." : "Guardar envíos"}
+          <T>{guardando ? "Guardando..." : "Guardar envíos"}</T>
         </button>
-        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</span>}
+        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></span>}
       </div>
     </div>
   )

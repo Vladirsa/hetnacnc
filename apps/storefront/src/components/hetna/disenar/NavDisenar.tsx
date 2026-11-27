@@ -44,7 +44,7 @@ export const MigasDisenar = () => {
             <T>Diseñar y escanear</T>
           </LocalizedClientLink>
           <span>/</span>
-          <span className="font-medium text-[#1B1B18]">{h.nombre}</span>
+          <span className="font-medium text-[#1B1B18]"><T>{h.nombre}</T></span>
         </>
       ) : (
         <span className="font-medium text-[#1B1B18]"><T>Diseñar y escanear</T></span>
@@ -64,7 +64,7 @@ const Opcion = ({ slug, nombre, icono, activa }: { slug: string; nombre: string;
     <span className={activa ? "text-[#B34D07]" : "text-[#C2560A]"}>
       <ServicioIcono nombre={icono} size={18} />
     </span>
-    {nombre}
+    <T>{nombre}</T>
   </LocalizedClientLink>
 )
 
@@ -137,7 +137,7 @@ export const FilaDisenar = () => {
               }`}
             >
               <ServicioIcono nombre={h.icono} size={16} />
-              {h.nombre}
+              <T>{h.nombre}</T>
             </LocalizedClientLink>
           )
         })}

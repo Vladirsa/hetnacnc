@@ -42,7 +42,7 @@ export function BarraEstudio() {
                 estudio === e ? "bg-[#F07A1A] text-white" : "text-white/65 hover:text-white"
               }`}
             >
-              {ESTUDIOS[e].nombre}
+              <T>{ESTUDIOS[e].nombre}</T>
             </LocalizedClientLink>
           ))}
         </nav>
@@ -81,7 +81,7 @@ function Pestanas({ estudio, actual }: { estudio: Estudio; actual: string }) {
                 es ? "bg-white text-[#0D1015]" : "text-white/65 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {h.corto}
+              <T>{h.corto}</T>
             </LocalizedClientLink>
           </li>
         )

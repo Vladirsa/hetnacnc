@@ -4,6 +4,7 @@
 // días y en qué colores. Cada material que activa es una OFERTA suya en la
 // tienda. También puede destacarse ($150 por 30 días) para salir primero.
 // Backend: packages/api/src/api/vendor/hetna-impresion (lib/impresion-*.ts).
+import { T } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -17,6 +18,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Imprime diseños HETNA",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -86,10 +89,10 @@ function Diseno({ d, alGuardar }) {
       <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
         {d.imagen ? <img src={d.imagen} alt="" style={{ width: 84, height: 84, objectFit: "cover", borderRadius: 10, background: "#F3F1EA" }} /> : null}
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{d.titulo}</div>
-          {d.medidas_mm ? <div style={{ color: "#6B675C", fontSize: 13 }}>Pieza de {d.medidas_mm.map((x) => Math.round(x)).join(" × ")} mm</div> : null}
+          <div style={{ fontWeight: 700, fontSize: 16 }}><T>{d.titulo}</T></div>
+          {d.medidas_mm ? <div style={{ color: "#6B675C", fontSize: 13 }}><T>Pieza de</T> <T>{d.medidas_mm.map((x) => Math.round(x)).join(" × ")}</T> <T>mm</T></div> : null}
           <a href={`https://hetnacnc.com/mx/products/${d.handle}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#C2560A" }}>
-            Ver la ficha en la tienda
+            <T>Ver la ficha en la tienda</T>
           </a>
         </div>
       </div>
@@ -97,13 +100,13 @@ function Diseno({ d, alGuardar }) {
         <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 10, minWidth: 640 }}>
           <thead>
             <tr>
-              <th style={S.th}>Lo imprimo</th>
-              <th style={S.th}>Material</th>
-              <th style={S.th}>Gramos</th>
-              <th style={S.th}>Recomendado</th>
-              <th style={S.th}>Tu precio final</th>
-              <th style={S.th}>Días hábiles</th>
-              <th style={S.th}>Colores (separa con coma)</th>
+              <th style={S.th}><T>Lo imprimo</T></th>
+              <th style={S.th}><T>Material</T></th>
+              <th style={S.th}><T>Gramos</T></th>
+              <th style={S.th}><T>Recomendado</T></th>
+              <th style={S.th}><T>Tu precio final</T></th>
+              <th style={S.th}><T>Días hábiles</T></th>
+              <th style={S.th}><T>Colores (separa con coma)</T></th>
             </tr>
           </thead>
           <tbody>
@@ -114,8 +117,8 @@ function Diseno({ d, alGuardar }) {
                   <td style={S.td}>
                     <input type="checkbox" checked={f.activa} onChange={(e) => cambiar(m.variant_id, "activa", e.target.checked)} />
                   </td>
-                  <td style={{ ...S.td, fontWeight: 600 }}>{m.material}</td>
-                  <td style={S.td}>{m.gramos ? `${m.gramos} g` : "—"}</td>
+                  <td style={{ ...S.td, fontWeight: 600 }}><T>{m.material}</T></td>
+                  <td style={S.td}><T>{m.gramos ? `${m.gramos} g` : "—"}</T></td>
                   <td style={S.td}>{pesos(m.recomendado)}</td>
                   <td style={{ ...S.td, width: 120 }}>
                     <input style={S.input} inputMode="decimal" disabled={!f.activa} value={f.precio} onChange={(e) => cambiar(m.variant_id, "precio", e.target.value)} />
@@ -132,13 +135,13 @@ function Diseno({ d, alGuardar }) {
           </tbody>
         </table>
       </div>
-      {estado?.ok ? <div style={S.ok}>{estado.ok}</div> : null}
-      {estado?.err ? <div style={S.err}>{estado.err}</div> : null}
+      {estado?.ok ? <div style={S.ok}><T>{estado.ok}</T></div> : null}
+      {estado?.err ? <div style={S.err}><T>{estado.err}</T></div> : null}
       <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
         <button style={{ ...S.btn, opacity: cambios.length && !guardando ? 1 : 0.5 }} disabled={!cambios.length || guardando} onClick={guardar}>
-          {guardando ? "Guardando…" : "Guardar"}
+          <T>{guardando ? "Guardando…" : "Guardar"}</T>
         </button>
-        {cambios.length ? <span style={{ fontSize: 13, color: "#6B675C" }}>{cambios.length} cambio(s) sin guardar</span> : null}
+        {cambios.length ? <span style={{ fontSize: 13, color: "#6B675C" }}><T>{cambios.length}</T> <T>cambio(s) sin guardar</T></span> : null}
       </div>
     </div>
   )
@@ -187,42 +190,42 @@ export default function ImprimirDisenos() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Imprime diseños HETNA</h1>
+      <h1 style={S.h1}><T>Imprime diseños HETNA</T></h1>
       <p style={S.sub}>
-        Diseños listos para imprimir en 3D que ya están en la tienda. Elige cuáles imprimes, en qué material, a qué precio, en cuántos días y en qué
+        <T>Diseños listos para imprimir en 3D que ya están en la tienda. Elige cuáles imprimes, en qué material, a qué precio, en cuántos días y en qué
         colores. Cada material que actives es una oferta tuya: el cliente compara talleres y te compra a ti. El precio recomendado sale del volumen real
-        de la pieza; tú pones el tuyo. Es el precio final que paga el cliente (con IVA), sin el envío.
+        de la pieza; tú pones el tuyo. Es el precio final que paga el cliente (con IVA), sin el envío.</T>
       </p>
       <p style={S.sub}>
-        <b>¿Tienes impresora multicolor (AMS, MMU)?</b> Las piezas de dos partes (llaveros, letras, texturizadores…) tienen los materiales
-        "· 2 colores": pon ahí tu precio y al menos dos colores. El cliente elige el color de cada parte y lo ves en la página del pedido.
+        <b><T>¿Tienes impresora multicolor (AMS, MMU)?</T></b> <T>Las piezas de dos partes (llaveros, letras, texturizadores…) tienen los materiales
+        "· 2 colores": pon ahí tu precio y al menos dos colores. El cliente elige el color de cada parte y lo ves en la página del pedido.</T>
       </p>
 
-      {aviso?.ok ? <div style={S.ok}>{aviso.ok}</div> : null}
-      {aviso?.err ? <div style={S.err}>{aviso.err}</div> : null}
+      {aviso?.ok ? <div style={S.ok}><T>{aviso.ok}</T></div> : null}
+      {aviso?.err ? <div style={S.err}><T>{aviso.err}</T></div> : null}
 
       {datos ? (
         <div style={S.dest}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>⭐ Sal primero: taller destacado</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}><T>⭐ Sal primero: taller destacado</T></div>
           <p style={{ ...S.sub, margin: "6px 0 10px" }}>
-            Por {pesos(datos.destacado.precio)} cada {datos.destacado.dias} días sales primero, con la insignia <b>Destacado</b>, en todas las fichas de
-            impresión bajo pedido donde tengas oferta. Pago único con Mercado Pago; no se renueva solo.
+            <T>Por</T> {pesos(datos.destacado.precio)} <T>cada</T> <T>{datos.destacado.dias}</T> <T>días sales primero, con la insignia</T> <b><T>Destacado</T></b><T>, en todas las fichas de
+            impresión bajo pedido donde tengas oferta. Pago único con Mercado Pago; no se renueva solo.</T>
           </p>
           {datos.destacado.hasta ? (
             <div style={{ fontSize: 14, marginBottom: 8 }}>
-              Eres destacado hasta el <b>{fecha(datos.destacado.hasta)}</b>. Si pagas otra vez, se suman {datos.destacado.dias} días.
+              <T>Eres destacado hasta el</T> <b>{fecha(datos.destacado.hasta)}</b><T>. Si pagas otra vez, se suman</T> <T>{datos.destacado.dias}</T> <T>días.</T>
             </div>
           ) : null}
           <button style={{ ...S.btn, opacity: pagando ? 0.6 : 1 }} disabled={pagando} onClick={destacar}>
-            {pagando ? "Abriendo Mercado Pago…" : datos.destacado.hasta ? `Sumar ${datos.destacado.dias} días` : `Destacarme por ${pesos(datos.destacado.precio)}`}
+            <T>{pagando ? "Abriendo Mercado Pago…" : datos.destacado.hasta ? `Sumar ${datos.destacado.dias} días` : `Destacarme por ${pesos(datos.destacado.precio)}`}</T>
           </button>
-          {!activas ? <div style={{ fontSize: 13, color: "#8A5A00", marginTop: 8 }}>Primero activa al menos un material abajo: el destacado sólo se ve donde tienes oferta.</div> : null}
+          {!activas ? <div style={{ fontSize: 13, color: "#8A5A00", marginTop: 8 }}><T>Primero activa al menos un material abajo: el destacado sólo se ve donde tienes oferta.</T></div> : null}
         </div>
       ) : null}
 
-      {error ? <div style={S.err}>{error}</div> : null}
-      {!datos && !error ? <p style={S.sub}>Cargando…</p> : null}
-      {datos && !datos.disenos.length ? <p style={S.sub}>Todavía no hay diseños publicados. Pronto habrá.</p> : null}
+      {error ? <div style={S.err}><T>{error}</T></div> : null}
+      {!datos && !error ? <p style={S.sub}><T>Cargando…</T></p> : null}
+      {datos && !datos.disenos.length ? <p style={S.sub}><T>Todavía no hay diseños publicados. Pronto habrá.</T></p> : null}
       {(datos?.disenos || []).map((d) => (
         <Diseno key={d.id} d={d} alGuardar={cargar} />
       ))}
