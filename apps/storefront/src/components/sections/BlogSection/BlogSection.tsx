@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { BlogPost } from '@/types/blog';
 import { BlogCard } from '@/components/organisms/BlogCard/BlogCard'
 
@@ -36,7 +37,7 @@ export function BlogSection() {
     <section className='bg-tertiary container'>
       <div className='flex items-center justify-between mb-12'>
         <h2 className='heading-lg text-tertiary'>
-          MANTENTE AL DÍA
+          <TS>MANTENTE AL DÍA</TS>
         </h2>
       </div>
       <div className='grid grid-cols-1 lg:grid-cols-3'>

@@ -4,6 +4,7 @@
 // y la paleta por parte (panel), la vista pintada y los archivos (3MF y un ZIP
 // con un STL por color). El motor de cada herramienta da las partes con nombre
 // (lib/generador/vectores: conPartes); los archivos se arman en lib/generador/multicolor.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { Boton, Interruptor, Seccion, TarjetaExport, descargar } from "@/components/hetna/estudio3d/Controles"
@@ -80,10 +81,10 @@ export function TarjetaColores({ mc, archivo, titulo, nota }: { mc: EstadoMultic
     >
       <div className="flex gap-2">
         <Boton tipo="primario" onClick={() => descargar(`${archivo}-colores.3mf`, new Blob([archivo3MF(partes(), titulo) as BlobPart], { type: "model/3mf" }), "model/3mf")}>
-          3MF
+          <T>3MF</T>
         </Boton>
         <Boton onClick={() => descargar(`${archivo}-por-color.zip`, new Blob([zipPorColor(partes(), archivo) as BlobPart], { type: "application/zip" }), "application/zip")}>
-          STL por color (ZIP)
+          <T>STL por color (ZIP)</T>
         </Boton>
       </div>
     </TarjetaExport>

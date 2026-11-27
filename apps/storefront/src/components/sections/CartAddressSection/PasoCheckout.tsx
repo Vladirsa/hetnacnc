@@ -4,6 +4,7 @@
 // y distintos del carrito, con el fondo gris de la librería y títulos en
 // inglés. Aquí quedan iguales: tarjeta blanca, número del paso, palomita verde
 // cuando ya está, y un enlace para modificar.
+import { T } from "@/components/hetna/i18n/Idioma"
 export const PasoCheckout = ({
   numero,
   titulo,
@@ -35,7 +36,7 @@ export const PasoCheckout = ({
         >
           {listo ? "✓" : numero}
         </span>
-        {titulo}
+        <T>{titulo}</T>
       </h2>
       {onEditar && (
         <button
@@ -43,7 +44,7 @@ export const PasoCheckout = ({
           onClick={onEditar}
           className="shrink-0 text-[13px] font-semibold text-[#B34D07] underline"
         >
-          Modificar
+          <T>Modificar</T>
         </button>
       )}
     </div>

@@ -1,10 +1,12 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import CotizadorEnvio from "@/components/hetna/envios/CotizadorEnvio"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA, ligaWhatsApp } from "@/lib/hetna/empresa"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/servicios/envios-hetna" },
   title: "Envíos de piezas, herramientas y materiales CNC en México",
   description:
@@ -181,11 +183,11 @@ export default function EnviosHetnaPage() {
 
       {/* Hero */}
       <header className="overflow-hidden rounded-3xl bg-[#142033] p-8 text-white sm:p-14" style={{ backgroundImage: REJILLA }}>
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Envíos HETNA</p>
-        <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">Envíos especializados para productos CNC y manufactura</h1>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Envíos HETNA</TS></p>
+        <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>Envíos especializados para productos CNC y manufactura</TS></h1>
         <p className="mt-3 max-w-2xl text-lg text-white/80">
-          Envía piezas, herramientas, materiales y pedidos técnicos a todo México. Compara paqueterías, paga en línea y recibe tu guía por
-          correo.
+          <TS>Envía piezas, herramientas, materiales y pedidos técnicos a todo México. Compara paqueterías, paga en línea y recibe tu guía por
+          correo.</TS>
         </p>
         <ul className="mt-5 grid max-w-3xl gap-2 sm:grid-cols-3">
           {DIFERENTE.map((x) => (
@@ -197,10 +199,10 @@ export default function EnviosHetnaPage() {
         </ul>
         <div className="mt-7 flex flex-wrap gap-3">
           <a href="#cotizar-envio" className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110">
-            Cotizar mi envío
+            <TS>Cotizar mi envío</TS>
           </a>
           <a href="#talleres" className="rounded-xl border border-white/30 px-6 py-3 font-semibold text-white hover:bg-white/10">
-            Vendo en HETNA
+            <TS>Vendo en HETNA</TS>
           </a>
         </div>
       </header>
@@ -209,7 +211,7 @@ export default function EnviosHetnaPage() {
 
       {/* Cómo funciona */}
       <section className="mt-12">
-        <h2 className={H2}>Cómo funciona</h2>
+        <h2 className={H2}><TS>Cómo funciona</TS></h2>
         <ol className="mt-5 grid gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
           {PASOS.map(([n, t, d]) => (
             <li key={n} className="list-none rounded-2xl border border-[#E7E4DC] bg-white p-6">
@@ -224,7 +226,7 @@ export default function EnviosHetnaPage() {
       {/* Para quién y qué enviar */}
       <section className="mt-12 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
         <div className={CAJA}>
-          <h2 className="text-xl font-extrabold text-[#142033]">¿Para quién es?</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>¿Para quién es?</TS></h2>
           <ul className="mt-4 grid gap-3">
             {PARA_QUIEN.map(([t, d]) => (
               <li key={t} className="flex gap-3">
@@ -238,7 +240,7 @@ export default function EnviosHetnaPage() {
           </ul>
         </div>
         <div className={CAJA}>
-          <h2 className="text-xl font-extrabold text-[#142033]">¿Qué puedes enviar?</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>¿Qué puedes enviar?</TS></h2>
           <ul className="mt-4 flex flex-wrap gap-2 p-0">
             {QUE_ENVIAR.map((x) => (
               <li key={x} className="list-none rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm font-medium text-[#40403A]">
@@ -247,9 +249,9 @@ export default function EnviosHetnaPage() {
             ))}
           </ul>
           <p className="mt-4 text-sm text-[#6B675C]">
-            No se envían materiales peligrosos (inflamables, químicos, gases, baterías sueltas). ¿Duda con tu pieza?{" "}
+            <TS>No se envían materiales peligrosos (inflamables, químicos, gases, baterías sueltas). ¿Duda con tu pieza?</TS>{" "}
             <a href={WHATSAPP_AYUDA} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C2560A] underline">
-              Pregúntanos
+              <TS>Pregúntanos</TS>
             </a>
             .
           </p>
@@ -258,12 +260,12 @@ export default function EnviosHetnaPage() {
 
       {/* Tipos de envío */}
       <section className="mt-12">
-        <h2 className={H2}>Tipos de envío</h2>
+        <h2 className={H2}><TS>Tipos de envío</TS></h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TIPOS.map((t) => (
             <div key={t.titulo} className="flex flex-col rounded-2xl border border-[#E7E4DC] bg-white p-6">
-              <h3 className="text-lg font-extrabold text-[#142033]">{t.titulo}</h3>
-              <p className="mt-2 flex-1 text-sm text-[#6B675C]">{t.texto}</p>
+              <h3 className="text-lg font-extrabold text-[#142033]"><TS>{t.titulo}</TS></h3>
+              <p className="mt-2 flex-1 text-sm text-[#6B675C]"><TS>{t.texto}</TS></p>
               <a
                 href={t.href}
                 {...(t.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
@@ -278,7 +280,7 @@ export default function EnviosHetnaPage() {
 
       {/* Por qué con HETNA */}
       <section className="mt-12 rounded-3xl bg-[#F3F1EA] p-6 sm:p-10">
-        <h2 className={H2}>¿Por qué con HETNA y no directo con la paquetería?</h2>
+        <h2 className={H2}><TS>¿Por qué con HETNA y no directo con la paquetería?</TS></h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VENTAJAS.map(([t, d]) => (
             <div key={t} className="rounded-2xl bg-white p-5">
@@ -300,7 +302,7 @@ export default function EnviosHetnaPage() {
       <section id="talleres" className={`${CAJA} mt-12 scroll-mt-28`}>
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <h2 className="text-xl font-extrabold text-[#142033] sm:text-2xl">Si vendes en HETNA, los envíos ya vienen incluidos</h2>
+            <h2 className="text-xl font-extrabold text-[#142033] sm:text-2xl"><TS>Si vendes en HETNA, los envíos ya vienen incluidos</TS></h2>
             <ul className="mt-4 grid gap-2 p-0">
               {TALLERES.map((x) => (
                 <li key={x} className="flex list-none gap-2 text-[#40403A]">
@@ -315,10 +317,10 @@ export default function EnviosHetnaPage() {
               href="/talleres/unete"
               className="rounded-xl bg-[#142033] px-5 py-3 text-center font-semibold text-white hover:brightness-125"
             >
-              Registrar mi taller
+              <TS>Registrar mi taller</TS>
             </LocalizedClientLink>
             <a href="/seller" className="text-center text-sm font-semibold text-[#C2560A] hover:underline">
-              Ya vendo: ir a mi panel
+              <TS>Ya vendo: ir a mi panel</TS>
             </a>
           </div>
         </div>
@@ -326,7 +328,7 @@ export default function EnviosHetnaPage() {
 
       {/* Preguntas frecuentes */}
       <section className="mt-12">
-        <h2 className={H2}>Preguntas frecuentes</h2>
+        <h2 className={H2}><TS>Preguntas frecuentes</TS></h2>
         <div className="mt-5 grid gap-3">
           {PREGUNTAS.map(([q, a]) => (
             <details key={q} className="group rounded-2xl border border-[#E7E4DC] bg-white p-5 open:shadow-sm">
@@ -343,20 +345,20 @@ export default function EnviosHetnaPage() {
       </section>
 
       <p className="mt-4 text-center text-sm text-[#6B675C]">
-        Lee las{" "}
+        <TS>Lee las</TS>{" "}
         <LocalizedClientLink href="/servicios/envios-hetna/condiciones" className="font-semibold text-[#C2560A] underline">
-          condiciones de Envíos HETNA
+          <TS>condiciones de Envíos HETNA</TS>
         </LocalizedClientLink>{" "}
-        (medidas, sobrepeso, evidencia y protección).
+        <TS>(medidas, sobrepeso, evidencia y protección).</TS>
       </p>
 
       {/* CTA final */}
       <section className="mt-12 rounded-3xl bg-[#142033] p-8 text-center text-white sm:p-12" style={{ backgroundImage: REJILLA }}>
-        <h2 className="text-2xl font-extrabold sm:text-3xl">¿Listo para enviar?</h2>
-        <p className="mx-auto mt-2 max-w-xl text-white/80">Cotiza en un minuto, compara paqueterías y recibe tu guía por correo.</p>
+        <h2 className="text-2xl font-extrabold sm:text-3xl"><TS>¿Listo para enviar?</TS></h2>
+        <p className="mx-auto mt-2 max-w-xl text-white/80"><TS>Cotiza en un minuto, compara paqueterías y recibe tu guía por correo.</TS></p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <a href="#cotizar-envio" className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110">
-            Cotizar mi envío
+            <TS>Cotizar mi envío</TS>
           </a>
           <a
             href={WHATSAPP_AYUDA}
@@ -364,10 +366,15 @@ export default function EnviosHetnaPage() {
             rel="noopener noreferrer"
             className="rounded-xl border border-white/30 px-6 py-3 font-semibold text-white hover:bg-white/10"
           >
-            Hablar con nosotros
+            <TS>Hablar con nosotros</TS>
           </a>
         </div>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

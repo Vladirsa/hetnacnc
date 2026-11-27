@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -68,9 +69,9 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
     return (
       <section className="mt-6 rounded-2xl border border-dashed border-[#D9D5C9] bg-[#FAF9F5] p-8 text-center">
         <p className="text-3xl">⏳</p>
-        <h2 className="mt-2 text-lg font-extrabold text-[#142033]">Aún no llegan propuestas</h2>
+        <h2 className="mt-2 text-lg font-extrabold text-[#142033]"><T>Aún no llegan propuestas</T></h2>
         <p className="mx-auto mt-1 max-w-md text-sm text-[#6B675C]">
-          Los talleres ya recibieron tu solicitud. Te avisaremos por correo cada vez que llegue una propuesta; vuelve a esta misma liga para compararlas.
+          <T>Los talleres ya recibieron tu solicitud. Te avisaremos por correo cada vez que llegue una propuesta; vuelve a esta misma liga para compararlas.</T>
         </p>
       </section>
     )
@@ -95,7 +96,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
           ))}
           <label className="ml-1 flex items-center gap-1.5 text-[#40403A]">
             <input type="checkbox" checked={soloEnvio} onChange={(e) => setSoloEnvio(e.target.checked)} className="accent-[#C2560A]" />
-            Con envío incluido
+            <T>Con envío incluido</T>
           </label>
           {solicitud.propuestas.length >= 2 && (
             <span className="ml-1 inline-flex overflow-hidden rounded-full border border-[#D9D5C9]">
@@ -116,18 +117,18 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         <PagoSolicitud token={token} s={solicitud} />
       ) : solicitud.pago_estado === "pagado" ? (
         <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-5 text-[#1E7B3A]">
-          <p className="font-extrabold">✓ Pago recibido</p>
-          <p className="mt-1 text-sm">El taller ya está trabajando en tu pedido. Te avisaremos cuando salga el envío.</p>
+          <p className="font-extrabold"><T>✓ Pago recibido</T></p>
+          <p className="mt-1 text-sm"><T>El taller ya está trabajando en tu pedido. Te avisaremos cuando salga el envío.</T></p>
         </div>
       ) : (
         solicitud.pago_url && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#C2560A]/30 bg-[#FFF1E6] p-5">
             <div>
-              <p className="font-extrabold text-[#142033]">Falta tu pago</p>
-              <p className="text-sm text-[#40403A]">Paga con Mercado Pago para que el taller empiece a fabricar.</p>
+              <p className="font-extrabold text-[#142033]"><T>Falta tu pago</T></p>
+              <p className="text-sm text-[#40403A]"><T>Paga con Mercado Pago para que el taller empiece a fabricar.</T></p>
             </div>
             <a href={solicitud.pago_url} className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110">
-              Pagar ahora
+              <T>Pagar ahora</T>
             </a>
           </div>
         )
@@ -139,7 +140,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
         if (!p) return null
         return (
           <div className="mt-4 rounded-2xl border border-[#1E7B3A]/30 bg-[#E6F4EA] p-4">
-            <p className="text-sm font-extrabold text-[#0F5C2A]">⭐ HETNA te recomienda: {p.taller.nombre}</p>
+            <p className="text-sm font-extrabold text-[#0F5C2A]"><T>⭐ HETNA te recomienda:</T> {p.taller.nombre}</p>
             {r.razones.length > 0 && (
               <ul className="mt-1 list-disc pl-5 text-sm text-[#1E4D2B]">
                 {r.razones.map((x) => (
@@ -148,7 +149,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
               </ul>
             )}
             <p className="mt-2 text-xs text-[#40403A]">
-              La que mejor equilibra precio, plazo y lo que el taller ha cumplido en HETNA (entregas a tiempo, calificación, verificación). La membresía no cuenta. Tú decides.
+              <T>La que mejor equilibra precio, plazo y lo que el taller ha cumplido en HETNA (entregas a tiempo, calificación, verificación). La membresía no cuenta. Tú decides.</T>
             </p>
           </div>
         )
@@ -157,16 +158,16 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
       {solicitud.propuestas.length >= 2 && (
         <div className="mt-4 rounded-2xl border border-[#E7E4DC] bg-[#FAF9F6] p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-bold text-[#142033]">🤖 Resumen de las propuestas con IA</p>
+            <p className="text-sm font-bold text-[#142033]"><T>🤖 Resumen de las propuestas con IA</T></p>
             {!ia?.resumen && (
               <button type="button" onClick={pedirIa} disabled={ia?.cargando} className="rounded-xl bg-[#142033] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
                 {ia?.cargando ? "Analizando…" : "Explícame las diferencias"}
               </button>
             )}
           </div>
-          {ia?.resumen && <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40403A]">{ia.resumen}</div>}
+          {ia?.resumen && <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#40403A]"><T>{ia.resumen}</T></div>}
           {ia && !ia.cargando && !ia.resumen && ia.motivo && <p className="mt-2 text-sm text-[#6B675C]">{ia.motivo}</p>}
-          <p className="mt-2 text-xs text-[#8A867B]">La IA sólo explica lo que escribieron los talleres; no elige por ti. La decisión es tuya.</p>
+          <p className="mt-2 text-xs text-[#8A867B]"><T>La IA sólo explica lo que escribieron los talleres; no elige por ti. La decisión es tuya.</T></p>
         </div>
       )}
 
@@ -188,18 +189,25 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-lg font-extrabold text-[#142033]">{p.taller.nombre}</h3>
                     {p.taller.verificado ? (
-                      <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Verificado</span>
+                      <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><T>✓ Verificado</T></span>
                     ) : (
-                      <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5 text-xs font-bold text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller">Registrado · sin verificar</span>
+                      <span className="rounded-full bg-[#F1F0EC] px-2 py-0.5 text-xs font-bold text-[#6B675C]" title="Se registró en HETNA; todavía no revisamos su identificación ni su taller"><T>Registrado · sin verificar</T></span>
                     )}
                     {p.taller.capacidad_libre && (
                       <span className="rounded-full bg-[#FFF6E0] px-2 py-0.5 text-xs font-bold text-[#8A5A00]" title={p.taller.capacidad_libre.nota || "Tiene máquina libre esta semana"}>
-                        ⚡ Máquina libre{p.taller.capacidad_libre.descuento_pct ? ` · ofrece hasta ${p.taller.capacidad_libre.descuento_pct}%` : ""}
+                        <T>⚡ Máquina libre</T>{p.taller.capacidad_libre.descuento_pct ? ` · ofrece hasta ${p.taller.capacidad_libre.descuento_pct}%` : ""}
                       </span>
                     )}
+                    {p.primera && <span className="rounded-full bg-[#EAF1FB] px-2 py-0.5 text-xs font-bold text-[#1D4E89]" title="Fue el primer taller en mandarte precio">🥇 Primero en cotizar</span>}
+                    {p.cotizo_en_horas != null && p.cotizo_en_horas <= 4 && (
+                      <span className="rounded-full bg-[#EAF1FB] px-2 py-0.5 text-xs font-bold text-[#1D4E89]" title="Tiempo desde que recibió tu solicitud hasta que te cotizó">⏱ Cotizó en {textoRespuesta(p.cotizo_en_horas)}</span>
+                    )}
+                    {p.taller.medido?.respuesta_horas != null && p.taller.medido.respuesta_horas <= 4 && (p.taller.medido.tasa_respuesta_pct ?? 100) >= 70 && (
+                      <span className="rounded-full bg-[#FFF6E0] px-2 py-0.5 text-xs font-bold text-[#8A5A00]" title="Suele cotizar en menos de 4 horas y contesta casi todas las solicitudes">⚡ Responde rápido</span>
+                    )}
                     {solicitud.recomendada?.id === p.id && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#0F5C2A]">{solicitud.recomendada?.hetna_elige ? "✓ HETNA la eligió para ti" : "⭐ Recomendada por HETNA"}</span>}
-                    {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]">Destacado</span>}
-                    {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
+                    {p.destacado && <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs font-bold text-[#C2560A]"><T>Destacado</T></span>}
+                    {elegida && <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]"><T>Elegida</T></span>}
                   </div>
                   <p className="text-sm text-[#6B675C]">
                     {p.taller.estado || "México"}
@@ -216,16 +224,16 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Entrega en {p.dias} {p.dias === 1 ? "día" : "días"}</span>
-                <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Vigencia {p.vigencia_dias} días</span>
+                <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]"><T>Entrega en</T> {p.dias} {p.dias === 1 ? "día" : "días"}</span>
+                <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]"><T>Vigencia</T> {p.vigencia_dias} <T>días</T></span>
                 {p.anticipo_pct ? (
-                  <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]">Anticipo {p.anticipo_pct}%</span>
+                  <span className="rounded-full bg-[#F3F1EA] px-3 py-1 text-[#40403A]"><T>Anticipo</T> {p.anticipo_pct}%</span>
                 ) : null}
                 {p.precio === minPrecio && solicitud.propuestas.length > 1 && (
-                  <span className="rounded-full bg-[#E6F4EA] px-3 py-1 font-semibold text-[#1E7B3A]">Mejor precio</span>
+                  <span className="rounded-full bg-[#E6F4EA] px-3 py-1 font-semibold text-[#1E7B3A]"><T>Mejor precio</T></span>
                 )}
                 {p.dias === minDias && solicitud.propuestas.length > 1 && (
-                  <span className="rounded-full bg-[#E8EEF7] px-3 py-1 font-semibold text-[#142033]">Más rápida</span>
+                  <span className="rounded-full bg-[#E8EEF7] px-3 py-1 font-semibold text-[#142033]"><T>Más rápida</T></span>
                 )}
               </div>
 
@@ -272,7 +280,7 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                     <p key={n}>• {n}</p>
                   ))}
                   {notasDe.get(p.id)!.faltan.length > 0 && (
-                    <p className="mt-1 text-[#8A5A00]">Antes de elegir, pregúntale: {notasDe.get(p.id)!.faltan.join(" · ")}.</p>
+                    <p className="mt-1 text-[#8A5A00]"><T>Antes de elegir, pregúntale:</T> {notasDe.get(p.id)!.faltan.join(" · ")}.</p>
                   )}
                 </div>
               ) : null}
@@ -286,11 +294,11 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
                     onClick={() => setConfirmar(p)}
                     className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110"
                   >
-                    Elegir esta propuesta
+                    <T>Elegir esta propuesta</T>
                   </button>
                 )}
                 <a href={`/mx/talleres/${p.taller.handle}`} target="_blank" rel="noopener" className="text-sm font-semibold text-[#142033] underline">
-                  Ver perfil del taller
+                  <T>Ver perfil del taller</T>
                 </a>
               </div>
             </article>
@@ -302,21 +310,21 @@ export default function ComparadorPropuestas({ token, solicitud }: { token: stri
       {confirmar && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
-            <h3 className="text-lg font-extrabold text-[#142033]">¿Elegir a {confirmar.taller.nombre}?</h3>
+            <h3 className="text-lg font-extrabold text-[#142033]"><T>¿Elegir a</T> {confirmar.taller.nombre}?</h3>
             <p className="mt-2 text-sm text-[#40403A]">
-              {pesos(confirmar.precio)} MXN · entrega en {confirmar.dias} días.
-              {confirmar.anticipo_pct ? ` El taller pide ${confirmar.anticipo_pct}% de anticipo para empezar.` : ""} Al confirmar te llevamos a pagar y
-              las demás propuestas se cierran (a los otros talleres les avisamos sin dar tus datos).
+              {pesos(confirmar.precio)} <T>MXN · entrega en</T> {confirmar.dias} <T>días.</T>
+              {confirmar.anticipo_pct ? ` El taller pide ${confirmar.anticipo_pct}% de anticipo para empezar.` : ""} <T>Al confirmar te llevamos a pagar y
+              las demás propuestas se cierran (a los otros talleres les avisamos sin dar tus datos).</T>
             </p>
             {contactoPorAutorizacion && (
               <label className="mt-3 flex items-start gap-2 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]">
                 <input type="checkbox" checked={compartir} onChange={(e) => setCompartir(e.target.checked)} className="mt-1 accent-[#C2560A]" />
-                <span>Compartir mi nombre, correo, teléfono y WhatsApp con <b>{confirmar.taller.nombre}</b> para coordinar directamente.</span>
+                <span><T>Compartir mi nombre, correo, teléfono y WhatsApp con</T> <b>{confirmar.taller.nombre}</b> <T>para coordinar directamente.</T></span>
               </label>
             )}
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirmar(null)} className="rounded-xl px-4 py-2 font-semibold text-[#40403A]">
-                Cancelar
+                <T>Cancelar</T>
               </button>
               <button
                 type="button"
@@ -341,7 +349,7 @@ function HistorialMedido({ m, calificacion, resenas }: { m?: Propuesta["taller"]
     ["Trabajos terminados", m?.terminados ? String(m.terminados) : "0", m?.terminados ? undefined : "Todavía ninguno en HETNA"],
     ["Entregas a tiempo", m?.puntualidad_pct != null ? `${m.puntualidad_pct}%` : "—"],
     ["Calificación", calificacion ? `★ ${Number(calificacion).toFixed(1)}` : "—", resenas ? `${resenas} ${resenas === 1 ? "reseña" : "reseñas"}` : "Sin reseñas"],
-    ["Responde en", m?.respuesta_horas != null ? textoRespuesta(m.respuesta_horas) : "—"],
+    ["Responde en", m?.respuesta_horas != null ? textoRespuesta(m.respuesta_horas) : "—", m?.tasa_respuesta_pct != null ? `Contesta ${m.tasa_respuesta_pct}% de las solicitudes` : undefined],
   ]
   return (
     <div className="mt-2">
@@ -350,7 +358,7 @@ function HistorialMedido({ m, calificacion, resenas }: { m?: Propuesta["taller"]
           <div key={t} className="rounded-lg bg-[#F7F6F2] px-2.5 py-1.5">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#8A867B]">{t}</dt>
             <dd className="m-0 text-[15px] font-extrabold text-[#142033]">{v}</dd>
-            {nota && <dd className="m-0 text-[11px] text-[#6B675C]">{nota}</dd>}
+            {nota && <dd className="m-0 text-[11px] text-[#6B675C]"><T>{nota}</T></dd>}
           </div>
         ))}
       </dl>
@@ -360,12 +368,12 @@ function HistorialMedido({ m, calificacion, resenas }: { m?: Propuesta["taller"]
             className={`rounded-full px-2 py-0.5 font-bold ${m.puntaje >= 80 ? "bg-[#E6F4EA] text-[#1E7B3A]" : m.puntaje >= 60 ? "bg-[#FFF6E0] text-[#8A5A00]" : "bg-[#FDECEC] text-[#B42318]"}`}
             title="Puntaje HETNA: trabajos terminados 30%, calidad calificada 30%, entregas a tiempo 25%, tiempo de respuesta 10%, reclamos 5%. Pagar plan o verificación no lo cambia."
           >
-            Cumplimiento {m.puntaje}/100
+            <T>Cumplimiento</T> {m.puntaje}/100
           </span>
         ) : (
-          <span className="text-[#6B675C]">El puntaje de cumplimiento aparece a partir de 3 trabajos terminados.</span>
+          <span className="text-[#6B675C]"><T>El puntaje de cumplimiento aparece a partir de 3 trabajos terminados.</T></span>
         )}
-        {m && m.reclamos > 0 && <span>{m.reclamos_resueltos} de {m.reclamos} reclamos resueltos</span>}
+        {m && m.reclamos > 0 && <span>{m.reclamos_resueltos} <T>de</T> {m.reclamos} <T>reclamos resueltos</T></span>}
       </p>
     </div>
   )

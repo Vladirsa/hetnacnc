@@ -1,10 +1,11 @@
+import { TS } from "@/i18n/TS"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
 // Bloque "Síguenos" con todas las redes oficiales de HETNA (se alimenta de empresa.ts).
 export default function SigueHetna({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <span className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Síguenos</span>
+      <span className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Síguenos</TS></span>
       {EMPRESA.redes.map((r) => (
         <a
           key={r.nombre}

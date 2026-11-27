@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -68,11 +69,11 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
   return (
     <main className="w-full bg-[#FAF9F6]" onClickCapture={alClic}>
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><T>Inicio</T></LocalizedClientLink>
         <span>/</span>
-        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]">Servicios</LocalizedClientLink>
+        <LocalizedClientLink href="/servicios" className="hover:text-[#B34D07]"><T>Servicios</T></LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">App HETNA CNC para talleres</span>
+        <span className="text-[#1B1B18] font-medium"><T>App HETNA CNC para talleres</T></span>
       </div>
 
       {/* Hero */}
@@ -80,35 +81,35 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 grid lg:grid-cols-[1fr_300px] gap-8 items-center overflow-hidden relative">
           <div className="flex flex-col gap-4">
             <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#FF6A1A] px-3 py-1 rounded-full">
-              App para talleres · Se instala desde el navegador, sin tiendas
+              <T>App para talleres · Se instala desde el navegador, sin tiendas</T>
             </span>
             <h1 className="font-display text-[30px] lg:text-[46px] leading-[1.06] font-bold m-0 max-w-[720px]">
-              Cotiza, cobra y controla tu taller desde el celular
+              <T>Cotiza, cobra y controla tu taller desde el celular</T>
             </h1>
             <p className="m-0 text-[15.5px] lg:text-[17px] text-[#C9D2E0] max-w-[640px] leading-relaxed">
-              HETNA CNC es el sistema de gestión para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos reales, clientes, avances, gastos, inventario y equipo. Gratis para empezar y conectado con todo hetnacnc.com.
+              <T>HETNA CNC es el sistema de gestión para talleres de router, láser, plasma e impresión 3D: cotizaciones con tus costos reales, clientes, avances, gastos, inventario y equipo. Gratis para empezar y conectado con todo hetnacnc.com.</T>
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <a href={APP_TALLER.registro} className="inline-flex items-center bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold px-5 py-3 rounded-[10px] text-[15px]">
-                Crear mi taller gratis
+                <T>Crear mi taller gratis</T>
               </a>
               <a href={APP_TALLER.web} className="inline-flex items-center border border-[#3A4A63] hover:border-white text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]">
-                Abrir la app
+                <T>Abrir la app</T>
               </a>
               <a href="#instalar" className="inline-flex items-center gap-2 bg-white text-[#142033] hover:bg-[#F2F0EA] font-semibold px-5 py-3 rounded-[10px] text-[15px]">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M12 7v7M9 11l3 3 3-3M11 18h2" /></svg>
-                Instalar en mi celular
+                <T>Instalar en mi celular</T>
               </a>
             </div>
             <p className="m-0 text-[13px] text-[#9FB0C8]">
-              14 días con todo abierto · después, plan Gratis para siempre · sin tarjeta · Android, iPhone y computadora.
+              <T>14 días con todo abierto · después, plan Gratis para siempre · sin tarjeta · Android, iPhone y computadora.</T>
             </p>
           </div>
           <div className="hidden lg:flex flex-col gap-2 bg-[#0F1826] rounded-[14px] p-4 border border-[#2A3A55]">
-            <span className="text-[12px] uppercase tracking-wide font-bold text-[#9FB0C8]">Lo que ve tu cliente</span>
+            <span className="text-[12px] uppercase tracking-wide font-bold text-[#9FB0C8]"><T>Lo que ve tu cliente</T></span>
             <div className="bg-white text-[#1B1B18] rounded-[10px] p-3 text-[12.5px] flex flex-col gap-1.5">
-              <span className="font-bold text-[14px]">Cotización COT-0148</span>
-              <span className="text-[#6B6A63]">Letrero MDF 18 mm · 120 × 60 cm · 2 piezas</span>
+              <span className="font-bold text-[14px]"><T>Cotización COT-0148</T></span>
+              <span className="text-[#6B6A63]"><T>Letrero MDF 18 mm · 120 × 60 cm · 2 piezas</T></span>
               <div className="grid grid-cols-3 gap-1 pt-1">
                 {[["Económico", "$1,850"], ["Estándar", "$2,300"], ["Express", "$2,950"]].map(([n, p]) => (
                   <div key={n} className={`rounded-[8px] border p-1.5 text-center ${n === "Estándar" ? "border-[#FF6A1A] bg-[#FFF3EA]" : "border-[#E7E4DC]"}`}>
@@ -117,7 +118,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                   </div>
                 ))}
               </div>
-              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5">Enviada por WhatsApp · PDF con tu logo</span>
+              <span className="mt-1 rounded-[8px] bg-[#16794F] text-white text-center font-semibold py-1.5"><T>Enviada por WhatsApp · PDF con tu logo</T></span>
             </div>
           </div>
         </div>
@@ -128,7 +129,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
 
         {/* Cómo funciona */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Cómo funciona</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>Cómo funciona</T></h2>
           <ol className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PASOS.map(([t, d], i) => (
               <li key={t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
@@ -143,8 +144,8 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         {/* Vinculado con la plataforma */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Todo conectado con hetnacnc.com</h2>
-            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No es solo un cotizador: es la puerta de tu taller a la plataforma. Lo que cotizas en la app se envía, se fabrica y se vende con las herramientas de HETNA.</p>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>Todo conectado con hetnacnc.com</T></h2>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]"><T>No es solo un cotizador: es la puerta de tu taller a la plataforma. Lo que cotizas en la app se envía, se fabrica y se vende con las herramientas de HETNA.</T></p>
           </div>
           <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {VINCULOS.map((v) => (
@@ -162,27 +163,27 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         {/* Instalar */}
         <section id="instalar" className="flex flex-col gap-4 scroll-mt-24">
           <div>
-            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Instálala desde el navegador, sin tiendas</h2>
-            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]">No hay que buscarla en Play Store ni App Store: se abre en hetnacnc.com/app y se instala en un toque. Las actualizaciones llegan solas.</p>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>Instálala desde el navegador, sin tiendas</T></h2>
+            <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63] max-w-[760px]"><T>No hay que buscarla en Play Store ni App Store: se abre en hetnacnc.com/app y se instala en un toque. Las actualizaciones llegan solas.</T></p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Android (Chrome, Edge, Samsung)</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app y toca <strong>Instalar</strong> en el aviso que aparece abajo (o en el menú ⋮ del navegador, <em>Instalar aplicación</em>). Queda con su ícono, abre a pantalla completa y se actualiza sola.</p>
-              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir e instalar</a>
-              <a href={APP_TALLER.android} className="text-[12px] text-[#9A978C] hover:text-[#B34D07] underline underline-offset-2">¿Prefieres el instalador APK? Descárgalo aquí</a>
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]"><T>Android (Chrome, Edge, Samsung)</T></h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><T>Abre la app y toca</T> <strong><T>Instalar</T></strong> <T>en el aviso que aparece abajo (o en el menú ⋮ del navegador,</T> <em><T>Instalar aplicación</T></em><T>). Queda con su ícono, abre a pantalla completa y se actualiza sola.</T></p>
+              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"><T>Abrir e instalar</T></a>
+              <a href={APP_TALLER.android} className="text-[12px] text-[#9A978C] hover:text-[#B34D07] underline underline-offset-2"><T>¿Prefieres el instalador APK? Descárgalo aquí</T></a>
             </div>
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">iPhone y iPad (Safari)</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">Abre la app en Safari, toca <strong>Compartir</strong> (el cuadrito con la flecha) y luego <strong>Añadir a pantalla de inicio</strong>. Queda con su ícono como cualquier app y abre a pantalla completa.</p>
-              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en Safari</a>
-              <span className="text-[12px] text-[#9A978C]">También desde Chrome en iPhone: Compartir → Añadir a pantalla de inicio</span>
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]"><T>iPhone y iPad (Safari)</T></h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><T>Abre la app en Safari, toca</T> <strong><T>Compartir</T></strong> <T>(el cuadrito con la flecha) y luego</T> <strong><T>Añadir a pantalla de inicio</T></strong><T>. Queda con su ícono como cualquier app y abre a pantalla completa.</T></p>
+              <a href={APP_TALLER.web} className="mt-auto text-center bg-[#142033] hover:bg-[#0F1826] text-white font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"><T>Abrir en Safari</T></a>
+              <span className="text-[12px] text-[#9A978C]"><T>También desde Chrome en iPhone: Compartir → Añadir a pantalla de inicio</T></span>
             </div>
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-3">
-              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]">Computadora</h3>
-              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">En Chrome o Edge, el ícono de instalar en la barra de direcciones la deja como programa en Windows o Mac. Misma cuenta y mismos datos que en el celular; ideal para cotizaciones largas y reportes.</p>
-              <a href={APP_TALLER.web} className="mt-auto text-center border border-[#142033] text-[#142033] hover:bg-[#F2F0EA] font-semibold px-4 py-2.5 rounded-[10px] text-[14px]">Abrir en el navegador</a>
-              <span className="text-[12px] text-[#9A978C]">hetnacnc.com/cotizador</span>
+              <h3 className="m-0 text-[17px] font-bold text-[#1B1B18]"><T>Computadora</T></h3>
+              <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><T>En Chrome o Edge, el ícono de instalar en la barra de direcciones la deja como programa en Windows o Mac. Misma cuenta y mismos datos que en el celular; ideal para cotizaciones largas y reportes.</T></p>
+              <a href={APP_TALLER.web} className="mt-auto text-center border border-[#142033] text-[#142033] hover:bg-[#F2F0EA] font-semibold px-4 py-2.5 rounded-[10px] text-[14px]"><T>Abrir en el navegador</T></a>
+              <span className="text-[12px] text-[#9A978C]"><T>hetnacnc.com/cotizador</T></span>
             </div>
           </div>
         </section>
@@ -190,19 +191,19 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
         {/* Planes */}
         <section className="flex flex-col gap-4 scroll-mt-24" id="planes">
           <div>
-            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Planes</h2>
-            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">Precios en pesos mexicanos al mes, IVA incluido. Todos empiezan con {DIAS_PRUEBA} días de prueba con todo abierto; el plan Gratis no vence.</p>
+            <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>Planes</T></h2>
+            <p className="m-0 mt-1 text-[14px] text-[#6B6A63]"><T>Precios en pesos mexicanos al mes, IVA incluido. Todos empiezan con</T> {DIAS_PRUEBA} <T>días de prueba con todo abierto; el plan Gratis no vence.</T></p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {PLANES_APP.map((p) => (
               <div key={p.nombre} className={`bg-white rounded-[14px] p-5 flex flex-col gap-3 border ${p.destacado ? "border-[#FF6A1A] border-2" : "border-[#E7E4DC]"}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">{p.nombre}</h3>
-                  {p.destacado && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full">Más elegido</span>}
+                  {p.destacado && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full"><T>Más elegido</T></span>}
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[28px] font-bold text-[#1B1B18]">{p.precio}</span>
-                  <span className="text-[13px] text-[#6B6A63]">{p.nota}</span>
+                  <span className="text-[13px] text-[#6B6A63]"><T>{p.nota}</T></span>
                 </div>
                 <p className="m-0 text-[13px] text-[#6B6A63]">{p.para}</p>
                 <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[13.5px] text-[#1B1B18]">
@@ -210,7 +211,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                     <li key={x.texto} className="flex gap-2">
                       <span className={x.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-hidden="true">{x.estado === "proximamente" ? "○" : "✓"}</span>
                       <span className={x.estado === "proximamente" ? "text-[#6B6A63]" : undefined}>
-                        {x.texto} <Estado estado={x.estado} />
+                        <T>{x.texto}</T> <Estado estado={x.estado} />
                       </span>
                     </li>
                   ))}
@@ -224,14 +225,14 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
           <p className="m-0 text-[13px] leading-relaxed text-[#6B6A63]">{NOTA_PLANES}</p>
           <TablaPlanes />
           <div className="bg-[#E6F4EC] border border-[#B7E0C8] rounded-[14px] px-5 py-4">
-            <p className="m-0 text-[13.5px] font-bold text-[#16794F]">Siempre gratis, en todos los planes</p>
+            <p className="m-0 text-[13.5px] font-bold text-[#16794F]"><T>Siempre gratis, en todos los planes</T></p>
             <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]">{SIEMPRE_GRATIS.join(" · ")}</p>
           </div>
         </section>
 
         {/* Preguntas */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]">Preguntas frecuentes</h2>
+          <h2 className="font-display text-[24px] font-bold m-0 text-[#1B1B18]"><T>Preguntas frecuentes</T></h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {PREGUNTAS.map(([p, r]) => (
               <details key={p} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
@@ -265,13 +266,13 @@ function TablaPlanes() {
   return (
     <details className="group rounded-[14px] border border-[#E7E4DC] bg-white">
       <summary className="cursor-pointer list-none px-5 py-4 text-[15px] font-bold text-[#1B1B18] min-h-[44px]">
-        Comparar todos los planes <span className="text-[#C2560A] group-open:hidden">+</span><span className="hidden text-[#C2560A] group-open:inline">−</span>
+        <T>Comparar todos los planes</T> <span className="text-[#C2560A] group-open:hidden">+</span><span className="hidden text-[#C2560A] group-open:inline">−</span>
       </summary>
       <div className="overflow-x-auto px-2 pb-4 sm:px-5">
         <table className="w-full min-w-[640px] border-collapse text-[13.5px]">
           <thead>
             <tr className="border-b border-[#E7E4DC] text-left">
-              <th scope="col" className="py-2 pr-3 font-semibold text-[#6B6A63]">Función</th>
+              <th scope="col" className="py-2 pr-3 font-semibold text-[#6B6A63]"><T>Función</T></th>
               {PLANES_APP.map((p) => (
                 <th key={p.clave} scope="col" className="px-2 py-2 text-center font-bold text-[#1B1B18]">
                   {p.nombre}
@@ -302,8 +303,8 @@ function TablaPlanes() {
           </tbody>
         </table>
         <p className="m-0 mt-3 text-[12.5px] text-[#6B6A63]">
-          ✓ Disponible · <span className="rounded-full bg-[#E6EEFB] px-1.5 text-[#1D4E9E]">Beta</span> funciona, todavía en pruebas ·{" "}
-          <span className="rounded-full bg-[#F1F0EC] px-1.5">Próximamente</span> anunciada, todavía no incluida · — No incluido en este plan
+          <T>✓ Disponible ·</T> <span className="rounded-full bg-[#E6EEFB] px-1.5 text-[#1D4E9E]"><T>Beta</T></span> <T>funciona, todavía en pruebas ·</T>{" "}
+          <span className="rounded-full bg-[#F1F0EC] px-1.5"><T>Próximamente</T></span> <T>anunciada, todavía no incluida · — No incluido en este plan</T>
         </p>
       </div>
     </details>

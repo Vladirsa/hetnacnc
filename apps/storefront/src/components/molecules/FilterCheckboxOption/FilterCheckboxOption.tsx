@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Checkbox } from '@/components/atoms/Checkbox/Checkbox'
 import { cn } from '@/lib/utils';
 
@@ -33,7 +34,7 @@ export const FilterCheckboxOption = ({
           disabled && 'text-disabled'
         )}
       >
-        {label}{' '}
+        <T>{label}</T>{' '}
         {amount && (
           <span className='label-sm !font-light'>
             ({amount})

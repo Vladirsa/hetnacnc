@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 
 import { Button } from "@/components/atoms/Button/Button"
@@ -94,7 +95,7 @@ export const OfferCard = ({
               alt={`${productName} image`}
               width={100}
               height={100}
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 66vw"
               className="object-contain aspect-square w-full object-center h-full rounded-xs"
               data-testid="offer-card-image"
             />
@@ -117,7 +118,7 @@ export const OfferCard = ({
               </p>
             ) : (
               <p className="label-md text-secondary" data-testid="offer-card-price-unavailable">
-                No disponible en tu región
+                <T>No disponible en tu región</T>
               </p>
             )}
           </div>

@@ -8,6 +8,7 @@
 // El encabezado vive en el layout y no se vuelve a montar al navegar, por eso
 // el saldo se refresca al cambiar de página (como mucho cada 15 s) y al volver
 // a la pestaña, por ejemplo después de pagar una recarga.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -73,11 +74,11 @@ export function SaldoCreditos({ isLoggedIn, oscuro = false }: { isLoggedIn: bool
       <span className={oscuro ? "text-[#F5B47E]" : "text-[#C2560A]"}>
         <Moneda size={oscuro ? 13 : 14} />
       </span>
-      <span className="tabular-nums">{texto}</span>
+      <span className="tabular-nums"><T>{texto}</T></span>
       {oscuro && (
         <span className="font-normal text-[#C9D2E0]">
           {ilimitado ? "créditos ilimitados" : saldo === 1 ? "crédito" : "créditos"}
-          {!ilimitado && saldo === 0 && <span className="text-[#F5B47E]"> · Recargar</span>}
+          {!ilimitado && saldo === 0 && <span className="text-[#F5B47E]"> <T>· Recargar</T></span>}
         </span>
       )}
     </LocalizedClientLink>

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 /**
  * PilaresTrabajo.tsx
  * Visualización de los 4 pilares de HETNA — Nuestro proceso
@@ -90,12 +91,12 @@ function PilarCard({ pilar, isVisible, delay }: PilarCardProps) {
 
         {/* Título */}
         <h3 className={`text-base font-bold ${pilar.colorText} mb-1`}>
-          {pilar.titulo}
+          <TS>{pilar.titulo}</TS>
         </h3>
 
         {/* Descripción */}
         <p className="text-gray-700 leading-relaxed text-base">
-          {pilar.descripcion}
+          <TS>{pilar.descripcion}</TS>
         </p>
       </div>
     </div>
@@ -130,10 +131,10 @@ export default function PilaresTrabajo() {
         {/* Encabezado */}
         <div className="text-center mb-3">
           <h2 className="text-base font-bold text-gray-900 mb-1">
-            Nuestro <span className="text-green-600">proceso</span>
+            <TS>Nuestro</TS> <span className="text-green-600"><TS>proceso</TS></span>
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Nuestro proceso es transparente, eficiente y orientado a entregar la máxima calidad en cada proyecto.
+            <TS>Nuestro proceso es transparente, eficiente y orientado a entregar la máxima calidad en cada proyecto.</TS>
           </p>
         </div>
 
@@ -158,13 +159,13 @@ export default function PilaresTrabajo() {
         {/* CTA */}
         <div className="text-center mt-12">
           <p className="text-gray-700 mb-3">
-            ¿Listo para comenzar tu proyecto? Sube tu archivo ahora.
+            <TS>¿Listo para comenzar tu proyecto? Sube tu archivo ahora.</TS>
           </p>
           <a
             href="/maquila"
             className="inline-block px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
           >
-            Solicitar presupuesto gratis
+            <TS>Solicitar presupuesto gratis</TS>
           </a>
         </div>
       </div>

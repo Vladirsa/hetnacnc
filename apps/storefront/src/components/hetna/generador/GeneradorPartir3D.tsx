@@ -3,6 +3,7 @@
 // Partir modelo 3D (hetnacnc.com/mx/disenar/partir-3d): un modelo que no cabe
 // en la impresora se parte en piezas con conectores (pernos, perno integrado o
 // imanes) y se descargan las piezas en STL o en un ZIP. Todo en el navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
@@ -60,7 +61,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Numero = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1 min-w-0">
-    <span className="text-[12px] font-semibold text-[#6B6A63]">{etiqueta}</span>
+    <span className="text-[12px] font-semibold text-[#6B6A63]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-2.5 py-2 text-[15px] text-[#1B1B18] bg-transparent outline-none" />
       <span className="pr-2.5 text-[12px] text-[#9A978C]">{sufijo}</span>
@@ -274,10 +275,10 @@ export function GeneradorPartir3D() {
   return (
     <main className="flex-1 bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-6 pb-4">
-        <span className="inline-block px-3 py-1 rounded-full bg-[#E6F4EC] text-[#16794F] text-[12px] font-bold tracking-wide">GRATIS · SIN MARCA DE AGUA</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Imprime en grande con tu impresora de siempre</h1>
+        <span className="inline-block px-3 py-1 rounded-full bg-[#E6F4EC] text-[#16794F] text-[12px] font-bold tracking-wide"><T>GRATIS · SIN MARCA DE AGUA</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Imprime en grande con tu impresora de siempre</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[760px]">
-          <strong className="text-[#1B1B18]">Partir modelo 3D:</strong> sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que sí caben en la cama, con pernos o imanes para armarlo como una sola pieza. Cascos, macetas, letreros, piezas largas… Tu archivo no sale de tu navegador.
+          <strong className="text-[#1B1B18]"><T>Partir modelo 3D:</T></strong> <T>sube tu STL, OBJ o STEP, elige tu impresora y lo dividimos en piezas que sí caben en la cama, con pernos o imanes para armarlo como una sola pieza. Cascos, macetas, letreros, piezas largas… Tu archivo no sale de tu navegador.</T>
         </p>
       </section>
 
@@ -286,7 +287,7 @@ export function GeneradorPartir3D() {
           <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre || "Sube tu modelo 3D"}</span>
-            <span className="text-[12px] text-[#6B6A63]">STL, OBJ o STEP · hasta 60 MB</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>STL, OBJ o STEP · hasta 60 MB</T></span>
             <input type="file" accept=".stl,.obj,.step,.stp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {cargando && <p className="m-0 text-[13px] text-[#6B6A63]">{cargando}</p>}
@@ -295,7 +296,7 @@ export function GeneradorPartir3D() {
           {malla && med && (
             <>
               <div className="flex flex-col gap-2">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">Tu impresora</span>
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tu impresora</T></span>
                 <select
                   value={impresora}
                   onChange={(e) => elegirImpresora(Number(e.target.value))}
@@ -308,13 +309,13 @@ export function GeneradorPartir3D() {
                   {EJES.map((e, i) => <Numero key={e} etiqueta={`Cama ${e}`} valor={cama[i]} cambiar={(v) => { setImpresora(IMPRESORAS.length); setCama((c) => c.map((x, j) => (j === i ? v : x))) }} />)}
                 </div>
                 <button type="button" disabled={!camaOk} onClick={() => repartir()} className="self-start text-[13px] font-semibold text-[#C2560A] hover:underline disabled:opacity-50">
-                  Repartir cortes para esta cama
+                  <T>Repartir cortes para esta cama</T>
                 </button>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">Cortes ({cortes.length})</span>
-                {cortes.length === 0 && <span className="text-[13px] text-[#6B6A63]">Sin cortes: el modelo va completo.</span>}
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Cortes (</T>{cortes.length})</span>
+                {cortes.length === 0 && <span className="text-[13px] text-[#6B6A63]"><T>Sin cortes: el modelo va completo.</T></span>}
                 {cortes.map((c, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className="w-6 text-[13px] font-bold text-[#C2560A]">{EJES[c.eje]}</span>
@@ -344,28 +345,28 @@ export function GeneradorPartir3D() {
                 <div className="flex flex-wrap gap-2">
                   {EJES.map((e, i) => (
                     <button key={e} type="button" onClick={() => agregarCorte(i as Eje)} className="px-3 py-1.5 rounded-[8px] text-[12.5px] font-semibold border border-[#E7E4DC] bg-white hover:border-[#C2560A]">
-                      + Corte en {e}
+                      <T>+ Corte en</T> {e}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">Cómo se unen</span>
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Cómo se unen</T></span>
                 <div className="flex flex-wrap gap-2">
                   {CONECTORES.map((c) => <Opcion key={c.id} activa={conector === c.id} onClick={() => setConector(c.id)}>{c.nombre}</Opcion>)}
                 </div>
-                <span className="text-[12.5px] text-[#6B6A63]">{CONECTORES.find((c) => c.id === conector)?.nota}</span>
+                <span className="text-[12.5px] text-[#6B6A63]"><T>{CONECTORES.find((c) => c.id === conector)?.nota}</T></span>
                 {conector !== "ninguno" && (
                   <div className="flex flex-col gap-1.5">
-                    <span className="text-[12px] font-semibold text-[#6B6A63]">{conector === "imanes" ? "Imanes" : "Pernos"} por unión</span>
+                    <span className="text-[12px] font-semibold text-[#6B6A63]">{conector === "imanes" ? "Imanes" : "Pernos"} <T>por unión</T></span>
                     <div className="flex flex-wrap gap-1.5">
                       {[0, 1, 2, 3, 4, 6].map((n) => (
                         <Opcion key={n} activa={porUnion === n} onClick={() => setPorUnion(n)}>{n === 0 ? "Automático" : n}</Opcion>
                       ))}
                     </div>
                     <span className="text-[12px] text-[#6B6A63]">
-                      {porUnion === 0 ? "Según el tamaño de cada cara: 1 en caras chicas y hasta 4 en las grandes." : `${porUnion} en cada cara de corte, si caben con su pared.`} Ve dónde quedan en “Cortes y pernos”.
+                      {porUnion === 0 ? "Según el tamaño de cada cara: 1 en caras chicas y hasta 4 en las grandes." : `${porUnion} en cada cara de corte, si caben con su pared.`} <T>Ve dónde quedan en “Cortes y pernos”.</T>
                     </span>
                   </div>
                 )}
@@ -395,24 +396,24 @@ export function GeneradorPartir3D() {
             <>
               <div className="relative">
                 <Vista modelo={malla.tris} piezas={piezasVista} cortes={cortes} marcas={vista === "cortes" ? marcasVista : []} modo={vista} separar={separar} alTocar={cortarAqui} />
-                {calculando && <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-[12.5px] font-semibold text-[#6B6A63] border border-[#E7E4DC]">Partiendo...</span>}
+                {calculando && <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-[12.5px] font-semibold text-[#6B6A63] border border-[#E7E4DC]"><T>Partiendo...</T></span>}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Opcion activa={vista === "piezas"} onClick={() => setVista("piezas")}>Piezas</Opcion>
-                <Opcion activa={vista === "cortes"} onClick={() => setVista("cortes")}>Cortes y {conector === "imanes" ? "imanes" : "pernos"}</Opcion>
+                <Opcion activa={vista === "piezas"} onClick={() => setVista("piezas")}><T>Piezas</T></Opcion>
+                <Opcion activa={vista === "cortes"} onClick={() => setVista("cortes")}><T>Cortes y</T> {conector === "imanes" ? "imanes" : "pernos"}</Opcion>
                 {vista === "cortes" && (
                   <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#6B6A63]">
-                    <span className="ml-1">Toca el modelo para cortar en</span>
+                    <span className="ml-1"><T>Toca el modelo para cortar en</T></span>
                     {EJES.map((e, i) => (
                       <Opcion key={e} activa={ejeToque === i} onClick={() => setEjeToque(i as Eje)}>{e}</Opcion>
                     ))}
                   </span>
                 )}
               </div>
-              {vista === "cortes" && <p className="m-0 text-[12.5px] text-[#6B6A63]">Los planos naranjas son los cortes y los cilindros verdes, {conector === "imanes" ? "los huecos de los imanes" : "los pernos"}. Gira con un dedo o el ratón; un toque sin arrastrar agrega un corte en ese punto.</p>}
+              {vista === "cortes" && <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Los planos naranjas son los cortes y los cilindros verdes,</T> {conector === "imanes" ? "los huecos de los imanes" : "los pernos"}<T>. Gira con un dedo o el ratón; un toque sin arrastrar agrega un corte en ese punto.</T></p>}
               {res && res.piezas.length > 1 && vista === "piezas" && (
                 <label className="flex items-center gap-3 text-[13px] text-[#6B6A63]">
-                  Separar piezas
+                  <T>Separar piezas</T>
                   <input type="range" min={0} max={80} value={separar} onChange={(e) => setSeparar(Number(e.target.value))} className="flex-1 max-w-[260px] accent-[#C2560A]" />
                 </label>
               )}
@@ -434,23 +435,23 @@ export function GeneradorPartir3D() {
               {res && (
                 <>
                   {res.avisos.map((a) => <p key={a} className="m-0 text-[13.5px] text-[#B34D07]">{a}</p>)}
-                  {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`} en la cama de {camaN.join("×")} mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</p>}
+                  {noCaben > 0 && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{noCaben === 1 ? "Una pieza no cabe" : `${noCaben} piezas no caben`} <T>en la cama de</T> {camaN.join("×")} <T>mm. Agrega cortes o pulsa “Repartir cortes para esta cama”.</T></p>}
                   {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
 
                   <button type="button" onClick={cotizar} className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                    Ver precio de todas las piezas en el Cotizador
+                    <T>Ver precio de todas las piezas en el Cotizador</T>
                   </button>
                   <div className="grid sm:grid-cols-2 gap-2">
                     <button type="button" onClick={bajarZip} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3.5 rounded-[10px] text-[15px]">
-                      Descargar todo (ZIP)
+                      <T>Descargar todo (ZIP)</T>
                     </button>
                     <button
                       type="button"
                       onClick={fabricar}
                       className="bg-[#FF6A1A] hover:bg-[#E65C12] text-white font-extrabold py-3.5 rounded-[10px] text-[15px]"
                     >
-                      Fabrícamelo: que un taller lo imprima
+                      <T>Fabrícamelo: que un taller lo imprima</T>
                     </button>
                   </div>
 
@@ -461,10 +462,10 @@ export function GeneradorPartir3D() {
                         <li key={p.nombre} className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5 flex items-center gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="text-[14px] font-semibold text-[#1B1B18]">{p.nombre}</div>
-                            <div className={`text-[12.5px] ${ok ? "text-[#6B6A63]" : "text-[#8A1C1C]"}`}>{p.tam.join(" × ")} mm{ok ? "" : " · no cabe"}</div>
+                            <div className={`text-[12.5px] ${ok ? "text-[#6B6A63]" : "text-[#8A1C1C]"}`}>{p.tam.join(" × ")} <T>mm</T>{ok ? "" : " · no cabe"}</div>
                           </div>
                           <button type="button" onClick={() => descargar(`${nombre}-${p.nombre}.stl`, mallaSTL(p.malla), "model/stl")} className="px-3 py-2 rounded-[8px] bg-[#142033] hover:bg-[#0F1826] text-white text-[13px] font-semibold">
-                            STL
+                            <T>STL</T>
                           </button>
                         </li>
                       )
@@ -472,17 +473,17 @@ export function GeneradorPartir3D() {
                     {res.perno && (
                       <li className="bg-white border border-[#E7E4DC] rounded-[12px] px-3 py-2.5 flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="text-[14px] font-semibold text-[#1B1B18]">Perno × {res.conectores}</div>
-                          <div className="text-[12.5px] text-[#6B6A63]">Ø {diametro} × {res.pernoLargo} mm</div>
+                          <div className="text-[14px] font-semibold text-[#1B1B18]"><T>Perno ×</T> {res.conectores}</div>
+                          <div className="text-[12.5px] text-[#6B6A63]">Ø {diametro} × {res.pernoLargo} <T>mm</T></div>
                         </div>
                         <button type="button" onClick={() => descargar(`perno-${diametro}x${res.pernoLargo}mm.stl`, mallaSTL(res.perno!), "model/stl")} className="px-3 py-2 rounded-[8px] bg-[#142033] hover:bg-[#0F1826] text-white text-[13px] font-semibold">
-                          STL
+                          <T>STL</T>
                         </button>
                       </li>
                     )}
                   </ul>
                   <a href={`https://wa.me/${TELEFONO}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className="self-start text-[13.5px] font-semibold text-[#C2560A] hover:underline">
-                    ¿Dudas? Pregúntanos por WhatsApp
+                    <T>¿Dudas? Pregúntanos por WhatsApp</T>
                   </a>
                 </>
               )}

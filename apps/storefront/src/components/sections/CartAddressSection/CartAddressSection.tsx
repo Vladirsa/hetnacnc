@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useActionState, useEffect } from "react"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -75,12 +76,12 @@ const DatosDigital = ({
       {abierto ? (
         <form action={accion} data-testid="checkout-datos-digital">
           <p className="mb-4 rounded-[8px] bg-[#EEF7F0] px-3 py-2 text-[14px] text-[#17633A]">
-            Tu compra es digital: <strong>no pedimos dirección ni hay envío</strong>. Descargas al confirmar el pago y
-            también te mandamos los archivos por correo.
+            <T>Tu compra es digital:</T> <strong><T>no pedimos dirección ni hay envío</T></strong><T>. Descargas al confirmar el pago y
+            también te mandamos los archivos por correo.</T>
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-[14px] font-semibold text-[#1B1B18]">
-              Correo
+              <T>Correo</T>
               <input
                 name="email"
                 type="email"
@@ -92,7 +93,7 @@ const DatosDigital = ({
               />
             </label>
             <label className="flex flex-col gap-1 text-[14px] font-semibold text-[#1B1B18]">
-              Nombre
+              <T>Nombre</T>
               <input
                 name="nombre"
                 required
@@ -115,10 +116,10 @@ const DatosDigital = ({
         <div className="text-[14px] leading-relaxed text-[#4A4943]">
           <p className="font-semibold text-[#1B1B18]">{nombreActual}</p>
           <p className="text-[#6B6A63]">{cart?.email}</p>
-          <p className="mt-1 text-[#17633A]">Entrega digital: descarga inmediata tras el pago y copia por correo.</p>
+          <p className="mt-1 text-[#17633A]"><T>Entrega digital: descarga inmediata tras el pago y copia por correo.</T></p>
         </div>
       ) : (
-        <p className="text-[14px] text-[#6B6A63]">Cargando…</p>
+        <p className="text-[14px] text-[#6B6A63]"><T>Cargando…</T></p>
       )}
     </PasoCheckout>
   )
@@ -218,7 +219,7 @@ const DireccionFisica = ({
           {cart?.email && <p className="text-[#6B6A63]">{cart.email}</p>}
         </div>
       ) : (
-        <p className="text-[14px] text-[#6B6A63]">Cargando tu dirección…</p>
+        <p className="text-[14px] text-[#6B6A63]"><T>Cargando tu dirección…</T></p>
       )}
     </PasoCheckout>
   )

@@ -291,7 +291,13 @@ const LIGA_MARCA = "{{liga}}"
 export function textoBase(origen: Origen, d: { titulo: string; resumen?: string; lugar?: string; precio?: string }) {
   const r = d.resumen ? `\n\n${d.resumen}` : ""
   const l = d.lugar ? `\n📍 ${d.lugar}` : ""
-  if (origen === "licitacion") return `🔧 Nueva solicitud de cotización en HETNA CNC\n\n${d.titulo}${l}${r}\n\n¿Tienes taller? Envía tu propuesta sin comisión: ${LIGA_MARCA}`
+  if (origen === "licitacion") {
+    // Título que llama al taller de la zona: "¿Tienes CNC en Querétaro? Un cliente busca quién le cotice…"
+    const estado = (d.lugar || "").split(",").map((x) => x.trim()).filter(Boolean).pop()
+    const t = d.titulo && !/^Trabajo de fabricación/i.test(d.titulo) ? d.titulo.replace(/ - /g, " en ").toLowerCase() : "un trabajo de fabricación"
+    const que = /^(un |una |trabajo )/.test(t) ? (t.startsWith("trabajo ") ? `un ${t}` : t) : t
+    return `📢 ¿Tienes CNC${estado ? ` en ${estado}` : ""}? Un cliente busca quién le cotice ${que}${l}${r}\n\n👉 Regístrate gratis y manda tu cotización hoy, sin comisión: ${LIGA_MARCA}`
+  }
   if (origen === "taller") return `🏭 Nuevo taller en HETNA CNC: ${d.titulo}${l}${r}\n\nConoce sus trabajos y pídele cotización: ${LIGA_MARCA}`
   if (origen === "producto") return `🛒 Nuevo en la tienda HETNA: ${d.titulo}${d.precio ? ` — ${d.precio}` : ""}${r}\n\nVelo aquí: ${LIGA_MARCA}`
   if (origen === "taller_video") return `🔧 ${d.titulo}${r}\n\nCotiza con este taller: ${LIGA_MARCA}`

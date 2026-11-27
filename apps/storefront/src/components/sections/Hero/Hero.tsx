@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import Image from "@/lib/imagenes/Imagen"
 
 import tailwindConfig from "../../../../tailwind.config"
@@ -46,7 +47,7 @@ export const Hero = ({ image, heading, paragraph, buttons }: HeroProps) => {
               >
                 <span>
                   <span className="group-hover:inline-flex hidden">#</span>
-                  {label}
+                  <TS>{label}</TS>
                 </span>
 
                 <ArrowRightIcon

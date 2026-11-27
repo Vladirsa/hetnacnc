@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Fragment, useEffect, useRef, useState, useTransition, type FC } from 'react';
 
 import { Listbox, Transition } from '@headlessui/react';
@@ -417,7 +418,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
               disabled={!allSellersHaveMethod || isPendingDeleteRow}
               loading={isLoadingPrices}
             >
-              Continuar al pago
+              <T>Continuar al pago</T>
             </Button>
           </div>
         </>
@@ -431,7 +432,7 @@ const EnvioFisico = ({ cart, availableShippingMethods }: ShippingProps) => {
                     key={method.id}
                     className="mb-4 rounded-md border p-4"
                   >
-                    <Text className="txt-medium-plus text-ui-fg-base mb-1">Método</Text>
+                    <Text className="txt-medium-plus text-ui-fg-base mb-1"><T>Método</T></Text>
                     <Text className="txt-medium text-ui-fg-subtle">
                       {method.name}{' '}
                       {convertToLocale({

@@ -5,6 +5,7 @@
 // Antes: carrusel de 4 diapositivas donde competían "Explorar", "Cotizar" y
 // "Vende con nosotros". "Vende con nosotros" ahora vive en su propia sección,
 // más abajo (VenderConNosotros en HetnaHome).
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
@@ -29,11 +30,11 @@ export default function HeroFijo() {
       <div className="mx-auto flex max-w-[1280px] items-center gap-10 px-4 pb-10 pt-8 lg:px-16 lg:pb-12 lg:pt-12">
         <div className="flex flex-1 flex-col gap-4">
           <h1 className="font-display m-0 text-[28px] font-bold leading-[1.1] tracking-[-0.01em] md:text-[38px] lg:text-[44px]">
-            Fabricación CNC a medida en México
+            <TS>Fabricación CNC a medida en México</TS>
           </h1>
           <p className="m-0 max-w-[560px] text-[15px] leading-[1.55] text-[#C9D2E0] md:text-[17px]">
-            Cotiza tu pieza sin registro: corte láser, router, plasma, maquinado e impresión 3D con talleres de todo
-            México.
+            <TS>Cotiza tu pieza sin registro: corte láser, router, plasma, maquinado e impresión 3D con talleres de todo
+            México.</TS>
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-3">
             <LocalizedClientLink
@@ -41,13 +42,13 @@ export default function HeroFijo() {
               className="rounded-[12px] bg-[#C2560A] px-7 py-4 text-[17px] font-bold text-white shadow-[0_10px_24px_-10px_rgba(217,96,11,0.9)] hover:bg-[#A84A08]"
               data-testid="hero-accion-principal"
             >
-              Cotiza tu pieza en 2 minutos
+              <TS>Cotiza tu pieza en 2 minutos</TS>
             </LocalizedClientLink>
             <LocalizedClientLink
               href="/categories"
               className="inline-block py-3 text-[15px] font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
             >
-              Ver diseños desde $30
+              <TS>Ver diseños desde $30</TS>
             </LocalizedClientLink>
           </div>
           <p className="m-0 text-[13px] text-[#C9D2E0]">
@@ -57,9 +58,9 @@ export default function HeroFijo() {
               rel="noopener noreferrer"
               className="font-semibold text-white hover:underline"
             >
-              WhatsApp {EMPRESA.whatsappVisible}
+              <TS>WhatsApp</TS> {EMPRESA.whatsappVisible}
             </a>{" "}
-            · Fabricación en México · Sin registro para cotizar
+            <TS>· Fabricación en México · Sin registro para cotizar</TS>
           </p>
         </div>
         <ol className="m-0 hidden w-[380px] shrink-0 list-none flex-col gap-3 p-0 lg:flex">
@@ -85,19 +86,19 @@ export function VenderConNosotros() {
   return (
     <section className="mx-4 my-10 flex flex-col items-start justify-between gap-4 rounded-[20px] border border-[#E7E4DC] bg-white px-6 py-6 lg:mx-16 lg:flex-row lg:items-center lg:px-10">
       <div>
-        <p className="m-0 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#C2560A]">Para talleres</p>
-        <h2 className="font-display m-0 mt-1 text-[22px] font-bold text-[#142033]">¿Tienes un taller CNC? Vende con nosotros</h2>
+        <p className="m-0 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#C2560A]"><TS>Para talleres</TS></p>
+        <h2 className="font-display m-0 mt-1 text-[22px] font-bold text-[#142033]"><TS>¿Tienes un taller CNC? Vende con nosotros</TS></h2>
         <p className="m-0 mt-1 max-w-[620px] text-[14px] text-[#6B675C]">
-          Recibe solicitudes de clientes de todo México y cotiza desde tu panel. Los primeros talleres entran como Taller
-          Fundador.
+          <TS>Recibe solicitudes de clientes de todo México y cotiza desde tu panel. Los primeros talleres entran como Taller
+          Fundador.</TS>
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-3">
         <LocalizedClientLink href="/talleres/unete" className="rounded-[10px] bg-[#142033] px-5 py-3 text-[14.5px] font-semibold text-white hover:brightness-110">
-          Vende con nosotros
+          <TS>Vende con nosotros</TS>
         </LocalizedClientLink>
         <LocalizedClientLink href="/talleres/fundadores" className="rounded-[10px] border border-[#142033] px-5 py-3 text-[14.5px] font-semibold text-[#142033]">
-          Taller Fundador
+          <TS>Taller Fundador</TS>
         </LocalizedClientLink>
       </div>
     </section>

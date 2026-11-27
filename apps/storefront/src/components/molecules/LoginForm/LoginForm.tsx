@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { destinoSeguro as destinoSeguroBase } from '@/lib/seguridad/destino-seguro';
 import { useState, type FormEvent } from 'react';
 
@@ -15,6 +16,7 @@ import { LabeledInput } from '@/components/cells/LabeledInput/LabeledInput'
 import { login, reenviarConfirmacion, transferCart } from '@/lib/data/customer';
 import { toast } from '@/lib/helpers/toast';
 import { CampoCodigo } from '@/components/hetna/cuenta/CampoCodigo';
+import { BotonesSociales } from '@/components/hetna/cuenta/BotonesSociales';
 
 import { LoginFormData, loginFormSchema } from './schema';
 
@@ -120,10 +122,10 @@ const Form = () => {
           className="rounded-sm border p-4"
           data-testid="login-form-container"
         >
-          <h1 className="heading-md mb-8 uppercase text-primary">Iniciar sesión</h1>
+          <h1 className="heading-md mb-8 uppercase text-primary"><T>Iniciar sesión</T></h1>
           {porConfirmar && (
             <div className="mb-6 rounded-sm border border-[#F2C98F] bg-[#FFF8EE] p-3 text-md text-[#5A3A12]" role="status">
-              <p className="m-0">{porConfirmar.texto}</p>
+              <p className="m-0"><T>{porConfirmar.texto}</T></p>
               <button
                 type="button"
                 disabled={reenviado}
@@ -139,6 +141,7 @@ const Form = () => {
               <CampoCodigo email={porConfirmar.email} alConfirmar={() => handleSubmit(submit)()} />
             </div>
           )}
+          <BotonesSociales destino={destino} />
           <form
             onSubmit={enviar}
             data-testid="login-form"
@@ -176,7 +179,7 @@ const Form = () => {
               className="label-md mt-4 block text-right uppercase text-action-on-secondary"
               data-testid="login-forgot-password-link"
             >
-              ¿Olvidaste tu contraseña?
+              <T>¿Olvidaste tu contraseña?</T>
             </Link>
 
             <Button
@@ -184,14 +187,14 @@ const Form = () => {
               disabled={isSubmitting}
               data-testid="login-submit-button"
             >
-              Iniciar sesión
+              <T>Iniciar sesión</T>
             </Button>
           </form>
         </div>
 
         <div className="rounded-sm border p-4">
           <h2 className="heading-md mb-4 uppercase text-primary">
-            ¿Aún no tienes cuenta?
+            <T>¿Aún no tienes cuenta?</T>
           </h2>
           <Link
             href={volver ? `/register?volver=${encodeURIComponent(destino)}` : '/register'}
@@ -201,7 +204,7 @@ const Form = () => {
               variant="tonal"
               className="mt-8 flex w-full justify-center uppercase"
             >
-              Crear cuenta
+              <T>Crear cuenta</T>
             </Button>
           </Link>
         </div>

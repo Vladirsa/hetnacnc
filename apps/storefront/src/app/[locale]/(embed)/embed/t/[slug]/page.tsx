@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -11,7 +12,7 @@ import { leerTallerPublico } from "@/lib/cotizador/taller-publico"
 // cualquier sitio (frame-ancestors).
 type Props = { params: Promise<{ slug: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const t = await leerTallerPublico(slug)
   return {
@@ -31,4 +32,9 @@ export default async function WidgetCotizador({ params }: Props) {
       <CotizadorEnLinea taller={taller} widget />
     </>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

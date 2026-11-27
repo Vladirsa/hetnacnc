@@ -5,6 +5,7 @@
 // las demás herramientas que viven dentro de Estudio3D, para que todas se vean
 // y se manejen igual.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 export const numero = (s: string) => parseFloat((s || "").replace(",", "."))
 export const r1 = (x: number) => Math.round(x * 10) / 10
 
@@ -26,9 +27,9 @@ export const Etiqueta = ({ children }: { children: React.ReactNode }) => (
 
 export const Seccion = ({ titulo, children, nota }: { titulo: string; children: React.ReactNode; nota?: string }) => (
   <div className="flex flex-col gap-1.5">
-    <Etiqueta>{titulo}</Etiqueta>
+    <Etiqueta><T>{titulo}</T></Etiqueta>
     {children}
-    {nota && <span className="text-[11.5px] leading-snug text-[#8A97AB]">{nota}</span>}
+    {nota && <span className="text-[11.5px] leading-snug text-[#8A97AB]"><T>{nota}</T></span>}
   </div>
 )
 
@@ -44,7 +45,7 @@ export const CampoNum = ({
   sufijo?: string
 }) => (
   <label className="flex min-w-0 flex-col gap-1">
-    {etiqueta && <span className="text-[12.5px] text-[#C9D2E0]">{etiqueta}</span>}
+    {etiqueta && <span className="text-[12.5px] text-[#C9D2E0]"><T>{etiqueta}</T></span>}
     <span className="flex items-center rounded-[8px] bg-[#1C2431] focus-within:ring-1 focus-within:ring-[#C2560A]">
       <input
         type="text"
@@ -129,7 +130,7 @@ export const Chips = ({ items, onClick }: { items: { id: string; nombre: string 
 
 export const Interruptor = ({ etiqueta, activo, cambiar }: { etiqueta: string; activo: boolean; cambiar: (v: boolean) => void }) => (
   <button type="button" onClick={() => cambiar(!activo)} aria-pressed={activo} className="flex items-center justify-between gap-3 text-left">
-    <span className="text-[13.5px] text-[#E6EBF2]">{etiqueta}</span>
+    <span className="text-[13.5px] text-[#E6EBF2]"><T>{etiqueta}</T></span>
     <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${activo ? "bg-[#C2560A]" : "bg-[#2B3648]"}`}>
       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${activo ? "left-[18px]" : "left-0.5"}`} />
     </span>
@@ -138,7 +139,7 @@ export const Interruptor = ({ etiqueta, activo, cambiar }: { etiqueta: string; a
 
 export const Destacado = ({ titulo, children }: { titulo: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-3">
-    <span className="text-[13px] font-bold text-white">{titulo}</span>
+    <span className="text-[13px] font-bold text-white"><T>{titulo}</T></span>
     {children}
   </div>
 )
@@ -178,8 +179,8 @@ export const TarjetaExport = ({
   children: React.ReactNode
 }) => (
   <div className="flex flex-col gap-2 rounded-[12px] border border-[#2B3648] bg-[#1C2431] p-4">
-    <span className="text-[15px] font-bold text-white">{titulo}</span>
-    {nota && <span className="text-[12.5px] text-[#8A97AB]">{nota}</span>}
+    <span className="text-[15px] font-bold text-white"><T>{titulo}</T></span>
+    {nota && <span className="text-[12.5px] text-[#8A97AB]"><T>{nota}</T></span>}
     {children}
   </div>
 )

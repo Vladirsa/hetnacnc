@@ -3,6 +3,7 @@
 // Mi empresa → equipo (estrategia 2.4, parte 2): crear la empresa, invitar a
 // compras, ingeniería o almacén, activar la aprobación de pedidos y aprobar o
 // rechazar lo que piden los compradores.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -32,12 +33,12 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
     return (
       <div className="grid gap-3">
         <p className="text-[14px] text-[#4A4943]">
-          Crea tu empresa para invitar a tu equipo (compras, ingeniería, almacén): verán las mismas piezas, podrán repetir pedidos y, si quieres, los pedidos de los compradores necesitarán tu aprobación.
+          <T>Crea tu empresa para invitar a tu equipo (compras, ingeniería, almacén): verán las mismas piezas, podrán repetir pedidos y, si quieres, los pedidos de los compradores necesitarán tu aprobación.</T>
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input className={campo} placeholder="Nombre de la empresa" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={120} />
           <button disabled={ocupado} onClick={() => correr({ accion: "crear", nombre }, "Empresa creada. Ya puedes invitar a tu equipo.")} className="rounded-xl bg-[#C2560A] px-5 py-2.5 text-[14px] font-semibold text-white disabled:opacity-60">
-            Crear empresa
+            <T>Crear empresa</T>
           </button>
         </div>
         {msg && <p className={`text-sm font-semibold ${msg.ok ? "text-[#0F7A4A]" : "text-[#B3261E]"}`}>{msg.t}</p>}
@@ -50,27 +51,27 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
   return (
     <div className="grid gap-4">
       <p className="text-[14px] text-[#4A4943]">
-        <b className="text-[#142033]">{equipo.empresa.nombre}</b> · eres {admin ? "administrador" : "comprador"}
+        <b className="text-[#142033]">{equipo.empresa.nombre}</b> <T>· eres</T> {admin ? "administrador" : "comprador"}
         {equipo.empresa.aprobacion ? " · los pedidos de compradores necesitan aprobación" : ""}
       </p>
 
       {admin && pendientes.length > 0 && (
         <div className="rounded-xl border border-[#F2C9A5] bg-[#FFF8F1] p-4">
-          <p className="text-[14px] font-bold text-[#8A3D06]">Pedidos por aprobar ({pendientes.length})</p>
+          <p className="text-[14px] font-bold text-[#8A3D06]"><T>Pedidos por aprobar (</T>{pendientes.length})</p>
           <ul className="mt-2 grid gap-3">
             {pendientes.map((p) => (
               <li key={p.folio} className="rounded-lg bg-white p-3 text-[13px]">
                 <p className="font-semibold text-[#142033]">
                   {p.folio} · {p.quien}
                 </p>
-                <p className="text-[#40403A]">{p.resumen}</p>
-                <p className="line-clamp-2 text-[#6B675C]">{p.descripcion}</p>
+                <p className="text-[#40403A]"><T>{p.resumen}</T></p>
+                <p className="line-clamp-2 text-[#6B675C]"><T>{p.descripcion}</T></p>
                 <div className="mt-2 flex gap-2">
                   <button disabled={ocupado} onClick={() => correr({ accion: "aprobar", folio: p.folio }, `${p.folio} aprobado: ya va a los talleres.`)} className="rounded-lg bg-[#0F7A4A] px-3 py-1.5 font-semibold text-white disabled:opacity-60">
-                    Aprobar
+                    <T>Aprobar</T>
                   </button>
                   <button disabled={ocupado} onClick={() => { if (confirm(`¿Rechazar ${p.folio}? Se cancela.`)) correr({ accion: "rechazar", folio: p.folio }, `${p.folio} rechazado.`) }} className="rounded-lg bg-[#F3F1EA] px-3 py-1.5 font-semibold text-[#40403A] disabled:opacity-60">
-                    Rechazar
+                    <T>Rechazar</T>
                   </button>
                 </div>
               </li>
@@ -80,7 +81,7 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
       )}
 
       <div>
-        <p className="text-[13px] font-bold text-[#142033]">Equipo</p>
+        <p className="text-[13px] font-bold text-[#142033]"><T>Equipo</T></p>
         <ul className="mt-1 divide-y divide-[#EFEDE6] rounded-xl border border-[#E7E4DC] bg-white">
           {(equipo.miembros || []).map((m) => (
             <li key={m.email} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[13px]">
@@ -89,7 +90,7 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
               </span>
               {admin && (
                 <button disabled={ocupado} onClick={() => { if (confirm(`¿Quitar a ${m.email} del equipo?`)) correr({ accion: "quitar", email: m.email }, "Listo.") }} className="text-[12px] font-semibold text-[#B3261E]">
-                  Quitar
+                  <T>Quitar</T>
                 </button>
               )}
             </li>
@@ -106,7 +107,7 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
               <option value="admin">Administrador</option>
             </select>
             <button disabled={ocupado} onClick={() => correr({ accion: "invitar", email: correo, rol }, `Invitación enviada a ${correo}.`).then(() => setCorreo(""))} className="rounded-xl bg-[#142033] px-5 py-2.5 text-[14px] font-semibold text-white disabled:opacity-60">
-              Invitar
+              <T>Invitar</T>
             </button>
           </div>
           <label className="flex items-start gap-2 text-[14px] text-[#40403A]">
@@ -118,7 +119,7 @@ export function EquipoEmpresa({ equipo }: { equipo: MiEquipo }) {
               className="mt-1 accent-[#C2560A]"
             />
             <span>
-              <b>Aprobación de pedidos:</b> lo que pida un comprador no llega a ningún taller hasta que un administrador lo apruebe.
+              <b><T>Aprobación de pedidos:</T></b> <T>lo que pida un comprador no llega a ningún taller hasta que un administrador lo apruebe.</T>
             </span>
           </label>
         </>

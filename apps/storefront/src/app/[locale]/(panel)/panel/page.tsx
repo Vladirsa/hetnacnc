@@ -1,5 +1,6 @@
 // HETNA Panel → Inicio: lo mismo que el Centro de control del dashboard,
 // pero para leerlo en el celular en 30 segundos.
+import { TS } from "@/i18n/TS"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace, pesos } from "@/lib/panel/sesion"
 
@@ -30,7 +31,7 @@ export default async function PanelInicio({ params, searchParams }: { params: Pr
         ))}
       </div>
       <Tarjeta>
-        <Titulo>Administrar</Titulo>
+        <Titulo><TS>Administrar</TS></Titulo>
         <div className="grid grid-cols-3 gap-2 text-center">
           {[
             ["📦", "Productos", "/dashboard/products"], ["🧾", "Pedidos", "/dashboard/orders"], ["🏭", "Talleres", "/dashboard/sellers"],
@@ -43,13 +44,13 @@ export default async function PanelInicio({ params, searchParams }: { params: Pr
             </a>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-[#9A968B]">Abre el dashboard completo (mejor en tablet o computadora). Las acciones del día a día están en las pestañas de abajo.</p>
+        <p className="mt-2 text-[11px] text-[#9A968B]"><TS>Abre el dashboard completo (mejor en tablet o computadora). Las acciones del día a día están en las pestañas de abajo.</TS></p>
       </Tarjeta>
-      {error && <Vacio>No pude leer el centro de control: {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer el centro de control:</TS> {error}</Vacio>}
       {c && (
         <>
           <Tarjeta>
-            <Titulo>Ventas · {dias === 1 ? "hoy" : `${dias} días`}</Titulo>
+            <Titulo><TS>Ventas ·</TS> {dias === 1 ? "hoy" : `${dias} días`}</Titulo>
             <div className="grid grid-cols-2 gap-2">
               <Kpi etiqueta="Ingresos" valor={pesos(c.ventas.ingresos, c.ventas.moneda || "MXN")} antes={dif(c.ventas.ingresos, c.ventas.ingresos_antes)} />
               <Kpi etiqueta="Pedidos" valor={String(c.ventas.pedidos)} antes={dif(c.ventas.pedidos, c.ventas.pedidos_antes)} />
@@ -61,22 +62,22 @@ export default async function PanelInicio({ params, searchParams }: { params: Pr
           </Tarjeta>
           {c.saldos?.skydropx && (
             <Tarjeta>
-              <Titulo>Saldo de envíos</Titulo>
+              <Titulo><TS>Saldo de envíos</TS></Titulo>
               <p className="text-sm text-[#40403A]">{c.saldos.skydropx.texto || `Skydropx: ${pesos(c.saldos.skydropx.saldo || 0)}`}{typeof c.saldos.skydropx.alcanza_dias === "number" ? ` · alcanza ≈ ${c.saldos.skydropx.alcanza_dias} días` : ""}</p>
             </Tarjeta>
           )}
           <Tarjeta>
-            <Titulo extra={<span className="text-[12px] text-[#6B675C]">{c.conteo.rojo} urgentes · {c.conteo.ambar} por revisar</span>}>Avisos</Titulo>
-            {c.avisos.length === 0 ? <Vacio>Sin avisos. Todo en orden.</Vacio> : (
+            <Titulo extra={<span className="text-[12px] text-[#6B675C]">{c.conteo.rojo} <TS>urgentes ·</TS> {c.conteo.ambar} <TS>por revisar</TS></span>}><TS>Avisos</TS></Titulo>
+            {c.avisos.length === 0 ? <Vacio><TS>Sin avisos. Todo en orden.</TS></Vacio> : (
               <ul className="divide-y divide-[#EFEDE6]">
                 {c.avisos.slice(0, 30).map((a, i) => (
                   <li key={i} className="py-2.5">
                     <div className="flex items-start gap-2">
                       <Etiqueta color={a.nivel}>{a.nivel === "rojo" ? "Urgente" : a.nivel === "ambar" ? "Revisar" : "Info"}</Etiqueta>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13.5px] font-bold leading-snug text-[#142033]">{a.titulo}</p>
-                        {a.detalle && <p className="text-[12px] text-[#6B675C]">{a.detalle}</p>}
-                        <p className="text-[11px] text-[#9A968B]">{hace(a.cuando)}{a.url && <> · <a className="font-semibold text-[#C2560A]" href={a.url} target="_blank" rel="noreferrer">Abrir en el dashboard</a></>}</p>
+                        <p className="text-[13.5px] font-bold leading-snug text-[#142033]"><TS>{a.titulo}</TS></p>
+                        {a.detalle && <p className="text-[12px] text-[#6B675C]"><TS>{a.detalle}</TS></p>}
+                        <p className="text-[11px] text-[#9A968B]">{hace(a.cuando)}{a.url && <> · <a className="font-semibold text-[#C2560A]" href={a.url} target="_blank" rel="noreferrer"><TS>Abrir en el dashboard</TS></a></>}</p>
                       </div>
                     </div>
                   </li>

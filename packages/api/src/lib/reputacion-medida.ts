@@ -11,7 +11,7 @@
 // El puntaje (0–100) sólo se muestra con MIN_TRABAJOS terminados; antes es
 // "historial insuficiente". Pesos (decisión del dueño, 19 nov 2026, sobre la
 // auditoría): trabajos terminados 30, calidad calificada 30, puntualidad 25,
-// tiempo de respuesta 10, historial de reclamos 5. Si falta un dato, su peso se
+// respuesta 10 (qué tan rápido cotiza y en cuántos avisos contesta), historial de reclamos 5. Si falta un dato, su peso se
 // reparte entre los demás.
 //
 // La verificación y las certificaciones NO entran aquí (regla del 9 nov 2026):
@@ -25,6 +25,9 @@ const T_EVENTO = "hetna_solicitud_evento"
 const T_RECLAMO = "hetna_resena_reclamo"
 const T_RESENA = "hetna_resena_taller"
 const T_AVISO = "hetna_solicitud_aviso" // difusion.ts: cuándo se le avisó al taller de cada solicitud
+const T_RESPUESTA = "hetna_respuesta_taller" // el taller dijo que no a una solicitud (con motivo)
+const MIN_AVISOS = 3 // avisos mínimos para medir la tasa de respuesta
+const PLAZO_CONTESTAR_H = 48 // un aviso cuenta para la tasa cuando ya pasaron 48 h
 const MIN_RESPUESTAS = 3 // propuestas mínimas para mostrar el tiempo de respuesta
 const VENTANA_RESPUESTA_DIAS = 120
 export const MIN_TRABAJOS = 3
@@ -51,6 +54,10 @@ export type MedidaTaller = {
    *  null si tiene menos de MIN_RESPUESTAS propuestas medibles en los últimos 120 días. */
   respuesta_horas?: number | null
   respuestas_medidas?: number
+  /** % de las solicitudes que le avisamos en las que contestó (cotizó o dijo que no).
+   *  null con menos de MIN_AVISOS avisos ya vencidos en los últimos 120 días. */
+  tasa_respuesta_pct?: number | null
+  avisos_medidos?: number
 }
 
 /** Mediana de una lista de números (null si está vacía). */
@@ -77,6 +84,30 @@ async function tiempoRespuesta(knex: any, sellerId: string): Promise<{ horas: nu
     .filter((h) => h >= 0 && h < 24 * 30)
   const med = horas.length >= MIN_RESPUESTAS ? mediana(horas) : null
   return { horas: med == null ? null : r1(med), n: horas.length }
+}
+
+/** Tasa de respuesta: de las solicitudes que se le avisaron (hace más de 48 h,
+ *  en los últimos 120 días), en cuántas cotizó o dijo que no. Contestar "no
+ *  puedo" también cuenta: el cliente y HETNA saben a qué atenerse. */
+async function tasaRespuesta(knex: any, sellerId: string): Promise<{ pct: number | null; n: number }> {
+  if (!(await existe(knex, T_AVISO))) return { pct: null, n: 0 }
+  const desde = new Date(Date.now() - VENTANA_RESPUESTA_DIAS * DIA)
+  const hasta = new Date(Date.now() - PLAZO_CONTESTAR_H * 3_600_000)
+  const hayRespuestas = await existe(knex, T_RESPUESTA)
+  const fila = await knex(T_AVISO + " as a")
+    .where("a.seller_id", sellerId)
+    .whereBetween("a.created_at", [desde, hasta])
+    .select(
+      knex.raw("count(distinct a.solicitud_id) as n"),
+      knex.raw(
+        `count(distinct a.solicitud_id) filter (where exists (select 1 from ${T_PROPUESTA} p where p.solicitud_id = a.solicitud_id and p.seller_id = a.seller_id)` +
+          (hayRespuestas ? ` or exists (select 1 from ${T_RESPUESTA} r where r.solicitud_id = a.solicitud_id and r.seller_id = a.seller_id)` : "") +
+          `) as contesto`
+      )
+    )
+    .first()
+  const n = Number(fila?.n || 0)
+  return { pct: n >= MIN_AVISOS ? Math.round((Number(fila?.contesto || 0) / n) * 100) : null, n }
 }
 
 type Fila = {
@@ -121,8 +152,14 @@ type DatosPuntaje = {
   calidad: number | null
   puntualidad_pct: number | null
   respuesta_horas?: number | null
+  tasa_respuesta_pct?: number | null
   reclamos: number
   reclamos_resueltos: number
+}
+
+const promedio = (xs: (number | null)[]) => {
+  const v = xs.filter((x): x is number => x != null)
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null
 }
 
 /** Cada parte entre 0 y 1 (null si no hay dato para medirla). */
@@ -134,8 +171,11 @@ export function partesPuntaje(m: DatosPuntaje) {
     terminados: m.terminados > 0 ? clamp(m.terminados / META_TRABAJOS) * ((m.terminados_pct ?? 100) / 100) : null,
     calidad: m.calidad == null ? null : clamp(m.calidad / 5),
     puntualidad: m.puntualidad_pct == null ? null : clamp(m.puntualidad_pct / 100),
-    respuesta:
+    // Respuesta: qué tan rápido cotiza y qué tanto contesta (promedio de lo que haya)
+    respuesta: promedio([
       m.respuesta_horas == null ? null : clamp((RESPUESTA_LIMITE_H - m.respuesta_horas) / (RESPUESTA_LIMITE_H - RESPUESTA_IDEAL_H)),
+      m.tasa_respuesta_pct == null ? null : clamp(m.tasa_respuesta_pct / 100),
+    ]),
     // Un reclamo abierto pesa entero y uno resuelto medio, contra los trabajos terminados
     reclamos: m.terminados > 0 ? clamp(1 - (abiertos + 0.5 * m.reclamos_resueltos) / m.terminados) : null,
   }
@@ -206,6 +246,9 @@ export async function medirTaller(knex: any, sellerId: string): Promise<MedidaTa
   const resp = await tiempoRespuesta(knex, sellerId).catch(() => ({ horas: null, n: 0 }))
   m.respuesta_horas = resp.horas
   m.respuestas_medidas = resp.n
+  const tasa = await tasaRespuesta(knex, sellerId).catch(() => ({ pct: null, n: 0 }))
+  m.tasa_respuesta_pct = tasa.pct
+  m.avisos_medidos = tasa.n
   m.suficiente = m.terminados >= MIN_TRABAJOS
   m.puntaje = m.suficiente ? puntajeMedido(m) : null
   return m

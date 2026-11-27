@@ -2,6 +2,7 @@
 // vende desde otro país, envía puerta a puerta con impuestos pagados (DDP) y el
 // cliente lo sabe ANTES de comprar: de dónde viene, cuánto tarda y que no paga
 // nada extra al recibir. Sólo sale si el vendedor lo marcó en su perfil.
+import { TS } from "@/i18n/TS"
 import { entregaImportacion, tallerPorHandle } from "@/lib/hetna/talleres"
 
 export async function AvisoImportacion({ handle, compacto = false }: { handle?: string | null; compacto?: boolean }) {
@@ -12,20 +13,20 @@ export async function AvisoImportacion({ handle, compacto = false }: { handle?: 
   if (compacto) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-[#EEF2FB] px-2 py-0.5 text-[11px] font-bold uppercase text-[#1a3a5c]" title={`Se envía desde ${imp.pais}`}>
-        🌏 Importación
+        <TS>🌏 Importación</TS>
       </span>
     )
   }
   return (
     <div className="mb-3 rounded-xl border border-[#C9D6EE] bg-[#EEF2FB] p-3 text-[14px] text-[#1a3a5c]" data-testid="aviso-importacion">
-      <p className="m-0 font-bold">🌏 Producto de importación · se envía desde {imp.pais}</p>
+      <p className="m-0 font-bold"><TS>🌏 Producto de importación · se envía desde</TS> {imp.pais}</p>
       <ul className="m-0 mt-1 list-none p-0 leading-relaxed">
-        <li>📦 Puerta a puerta con paquetería internacional: {entregaImportacion(imp)}.</li>
-        <li>✅ Impuestos de importación incluidos en el precio: no pagas nada extra al recibir.</li>
+        <li><TS>📦 Puerta a puerta con paquetería internacional:</TS> {entregaImportacion(imp)}.</li>
+        <li><TS>✅ Impuestos de importación incluidos en el precio: no pagas nada extra al recibir.</TS></li>
         <li>
-          🛡️ Pagas dentro de HETNA: si no llega, llega dañado o es distinto, te devolvemos tu dinero. Por ser importación no hay
-          devolución por cambio de opinión.{" "}
-          <a href="/mx/devoluciones" className="underline">Ver reglas</a>
+          <TS>🛡️ Pagas dentro de HETNA: si no llega, llega dañado o es distinto, te devolvemos tu dinero. Por ser importación no hay
+          devolución por cambio de opinión.</TS>{" "}
+          <a href="/mx/devoluciones" className="underline"><TS>Ver reglas</TS></a>
         </li>
       </ul>
     </div>

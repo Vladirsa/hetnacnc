@@ -2,6 +2,7 @@
 // `ciudades`). Se indexa sólo si hay talleres de ese servicio en el estado, o al
 // menos MIN_DIRECTORIO empresas del directorio que lo ofrecen ahí: sin empresas
 // locales sería una página "puerta" (lib/seo/guias.ts, lib/seo/directorio-guia.ts).
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -16,7 +17,7 @@ type Props = { params: Promise<{ locale: string; guia: string; ciudad: string }>
 export const revalidate = 3600
 
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const p = await params
   const g = guiaPorSlug(p.guia)
   const c = ciudadPorSlug(p.ciudad)
@@ -40,4 +41,9 @@ export default async function PaginaGuiaCiudad({ params }: Props) {
   const c = ciudadPorSlug(p.ciudad)
   if (!g?.ciudades || !c) notFound()
   return <GuiaCnc guia={g} ciudad={c} />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 // Marco común de las vistas 3D (Caja3D y Malla3D): botón de pantalla completa
@@ -36,7 +37,7 @@ export function Visor3D({ children, alto = "h-[440px] lg:h-[600px]", oscuro = fa
         </svg>
         {completa ? "Salir" : "Pantalla completa"}
       </button>
-      <span className={`pointer-events-none absolute bottom-2 left-2 rounded-[6px] px-2 py-1 text-[11.5px] ${oscuro ? "bg-black/50 text-[#C9D2E0]" : "bg-white/80 text-[#4A4943]"}`}>Arrastra para girar · rueda para acercar</span>
+      <span className={`pointer-events-none absolute bottom-2 left-2 rounded-[6px] px-2 py-1 text-[11.5px] ${oscuro ? "bg-black/50 text-[#C9D2E0]" : "bg-white/80 text-[#4A4943]"}`}><T>Arrastra para girar · rueda para acercar</T></span>
     </div>
   )
 }

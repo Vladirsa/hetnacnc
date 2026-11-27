@@ -4,6 +4,7 @@
 // lo ves en 3D y descargas el STL para imprimir; o lo mandas al Cotizador para
 // que un taller de HETNA lo imprima. Los modelos y su geometría viven en
 // lib/generador/modelos3d.ts (manifold-3d: sólidos cerrados, sin errores de malla).
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -146,10 +147,10 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
   return (
     <main className="flex-1 bg-[#FAF9F6]">
       <div className="mx-auto max-w-[1280px] px-4 py-6 lg:px-8">
-        <p className="m-0 text-[12px] font-bold uppercase tracking-[.18em] text-[#0EA5E9]">Impresión 3D · paramétrico</p>
+        <p className="m-0 text-[12px] font-bold uppercase tracking-[.18em] text-[#0EA5E9]"><T>Impresión 3D · paramétrico</T></p>
         <h1 className="font-display m-0 mt-1 text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">{inicial ? `${modelo.nombre}: modelo 3D a tu medida` : "Modelos 3D a tu medida"}</h1>
         <p className="m-0 mt-1 max-w-3xl text-[15px] text-[#4A4943]">
-          Elige un modelo, ajusta sus medidas y descarga el STL listo para imprimir, sin saber CAD. O pide que un taller de HETNA te lo imprima.
+          <T>Elige un modelo, ajusta sus medidas y descarga el STL listo para imprimir, sin saber CAD. O pide que un taller de HETNA te lo imprima.</T>
         </p>
 
         {/* Modelos por categoría */}
@@ -179,7 +180,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
           <div className="flex flex-col gap-4 rounded-[14px] border border-[#E7E4DC] bg-white p-4">
             <div>
               <h2 className="m-0 text-[18px] font-bold text-[#142033]">{modelo.nombre}</h2>
-              <p className="m-0 mt-1 text-[13.5px] text-[#4A4943]">{modelo.texto}</p>
+              <p className="m-0 mt-1 text-[13.5px] text-[#4A4943]"><T>{modelo.texto}</T></p>
             </div>
 
             {modelo.params.map((p) => {
@@ -211,7 +212,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
             {malla && (
               <p className="m-0 rounded-[8px] bg-[#F3F1EA] px-3 py-2 text-[13px] text-[#40403A]">
-                Medidas: <b>{malla.medidas.map(r1).join(" × ")} mm</b> · {Math.round(malla.tris.length / 9).toLocaleString("es-MX")} triángulos
+                <T>Medidas:</T> <b>{malla.medidas.map(r1).join(" × ")} <T>mm</T></b> · {Math.round(malla.tris.length / 9).toLocaleString("es-MX")} <T>triángulos</T>
               </p>
             )}
 
@@ -224,10 +225,10 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
               }}
               className="rounded-[10px] bg-[#142033] py-3 text-[15px] font-semibold text-white hover:bg-[#0F1826] disabled:opacity-50"
             >
-              Descargar STL
+              <T>Descargar STL</T>
             </button>
             <button type="button" disabled={!malla} onClick={fabricar} className="rounded-[10px] bg-[#FF6A1A] py-3 text-[15px] font-extrabold text-white hover:bg-[#E65C12] disabled:opacity-50">
-              Fabrícamelo: que un taller lo imprima
+              <T>Fabrícamelo: que un taller lo imprima</T>
             </button>
             {mc.disponible && (
               <div className="tema-estudio flex flex-col gap-3 rounded-[10px] bg-[#121925] p-3 text-white">
@@ -237,10 +238,10 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
             )}
             {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
             <button type="button" onClick={() => setValores(valoresIniciales(modelo))} className="text-[13px] font-semibold text-[#0284C7] underline">
-              Volver a las medidas de fábrica
+              <T>Volver a las medidas de fábrica</T>
             </button>
             <p className="m-0 text-[12px] text-[#6B675C]">
-              El STL sale cerrado y apoyado en la cama. Imprímelo en PLA o PETG; para piezas de taller, 3 perímetros y 30% de relleno.
+              <T>El STL sale cerrado y apoyado en la cama. Imprímelo en PLA o PETG; para piezas de taller, 3 perímetros y 30% de relleno.</T>
             </p>
           </div>
         </div>

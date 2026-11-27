@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -30,25 +31,25 @@ export default function PreguntasSolicitud({ token, preguntas, abierta }: { toke
   return (
     <section id="preguntas" className="mt-6 scroll-mt-24 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-extrabold text-[#142033]">Preguntas de los talleres</h2>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>Preguntas de los talleres</T></h2>
         {sinContestar > 0 && (
           <span className="rounded-full bg-[#FFF1E6] px-3 py-1 text-sm font-bold text-[#C2560A]">
-            {sinContestar} sin contestar
+            {sinContestar} <T>sin contestar</T>
           </span>
         )}
       </div>
       <p className="mt-1 text-sm text-[#6B675C]">
-        Tu respuesta la ven todos los talleres que cotizan tu trabajo. No escribas teléfono ni correo: se ocultan solos.
+        <T>Tu respuesta la ven todos los talleres que cotizan tu trabajo. No escribas teléfono ni correo: se ocultan solos.</T>
       </p>
       <ul className="mt-4 grid gap-3">
         {preguntas.map((p) => (
           <li key={p.id} className="rounded-xl bg-[#FAF9F5] p-4">
             <p className="text-sm text-[#142033]">
-              <span className="font-bold">Taller:</span> {p.pregunta}
+              <span className="font-bold"><T>Taller:</T></span> <T>{p.pregunta}</T>
             </p>
             {p.respuesta ? (
               <p className="mt-2 text-sm text-[#40403A]">
-                <span className="font-bold text-[#1E7B3A]">Tú:</span> {p.respuesta}
+                <span className="font-bold text-[#1E7B3A]"><T>Tú:</T></span> <T>{p.respuesta}</T>
               </p>
             ) : abierta ? (
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -70,7 +71,7 @@ export default function PreguntasSolicitud({ token, preguntas, abierta }: { toke
                 </button>
               </div>
             ) : (
-              <p className="mt-2 text-sm text-[#9B978C]">Sin respuesta</p>
+              <p className="mt-2 text-sm text-[#9B978C]"><T>Sin respuesta</T></p>
             )}
           </li>
         ))}

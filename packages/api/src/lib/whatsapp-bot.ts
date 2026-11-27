@@ -36,7 +36,7 @@ const ESPERA_MS = 8000 // junta los mensajes seguidos
 const HISTORIA = 16
 
 let listo = false
-async function asegurar(knex: any) {
+export async function asegurar(knex: any) {
   if (listo) return
   if (!(await knex.schema.hasTable(T_CHAT))) {
     await knex.schema.createTable(T_CHAT, (t: any) => {
@@ -73,7 +73,7 @@ export async function activarBot(knex: any, activo: boolean) {
   await knex.raw(`insert into ?? (clave, valor) values ('whatsapp_bot', ?::jsonb) on conflict (clave) do update set valor = excluded.valor`, [T_CONFIG_S, JSON.stringify({ activo: !!activo })])
 }
 
-async function guardarMsg(knex: any, numero: string, rol: string, texto: string) {
+export async function guardarMsg(knex: any, numero: string, rol: string, texto: string) {
   if (!String(texto || "").trim()) return
   await knex(T_MSG).insert({ numero, rol, texto: String(texto).slice(0, 2000) })
 }

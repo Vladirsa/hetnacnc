@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import { SellerInfo } from "@/components/molecules/SellerInfo/SellerInfo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -37,7 +38,7 @@ export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller
 
   return (
     <section className="rounded-lg border border-[#E7E4DC] bg-white p-4" data-testid="product-seller-card">
-      <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]">Vendido por</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Vendido por</TS></p>
       <div className="mt-2 flex items-center gap-3">
         <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#142033] text-lg font-extrabold text-white">
           {t.logo ? (
@@ -51,10 +52,10 @@ export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller
           <p className="flex flex-wrap items-center gap-2 font-bold text-[#142033]">
             {t.nombre}
             {t.verificado && (
-              <span className="rounded-full bg-[#E7F5EC] px-2 py-0.5 text-[10px] font-bold uppercase text-[#1E7B3A]" title="HETNA revisó su identificación y su taller">✓ Verificado</span>
+              <span className="rounded-full bg-[#E7F5EC] px-2 py-0.5 text-[10px] font-bold uppercase text-[#1E7B3A]" title="HETNA revisó su identificación y su taller"><TS>✓ Verificado</TS></span>
             )}
             {t.fundador && (
-              <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-[10px] font-bold uppercase text-[#C2560A]">★ Taller fundador</span>
+              <span className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-[10px] font-bold uppercase text-[#C2560A]"><TS>★ Taller fundador</TS></span>
             )}
           </p>
           {donde && <p className="text-sm text-[#6B675C]">📍 {donde}</p>}
@@ -69,7 +70,7 @@ export const ProductDetailsSeller = async ({ seller, tipo = "fisico" }: { seller
         href={`/talleres/${t.handle}`}
         className="mt-3 inline-block text-sm font-semibold text-[#C2560A] hover:underline"
       >
-        Ver el taller y todos sus productos →
+        <TS>Ver el taller y todos sus productos →</TS>
       </LocalizedClientLink>
     </section>
   )

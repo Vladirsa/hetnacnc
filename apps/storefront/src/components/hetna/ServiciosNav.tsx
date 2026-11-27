@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { HttpTypes } from "@medusajs/types"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -44,7 +45,7 @@ const Menu = ({
 }) => (
   <div className="group relative h-full flex items-center shrink-0">
     <LocalizedClientLink href={href} className={negrita ? ENLACE_NEGRITA : ENLACE}>
-      {etiqueta}
+      <TS>{etiqueta}</TS>
       <Flecha />
     </LocalizedClientLink>
     <div
@@ -76,8 +77,8 @@ const OpcionMenu = ({
       </span>
     )}
     <span className="flex flex-col">
-      <span className="text-[13.5px] font-semibold text-[#1B1B18]">{titulo}</span>
-      {texto && <span className="text-[12px] text-[#6B6A63] leading-snug">{texto}</span>}
+      <span className="text-[13.5px] font-semibold text-[#1B1B18]"><TS>{titulo}</TS></span>
+      {texto && <span className="text-[12px] text-[#6B6A63] leading-snug"><TS>{texto}</TS></span>}
     </span>
   </LocalizedClientLink>
 )
@@ -90,7 +91,7 @@ const ListaHojas = ({ grupo }: { grupo: Cat }) => (
       href={`/categories/${grupo.handle}`}
       className="rounded-[8px] px-3 py-2 text-[13px] font-bold text-[#B34D07] hover:underline"
     >
-      Ver todo en {grupo.name}
+      <TS>Ver todo en</TS> {grupo.name}
     </LocalizedClientLink>
     {hijosDe(grupo).map((h) => (
       <LocalizedClientLink
@@ -209,7 +210,7 @@ export const ServiciosNav = ({
     })}
 
     <LocalizedClientLink href="/foro-cnc" className={ENLACE}>
-      Foro CNC
+      <TS>Foro CNC</TS>
     </LocalizedClientLink>
 
     <span className="flex-1" />
@@ -217,7 +218,7 @@ export const ServiciosNav = ({
       href="/seller"
       className="shrink-0 bg-[#C2560A] hover:bg-[#A84A08] text-white text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full"
     >
-      Vende con nosotros
+      <TS>Vende con nosotros</TS>
     </a>
   </nav>
 )

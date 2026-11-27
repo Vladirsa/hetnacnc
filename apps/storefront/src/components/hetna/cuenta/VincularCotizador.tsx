@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { LIMITE_COTIZACIONES_GRATIS } from "@/lib/hetna/app-taller"
 import { useEffect, useState } from "react"
 
@@ -68,20 +69,20 @@ export function VincularCotizador() {
 
   return (
     <section className="rounded-[18px] border border-[#E7E4DC] bg-white p-5" aria-label="Cotizador para talleres">
-      <h2 className="m-0 text-[17px] font-bold text-[#142033]">Cotizador para talleres</h2>
+      <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Cotizador para talleres</T></h2>
       {estado.vinculado ? (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            Tu cuenta está vinculada con <b className="text-[#1B1B18]">{estado.taller}</b> · plan{" "}
-            <b className="text-[#1B1B18]">{NOMBRE_PLAN[estado.plan] || estado.plan}</b>. El botón Cotizador entra directo, sin
-            volver a escribir tu contraseña.
+            <T>Tu cuenta está vinculada con</T> <b className="text-[#1B1B18]">{estado.taller}</b> <T>· plan</T>{" "}
+            <b className="text-[#1B1B18]">{NOMBRE_PLAN[estado.plan] || estado.plan}</b><T>. El botón Cotizador entra directo, sin
+            volver a escribir tu contraseña.</T>
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <a
               href="/api/app/entrar-cotizador"
               className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
             >
-              Abrir el Cotizador
+              <T>Abrir el Cotizador</T>
             </a>
             <button
               type="button"
@@ -89,35 +90,35 @@ export function VincularCotizador() {
               disabled={trabajando}
               className="rounded-[10px] border border-[#E7E4DC] px-4 py-2 text-[14px] font-semibold text-[#6B6A63] hover:border-[#9B3225] hover:text-[#9B3225]"
             >
-              Desvincular
+              <T>Desvincular</T>
             </button>
           </div>
         </>
       ) : codigo ? (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            Abre la app del Cotizador con tu cuenta de administrador del taller, entra a <b>Configuración → Cuenta de hetnacnc.com</b> y
-            escribe este código:
+            <T>Abre la app del Cotizador con tu cuenta de administrador del taller, entra a</T> <b><T>Configuración → Cuenta de hetnacnc.com</T></b> <T>y
+            escribe este código:</T>
           </p>
           <p className="m-0 mt-3 font-mono text-[34px] font-extrabold tracking-[0.25em] text-[#142033]">{codigo.codigo}</p>
           <p className="m-0 mt-1 text-[12.5px] text-[#6B6A63]">
-            Vence a las{" "}
-            {new Date(codigo.expira).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" })}. Esta página se actualiza sola
-            cuando lo escribas.
+            <T>Vence a las</T>{" "}
+            {new Date(codigo.expira).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" })}<T>. Esta página se actualiza sola
+            cuando lo escribas.</T>
           </p>
         </>
       ) : (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con {LIMITE_COTIZACIONES_GRATIS}{" "}
-            cotizaciones al mes. Si ya tienes un taller en el Cotizador con este correo, se une solo.
+            <T>Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con</T> {LIMITE_COTIZACIONES_GRATIS}{" "}
+            <T>cotizaciones al mes. Si ya tienes un taller en el Cotizador con este correo, se une solo.</T>
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <a
               href="/api/app/entrar-cotizador"
               className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#A84A08]"
             >
-              Activar mi Cotizador
+              <T>Activar mi Cotizador</T>
             </a>
             <button
               type="button"

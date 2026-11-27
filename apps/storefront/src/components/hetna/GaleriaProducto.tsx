@@ -3,6 +3,7 @@
 // Galería de la ficha de producto: foto grande, miniaturas debajo y ampliación a pantalla completa.
 // Funciona con el dedo en celular (deslizar en la foto ampliada) y con flechas del teclado en computadora.
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -69,11 +70,11 @@ export default function GaleriaProducto({ imagenes, titulo }: { imagenes: Img[];
             width={800}
             height={800}
             quality={85}
-            sizes="(min-width: 1024px) 42vw, 100vw"
+            sizes="(min-width: 1024px) 42vw, 70vw"
             className="mx-auto h-auto max-h-[300px] w-full object-contain sm:max-h-[420px] lg:max-h-[480px]"
           />
           <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-            Toca para ampliar{total > 1 ? ` · ${i + 1}/${total}` : ""}
+            <T>Toca para ampliar</T>{total > 1 ? ` · ${i + 1}/${total}` : ""}
           </span>
         </button>
 

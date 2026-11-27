@@ -3,6 +3,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
@@ -183,7 +184,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
         <Destacado titulo="Umbral: qué tan oscuro cuenta como dibujo">
           <input type="range" min={1} max={254} value={umbral} onChange={(e) => setUmbral(Number(e.target.value))} className="w-full accent-[#C2560A]" />
           <button type="button" onClick={() => imagen && sugerir(imagen)} className="self-start text-[12px] font-semibold text-[#F2A15E] underline underline-offset-2">
-            Calcular automático
+            <T>Calcular automático</T>
           </button>
           <Interruptor etiqueta="Invertir (dibujo claro sobre fondo oscuro)" activo={invertir} cambiar={setInvertir} />
           <Interruptor etiqueta="Es una foto con grano (quitar ruido)" activo={ruido} cambiar={setRuido} />
@@ -245,10 +246,10 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
         <CampoNum etiqueta="Ancho del dibujo" valor={ancho} cambiar={setAncho} />
         {anchoOk ? (
           <span className="text-[12px] text-[#F2D29B]">
-            Quedará de {r1(anchoMM)} × {r1(altoMM)} mm
+            <T>Quedará de</T> {r1(anchoMM)} × {r1(altoMM)} <T>mm</T>
           </span>
         ) : (
-          <span className="text-[12px] text-[#F6B8AE]">Escribe un ancho entre 1 y 5000 mm.</span>
+          <span className="text-[12px] text-[#F6B8AE]"><T>Escribe un ancho entre 1 y 5000 mm.</T></span>
         )}
       </Destacado>
     </>
@@ -256,7 +257,7 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
 
   const hoja = (contenido: React.ReactNode, etiqueta: string) => (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]">{etiqueta}</span>
+      <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>{etiqueta}</T></span>
       <div
         className="flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-[12px] p-4 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]"
         style={{
@@ -297,9 +298,9 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
           </span>
           <div>
             <h1 className="m-0 text-[16px] font-bold">
-              Vectorizador <span className="text-[#F28A3C]">2D</span>
+              <T>Vectorizador</T> <span className="text-[#F28A3C]">2D</span>
             </h1>
-            <p className="m-0 text-[12px] text-[#8A97AB]">Imagen a DXF y SVG para CNC</p>
+            <p className="m-0 text-[12px] text-[#8A97AB]"><T>Imagen a DXF y SVG para CNC</T></p>
           </div>
         </div>
 
@@ -316,12 +317,12 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
             <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
           </svg>
           <span className="text-[14px] font-semibold">{nombre ? `${nombre} (cambiar)` : "Sube tu imagen"}</span>
-          <span className="text-[11.5px] text-[#8A97AB]">JPG, PNG o WebP · hasta 20 MB · o pégala con Ctrl+V</span>
+          <span className="text-[11.5px] text-[#8A97AB]"><T>JPG, PNG o WebP · hasta 20 MB · o pégala con Ctrl+V</T></span>
           <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {error && <Aviso tipo="error">{error}</Aviso>}
         {opcionesPanel}
-        <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]">Tu imagen no se sube a ningún servidor: todo se hace en tu navegador.</p>
+        <p className="m-0 mt-auto text-[11.5px] text-[#5B6880]"><T>Tu imagen no se sube a ningún servidor: todo se hace en tu navegador.</T></p>
       </aside>
 
       {/* Zona principal */}
@@ -365,32 +366,32 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                   <circle cx="11" cy="11" r="2" />
                 </svg>
               </span>
-              <h2 className="m-0 text-[22px] font-bold">Convierte tu logo o dibujo en vector</h2>
+              <h2 className="m-0 text-[22px] font-bold"><T>Convierte tu logo o dibujo en vector</T></h2>
               <p className="m-0 text-[14.5px] leading-relaxed text-[#C9D2E0]">
-                Sube una imagen y en segundos tienes contornos cerrados en DXF o SVG, listos para láser, router o plasma.
+                <T>Sube una imagen y en segundos tienes contornos cerrados en DXF o SVG, listos para láser, router o plasma.</T>
               </p>
               <ul className="m-0 flex flex-col gap-1.5 p-0 text-left text-[13.5px] text-[#8A97AB]">
-                <li>• Logotipos y dibujos con fondo liso salen casi perfectos.</li>
-                <li>• Para cortar una silueta usa «Un color»; para grabar un logo de varios colores, «Varios colores».</li>
-                <li>• En fotos, sube el contraste antes y marca «Es una foto con grano».</li>
+                <li><T>• Logotipos y dibujos con fondo liso salen casi perfectos.</T></li>
+                <li><T>• Para cortar una silueta usa «Un color»; para grabar un logo de varios colores, «Varios colores».</T></li>
+                <li><T>• En fotos, sube el contraste antes y marca «Es una foto con grano».</T></li>
               </ul>
             </div>
           ) : vista === "exportar" ? (
             listo && res ? (
               <div className="flex max-w-[760px] flex-col gap-4">
                 <div>
-                  <h3 className="m-0 text-[18px] font-bold">Archivos</h3>
+                  <h3 className="m-0 text-[18px] font-bold"><T>Archivos</T></h3>
                   <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">
-                    DXF: contornos cerrados en mm, una capa por color. SVG: relleno por color para grabar y línea roja de 0.1 mm para cortar.
+                    <T>DXF: contornos cerrados en mm, una capa por color. SVG: relleno por color para grabar y línea roja de 0.1 mm para cortar.</T>
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <TarjetaExport titulo="Para tu máquina" nota={`${r1(anchoMM)} × ${r1(altoMM)} mm`}>
                     <div className="flex gap-2">
                       <Boton tipo="primario" onClick={() => descargar(`${archivo}.dxf`, vectorDXF(res, anchoMM), "application/dxf")}>
-                        DXF
+                        <T>DXF</T>
                       </Boton>
-                      <Boton onClick={() => descargar(`${archivo}.svg`, vectorSVG(res, anchoMM), "image/svg+xml")}>SVG</Boton>
+                      <Boton onClick={() => descargar(`${archivo}.svg`, vectorSVG(res, anchoMM), "image/svg+xml")}><T>SVG</T></Boton>
                     </div>
                     <BotonesCam nombre={archivo} dxf={() => vectorDXF(res, anchoMM)} compacto />
                   </TarjetaExport>
@@ -403,14 +404,14 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                             setAviso("El archivo es muy grande para pasarlo al Cotizador. Descárgalo y súbelo ahí.")
                         }}
                       >
-                        Cotizador
+                        <T>Cotizador</T>
                       </Boton>
                     </div>
                   </TarjetaExport>
                 </div>
                 <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
-                  <span className="text-[15px] font-bold">¿No tienes máquina?</span>
-                  <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA lo corta o lo graba y te lo envía.</span>
+                  <span className="text-[15px] font-bold"><T>¿No tienes máquina?</T></span>
+                  <span className="text-[13px] text-[#F2D29B]"><T>Un taller de HETNA lo corta o lo graba y te lo envía.</T></span>
                   <div>
                     <Boton
                       tipo="primario"
@@ -425,25 +426,25 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
                           setAviso("El archivo es muy grande para mandarlo. Descárgalo y súbelo en la solicitud.")
                       }}
                     >
-                      Fabrícamelo
+                      <T>Fabrícamelo</T>
                     </Boton>
                   </div>
                 </div>
                 {aviso && <Aviso tipo="error">{aviso}</Aviso>}
                 <div className="flex flex-col justify-between gap-3 rounded-[12px] border border-[#2B3648] bg-[#1C2431] p-4 sm:flex-row sm:items-center">
                   <p className="m-0 text-[13.5px] text-[#C9D2E0]">
-                    <strong className="text-white">¿No quedó como querías?</strong> Lo vectorizamos a mano, con contornos limpios.
+                    <strong className="text-white"><T>¿No quedó como querías?</T></strong> <T>Lo vectorizamos a mano, con contornos limpios.</T>
                   </p>
                   <LocalizedClientLink
                     href="/servicios/generador-2d-3d/vectorizacion"
                     className="shrink-0 rounded-[8px] bg-[#2B3648] px-4 py-2 text-center text-[13px] font-semibold text-white hover:bg-[#344158]"
                   >
-                    Vectorización profesional
+                    <T>Vectorización profesional</T>
                   </LocalizedClientLink>
                 </div>
               </div>
             ) : (
-              <p className="m-0 text-[14px] text-[#8A97AB]">Ajusta el tamaño final para generar los archivos.</p>
+              <p className="m-0 text-[14px] text-[#8A97AB]"><T>Ajusta el tamaño final para generar los archivos.</T></p>
             )
           ) : (
             <>
@@ -467,17 +468,17 @@ export function GeneradorVectorizador({ cabecera }: { cabecera?: React.ReactNode
               {listo && (
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <span className="mr-auto text-[13px] text-[#8A97AB]">
-                    {r1(anchoMM)} × {r1(altoMM)} mm
+                    {r1(anchoMM)} × {r1(altoMM)} <T>mm</T>
                   </span>
                   <button
                     type="button"
                     onClick={() => res && descargar(`${archivo}.dxf`, vectorDXF(res, anchoMM), "application/dxf")}
                     className="rounded-[8px] bg-[#C2560A] px-4 py-2 text-[13px] font-semibold hover:bg-[#A84A08]"
                   >
-                    Descargar DXF
+                    <T>Descargar DXF</T>
                   </button>
                   <button type="button" onClick={() => setVista("exportar")} className="rounded-[8px] bg-[#2B3648] px-4 py-2 text-[13px] font-semibold hover:bg-[#344158]">
-                    Más opciones
+                    <T>Más opciones</T>
                   </button>
                 </div>
               )}

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { useParams, usePathname, useRouter } from "next/navigation"
@@ -97,7 +98,7 @@ export const Cart = () => {
     <>
       <div className="col-span-12 pb-2 pt-4">
         <h1 className="text-[24px] font-bold text-[#1B1B18] lg:text-[30px]">
-          Carrito{" "}
+          <T>Carrito</T>{" "}
           <span className="font-semibold text-[#6B6A63]">
             ({items.reduce((s, i) => s + i.quantity, 0)})
           </span>
@@ -129,7 +130,7 @@ export const Cart = () => {
               router.push(`/${locale}/checkout`)
             }}
           >
-            Continuar ({totalesMarcados.piezas})
+            <T>Continuar (</T>{totalesMarcados.piezas})
           </Button>
         </div>
       </div>
@@ -182,7 +183,7 @@ export const Cart = () => {
           href="/categories"
           className="mt-4 inline-block text-[14px] font-semibold text-[#B34D07] underline"
         >
-          Seguir viendo productos
+          <T>Seguir viendo productos</T>
         </LocalizedClientLink>
       </div>
 

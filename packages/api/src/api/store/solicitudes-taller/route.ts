@@ -1,3 +1,4 @@
+import { confirmarSolicitudWhatsapp } from "../../../lib/solicitud-whatsapp"
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
@@ -251,8 +252,11 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const modo = abierta ? "abierta" : "directa"
   // Una solicitud directa (a un solo taller) es privada por naturaleza
   const modalidad = modo === "directa" ? "privada" : leerModalidad(b.modalidad)
-  // La difusión en redes sólo con autorización expresa, y nunca de una privada
-  const difundirRedes = modalidad !== "privada" && si(b.difundir_redes)
+  // Redes: toda solicitud abierta se anuncia sola (resumen sin contacto ni
+  // archivos) para atraer talleres. Sólo no sale si el cliente desmarcó la
+  // casilla ("0") o si es privada.
+  const noDifundir = b.difundir_redes === false || b.difundir_redes === "0" || b.difundir_redes === "false" || b.difundir_redes === "no"
+  const difundirRedes = modalidad !== "privada" && !noDifundir
   // Fase 3: licitación privada o restringida (abierta, no dirigida a un taller)
   // y "sólo talleres verificados" son de la Membresía Empresarial.
   const pideEmpresarial = (modo === "abierta" && modalidad !== "publica") || si(b.solo_verificados)
@@ -319,6 +323,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     logger.error(`[licitacion] no se pudo guardar la solicitud: ${(e as Error).message}`)
     return res.status(500).json({ message: "No se pudo registrar tu solicitud. Intenta de nuevo en unos minutos." })
   }
+
+  // WhatsApp al cliente: «ya te estamos buscando el mejor taller» (lib/solicitud-whatsapp).
+  // Sin esperar: la cola de WhatsApp pausa entre mensajes.
+  if (sol) void confirmarSolicitudWhatsapp(knex, sol, logger)
 
   // Alta rápida del cliente (lib/afiliacion.ts): sin sesión y con la casilla
   // «Crear mi cuenta» marcada, recibe ya su número de afiliado y la liga para

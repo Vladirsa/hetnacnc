@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 
@@ -99,7 +100,7 @@ const Opcion = ({ activa, onClick, children, estilo }: { activa: boolean; onClic
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input
         type="text"
@@ -213,10 +214,10 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Generador de letreros y nombres</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Generador de letreros y nombres</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Escribe el texto, elige la letra y descarga el DXF listo para cortar en router, láser o plasma. Las letras que se tocan salen unidas en una sola pieza.
+          <T>Escribe el texto, elige la letra y descarga el DXF listo para cortar en router, láser o plasma. Las letras que se tocan salen unidas en una sola pieza.</T>
         </p>
       </section>
 
@@ -224,7 +225,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
         <section className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 lg:p-5 flex flex-col gap-4">
           {cabecera}
           <label className="flex flex-col gap-1">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Texto</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Texto</T></span>
             <textarea
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
@@ -232,11 +233,11 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
               maxLength={200}
               className="w-full px-3 py-2.5 text-[16px] text-[#1B1B18] bg-white border border-[#E7E4DC] rounded-[10px] outline-none focus:border-[#C2560A] resize-y"
             />
-            <span className="text-[12px] text-[#6B6A63]">Usa Enter para hacer otro renglón.</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>Usa Enter para hacer otro renglón.</T></span>
           </label>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Tipografía {cargando && <span className="font-normal text-[#6B6A63]">(cargando...)</span>}</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tipografía</T> {cargando && <span className="font-normal text-[#6B6A63]"><T>(cargando...)</T></span>}</span>
             {(["Cursiva", "Molde", "Esténcil"] as const).map((grupo) => (
               <div key={grupo} className="flex flex-col gap-1.5">
                 <span className="text-[12px] text-[#6B6A63]">{grupo === "Esténcil" ? "Esténcil (para plantillas y plasma)" : grupo}</span>
@@ -261,10 +262,10 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Tipo de letrero</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tipo de letrero</T></span>
             <div className="flex flex-wrap gap-2">
-              <Opcion activa={tipo === "recorte"} onClick={() => setTipo("recorte")}>Letras recortadas</Opcion>
-              <Opcion activa={tipo === "placa"} onClick={() => setTipo("placa")}>Placa con texto grabado</Opcion>
+              <Opcion activa={tipo === "recorte"} onClick={() => setTipo("recorte")}><T>Letras recortadas</T></Opcion>
+              <Opcion activa={tipo === "placa"} onClick={() => setTipo("placa")}><T>Placa con texto grabado</T></Opcion>
             </div>
           </div>
 
@@ -276,11 +277,11 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
             <div className="grid grid-cols-2 gap-2 items-end">
               <Campo etiqueta="Entre renglones (× alto)" valor={interlineado} cambiar={setInterlineado} sufijo="" />
               <div className="flex flex-col gap-1">
-                <span className="text-[13px] font-semibold text-[#1B1B18]">Alinear</span>
+                <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Alinear</T></span>
                 <div className="flex gap-1">
-                  <Opcion activa={alineacion === "izquierda"} onClick={() => setAlineacion("izquierda")}>Izq.</Opcion>
-                  <Opcion activa={alineacion === "centro"} onClick={() => setAlineacion("centro")}>Cen.</Opcion>
-                  <Opcion activa={alineacion === "derecha"} onClick={() => setAlineacion("derecha")}>Der.</Opcion>
+                  <Opcion activa={alineacion === "izquierda"} onClick={() => setAlineacion("izquierda")}><T>Izq.</T></Opcion>
+                  <Opcion activa={alineacion === "centro"} onClick={() => setAlineacion("centro")}><T>Cen.</T></Opcion>
+                  <Opcion activa={alineacion === "derecha"} onClick={() => setAlineacion("derecha")}><T>Der.</T></Opcion>
                 </div>
               </div>
             </div>
@@ -290,7 +291,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
                 <input type="checkbox" checked={conBarra} onChange={(e) => setConBarra(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-                Barra inferior que une las letras
+                <T>Barra inferior que une las letras</T>
               </label>
               {conBarra && <Campo etiqueta="Grosor de la barra" valor={barra} cambiar={setBarra} />}
             </div>
@@ -303,17 +304,17 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
           )}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Máquina</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Máquina</T></span>
             <div className="flex flex-wrap gap-2">
-              <Opcion activa={maquina === "router"} onClick={() => setMaquina("router")}>Router (revisar fresa)</Opcion>
-              <Opcion activa={maquina === "laser"} onClick={() => setMaquina("laser")}>Láser o plasma</Opcion>
+              <Opcion activa={maquina === "router"} onClick={() => setMaquina("router")}><T>Router (revisar fresa)</T></Opcion>
+              <Opcion activa={maquina === "laser"} onClick={() => setMaquina("laser")}><T>Láser o plasma</T></Opcion>
             </div>
             {maquina === "router" && (
               <>
                 <div className="flex flex-wrap gap-1.5">
                   {FRESAS.map((x) => (
                     <button key={x.etiqueta} type="button" onClick={() => setFresa(String(x.mm))} className={`text-[12px] font-semibold border px-2.5 py-1 rounded-full ${numero(fresa) === x.mm ? "bg-[#142033] text-white border-[#142033]" : "bg-[#FAF9F6] text-[#1B1B18] border-[#E7E4DC] hover:border-[#C2560A]"}`}>
-                      {x.etiqueta}
+                      <T>{x.etiqueta}</T>
                     </button>
                   ))}
                 </div>
@@ -326,7 +327,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
 
         <section className="flex flex-col gap-4 min-w-0 order-first lg:order-none">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-[#6B6A63]">Vista previa{maquina === "router" && numero(fresa) > 0 ? " · en rojo lo que la fresa no alcanza" : ""}</span>
+            <span className="text-[13px] text-[#6B6A63]"><T>Vista previa</T>{maquina === "router" && numero(fresa) > 0 ? " · en rojo lo que la fresa no alcanza" : ""}</span>
             <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{calculando || cargando ? "Calculando..." : ""}</span>
           </div>
           <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[220px]">
@@ -365,7 +366,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
                 className="w-full bg-[#16794F] hover:bg-[#12623F] text-white font-semibold py-3.5 rounded-[10px] text-[15px] flex items-center justify-center gap-2"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h4" /></svg>
-                Ver precio al instante en el Cotizador
+                <T>Ver precio al instante en el Cotizador</T>
               </button>
               {/* Barra delgada de precio (como en el Studio de cajas, 23 nov 2026): la tarjeta grande ocupaba media columna */}
               <div className="rounded-[12px] [&>div]:rounded-[12px] [&>div]:border-t-0">
@@ -374,10 +375,10 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
               {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => descargar(`${archivo}.dxf`, vectorDXF(res.vector, res.ancho), "application/dxf")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                  Descargar DXF
+                  <T>Descargar DXF</T>
                 </button>
                 <button type="button" onClick={() => descargar(`${archivo}.svg`, vectorSVG(res.vector, res.ancho), "image/svg+xml")} className="bg-[#142033] hover:bg-[#0F1826] text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                  Descargar SVG
+                  <T>Descargar SVG</T>
                 </button>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">

@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -16,7 +17,7 @@ export function RefreshButton({ label, className }: RefreshButtonProps) {
       onClick={() => router.refresh()}
       className={cn("max-w-fit", className)}
     >
-      {label}
+      <T>{label}</T>
     </Button>
   )
 }

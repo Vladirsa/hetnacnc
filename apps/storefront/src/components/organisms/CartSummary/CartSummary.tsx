@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { convertToLocale } from "@/lib/helpers/money"
 
 export const CartSummary = ({
@@ -21,7 +22,7 @@ export const CartSummary = ({
     <div data-testid="cart-summary">
       <div className="space-y-4 label-md text-secondary mb-4">
         <div className="flex justify-between" data-testid="cart-summary-items">
-          <span>Productos:</span>
+          <span><T>Productos:</T></span>
           <span className="text-primary">
             {convertToLocale({
               amount: item_total,
@@ -30,7 +31,7 @@ export const CartSummary = ({
           </span>
         </div>
         <div className="flex justify-between" data-testid="cart-summary-delivery">
-          <span>Envío:</span>
+          <span><T>Envío:</T></span>
           <span className="text-primary">
             {convertToLocale({
               amount: shipping_total,
@@ -39,7 +40,7 @@ export const CartSummary = ({
           </span>
         </div>
         <div className="flex justify-between" data-testid="cart-summary-tax">
-          <span>Impuestos:</span>
+          <span><T>Impuestos:</T></span>
           <span className="text-primary">
             {convertToLocale({
               amount: tax,
@@ -48,7 +49,7 @@ export const CartSummary = ({
           </span>
         </div>
         <div className="flex justify-between" data-testid="cart-summary-discount">
-          <span>Descuento:</span>
+          <span><T>Descuento:</T></span>
           <span className="text-primary">
             {convertToLocale({
               amount: discount_total,
@@ -57,7 +58,7 @@ export const CartSummary = ({
           </span>
         </div>
         <div className="flex justify-between border-t pt-4 items-center" data-testid="cart-summary-total">
-          <span>Total:</span>
+          <span><T>Total:</T></span>
           <span className="label-xl text-primary">
             {convertToLocale({
               amount: total,

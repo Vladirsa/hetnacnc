@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { SellerTabs } from "@/components/organisms/SellerTabs/SellerTabs"
 import { SellerPageHeader } from "@/components/sections/SellerPageHeader/SellerPageHeader"
 import { retrieveCustomer } from "@/lib/data/customer"
@@ -11,7 +12,7 @@ import { SellerDTO } from "@mercurjs/types"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ handle: string; locale: string }>
@@ -97,4 +98,9 @@ export default async function SellerPage({
       />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { ProductGallery } from "@/components/organisms/ProductGallery/ProductGallery"
 import { ProductDetails, ProductDetallesLargos } from "@/components/organisms/ProductDetails/ProductDetails"
 import { listProducts } from "@/lib/data/products"
@@ -198,12 +199,12 @@ export const ProductDetailsPage = async ({
   const medidasProd =
     textoMeta(metaProd.medidas) ||
     textoMeta(metaProd.medida_principal) ||
-    campoDeDescripcion(prod.description, /^medidas?$/i) ||
+    campoDeDescripcion(textoMeta(metaProd.descripcion_es) || prod.description, /^medidas?$/i) ||
     // muchas fichas sólo traen la medida en el nombre ("Celosía 600x600 mm")
     medidasEnTexto(prod.title) ||
     undefined
   // Material para "Fabrícalo": el de la ficha o, si no, lo que diga el nombre ("Tabla de pino…")
-  const materialProd = [textoMeta(metaProd.material), campoDeDescripcion(prod.description, /^material(es)?$/i), prod.title].filter(Boolean).join(" ")
+  const materialProd = [textoMeta(metaProd.material), campoDeDescripcion(textoMeta(metaProd.descripcion_es) || prod.description, /^material(es)?$/i), prod.title].filter(Boolean).join(" ")
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
   // Impresión 3D bajo pedido: en vez de "Fabrícalo", los talleres que ya lo
@@ -319,7 +320,7 @@ export const ProductDetailsPage = async ({
       <nav aria-label="Migas de pan" className="mb-3 text-[13px] text-[#6B6A63]" data-testid="product-migas">
         <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0">
           <li>
-            <LocalizedClientLink href="/" className="hover:text-[#B34D07] hover:underline">Inicio</LocalizedClientLink>
+            <LocalizedClientLink href="/" className="hover:text-[#B34D07] hover:underline"><TS>Inicio</TS></LocalizedClientLink>
           </li>
           {categoria?.name && categoria?.handle && (
             <li className="flex items-center gap-1">

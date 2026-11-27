@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -10,7 +12,7 @@ import { tallerPorHandle } from "@/lib/hetna/talleres"
 // (descripción, material, medidas, cantidad, acabado y sus archivos). Con
 // ?taller=<handle>, va directo al taller que la hizo.
 export const dynamic = "force-dynamic"
-export const metadata: Metadata = { title: "Repetir pedido", robots: { index: false, follow: false } }
+const metadataEs: Metadata = { title: "Repetir pedido", robots: { index: false, follow: false } }
 
 type Props = { params: Promise<{ folio: string; locale: string }>; searchParams: Promise<{ taller?: string }> }
 
@@ -25,9 +27,9 @@ export default async function RepetirPedidoPage({ params, searchParams }: Props)
   return (
     <main className="container">
       <div className="mx-auto max-w-[900px] py-10">
-        <LocalizedClientLink href="/user/piezas" className="text-sm font-semibold text-[#C2560A] hover:underline">← Mis piezas</LocalizedClientLink>
-        <h1 className="mt-2 text-[26px] font-bold text-[#1B1B18]">Repetir pedido {p.folio}{t ? ` con ${t.nombre}` : ""}</h1>
-        <p className="mb-6 mt-1 text-[15px] text-[#4A4943]">Ya va todo puesto como la vez pasada. Cambia la cantidad o lo que necesites y envía.</p>
+        <LocalizedClientLink href="/user/piezas" className="text-sm font-semibold text-[#C2560A] hover:underline"><TS>← Mis piezas</TS></LocalizedClientLink>
+        <h1 className="mt-2 text-[26px] font-bold text-[#1B1B18]"><TS>Repetir pedido</TS> {p.folio}{t ? ` con ${t.nombre}` : ""}</h1>
+        <p className="mb-6 mt-1 text-[15px] text-[#4A4943]"><TS>Ya va todo puesto como la vez pasada. Cambia la cantidad o lo que necesites y envía.</TS></p>
         <FormSolicitudTaller
           taller={t?.handle}
           nombreTaller={t?.nombre}
@@ -46,4 +48,9 @@ export default async function RepetirPedidoPage({ params, searchParams }: Props)
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

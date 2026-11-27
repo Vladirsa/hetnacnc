@@ -13,6 +13,7 @@
 // Ejes del mueble: X ancho, Y fondo (0 = frente), Z alto. three usa Y arriba:
 // (x, y, z) del mueble → (x, z, -y).
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
@@ -762,7 +763,7 @@ export default function Mueble3D({
       <div ref={ref} className="h-full min-h-[260px] w-full cursor-grab overflow-hidden active:cursor-grabbing" />
       {etiqueta && (
         <span className="pointer-events-none absolute rounded-[6px] bg-black/75 px-2 py-1 text-[12px] font-semibold text-white" style={{ left: etiqueta.x + 14, top: etiqueta.y - 10 }}>
-          {etiqueta.texto}
+          <T>{etiqueta.texto}</T>
         </span>
       )}
     </div>

@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Divider } from "@/components/atoms/Divider/Divider"
 import { Modal } from "@/components/molecules/Modal/Modal"
@@ -16,7 +17,7 @@ export const SellerFooter = ({ seller }: { seller: SellerDTO }) => {
       <div className="flex gap-2 lg:gap-4 items-center label-sm lg:label-md text-secondary mb-4 lg:mb-0 justify-between w-full lg:justify-start lg:w-auto">
         <Divider square />
         {seller.created_at && Number.isFinite(new Date(seller.created_at).getTime()) && (
-          <p>Miembro desde {format(new Date(seller.created_at), "yyyy-MM-dd")}</p>
+          <p><T>Miembro desde</T> {format(new Date(seller.created_at), "yyyy-MM-dd")}</p>
         )}
       </div>
       <Button
@@ -25,7 +26,7 @@ export const SellerFooter = ({ seller }: { seller: SellerDTO }) => {
         className="uppercase"
         onClick={() => setOpenModal(true)}
       >
-        Reportar vendedor
+        <T>Reportar vendedor</T>
       </Button>
       {openModal && (
         <Modal heading="Reportar vendedor" onClose={() => setOpenModal(false)}>

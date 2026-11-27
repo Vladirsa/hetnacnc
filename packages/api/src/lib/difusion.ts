@@ -242,23 +242,36 @@ export async function difundirSolicitud(
   // Redes: sólo con autorización expresa del cliente (difundir_redes), nunca
   // una privada, y con el resumen sin datos sensibles (Licitaciones 3.0 §1.3):
   // sin planos, sin presupuesto confidencial, sin contacto.
-  if (!extra && abierta && s.difundir_redes) {
-    // Fase 5A: pasa por el Social Hub (textos por red, horario y medición)
-    await publicacionAutomatica(
-      knex,
-      {
-        origen: "licitacion",
-        origen_id: s.id,
-        titulo: [trabajoTaller.servicio, trabajoTaller.material].filter(Boolean).join(" - ") || "Trabajo de fabricación CNC",
-        resumen: resumenRedes(s),
-        lugar: [trabajoTaller.ciudad, trabajoTaller.estado_mx].filter(Boolean).join(", "),
-        url: ligaTrabajo(s.folio),
-      },
-      logger
-    )
-  }
+  if (!extra && abierta && s.difundir_redes) await publicarSolicitudEnRedes(knex, s, logger, trabajoTaller)
   logger.info(`[licitacion] ${folio} difundida a ${destinos.length} talleres${extra ? ` (ronda ${extra.ronda})` : ""}`)
   return destinos.length
+}
+
+/** ¿Se puede anunciar en redes? Abierta, no privada y todavía recibiendo propuestas. */
+export function sePuedeDifundir(s: any) {
+  return s.modo === "abierta" && modalidadDe(s) !== "privada" && s.estado === "abierta"
+}
+
+/**
+ * Anuncio de la solicitud en redes y Telegram (Social Hub). Sólo el resumen
+ * que ve un taller que todavía no participa: sin contacto, planos ni
+ * presupuesto confidencial. null si ya se había anunciado.
+ */
+export async function publicarSolicitudEnRedes(knex: any, s: any, logger: any, trabajoTaller?: Trabajo) {
+  const t = trabajoTaller || ({ ...(s.trabajo || {}), ...trabajoParaTaller(s, { invitado: false, acceso: "ninguno", propuso: false, elegido: false }) } as Trabajo)
+  // Fase 5A: pasa por el Social Hub (textos por red, horario y medición)
+  return publicacionAutomatica(
+    knex,
+    {
+      origen: "licitacion",
+      origen_id: s.id,
+      titulo: [t.servicio, t.material].filter(Boolean).join(" - ") || "Trabajo de fabricación CNC",
+      resumen: resumenRedes(s),
+      lugar: [t.ciudad, t.estado_mx].filter(Boolean).join(", "),
+      url: ligaTrabajo(s.folio),
+    },
+    logger
+  )
 }
 
 // HETNA aprueba una solicitud en revisión (o el job, si se venció el plazo):

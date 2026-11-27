@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { HetnaHome } from "@/components/hetna/HetnaHome"
 import { BannerSection } from "@/components/sections/BannerSection/BannerSection"
 import { BlogSection } from "@/components/sections/BlogSection/BlogSection"
@@ -15,7 +16,7 @@ import {
   getStorefrontLocales,
 } from "@/lib/helpers/hreflang"
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -177,4 +178,9 @@ export default async function Home({
       <HetnaHome locale={locale} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

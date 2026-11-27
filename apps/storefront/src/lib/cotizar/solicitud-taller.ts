@@ -125,6 +125,10 @@ export type Propuesta = {
   condiciones: string
   estado: string
   fecha: string
+  /** Horas desde que se le avisó al taller hasta que cotizó (null si no se sabe) */
+  cotizo_en_horas?: number | null
+  /** Fue la primera propuesta en llegar (con 2 o más propuestas) */
+  primera?: boolean
   destacado: boolean
   // Anticipo que pide el taller si le pagas directo (null = pago completo)
   anticipo_pct?: number | null
@@ -147,6 +151,8 @@ export type Propuesta = {
       puntaje: number | null
       suficiente: boolean
       respuesta_horas?: number | null
+      /** % de avisos en que contestó (cotizó o dijo que no) */
+      tasa_respuesta_pct?: number | null
     } | null
     /** Máquinas que declaró en su perfil y su área de trabajo más grande */
     capacidad?: { maquinas: number; resumen: string; area_mayor: string | null } | null

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { registrarLatam } from "@/lib/hetna/latam"
@@ -17,8 +18,8 @@ export function FormLatam({ paisInicial = "" }: { paisInicial?: string }) {
     return (
       <div className="rounded-2xl border border-[#BFE3CC] bg-[#E6F4EA] p-6 text-center">
         <p className="text-3xl">{p?.bandera || "✅"}</p>
-        <p className="mt-2 text-lg font-bold text-[#0F7A4A]">¡Listo, ya estás en la lista de {p?.nombre}!</p>
-        <p className="mt-1 text-sm text-[#40403A]">Te avisamos a <b>{f.correo}</b> en cuanto abramos tu país, antes que a nadie.</p>
+        <p className="mt-2 text-lg font-bold text-[#0F7A4A]"><T>¡Listo, ya estás en la lista de</T> {p?.nombre}!</p>
+        <p className="mt-1 text-sm text-[#40403A]"><T>Te avisamos a</T> <b>{f.correo}</b> <T>en cuanto abramos tu país, antes que a nadie.</T></p>
       </div>
     )
   }
@@ -63,7 +64,7 @@ export function FormLatam({ paisInicial = "" }: { paisInicial?: string }) {
       <button disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110 disabled:opacity-60">
         {estado === "enviando" ? "Enviando…" : f.tipo === "taller" ? "Apuntarme como taller fundador" : "Avísenme cuando abran"}
       </button>
-      <p className="text-center text-[12px] text-[#7A776E]">Usamos tus datos sólo para avisarte cuando HETNA abra en tu país.</p>
+      <p className="text-center text-[12px] text-[#7A776E]"><T>Usamos tus datos sólo para avisarte cuando HETNA abra en tu país.</T></p>
     </form>
   )
 }

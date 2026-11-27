@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { convertToLocale } from "@/lib/helpers/money"
 import { HttpTypes } from "@medusajs/types"
 import Image from "@/lib/imagenes/Imagen"
@@ -51,7 +52,7 @@ export const Item = ({
         <div className="lg:flex justify-between -mt-4 lg:mt-0">
           <div className="label-md text-secondary">
             <p>
-              Quantity: <span className="text-primary">{item.quantity}</span>
+              <TS>Quantity:</TS> <span className="text-primary">{item.quantity}</span>
             </p>
           </div>
           <div className="lg:text-right flex lg:block items-center gap-2 mt-4 lg:mt-0">

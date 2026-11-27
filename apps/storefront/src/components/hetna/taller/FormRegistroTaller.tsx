@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRef, useState } from "react"
 
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
@@ -146,18 +147,18 @@ export default function FormRegistroTaller() {
     return (
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-8 text-center">
         <p className="text-2xl">✓</p>
-        <h3 className="mt-2 text-xl font-extrabold text-[#142033]">¡Recibimos tu registro!</h3>
+        <h3 className="mt-2 text-xl font-extrabold text-[#142033]"><T>¡Recibimos tu registro!</T></h3>
         <p className="mx-auto mt-2 max-w-md text-[#6B675C]">
-          Te mandamos un correo de bienvenida. <strong className="text-[#142033]">Tu siguiente paso:</strong> crea tu cuenta en el
-          panel de talleres con el mismo correo y completa tu perfil. Con eso empiezas a recibir solicitudes.
+          <T>Te mandamos un correo de bienvenida.</T> <strong className="text-[#142033]"><T>Tu siguiente paso:</T></strong> <T>crea tu cuenta en el
+          panel de talleres con el mismo correo y completa tu perfil. Con eso empiezas a recibir solicitudes.</T>
         </p>
         <a href={panel} className="mt-5 inline-flex rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110">
-          Crear mi cuenta de taller
+          <T>Crear mi cuenta de taller</T>
         </a>
         <p className="mt-3 text-xs text-[#6B675C]">
-          ¿Dudas?{" "}
+          <T>¿Dudas?</T>{" "}
           <a href={ligaWhatsApp("Hola HETNA, acabo de registrar mi taller y tengo una duda")} target="_blank" rel="noreferrer" className="font-semibold text-[#1FA855]">
-            Escríbenos por WhatsApp
+            <T>Escríbenos por WhatsApp</T>
           </a>
         </p>
       </div>
@@ -168,23 +169,23 @@ export default function FormRegistroTaller() {
     <form onSubmit={enviar} className="grid gap-7 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-7">
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>1</span> Tu taller
+          <span className={NUM}>1</span> <T>Tu taller</T>
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={ETIQUETA} htmlFor="nombre_taller">Nombre del taller *</label>
+            <label className={ETIQUETA} htmlFor="nombre_taller"><T>Nombre del taller *</T></label>
             <input id="nombre_taller" name="nombre_taller" required maxLength={120} className={CAMPO} />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="contacto">Tu nombre</label>
+            <label className={ETIQUETA} htmlFor="contacto"><T>Tu nombre</T></label>
             <input id="contacto" name="contacto" maxLength={120} className={CAMPO} autoComplete="name" />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="ciudad">Ciudad</label>
+            <label className={ETIQUETA} htmlFor="ciudad"><T>Ciudad</T></label>
             <input id="ciudad" name="ciudad" className={CAMPO} autoComplete="address-level2" />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="estado_mx">Estado</label>
+            <label className={ETIQUETA} htmlFor="estado_mx"><T>Estado</T></label>
             <select id="estado_mx" name="estado_mx" className={CAMPO} defaultValue="">
               <option value="">Selecciona</option>
               {ESTADOS.map((x) => (
@@ -197,20 +198,20 @@ export default function FormRegistroTaller() {
 
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>2</span> Qué haces
+          <span className={NUM}>2</span> <T>Qué haces</T>
         </legend>
         <div className="mt-3">
-          <p className={ETIQUETA}>Servicios que ofreces *</p>
+          <p className={ETIQUETA}><T>Servicios que ofreces *</T></p>
           <Chips opciones={SERVICIOS} elegidas={servicios} alCambiar={setServicios} />
         </div>
         <div>
-          <p className={ETIQUETA}>Materiales que trabajas</p>
+          <p className={ETIQUETA}><T>Materiales que trabajas</T></p>
           <Chips opciones={MATERIALES} elegidas={materiales} alCambiar={setMateriales} />
-          <p className="mt-1 text-xs text-[#6B675C]">Te avisamos primero de las solicitudes de los materiales que marques.</p>
+          <p className="mt-1 text-xs text-[#6B675C]"><T>Te avisamos primero de las solicitudes de los materiales que marques.</T></p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={ETIQUETA} htmlFor="maquinas">Máquinas</label>
+            <label className={ETIQUETA} htmlFor="maquinas"><T>Máquinas</T></label>
             <textarea
               id="maquinas"
               name="maquinas"
@@ -221,7 +222,7 @@ export default function FormRegistroTaller() {
             />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="capacidad">¿Cuánto puedes producir?</label>
+            <label className={ETIQUETA} htmlFor="capacidad"><T>¿Cuánto puedes producir?</T></label>
             <select id="capacidad" name="capacidad" className={CAMPO} defaultValue="">
               <option value="">Selecciona</option>
               {CAPACIDAD.map((c) => (
@@ -234,7 +235,7 @@ export default function FormRegistroTaller() {
 
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>3</span> Tu trabajo
+          <span className={NUM}>3</span> <T>Tu trabajo</T>
         </legend>
         <div className="mt-3 grid gap-2">
           <label
@@ -246,9 +247,9 @@ export default function FormRegistroTaller() {
             }}
             className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#D9D5CA] bg-[#FAF9F6] px-4 py-5 text-center hover:border-[#C2560A]"
           >
-            <span className="text-sm font-bold text-[#142033]">Sube fotos de trabajos que has hecho</span>
-            <span className="text-xs text-[#6B675C]">Hasta {FOTOS_MAX} fotos · las piezas reales convencen más que cualquier texto</span>
-            <span className="mt-2 rounded-lg bg-[#142033] px-4 py-2 text-xs font-semibold text-white">Elegir fotos</span>
+            <span className="text-sm font-bold text-[#142033]"><T>Sube fotos de trabajos que has hecho</T></span>
+            <span className="text-xs text-[#6B675C]"><T>Hasta</T> {FOTOS_MAX} <T>fotos · las piezas reales convencen más que cualquier texto</T></span>
+            <span className="mt-2 rounded-lg bg-[#142033] px-4 py-2 text-xs font-semibold text-white"><T>Elegir fotos</T></span>
           </label>
           <input
             ref={entrada}
@@ -268,7 +269,7 @@ export default function FormRegistroTaller() {
                     {f.error ? (
                       <span className="block text-xs text-[#B3261E]">{f.error}</span>
                     ) : f.subida ? (
-                      <span className="block text-xs text-[#2E7D32]">Lista</span>
+                      <span className="block text-xs text-[#2E7D32]"><T>Lista</T></span>
                     ) : (
                       <span className="mt-1 block h-1.5 overflow-hidden rounded bg-[#E7E4DC]">
                         <span className="block h-full bg-[#C2560A] transition-all" style={{ width: `${f.avance}%` }} />
@@ -276,7 +277,7 @@ export default function FormRegistroTaller() {
                     )}
                   </span>
                   <button type="button" onClick={() => setFotos((xs) => xs.filter((x) => x.id !== f.id))} className="text-xs font-semibold text-[#6B675C] hover:text-[#B3261E]">
-                    Quitar
+                    <T>Quitar</T>
                   </button>
                 </li>
               ))}
@@ -284,27 +285,27 @@ export default function FormRegistroTaller() {
           )}
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="portafolio">¿Tienes Facebook, Instagram o página? Pega la liga (opcional)</label>
+          <label className={ETIQUETA} htmlFor="portafolio"><T>¿Tienes Facebook, Instagram o página? Pega la liga (opcional)</T></label>
           <input id="portafolio" name="portafolio" className={CAMPO} placeholder="facebook.com/mitaller" />
         </div>
       </fieldset>
 
       <fieldset className="grid gap-3">
         <legend className={PASO}>
-          <span className={NUM}>4</span> Contacto
+          <span className={NUM}>4</span> <T>Contacto</T>
         </legend>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={ETIQUETA} htmlFor="whatsapp">WhatsApp *</label>
+            <label className={ETIQUETA} htmlFor="whatsapp"><T>WhatsApp *</T></label>
             <input id="whatsapp" name="whatsapp" type="tel" required className={CAMPO} autoComplete="tel" placeholder="10 dígitos" />
           </div>
           <div>
-            <label className={ETIQUETA} htmlFor="email">Correo *</label>
+            <label className={ETIQUETA} htmlFor="email"><T>Correo *</T></label>
             <input id="email" name="email" type="email" required className={CAMPO} autoComplete="email" />
-            <span className="mt-1 block text-xs text-[#6B675C]">Usa el mismo al crear tu cuenta del panel.</span>
+            <span className="mt-1 block text-xs text-[#6B675C]"><T>Usa el mismo al crear tu cuenta del panel.</T></span>
           </div>
           <div className="sm:col-span-2">
-            <label className={ETIQUETA} htmlFor="comentarios">Algo más que debamos saber (opcional)</label>
+            <label className={ETIQUETA} htmlFor="comentarios"><T>Algo más que debamos saber (opcional)</T></label>
             <textarea
               id="comentarios"
               name="comentarios"
@@ -326,9 +327,9 @@ export default function FormRegistroTaller() {
         >
           {estado === "enviando" ? "Enviando…" : subiendo ? "Subiendo fotos…" : "Registrar mi taller"}
         </button>
-        <span className="text-xs text-[#6B675C]">Es gratis. Tu WhatsApp y correo no se muestran a los clientes.</span>
+        <span className="text-xs text-[#6B675C]"><T>Es gratis. Tu WhatsApp y correo no se muestran a los clientes.</T></span>
       </div>
-      {estado === "error" && <p className="text-sm text-[#B3261E]">{mensaje}</p>}
+      {estado === "error" && <p className="text-sm text-[#B3261E]"><T>{mensaje}</T></p>}
     </form>
   )
 }

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import Image from "@/lib/imagenes/Imagen"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { BlogPost } from "@/types/blog"
@@ -34,7 +35,7 @@ export function BlogCard({ post, index }: BlogCardProps) {
         <h3 className="heading-sm">{post.title}</h3>
         <p className="text-md line-clamp-2">{post.excerpt}</p>
         <div className="flex items-center gap-4 uppercase label-md mt-[26px]">
-          Read more{" "}
+          <TS>Read more</TS>{" "}
           <ArrowRightIcon
             size={20}
             color={tailwindConfig.theme.extend.colors.tertiary}

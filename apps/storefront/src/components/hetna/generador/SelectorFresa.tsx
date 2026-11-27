@@ -4,6 +4,7 @@
 // del Laboratorio 3-5 ejes y del torno). Si no tiene, se usan las de inicio.
 // Se puede agregar una fresa nueva ahí mismo; se guarda en su cuenta (o en el
 // navegador sin sesión) y aparece en todas las herramientas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import type { FresaCam } from "@/lib/data/cam-maquinas"
@@ -88,7 +89,7 @@ export function SelectorFresa({
   return (
     <div className="flex flex-col gap-1.5">
       <label className="flex items-center justify-between gap-2 text-[12.5px] text-[#C9D2E0]">
-        <span className="shrink-0">{etiqueta}</span>
+        <span className="shrink-0"><T>{etiqueta}</T></span>
         <select
           value={actual?.id || ""}
           onChange={(e) => {
@@ -111,11 +112,11 @@ export function SelectorFresa({
           +
         </button>
       </label>
-      {nota && <span className="text-[11.5px] text-[#8A97AB]">{nota}</span>}
+      {nota && <span className="text-[11.5px] text-[#8A97AB]"><T>{nota}</T></span>}
       {nueva.abierta && (
         <div className="flex flex-wrap items-end gap-1.5 rounded-[8px] border border-[#2A3546] bg-[#111821] p-2 text-[12px] text-[#C9D2E0]">
           <label className="flex flex-col gap-0.5">
-            Tipo
+            <T>Tipo</T>
             <select value={nueva.tipo} onChange={(e) => setNueva((n) => ({ ...n, tipo: e.target.value as FresaCam["tipo"] }))} className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-white">
               {tipos.map((t) => (
                 <option key={t} value={t}>{NOMBRE_TIPO[t]}</option>
@@ -123,17 +124,17 @@ export function SelectorFresa({
             </select>
           </label>
           <label className="flex w-16 flex-col gap-0.5">
-            Ø mm
+            <T>Ø mm</T>
             <input value={nueva.d} onChange={(e) => setNueva((n) => ({ ...n, d: e.target.value }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-white" />
           </label>
           {nueva.tipo === "v" && (
             <label className="flex w-14 flex-col gap-0.5">
-              Ángulo
+              <T>Ángulo</T>
               <input value={nueva.ang} onChange={(e) => setNueva((n) => ({ ...n, ang: e.target.value }))} inputMode="decimal" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-white" />
             </label>
           )}
           <label className="flex min-w-[8rem] flex-1 flex-col gap-0.5">
-            Nombre
+            <T>Nombre</T>
             <input value={nueva.nombre} onChange={(e) => setNueva((n) => ({ ...n, nombre: e.target.value }))} placeholder="Mi fresa" className="rounded-[6px] border border-[#2A3546] bg-[#0B0F15] px-1.5 py-1 text-white" />
           </label>
           <button
@@ -148,7 +149,7 @@ export function SelectorFresa({
             }}
             className="rounded-[6px] bg-[#C2560A] px-2.5 py-1 font-semibold text-white hover:bg-[#A84A08]"
           >
-            Guardar
+            <T>Guardar</T>
           </button>
           {nueva.aviso && <span className="w-full text-[#F6D58E]">{nueva.aviso}</span>}
         </div>

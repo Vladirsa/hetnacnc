@@ -1,4 +1,5 @@
 'use client';
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname } from 'next/navigation';
 
 import { useCartContext } from '@/components/providers/Cart/context';
@@ -43,7 +44,7 @@ export function MobileBottomNav() {
             <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#F08A3C] text-white text-[10px] leading-4 text-center">{cartCount}</span>
           )}
         </span>
-        <span className={it.label.length > 10 ? 'text-[9.5px] tracking-tight whitespace-nowrap' : ''}>{it.label}</span>
+        <span className={it.label.length > 10 ? 'text-[9.5px] tracking-tight whitespace-nowrap' : ''}><T>{it.label}</T></span>
       </LocalizedClientLink>
     );
   };
@@ -61,7 +62,7 @@ export function MobileBottomNav() {
           <span className="relative">
             <Icon d={COTIZADOR.d} />
           </span>
-          <span>{COTIZADOR.label}</span>
+          <span><T>{COTIZADOR.label}</T></span>
         </a>
         {tab(CART)}
         {tab(USER)}

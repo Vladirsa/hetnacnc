@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { FileCode, ShoppingBag, Wrench } from "lucide-react"
 import type { ComponentType } from "react"
 import { HttpTypes } from "@medusajs/types"
@@ -50,10 +51,10 @@ export default function CategoriasVisuales({ categorias }: { categorias: Cat[] }
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-8 max-w-[720px]">
           <h2 className="text-[30px] md:text-[44px] font-extrabold leading-[1.08] text-[#142033]">
-            Compra por <span className="text-[#C2560A]">categoría</span>
+            <TS>Compra por</TS> <span className="text-[#C2560A]"><TS>categoría</TS></span>
           </h2>
           <p className="mt-2 text-[15px] md:text-[17px] text-[#6B6A63]">
-            Encuentra lo que necesitas, o pide que lo fabriquen por ti.
+            <TS>Encuentra lo que necesitas, o pide que lo fabriquen por ti.</TS>
           </p>
         </div>
 
@@ -117,7 +118,7 @@ export default function CategoriasVisuales({ categorias }: { categorias: Cat[] }
                     href={"/categories/" + raiz.handle}
                     className="mt-auto inline-flex w-fit items-center rounded-full bg-[#C2560A] px-5 py-2.5 text-[13.5px] font-bold text-white hover:bg-[#A84A08]"
                   >
-                    Ver todo en {raiz.name} →
+                    <TS>Ver todo en</TS> {raiz.name} →
                   </LocalizedClientLink>
                 </div>
               </div>

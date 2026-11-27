@@ -2,6 +2,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { TS } from "@/i18n/TS"
 import { getImageProps } from "next/image"
 import { preload } from "react-dom"
 
@@ -92,7 +93,7 @@ export function ImagenPieza({
 
 export const EtiquetaPublicidad = () => (
   <span className="absolute right-2 top-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-    Publicidad
+    <TS>Publicidad</TS>
   </span>
 )
 
@@ -101,11 +102,11 @@ export function TextoPieza({ p }: { p: Pieza }) {
   if (!p.titulo && !p.subtitulo && !p.boton) return null
   return (
     <div className="absolute inset-x-0 bottom-0 z-[1] flex flex-col gap-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white md:p-5">
-      {p.titulo && <strong className="text-[15px] leading-tight md:text-lg">{p.titulo}</strong>}
-      {p.subtitulo && <span className="text-[12.5px] leading-snug text-white/85 md:text-[13.5px]">{p.subtitulo}</span>}
+      {p.titulo && <strong className="text-[15px] leading-tight md:text-lg"><TS>{p.titulo}</TS></strong>}
+      {p.subtitulo && <span className="text-[12.5px] leading-snug text-white/85 md:text-[13.5px]"><TS>{p.subtitulo}</TS></span>}
       {p.boton && (
         <span className="mt-1 inline-block w-fit rounded-lg bg-[#C2560A] px-3.5 py-1.5 text-[13px] font-bold text-white">
-          {p.boton}
+          <TS>{p.boton}</TS>
         </span>
       )}
     </div>

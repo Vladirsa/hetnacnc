@@ -3,6 +3,7 @@
 // En la liga privada del cliente: quién descargó sus planos y modelos (cada
 // descarga queda registrada en HETNA) y el botón para borrarlos cuando la
 // solicitud termina. Problema 4 de la auditoría.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -31,21 +32,21 @@ export default function ArchivosProtegidos({ token, s }: { token: string; s: Vis
 
   return (
     <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-      <h2 className="text-lg font-extrabold text-[#142033]">Tus archivos</h2>
+      <h2 className="text-lg font-extrabold text-[#142033]"><T>Tus archivos</T></h2>
       {a.borrados_en ? (
         <p className="mt-2 text-sm text-[#40403A]">
-          Se borraron el {fecha(a.borrados_en)}: {a.borrados.join(", ")}. Ya no se pueden descargar.
+          <T>Se borraron el</T> {fecha(a.borrados_en)}: {a.borrados.join(", ")}<T>. Ya no se pueden descargar.</T>
         </p>
       ) : (
         <>
           <p className="mt-2 text-sm text-[#40403A]">
-            Están en un almacenamiento privado. Mientras recibes propuestas, los descargan sólo los talleres que pueden
+            <T>Están en un almacenamiento privado. Mientras recibes propuestas, los descargan sólo los talleres que pueden
             cotizar tu solicitud, según los permisos que elegiste; en cuanto eliges una propuesta o la solicitud cierra,
-            únicamente el taller elegido. Cada liga dura una hora y cada descarga queda registrada aquí.
-            {" "}Se borran {a.dias_conservacion} días después de que la solicitud se cierra o se cancela.
+            únicamente el taller elegido. Cada liga dura una hora y cada descarga queda registrada aquí.</T>
+            {" "}<T>Se borran</T> {a.dias_conservacion} <T>días después de que la solicitud se cierra o se cancela.</T>
           </p>
           {a.descargas.length === 0 ? (
-            <p className="mt-3 text-sm text-[#6B675C]">Nadie ha descargado tus archivos todavía.</p>
+            <p className="mt-3 text-sm text-[#6B675C]"><T>Nadie ha descargado tus archivos todavía.</T></p>
           ) : (
             <ul className="mt-3 grid gap-1 text-sm text-[#40403A]">
               {a.descargas.slice(0, 30).map((d, i) => (

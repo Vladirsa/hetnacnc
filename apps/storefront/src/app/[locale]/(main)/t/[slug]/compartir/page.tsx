@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -11,7 +13,7 @@ import { svgQR } from "@/lib/generador/qr"
 // las estadísticas se ven en la app, en Mi página en línea.
 type Props = { params: Promise<{ slug: string; locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const t = await leerTallerPublico(slug)
   return { title: t ? `Comparte el cotizador de ${t.nombre}` : "Compartir cotizador", robots: { index: false, follow: false } }
@@ -24,17 +26,22 @@ export default async function CompartirPage({ params }: Props) {
   const liga = `https://hetnacnc.com/t/${t.slug}`
   return (
     <main className="container max-w-[860px] py-6 md:py-10">
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Tu cotizador en línea</p>
-      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]">Comparte el cotizador de {t.nombre}</h1>
+      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><TS>Tu cotizador en línea</TS></p>
+      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Comparte el cotizador de</TS> {t.nombre}</h1>
       <p className="mt-2 text-[#40403A]">
-        Cada cliente que cotiza aquí te llega a la app con sus medidas, su archivo revisado y su precio estimado. Entre más lugares tenga tu liga, más solicitudes recibes.
+        <TS>Cada cliente que cotiza aquí te llega a la app con sus medidas, su archivo revisado y su precio estimado. Entre más lugares tenga tu liga, más solicitudes recibes.</TS>
       </p>
       <p className="mb-6 mt-2 text-sm">
         <LocalizedClientLink href={`/t/${t.slug}`} className="font-semibold text-[#C2560A] hover:underline">
-          Ver mi cotizador →
+          <TS>Ver mi cotizador →</TS>
         </LocalizedClientLink>
       </p>
       <CompartirCotizador liga={liga} slug={t.slug} nombre={t.nombre} qrSvg={svgQR(liga, 220)} />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

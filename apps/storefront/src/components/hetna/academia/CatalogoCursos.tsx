@@ -2,6 +2,7 @@
 
 // Catálogo de la Academia: buscador y filtros en el navegador (los cursos ya
 // vienen en la página, así que filtrar es instantáneo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import type { Course } from "@/lib/data/courses"
@@ -52,7 +53,7 @@ export function CatalogoCursos({ cursos }: { cursos: Course[] }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <label className="relative block">
-          <span className="sr-only">Buscar cursos</span>
+          <span className="sr-only"><T>Buscar cursos</T></span>
           <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9A978C]" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-3.5-3.5" />
@@ -66,11 +67,11 @@ export function CatalogoCursos({ cursos }: { cursos: Course[] }) {
           />
         </label>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          <Chip activo={precio === "todos"} onClick={() => setPrecio("todos")}>Todos</Chip>
-          <Chip activo={precio === "gratis"} onClick={() => setPrecio("gratis")}>Gratis</Chip>
-          <Chip activo={precio === "pago"} onClick={() => setPrecio("pago")}>De pago</Chip>
+          <Chip activo={precio === "todos"} onClick={() => setPrecio("todos")}><T>Todos</T></Chip>
+          <Chip activo={precio === "gratis"} onClick={() => setPrecio("gratis")}><T>Gratis</T></Chip>
+          <Chip activo={precio === "pago"} onClick={() => setPrecio("pago")}><T>De pago</T></Chip>
           <span className="w-px bg-[#E7E4DC] mx-1 shrink-0" aria-hidden="true" />
-          <Chip activo={nivel === "todos"} onClick={() => setNivel("todos")}>Todos los niveles</Chip>
+          <Chip activo={nivel === "todos"} onClick={() => setNivel("todos")}><T>Todos los niveles</T></Chip>
           {Object.entries(NIVEL).map(([k, v]) => (
             <Chip key={k} activo={nivel === k} onClick={() => setNivel(k)}>
               {v}
@@ -91,7 +92,7 @@ export function CatalogoCursos({ cursos }: { cursos: Course[] }) {
         </div>
       ) : (
         <div className="bg-white border border-dashed border-[#D9D5CA] rounded-[14px] p-8 text-center text-[14.5px] text-[#6B6A63]">
-          No hay cursos con esos filtros todavía.
+          <T>No hay cursos con esos filtros todavía.</T>
         </div>
       )}
     </div>

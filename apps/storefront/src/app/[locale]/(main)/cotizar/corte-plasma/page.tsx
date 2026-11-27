@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/hetna/JsonLd"
 import { migas, servicioSchema } from "@/lib/hetna/schema"
@@ -6,7 +8,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { CalculadoraLead } from "@/components/hetna/cotizar/CalculadoraLead"
 import { FranjaAyuda } from "@/components/hetna/ServicioPagina"
 
-export async function generateMetadata(): Promise<Metadata> {
+async function generateMetadataEs(): Promise<Metadata> {
   return {
     alternates: { canonical: "https://hetnacnc.com/mx/cotizar/corte-plasma" },
     title: "Costo de corte plasma CNC | Cotiza en línea",
@@ -26,21 +28,21 @@ export default async function CotizarCortePlasma() {
         ]}
       />
       <div className="px-4 lg:px-16 pt-5 text-[13px] text-[#6B6A63] flex flex-wrap gap-1.5">
-        <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+        <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">Cotizar corte plasma</span>
+        <span className="text-[#1B1B18] font-medium"><TS>Cotizar corte plasma</TS></span>
       </div>
 
       <section className="px-4 lg:px-16 pt-5 pb-8 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="bg-[#142033] text-white rounded-[18px] p-6 lg:p-10 flex flex-col gap-4">
           <span className="self-start text-[12px] font-bold tracking-wide uppercase bg-[#C2560A] px-3 py-1 rounded-full">
-            Corte plasma
+            <TS>Corte plasma</TS>
           </span>
           <h1 className="font-display text-[28px] lg:text-[38px] leading-[1.1] font-bold m-0 max-w-[560px]">
-            ¿Cuánto cuesta cortar tu pieza en plasma?
+            <TS>¿Cuánto cuesta cortar tu pieza en plasma?</TS>
           </h1>
           <p className="m-0 text-[15px] lg:text-[16px] text-[#C9D2E0] max-w-[520px] leading-relaxed">
-            Pon material, calibre, medidas y cantidad. Te damos un estimado al instante, sin subir archivo ni crear cuenta.
+            <TS>Pon material, calibre, medidas y cantidad. Te damos un estimado al instante, sin subir archivo ni crear cuenta.</TS>
           </p>
         </div>
         <CalculadoraLead
@@ -61,4 +63,9 @@ export default async function CotizarCortePlasma() {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }

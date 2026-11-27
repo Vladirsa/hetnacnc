@@ -1,6 +1,7 @@
 "use client"
 
 // Botón principal del curso: inscribirse gratis, comprarlo o "ya estás inscrito".
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -29,9 +30,9 @@ export function AccionCurso({
   if (inscrito) {
     return (
       <div className="flex flex-col gap-2">
-        <span className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-[#1F7A4D]">✓ Ya estás inscrito</span>
+        <span className="inline-flex items-center gap-2 text-[14.5px] font-semibold text-[#1F7A4D]"><T>✓ Ya estás inscrito</T></span>
         <a href="#temario" className={`${BTN} bg-[#142033] hover:bg-black text-white`}>
-          Empezar a ver el curso
+          <T>Empezar a ver el curso</T>
         </a>
       </div>
     )
@@ -40,7 +41,7 @@ export function AccionCurso({
   if (!gratis) {
     return productHandle ? (
       <LocalizedClientLink href={`/products/${productHandle}`} className={`${BTN} bg-[#C2560A] hover:bg-[#A84A08] text-white`}>
-        Comprar curso · {precio}
+        <T>Comprar curso ·</T> {precio}
       </LocalizedClientLink>
     ) : null
   }
@@ -67,10 +68,10 @@ export function AccionCurso({
       </button>
       {aviso && (
         <p className="m-0 text-[13.5px] text-[#6B6A63]" role="status">
-          {aviso.texto}{" "}
+          <T>{aviso.texto}</T>{" "}
           {aviso.sesion && (
             <LocalizedClientLink href="/user" className="font-semibold text-[#B34D07] underline">
-              Entrar o crear cuenta
+              <T>Entrar o crear cuenta</T>
             </LocalizedClientLink>
           )}
         </p>

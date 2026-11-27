@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useParams, useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -75,7 +76,7 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-2 border-0 p-0 m-0">
-        <legend className={`${etiqueta} mb-2`}>¿Qué quieres publicar?</legend>
+        <legend className={`${etiqueta} mb-2`}><T>¿Qué quieres publicar?</T></legend>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {tipos.map((t) => (
             <button
@@ -90,14 +91,14 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
               className={`text-left rounded-[10px] border px-3 py-2.5 transition ${tipo === t ? "border-[#C2560A] bg-[#FDEEE1]" : "border-[#E0DCD2] bg-white hover:border-[#C2560A]"}`}
             >
               <span className="block text-[14.5px] font-bold text-[#1B1B18]">{TIPOS_TEMA[t].nombre}</span>
-              <span className="block text-[12.5px] text-[#6B6A63] leading-snug">{TIPOS_TEMA[t].ayuda}</span>
+              <span className="block text-[12.5px] text-[#6B6A63] leading-snug"><T>{TIPOS_TEMA[t].ayuda}</T></span>
             </button>
           ))}
         </div>
       </fieldset>
 
       <label className="flex flex-col gap-2">
-        <span className={etiqueta}>Sección</span>
+        <span className={etiqueta}><T>Sección</T></span>
         <select value={seccion} onChange={(e) => setSeccion(e.target.value)} className={campo} required>
           <option value="">Elige una sección…</option>
           {disponibles.map((s) => (
@@ -109,7 +110,7 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className={etiqueta}>Título</span>
+        <span className={etiqueta}><T>Título</T></span>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -118,22 +119,22 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
           placeholder={tipo === "pregunta" ? "Ej. ¿Qué fresa uso para cortar MDF de 18 mm sin quemar el borde?" : "Escribe un título claro"}
           className={campo}
         />
-        <span className="text-[12.5px] text-[#6B6A63]">Escríbelo como lo buscarías en Google. {titulo.trim().length}/150</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Escríbelo como lo buscarías en Google.</T> {titulo.trim().length}/150</span>
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className={etiqueta}>Detalles</span>
+        <span className={etiqueta}><T>Detalles</T></span>
         <textarea value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} maxLength={20000} required rows={8} placeholder={AYUDA_CUERPO[tipo]} className={`${campo} leading-relaxed resize-y`} />
-        <span className="text-[12.5px] text-[#6B6A63]">Para compartir G-code, escríbelo entre ``` y ```.</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Para compartir G-code, escríbelo entre ``` y ```.</T></span>
       </label>
 
       <div className="flex flex-col gap-2">
-        <span className={etiqueta}>Fotos</span>
+        <span className={etiqueta}><T>Fotos</T></span>
         <SubirFotos fotos={fotos} onCambio={setFotos} max={8} />
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className={etiqueta}>Ligas y videos</span>
+        <span className={etiqueta}><T>Ligas y videos</T></span>
         {ligas.map((l, i) => {
           const v = l.trim() ? leerVideo(/^https?:\/\//.test(l.trim()) ? l.trim() : `https://${l.trim()}`) : null
           return (
@@ -145,28 +146,28 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
                 placeholder="https://youtu.be/… o la liga de tu página"
                 className={campo}
               />
-              {v && <span className="shrink-0 text-[12px] font-bold text-[#16794F]">Video ✓</span>}
+              {v && <span className="shrink-0 text-[12px] font-bold text-[#16794F]"><T>Video ✓</T></span>}
             </div>
           )
         })}
         {ligas.length < 5 && (
           <button type="button" onClick={() => setLigas([...ligas, ""])} className="self-start text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-            + Otra liga
+            <T>+ Otra liga</T>
           </button>
         )}
-        <span className="text-[12.5px] text-[#6B6A63]">Los videos de YouTube, TikTok, Facebook e Instagram se ven dentro del tema.</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Los videos de YouTube, TikTok, Facebook e Instagram se ven dentro del tema.</T></span>
       </div>
 
       {tipo === "evento" && (
         <fieldset className="m-0 flex flex-col gap-3 rounded-[12px] border border-[#BFE0CC] bg-[#F3FAF5] p-4">
-          <legend className={`${etiqueta} px-1`}>Fecha y lugar del evento</legend>
+          <legend className={`${etiqueta} px-1`}><T>Fecha y lugar del evento</T></legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1.5 text-[13.5px] font-semibold text-[#44433D]">
-              Empieza (hora de México)
+              <T>Empieza (hora de México)</T>
               <input type="datetime-local" value={inicio} onChange={(e) => setInicio(e.target.value)} required className={campo} />
             </label>
             <label className="flex flex-col gap-1.5 text-[13.5px] font-semibold text-[#44433D]">
-              Termina (opcional)
+              <T>Termina (opcional)</T>
               <input type="datetime-local" value={fin} min={inicio || undefined} onChange={(e) => setFin(e.target.value)} className={campo} />
             </label>
           </div>
@@ -200,7 +201,7 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
         <div className="flex flex-col gap-3 border border-[#E7E4DC] rounded-[12px] p-4 bg-[#FCFBF8]">
           <label className="flex items-center gap-2 text-[14px] font-bold cursor-pointer">
             <input type="checkbox" checked={conEncuesta} onChange={(e) => setConEncuesta(e.target.checked)} />
-            Agregar encuesta
+            <T>Agregar encuesta</T>
           </label>
           {conEncuesta && (
             <>
@@ -217,7 +218,7 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
               ))}
               {opciones.length < 6 && (
                 <button type="button" onClick={() => setOpciones([...opciones, ""])} className="self-start text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                  + Otra opción
+                  <T>+ Otra opción</T>
                 </button>
               )}
             </>
@@ -233,7 +234,7 @@ export function FormTema({ secciones, seccionInicial, tipoInicial, esNegocio }: 
         <button type="submit" disabled={pendiente} className="bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-6 py-3 rounded-[10px] text-[15px] disabled:opacity-50">
           {pendiente ? "Publicando…" : "Publicar"}
         </button>
-        <span className="text-[12.5px] text-[#6B6A63]">Al publicar aceptas que los teléfonos y correos se ocultan.</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Al publicar aceptas que los teléfonos y correos se ocultan.</T></span>
       </div>
     </form>
   )

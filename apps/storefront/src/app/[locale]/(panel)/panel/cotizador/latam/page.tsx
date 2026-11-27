@@ -1,5 +1,6 @@
 // HETNA Panel → App → Latinoamérica: pre-registros por país (Fase 5) para
 // decidir qué país abrir primero.
+import { TS } from "@/i18n/TS"
 import { SubApp } from "@/components/hetna/panel/SubApp"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace } from "@/lib/panel/sesion"
@@ -20,11 +21,11 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="latam" />
-      {error && <Vacio>No pude leer los registros: {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los registros:</TS> {error}</Vacio>}
       {d && (
         <>
           <Tarjeta>
-            <Titulo extra={<a href={`/${locale}/latinoamerica`} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#C2560A]">Página pública →</a>}>Latinoamérica: pre-registros</Titulo>
+            <Titulo extra={<a href={`/${locale}/latinoamerica`} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#C2560A]"><TS>Página pública →</TS></a>}><TS>Latinoamérica: pre-registros</TS></Titulo>
             <div className="grid grid-cols-2 gap-2">
               <Kpi etiqueta="Talleres fundadores" valor={String(tot.t)} />
               <Kpi etiqueta="Clientes" valor={String(tot.c)} />
@@ -33,15 +34,15 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
               {filas.map(({ k, p, c }) => (
                 <li key={k} className="flex items-center justify-between py-2 text-[13px]">
                   <span className="font-semibold">{p.bandera} {p.nombre} <span className="font-normal text-[#6B675C]">({p.moneda})</span></span>
-                  <span className="text-[#40403A]">{c.talleres} talleres · {c.clientes} clientes</span>
+                  <span className="text-[#40403A]">{c.talleres} <TS>talleres ·</TS> {c.clientes} <TS>clientes</TS></span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[11px] text-[#6B675C]">Para abrir un país: crear su región en la tienda (moneda, impuestos y envíos) y avisar a sus registrados.</p>
+            <p className="mt-2 text-[11px] text-[#6B675C]"><TS>Para abrir un país: crear su región en la tienda (moneda, impuestos y envíos) y avisar a sus registrados.</TS></p>
           </Tarjeta>
           <Tarjeta>
-            <Titulo>Últimos registros</Titulo>
-            {d.ultimos.length === 0 && <Vacio>Todavía nadie se ha registrado.</Vacio>}
+            <Titulo><TS>Últimos registros</TS></Titulo>
+            {d.ultimos.length === 0 && <Vacio><TS>Todavía nadie se ha registrado.</TS></Vacio>}
             <ul className="divide-y divide-[#EFEDE6]">
               {d.ultimos.map((r) => (
                 <li key={r.id} className="py-2.5 text-[13px]">
@@ -51,7 +52,7 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
                   </div>
                   <p className="text-[12px] text-[#40403A]">{[r.nombre, r.ciudad, r.correo, r.telefono].filter(Boolean).join(" · ")}</p>
                   {r.maquinas && <p className="text-[12px] text-[#6B675C]">{r.maquinas}</p>}
-                  {r.mensaje && <p className="text-[12px] italic text-[#6B675C]">“{r.mensaje}”</p>}
+                  {r.mensaje && <p className="text-[12px] italic text-[#6B675C]">“<TS>{r.mensaje}</TS>”</p>}
                   <p className="text-[11px] text-[#9A968B]">{hace(r.created_at)}</p>
                 </li>
               ))}

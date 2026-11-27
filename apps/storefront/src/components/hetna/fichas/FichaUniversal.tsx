@@ -1,6 +1,7 @@
 // Bloques de la ficha universal (lib/hetna/tipo-producto.ts) que van debajo
 // de la zona de compra: especificaciones, qué incluye / qué no incluye, y
 // entrega con garantía. Cada bloque se oculta completo si no tiene datos.
+import { TS } from "@/i18n/TS"
 import { especificaciones, incluyeDe, tipoProducto } from "@/lib/hetna/tipo-producto"
 
 type Producto = Parameters<typeof especificaciones>[0]
@@ -10,7 +11,7 @@ export const EspecificacionesFicha = ({ product }: { product: Producto }) => {
   if (!filas.length) return null
   return (
     <section className="overflow-hidden rounded-[14px] border border-[#E7E4DC] bg-white" data-testid="ficha-especificaciones">
-      <h2 className="m-0 border-b border-[#E7E4DC] px-4 py-3 text-[16px] font-bold text-[#142033]">Especificaciones</h2>
+      <h2 className="m-0 border-b border-[#E7E4DC] px-4 py-3 text-[16px] font-bold text-[#142033]"><TS>Especificaciones</TS></h2>
       <table className="w-full border-collapse text-[14px]">
         <tbody>
           {filas.map(([k, v], i) => (
@@ -34,7 +35,7 @@ export const IncluyeFicha = ({ product }: { product: Producto }) => {
     <section className="grid gap-3 sm:grid-cols-2" data-testid="ficha-incluye">
       {incluye.length > 0 && (
         <div className="rounded-[14px] border border-[#CFE8D7] bg-[#F3FAF5] p-4">
-          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#17633A]">Qué incluye</h2>
+          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#17633A]"><TS>Qué incluye</TS></h2>
           <ul className="m-0 list-none space-y-1.5 p-0">
             {incluye.map((t) => (
               <li key={t} className="flex gap-2 text-[14px] text-[#2E2D29]">
@@ -47,7 +48,7 @@ export const IncluyeFicha = ({ product }: { product: Producto }) => {
       )}
       {noIncluye.length > 0 && (
         <div className="rounded-[14px] border border-[#F2D3CF] bg-[#FDF5F4] p-4">
-          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#9B3225]">Qué no incluye</h2>
+          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#9B3225]"><TS>Qué no incluye</TS></h2>
           <ul className="m-0 list-none space-y-1.5 p-0">
             {noIncluye.map((t) => (
               <li key={t} className="flex gap-2 text-[14px] text-[#2E2D29]">
@@ -77,19 +78,19 @@ export const EntregaGarantia = ({ product }: { product: Producto }) => {
     <section className="grid gap-3 sm:grid-cols-2" data-testid="ficha-entrega-garantia">
       {(produccion || entrega) && (
         <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]">🚚 Entrega</h2>
+          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]"><TS>🚚 Entrega</TS></h2>
           {produccion && (
             <p className="m-0 text-[14px] text-[#2E2D29]">
-              <strong>Tiempo de producción:</strong> {produccion}
+              <strong><TS>Tiempo de producción:</TS></strong> {produccion}
             </p>
           )}
           {entrega && <p className="m-0 mt-1 text-[14px] text-[#2E2D29]">{entrega}</p>}
-          <p className="m-0 mt-1 text-[13px] text-[#6B6A63]">El costo y los días del envío los ves con tu dirección, antes de pagar.</p>
+          <p className="m-0 mt-1 text-[13px] text-[#6B6A63]"><TS>El costo y los días del envío los ves con tu dirección, antes de pagar.</TS></p>
         </div>
       )}
       {garantia && (
         <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]">🛡️ Garantía</h2>
+          <h2 className="m-0 mb-2 text-[15px] font-bold text-[#142033]"><TS>🛡️ Garantía</TS></h2>
           <p className="m-0 text-[14px] text-[#2E2D29]">{garantia}</p>
         </div>
       )}

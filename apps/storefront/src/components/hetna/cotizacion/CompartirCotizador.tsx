@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 // Herramientas para que el taller comparta su cotizador en línea: copiar la
@@ -56,43 +57,43 @@ export function CompartirCotizador({ liga, slug, nombre, qrSvg }: { liga: string
   return (
     <div className="grid gap-4">
       <section className={caja}>
-        <h2 className="text-lg font-extrabold text-[#142033]">1. Tu liga</h2>
-        <p className="mt-1 text-sm text-[#6B675C]">Ponla en tu WhatsApp Business, tu bio de Instagram y TikTok, y en tus cotizaciones.</p>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>1. Tu liga</T></h2>
+        <p className="mt-1 text-sm text-[#6B675C]"><T>Ponla en tu WhatsApp Business, tu bio de Instagram y TikTok, y en tus cotizaciones.</T></p>
         <p className="mt-3 break-all rounded-lg bg-[#F5F3EE] p-3 text-[14px] font-semibold text-[#142033]">{liga}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Copiar texto={liga} etiqueta="Copiar liga" />
           <a href={`https://wa.me/?text=${encodeURIComponent(textoWa)}`} target="_blank" rel="noopener" className="rounded-lg bg-[#25D366] px-4 py-2 text-[13px] font-semibold text-white">
-            Mandar por WhatsApp
+            <T>Mandar por WhatsApp</T>
           </a>
           <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(liga)}`} target="_blank" rel="noopener" className="rounded-lg bg-[#1877F2] px-4 py-2 text-[13px] font-semibold text-white">
-            Compartir en Facebook
+            <T>Compartir en Facebook</T>
           </a>
         </div>
       </section>
 
       <section className={caja}>
-        <h2 className="text-lg font-extrabold text-[#142033]">2. QR para tu local y tus tarjetas</h2>
-        <p className="mt-1 text-sm text-[#6B675C]">Imprímelo en el mostrador, en tu camioneta o en tus tarjetas: el cliente lo escanea y cotiza desde su celular.</p>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>2. QR para tu local y tus tarjetas</T></h2>
+        <p className="mt-1 text-sm text-[#6B675C]"><T>Imprímelo en el mostrador, en tu camioneta o en tus tarjetas: el cliente lo escanea y cotiza desde su celular.</T></p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <div className="rounded-xl border border-[#E7E4DC] p-2" dangerouslySetInnerHTML={{ __html: qrSvg }} />
           <div className="flex flex-col gap-2">
-            <button type="button" onClick={bajarPng} className="rounded-lg bg-[#142033] px-4 py-2 text-[13px] font-semibold text-white">Descargar PNG (para imprimir)</button>
-            <button type="button" onClick={bajarSvg} className="rounded-lg border border-[#142033] px-4 py-2 text-[13px] font-semibold text-[#142033]">Descargar SVG (para diseño)</button>
+            <button type="button" onClick={bajarPng} className="rounded-lg bg-[#142033] px-4 py-2 text-[13px] font-semibold text-white"><T>Descargar PNG (para imprimir)</T></button>
+            <button type="button" onClick={bajarSvg} className="rounded-lg border border-[#142033] px-4 py-2 text-[13px] font-semibold text-[#142033]"><T>Descargar SVG (para diseño)</T></button>
           </div>
         </div>
       </section>
 
       <section className={caja}>
-        <h2 className="text-lg font-extrabold text-[#142033]">3. El cotizador dentro de tu página web</h2>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>3. El cotizador dentro de tu página web</T></h2>
         <p className="mt-1 text-sm text-[#6B675C]">
-          Pega este código en tu página (WordPress, Wix, Shopify o HTML) donde quieras que aparezca. Tus clientes cotizan sin salir de tu sitio y la solicitud te llega a la app como siempre.
+          <T>Pega este código en tu página (WordPress, Wix, Shopify o HTML) donde quieras que aparezca. Tus clientes cotizan sin salir de tu sitio y la solicitud te llega a la app como siempre.</T>
         </p>
         <pre className={pre}>{codigoWidget}</pre>
         <div className="mt-3 flex flex-wrap gap-2">
           <Copiar texto={codigoWidget} etiqueta="Copiar código" />
         </div>
         <details className="mt-3 text-sm text-[#40403A]">
-          <summary className="cursor-pointer font-semibold">¿Tu página no acepta scripts? Usa este iframe</summary>
+          <summary className="cursor-pointer font-semibold"><T>¿Tu página no acepta scripts? Usa este iframe</T></summary>
           <pre className={pre}>{codigoIframe}</pre>
           <div className="mt-2">
             <Copiar texto={codigoIframe} etiqueta="Copiar iframe" />
@@ -101,7 +102,7 @@ export function CompartirCotizador({ liga, slug, nombre, qrSvg }: { liga: string
       </section>
 
       <section className={caja}>
-        <h2 className="text-lg font-extrabold text-[#142033]">Así se ve en tu página</h2>
+        <h2 className="text-lg font-extrabold text-[#142033]"><T>Así se ve en tu página</T></h2>
         <iframe src={`/mx/embed/t/${slug}`} title="Vista previa del widget" className="mt-3 h-[720px] w-full rounded-xl border border-[#E7E4DC]" loading="lazy" />
       </section>
     </div>

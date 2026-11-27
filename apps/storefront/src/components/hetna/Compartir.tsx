@@ -1,5 +1,6 @@
 // Botones de compartir en redes. Solo enlaces (sin scripts de terceros): no frenan la página.
 // Instagram y TikTok no permiten compartir por enlace; para ellos se usa publicación automática (n8n).
+import { TS } from "@/i18n/TS"
 type Props = { url: string; titulo: string; texto?: string; className?: string }
 
 export default function Compartir({ url, titulo, texto, className = "" }: Props) {
@@ -16,7 +17,7 @@ export default function Compartir({ url, titulo, texto, className = "" }: Props)
   ]
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <span className="text-xs font-bold uppercase tracking-wide text-[#6B675C]">Compartir</span>
+      <span className="text-xs font-bold uppercase tracking-wide text-[#6B675C]"><TS>Compartir</TS></span>
       {redes.map((r) => (
         <a
           key={r.nombre}

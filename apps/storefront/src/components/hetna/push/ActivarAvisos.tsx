@@ -4,6 +4,7 @@
 // suscribe este navegador (service worker /sw.js) y lo liga a la cuenta.
 // Avisos: pedido recibido, en camino, cancelado; propuestas y preguntas de
 // talleres en sus solicitudes de fabricación; ofertas.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import { activarPushCliente, desactivarPushCliente, llavePush } from "@/lib/data/push"
@@ -118,7 +119,7 @@ export function ActivarAvisos({ compacto = false }: { compacto?: boolean }) {
         <p className="m-0 text-[15px] font-bold text-[#1B1B18]">
           {estado === "activo" ? "🔔 Avisos activados en este dispositivo" : "🔔 Recibe avisos en tu celular"}
         </p>
-        <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-[#44433D]">{texto}</p>
+        <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-[#44433D]"><T>{texto}</T></p>
         {error && <p className="m-0 mt-1 text-[13px] text-[#8A1C1C]">{error}</p>}
       </div>
       {(estado === "inactivo" || estado === "activando") && (
@@ -133,7 +134,7 @@ export function ActivarAvisos({ compacto = false }: { compacto?: boolean }) {
       )}
       {estado === "activo" && (
         <button type="button" onClick={() => void desactivar()} className="shrink-0 text-[13px] font-semibold text-[#6B6A63] underline">
-          Desactivar
+          <T>Desactivar</T>
         </button>
       )}
     </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -31,11 +32,11 @@ export const ComprarPaquetes = ({
   if (!paquetes.length || !proveedores.length) {
     return (
       <div className="mt-4 rounded-[12px] border border-dashed border-[#D9D5CC] bg-white px-4 py-6 text-center text-[14px] leading-relaxed text-[#6B6A63]">
-        Ahorita no hay paquetes a la venta.{" "}
+        <T>Ahorita no hay paquetes a la venta.</T>{" "}
         <LocalizedClientLink href="/contacto" className="font-semibold text-[#B34D07] underline">
-          Escríbenos
+          <T>Escríbenos</T>
         </LocalizedClientLink>{" "}
-        y te los cargamos a mano.
+        <T>y te los cargamos a mano.</T>
       </div>
     )
   }
@@ -75,12 +76,12 @@ export const ComprarPaquetes = ({
             >
               {esMejor && (
                 <span className="mb-2 self-start rounded-full bg-[#FDEEE1] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#B34D07]">
-                  Mejor precio por crédito
+                  <T>Mejor precio por crédito</T>
                 </span>
               )}
 
               <p className="text-[28px] font-bold leading-none text-[#1B1B18]">
-                {p.creditos} <span className="text-[14px] font-semibold text-[#6B6A63]">créditos</span>
+                {p.creditos} <span className="text-[14px] font-semibold text-[#6B6A63]"><T>créditos</T></span>
               </p>
 
               {escaneos > 0 && (
@@ -89,13 +90,13 @@ export const ComprarPaquetes = ({
                 </p>
               )}
 
-              <p className="mt-3 flex-1 text-[13px] leading-relaxed text-[#4A4943]">{p.descripcion}</p>
+              <p className="mt-3 flex-1 text-[13px] leading-relaxed text-[#4A4943]"><T>{p.descripcion}</T></p>
 
               <p className="mt-3 text-[22px] font-bold text-[#1B1B18]">
                 {convertToLocale({ amount: p.precio, currency_code: p.moneda })}
               </p>
               <p className="text-[12px] text-[#6B6A63]">
-                {convertToLocale({ amount: p.precio / p.creditos, currency_code: p.moneda })} por crédito
+                {convertToLocale({ amount: p.precio / p.creditos, currency_code: p.moneda })} <T>por crédito</T>
               </p>
 
               <div className="mt-4 flex flex-col gap-2">
@@ -123,8 +124,8 @@ export const ComprarPaquetes = ({
         })}
       </div>
       <p className="mt-3 text-[12px] leading-relaxed text-[#6B6A63]">
-        Precios en pesos mexicanos. El pago se hace en la página segura de Mercado Pago o PayPal; HETNA
-        no ve ni guarda los datos de tu tarjeta.
+        <T>Precios en pesos mexicanos. El pago se hace en la página segura de Mercado Pago o PayPal; HETNA
+        no ve ni guarda los datos de tu tarjeta.</T>
       </p>
     </>
   )

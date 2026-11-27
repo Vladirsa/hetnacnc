@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import type { ReactNode } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -32,18 +33,18 @@ export default function PaginaInfo({
       )}
       <div className="mx-auto w-full max-w-[920px] px-4 py-8 lg:px-6">
         <div className="mb-4 flex flex-wrap gap-1.5 text-[13px] text-[#6B6A63]">
-          <LocalizedClientLink href="/" className="hover:text-[#B34D07]">Inicio</LocalizedClientLink>
+          <LocalizedClientLink href="/" className="hover:text-[#B34D07]"><TS>Inicio</TS></LocalizedClientLink>
           <span>/</span>
-          <span className="font-medium text-[#1B1B18]">{titulo}</span>
+          <span className="font-medium text-[#1B1B18]"><TS>{titulo}</TS></span>
         </div>
 
         <header className="overflow-hidden rounded-3xl bg-[#142033] p-7 text-white sm:p-10" style={{ backgroundImage: REJILLA }}>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">{etiqueta}</p>
-          <h1 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">{titulo}</h1>
-          {resumen && <p className="mt-3 max-w-2xl text-white/75">{resumen}</p>}
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>{etiqueta}</TS></p>
+          <h1 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl"><TS>{titulo}</TS></h1>
+          {resumen && <p className="mt-3 max-w-2xl text-white/75"><TS>{resumen}</TS></p>}
           {actualizado && (
             <p className="mt-4 text-xs text-white/50">
-              Última actualización: {typeof actualizado === "string" ? actualizado : EMPRESA.actualizado}
+              <TS>Última actualización:</TS> {typeof actualizado === "string" ? actualizado : EMPRESA.actualizado}
             </p>
           )}
         </header>
@@ -54,7 +55,7 @@ export default function PaginaInfo({
 
         <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#E7E4DC] bg-white p-6 sm:flex-row sm:items-center">
           <div>
-            <p className="font-bold text-[#142033]">¿Tienes otra duda?</p>
+            <p className="font-bold text-[#142033]"><TS>¿Tienes otra duda?</TS></p>
             <p className="text-sm text-[#6B675C]">{EMPRESA.horario}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -64,13 +65,13 @@ export default function PaginaInfo({
               rel="noopener noreferrer"
               className="rounded-xl bg-[#C2560A] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110"
             >
-              Escríbenos por WhatsApp
+              <TS>Escríbenos por WhatsApp</TS>
             </a>
             <LocalizedClientLink
               href="/contacto"
               className="rounded-xl border border-[#142033] px-5 py-2.5 text-sm font-semibold text-[#142033] hover:bg-[#142033] hover:text-white"
             >
-              Contacto
+              <TS>Contacto</TS>
             </LocalizedClientLink>
           </div>
         </section>

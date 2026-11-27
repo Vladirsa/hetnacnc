@@ -1,5 +1,6 @@
 // HETNA Panel → Estrategia (sólo el dueño): los indicadores de la estrategia de
 // liderazgo (docs/estrategia-liderazgo-mundial.md) contra los 30 días anteriores.
+import { TS } from "@/i18n/TS"
 import { Etiqueta, Kpi, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { MarcarCompensacion } from "@/components/hetna/panel/Fase4"
 import { adminFetch, exigirPagina } from "@/lib/panel/sesion"
@@ -34,13 +35,13 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
   try { d = await adminFetch<Datos>("/admin/hetna-estrategia") } catch (e) { error = (e as Error).message }
   let f4: Fase4 | null = null
   try { f4 = await adminFetch<Fase4>("/admin/hetna-fase4") } catch {}
-  if (!d) return <Vacio>No pude leer los indicadores: {error}</Vacio>
+  if (!d) return <Vacio><TS>No pude leer los indicadores:</TS> {error}</Vacio>
   const a = d.actual, b = d.anterior
   const pctDetectados = a.archivos_revisados ? Math.round((a.archivos_con_problema / a.archivos_revisados) * 100) : null
   return (
     <div className="grid gap-4">
       <Tarjeta>
-        <Titulo extra={<span className="text-[11px] text-[#6B675C]">últimos 30 días</span>}>🏆 Estrategia: ¿vamos ganando?</Titulo>
+        <Titulo extra={<span className="text-[11px] text-[#6B675C]"><TS>últimos 30 días</TS></span>}><TS>🏆 Estrategia: ¿vamos ganando?</TS></Titulo>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Kpi etiqueta="Solicitudes de fabricación" valor={String(a.solicitudes)} antes={cambio(a.solicitudes, b.solicitudes)} />
           <Kpi etiqueta="Talleres activos (mandaron propuesta)" valor={String(a.talleres_activos)} antes={cambio(a.talleres_activos, b.talleres_activos)} />
@@ -50,7 +51,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       </Tarjeta>
 
       <Tarjeta>
-        <Titulo>La red de talleres</Titulo>
+        <Titulo><TS>La red de talleres</TS></Titulo>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Kpi etiqueta={`Entregas a tiempo (meta ${d.metas.puntualidad_pct} %)`} valor={d.red.puntualidad_pct != null ? `${d.red.puntualidad_pct} %` : "—"} antes={`${d.red.entregas_con_fecha} entregas con fecha`} />
           <Kpi etiqueta="Talleres en la red" valor={String(d.red.talleres)} />
@@ -60,19 +61,19 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       </Tarjeta>
 
       <Tarjeta>
-        <Titulo>Archivos revisados antes de cotizar</Titulo>
+        <Titulo><TS>Archivos revisados antes de cotizar</TS></Titulo>
         <div className="grid grid-cols-2 gap-2">
           <Kpi etiqueta="Solicitudes con archivo revisado" valor={String(a.archivos_revisados)} antes={cambio(a.archivos_revisados, b.archivos_revisados)} />
           <Kpi etiqueta="Con algo que corregir (detectado a tiempo)" valor={String(a.archivos_con_problema)} antes={pctDetectados != null ? `${pctDetectados} % de los archivos` : undefined} />
         </div>
-        <p className="mt-2 text-[11px] text-[#6B675C]">Cada archivo con problema detectado es un reclamo que no llega al taller.</p>
+        <p className="mt-2 text-[11px] text-[#6B675C]"><TS>Cada archivo con problema detectado es un reclamo que no llega al taller.</TS></p>
       </Tarjeta>
 
       {f4 && (
         <Tarjeta>
-          <Titulo extra={<Etiqueta color={f4.config.activa ? "verde" : "gris"}>{f4.config.activa ? "encendida" : "apagada"}</Etiqueta>}>Fase 4: HETNA responde</Titulo>
+          <Titulo extra={<Etiqueta color={f4.config.activa ? "verde" : "gris"}>{f4.config.activa ? "encendida" : "apagada"}</Etiqueta>}><TS>Fase 4: HETNA responde</TS></Titulo>
           <p className="mb-2 text-[12px] text-[#6B675C]">
-            HETNA cobra y retiene el pago, garantiza la fecha (compensa si el taller se atrasa), servicio exprés y crédito a empresas. Se enciende sólo con estas claves en el .env del backend; antes, revísalo con tu contador y tu abogado.
+            <TS>HETNA cobra y retiene el pago, garantiza la fecha (compensa si el taller se atrasa), servicio exprés y crédito a empresas. Se enciende sólo con estas claves en el .env del backend; antes, revísalo con tu contador y tu abogado.</TS>
           </p>
           <ul className="divide-y divide-[#EFEDE6]">
             {f4.lista.map((x) => (
@@ -87,11 +88,11 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
           </ul>
           {f4.compensaciones.filter((c) => c.estado === "pendiente").length > 0 && (
             <>
-              <p className="mt-3 text-[13px] font-bold text-[#8A3D06]">Compensaciones por entrega tarde, por aplicar</p>
+              <p className="mt-3 text-[13px] font-bold text-[#8A3D06]"><TS>Compensaciones por entrega tarde, por aplicar</TS></p>
               <ul className="divide-y divide-[#EFEDE6]">
                 {f4.compensaciones.filter((c) => c.estado === "pendiente").map((c) => (
                   <li key={c.solicitud_id} className="py-2 text-[13px]">
-                    <b>{c.folio}</b> · {c.dias_tarde} {c.dias_tarde === 1 ? "día" : "días"} tarde · compensar <b>${Number(c.monto).toLocaleString("es-MX")}</b> de ${Number(c.total).toLocaleString("es-MX")}
+                    <b>{c.folio}</b> · {c.dias_tarde} {c.dias_tarde === 1 ? "día" : "días"} <TS>tarde · compensar</TS> <b>${Number(c.monto).toLocaleString("es-MX")}</b> <TS>de $</TS>{Number(c.total).toLocaleString("es-MX")}
                     <MarcarCompensacion id={c.solicitud_id} />
                   </li>
                 ))}
@@ -102,11 +103,11 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       )}
 
       <Tarjeta>
-        <Titulo extra={<a href={`/${locale}/panel/licitaciones`} className="text-[12px] font-semibold text-[#C2560A]">Ver licitaciones →</a>}>
-          Solicitudes en riesgo: sin propuesta después de 2 h
+        <Titulo extra={<a href={`/${locale}/panel/licitaciones`} className="text-[12px] font-semibold text-[#C2560A]"><TS>Ver licitaciones →</TS></a>}>
+          <TS>Solicitudes en riesgo: sin propuesta después de 2 h</TS>
         </Titulo>
         {!d.en_riesgo?.length ? (
-          <Vacio>Ninguna. Todas las solicitudes abiertas ya tienen al menos una propuesta (o llevan menos de 2 h).</Vacio>
+          <Vacio><TS>Ninguna. Todas las solicitudes abiertas ya tienen al menos una propuesta (o llevan menos de 2 h).</TS></Vacio>
         ) : (
           <ul className="divide-y divide-[#EFEDE6]">
             {d.en_riesgo.map((r) => (
@@ -125,9 +126,9 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       </Tarjeta>
 
       <Tarjeta>
-        <Titulo>De dónde vienen las solicitudes (30 días)</Titulo>
+        <Titulo><TS>De dónde vienen las solicitudes (30 días)</TS></Titulo>
         {!a.origenes?.length ? (
-          <Vacio>Todavía no hay solicitudes con origen. Las ligas de los anuncios llevan utm_source y utm_campaign; aquí se ve cuántas solicitudes trae cada campaña.</Vacio>
+          <Vacio><TS>Todavía no hay solicitudes con origen. Las ligas de los anuncios llevan utm_source y utm_campaign; aquí se ve cuántas solicitudes trae cada campaña.</TS></Vacio>
         ) : (
           <ul className="divide-y divide-[#EFEDE6]">
             {a.origenes.map((o) => (
@@ -137,7 +138,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
                   {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
                 </span>
                 <span className="whitespace-nowrap text-[#40403A]">
-                  {o.solicitudes} solicitudes · {o.con_propuesta_elegida} eligieron taller
+                  {o.solicitudes} <TS>solicitudes ·</TS> {o.con_propuesta_elegida} <TS>eligieron taller</TS>
                 </span>
               </li>
             ))}
@@ -146,9 +147,9 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       </Tarjeta>
 
       <Tarjeta>
-        <Titulo>De dónde vienen los talleres registrados (30 días)</Titulo>
+        <Titulo><TS>De dónde vienen los talleres registrados (30 días)</TS></Titulo>
         {!d.talleres_origen?.length ? (
-          <Vacio>Todavía no hay registros de taller en los últimos 30 días.</Vacio>
+          <Vacio><TS>Todavía no hay registros de taller en los últimos 30 días.</TS></Vacio>
         ) : (
           <ul className="divide-y divide-[#EFEDE6]">
             {d.talleres_origen.map((o) => (
@@ -157,7 +158,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
                   {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
                   {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
                 </span>
-                <span className="whitespace-nowrap text-[#40403A]">{o.registros} registros</span>
+                <span className="whitespace-nowrap text-[#40403A]">{o.registros} <TS>registros</TS></span>
               </li>
             ))}
           </ul>
@@ -165,15 +166,15 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
       </Tarjeta>
 
       <Tarjeta>
-        <Titulo extra={<a href={`/${locale}/panel/cotizador/latam`} className="text-[12px] font-semibold text-[#C2560A]">Ver registros →</a>}>Latinoamérica: pre-registros</Titulo>
+        <Titulo extra={<a href={`/${locale}/panel/cotizador/latam`} className="text-[12px] font-semibold text-[#C2560A]"><TS>Ver registros →</TS></a>}><TS>Latinoamérica: pre-registros</TS></Titulo>
         {d.latam.length === 0 ? (
-          <Vacio>Todavía no hay registros. Prende los países en Mercados de la configuración de redes para que salga la campaña semanal.</Vacio>
+          <Vacio><TS>Todavía no hay registros. Prende los países en Mercados de la configuración de redes para que salga la campaña semanal.</TS></Vacio>
         ) : (
           <ul className="divide-y divide-[#EFEDE6]">
             {d.latam.map((p) => (
               <li key={p.pais} className="flex justify-between py-2 text-[13px]">
                 <span className="font-semibold">{PAIS[p.pais] || p.pais}</span>
-                <span className="text-[#40403A]">{p.talleres} talleres · {p.clientes} clientes</span>
+                <span className="text-[#40403A]">{p.talleres} <TS>talleres ·</TS> {p.clientes} <TS>clientes</TS></span>
               </li>
             ))}
           </ul>

@@ -2,6 +2,7 @@ import { HttpTypes } from '@medusajs/types';
 
 import { sdk } from '@/lib/client';
 import { CACHE_TAGS, getGlobalCacheOptions } from './cache-tags';
+import { localizarCategoria, localizarCategorias } from '@/i18n/datos';
 
 interface CategoriesProps {
   query?: Record<string, unknown>;
@@ -22,7 +23,7 @@ export const listCategories = async ({ query }: Partial<CategoriesProps> = {}) =
         next: getGlobalCacheOptions(CACHE_TAGS.categories)
       }
     } as never) as unknown as Promise<{ product_categories: HttpTypes.StoreProductCategory[] }>)
-    .then(({ product_categories }) => product_categories);
+    .then(({ product_categories }) => localizarCategorias(product_categories));
 
   const parentCategories = allCategories.filter(cat => !cat.parent_category_id);
 
@@ -50,7 +51,7 @@ export const listCategories = async ({ query }: Partial<CategoriesProps> = {}) =
 export const getCategoryByHandle = async (categoryHandle: string) => {
   return (sdk.store.productCategories
     .query({
-      fields: 'id,name,handle,parent_category_id,*category_children',
+      fields: 'id,name,handle,metadata,parent_category_id,*category_children',
       handle: categoryHandle,
       include_descendants_tree: true,
       fetchOptions: {
@@ -61,7 +62,7 @@ export const getCategoryByHandle = async (categoryHandle: string) => {
         )
       }
     } as never) as unknown as Promise<HttpTypes.StoreProductCategoryListResponse>)
-    .then(({ product_categories }) => product_categories[0]);
+    .then(({ product_categories }) => localizarCategoria(product_categories[0]));
 };
 
 // Medusa's `/store/products?category_id=` filters by the exact category only —

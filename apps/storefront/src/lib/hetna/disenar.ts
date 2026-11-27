@@ -82,6 +82,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Texturizador gratis para impresión 3D: placa o rodillo con palabras e íconos repetidos, sin costura, con mangos y guías de grosor. Descarga los STL al instante.",
   },
   {
+    slug: "patrones-3d",
+    nombre: "Patrones paramétricos 3D",
+    texto: "Sube tu maceta, florero o lámpara (STL u OBJ) y dale un patrón: Voronoi, panal, ondas, espiral, torsión.",
+    icono: "relieve",
+    acceso: "gratis",
+    titulo: "Patrones paramétricos 3D gratis: Voronoi, panal y ondas en tu STL",
+    descripcion:
+      "Sube tu modelo en STL u OBJ (una maceta, un florero, una pantalla de lámpara) o empieza con uno de los nuestros y dale un patrón paramétrico en la superficie: ondas, espiral, estrías, rombos, panal, Voronoi, burbujas u orgánico, con torsión. Mueves un número y todo se recalcula. Descarga el STL para imprimir en 3D o el relieve plano para tallar en router CNC.",
+    meta: "Diseño paramétrico gratis: aplica patrones Voronoi, panal, ondas o espiral a tu maceta o florero en STL. Descarga para impresión 3D o relieve para router CNC.",
+  },
+  {
     slug: "cortadores-galletas",
     nombre: "Cortadores de galletas",
     texto: "Corazón, estrella, nube, un nombre o tu dibujo: cortador con filo y sello para imprimir en 3D.",
@@ -91,6 +102,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     descripcion:
       "Haz tu propio cortador de galletas para impresión 3D: elige una figura (corazón, estrella, nube, pino, casita…), escribe un nombre o sube tu dibujo en SVG, ponle la medida y, si quieres, un sello con texto o ícono. Descarga gratis el STL del cortador (con filo y ceja) y el del sello.",
     meta: "Generador gratis de cortadores de galletas para impresión 3D: figuras, nombres o tu propio dibujo, con sello de texto o ícono. Descarga el STL al instante.",
+  },
+  {
+    slug: "ferulas-3d",
+    nombre: "Férulas termoformables",
+    texto: "Férulas ventiladas a la medida para mano, muñeca, dedo o pata de perro y gato: se imprimen planas y se moldean con calor.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Férulas impresas en 3D a la medida: generador de férulas termoformables (STL)",
+    descripcion:
+      "Para fisioterapeutas, terapeutas de mano, ortopedistas y veterinarios: mete las medidas del paciente y descarga la férula ventilada en STL para imprimir plana y moldear con calor. Antebrazo y muñeca con hueco para el pulgar, dedo y pata de perro o gato, con ventilación en panal, óvalos o círculos y ranuras para velcro. Si no tienes impresora, un taller de HETNA la imprime.",
+    meta: "Generador de férulas ventiladas para impresión 3D: antebrazo, muñeca, dedo y pata de mascota a la medida. Se imprimen planas y se moldean con calor.",
   },
   {
     slug: "rompecabezas",
@@ -553,6 +575,8 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "llaveros", corto: "Llaveros y placas" },
       { slug: "texturizador", corto: "Texturizador" },
       { slug: "cortadores-galletas", corto: "Cortadores de galletas" },
+      { slug: "ferulas-3d", corto: "Férulas" },
+      { slug: "patrones-3d", corto: "Patrones paramétricos" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "moldes-3d", corto: "Moldes" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },

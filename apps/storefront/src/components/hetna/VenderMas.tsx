@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { baseSitio } from "@/lib/hetna/schema"
 
 // Debajo del bloque de confianza: interés real de otros compradores, compartir
@@ -11,7 +12,7 @@ export function VenderMas({ titulo, handle, locale, vistas }: { titulo: string; 
     <div className="flex flex-col gap-3" data-testid="product-vender-mas">
       {vistas >= 10 && (
         <p className="m-0 text-sm text-[#40403A]">
-          <span aria-hidden>👀</span> <strong className="text-[#142033]">{vistas.toLocaleString("es-MX")} visitas</strong> a este producto en los últimos 7 días
+          <span aria-hidden>👀</span> <strong className="text-[#142033]">{vistas.toLocaleString("es-MX")} <TS>visitas</TS></strong> <TS>a este producto en los últimos 7 días</TS>
         </p>
       )}
       <div className="flex flex-wrap gap-2">
@@ -21,10 +22,10 @@ export function VenderMas({ titulo, handle, locale, vistas }: { titulo: string; 
           rel="noopener noreferrer"
           className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#25D366] px-3 py-2 text-sm font-bold text-[#128C4A] hover:bg-[#25D366]/10"
         >
-          Compártelo por WhatsApp
+          <TS>Compártelo por WhatsApp</TS>
         </a>
         <a href={medida} className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#C2560A] px-3 py-2 text-sm font-bold text-[#C2560A] hover:bg-[#C2560A]/10" data-testid="product-cotizar-similar">
-          Cotizar algo similar o a tu medida
+          <TS>Cotizar algo similar o a tu medida</TS>
         </a>
       </div>
     </div>
@@ -45,16 +46,16 @@ export function VideoProducto({ url, titulo }: { url: string; titulo: string }) 
     >
       <div className="grid items-center gap-6 p-5 md:grid-cols-[minmax(0,1fr)_300px] md:gap-10 md:p-8 lg:grid-cols-[minmax(0,520px)_340px] lg:justify-center lg:gap-16">
         <div className="min-w-0">
-          <p className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-[#C2560A]">Video del producto</p>
+          <p className="m-0 text-[11px] font-bold uppercase tracking-[0.14em] text-[#C2560A]"><TS>Video del producto</TS></p>
           <h2 id="titulo-video-producto" className="mt-1 text-2xl font-extrabold leading-tight text-[#142033] md:text-3xl">
-            Míralo en video
+            <TS>Míralo en video</TS>
           </h2>
           <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-[#40403A]">
-            Así se ve <strong className="text-[#142033]">{titulo}</strong> en movimiento: el acabado y los detalles que en una foto no se alcanzan a ver.
+            <TS>Así se ve</TS> <strong className="text-[#142033]"><TS>{titulo}</TS></strong> <TS>en movimiento: el acabado y los detalles que en una foto no se alcanzan a ver.</TS>
           </p>
           <ul className="mt-4 grid gap-2 text-[14px] text-[#1E2329]">
-            <li className="flex gap-2"><span aria-hidden className="text-[#C2560A]">▶</span> Dale play; empieza sin sonido y lo puedes subir.</li>
-            <li className="flex gap-2"><span aria-hidden className="text-[#C2560A]">⛶</span> Ábrelo en pantalla completa para verlo grande.</li>
+            <li className="flex gap-2"><span aria-hidden className="text-[#C2560A]">▶</span> <TS>Dale play; empieza sin sonido y lo puedes subir.</TS></li>
+            <li className="flex gap-2"><span aria-hidden className="text-[#C2560A]">⛶</span> <TS>Ábrelo en pantalla completa para verlo grande.</TS></li>
           </ul>
         </div>
         <video

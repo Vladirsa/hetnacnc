@@ -151,6 +151,9 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     minimumCacheTTL: 31536000,
+    // Sin 2048 ni 3840: ninguna foto se ve más ancha que 1400 px, y cada ancho
+    // extra es otra versión que el servidor tiene que hacer la primera vez.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Sólo dominios propios (src/lib/imagenes/dominios.ts). Las fotos de otros
     // dominios se muestran sin optimizar (src/lib/imagenes/Imagen.tsx) en vez de
     // pasar por el servidor.

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { promediosDeProductos } from "@/lib/resenas/acciones"
 
 import TarjetaProducto, { vendedoresPorProducto } from "./TarjetaProducto"
@@ -158,12 +159,12 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
         <section key={f.titulo} className="px-4 lg:px-16 py-4">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h2 className="font-display m-0 text-[20px] font-bold text-[#142033]">{f.titulo}</h2>
-              {f.subtitulo && <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]">{f.subtitulo}</p>}
+              <h2 className="font-display m-0 text-[20px] font-bold text-[#142033]"><TS>{f.titulo}</TS></h2>
+              {f.subtitulo && <p className="m-0 mt-0.5 text-[13px] text-[#6B6A63]"><TS>{f.subtitulo}</TS></p>}
             </div>
             {f.href && (
               <LocalizedClientLink href={f.href} className="shrink-0 text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                Ver todo →
+                <TS>Ver todo →</TS>
               </LocalizedClientLink>
             )}
           </div>

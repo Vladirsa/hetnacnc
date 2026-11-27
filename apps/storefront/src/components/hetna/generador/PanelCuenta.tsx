@@ -3,6 +3,7 @@
 // Dentro de las herramientas de diseño: los créditos del cliente (cuántos
 // tiene, cuánto cuesta bajar este diseño y comprar más sin salir) y "Mis
 // diseños" (guardar el diseño en su cuenta y volver a abrirlo después).
+import { T } from "@/components/hetna/i18n/Idioma"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
@@ -45,29 +46,29 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
     <div className="flex flex-col gap-2 rounded-[10px] border border-[#2A3546] bg-[#111821] p-2.5 text-[12.5px] text-[#C9D2E0]">
       <div className="flex items-center justify-between gap-2">
         <span>
-          Tus créditos:{" "}
+          <T>Tus créditos:</T>{" "}
           <b className="text-[15px] text-white">{saldo === undefined ? "…" : sinSesion ? "—" : saldo.ilimitado ? "∞" : saldo.saldo}</b>
         </span>
         <span className="text-right">
-          Este diseño: <b className="text-white">{pagado ? "pagado" : textoCreditos(costo)}</b>
+          <T>Este diseño:</T> <b className="text-white">{pagado ? "pagado" : textoCreditos(costo)}</b>
         </span>
       </div>
       {sinSesion ? (
         <span className="text-[12px] text-[#8A97AB]">
           <Link href={`/${locale}/login`} className="font-semibold text-[#FFB27A] underline">
-            Crea tu cuenta gratis
+            <T>Crea tu cuenta gratis</T>
           </Link>{" "}
-          y recibe {CREDITOS_BIENVENIDA} créditos de regalo para bajar tus primeros diseños.
+          <T>y recibe</T> {CREDITOS_BIENVENIDA} <T>créditos de regalo para bajar tus primeros diseños.</T>
         </span>
       ) : (
         <>
-          {!pagado && saldo && !alcanza && <span className="text-[12px] text-[#F6D58E]">Te faltan {textoCreditos(costo - saldo.saldo)} para bajar este diseño.</span>}
+          {!pagado && saldo && !alcanza && <span className="text-[12px] text-[#F6D58E]"><T>Te faltan</T> {textoCreditos(costo - saldo.saldo)} <T>para bajar este diseño.</T></span>}
           <div className="flex gap-1.5">
             <button type="button" onClick={() => setAbierto((x) => !x)} className="flex-1 rounded-[7px] bg-[#1C2431] px-2 py-1.5 font-semibold text-white hover:bg-[#243045]">
               {abierto ? "Ocultar paquetes" : "Comprar créditos"}
             </button>
             <Link href={`/${locale}/user/creditos`} className="rounded-[7px] bg-[#1C2431] px-2 py-1.5 font-semibold text-[#C9D2E0] hover:bg-[#243045]">
-              Movimientos
+              <T>Movimientos</T>
             </Link>
           </div>
         </>
@@ -75,14 +76,14 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
       {abierto && !sinSesion && (
         <div className="flex flex-col gap-1.5">
           {!cat ? (
-            <span className="text-[#8A97AB]">Cargando paquetes…</span>
+            <span className="text-[#8A97AB]"><T>Cargando paquetes…</T></span>
           ) : !cat.paquetes.length || !cat.proveedores.length ? (
-            <span className="text-[#8A97AB]">Ahorita no hay paquetes a la venta. Escríbenos y te los cargamos.</span>
+            <span className="text-[#8A97AB]"><T>Ahorita no hay paquetes a la venta. Escríbenos y te los cargamos.</T></span>
           ) : (
             cat.paquetes.map((p) => (
               <div key={p.handle} className="flex flex-wrap items-center gap-1.5 rounded-[8px] bg-[#0F151E] px-2 py-1.5">
                 <span className="min-w-0 flex-1">
-                  <b className="text-white">{p.creditos} créditos</b> · {pesos(p.precio)} <span className="text-[11px] text-[#8A97AB]">(${(p.precio / p.creditos).toFixed(1)} c/u)</span>
+                  <b className="text-white">{p.creditos} <T>créditos</T></b> · {pesos(p.precio)} <span className="text-[11px] text-[#8A97AB]">(${(p.precio / p.creditos).toFixed(1)} c/u)</span>
                 </span>
                 {cat.proveedores.map((prov) => (
                   <button key={prov} type="button" disabled={!!trabajando} onClick={() => comprar(p, prov)} className="rounded-[6px] bg-[#C2560A] px-2 py-1 text-[11.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
@@ -92,7 +93,7 @@ export function PanelCreditos({ costo, pagado, antesDePagar, recarga = 0 }: { co
               </div>
             ))
           )}
-          <span className="text-[11px] text-[#8A97AB]">Tu diseño se queda guardado en este navegador mientras pagas. Los créditos no caducan.</span>
+          <span className="text-[11px] text-[#8A97AB]"><T>Tu diseño se queda guardado en este navegador mientras pagas. Los créditos no caducan.</T></span>
           {aviso && <span className="text-[#F6B8AE]">{aviso}</span>}
         </div>
       )}
@@ -146,9 +147,9 @@ export function MisDisenos({
     return (
       <span className="text-[12px] text-[#8A97AB]">
         <Link href={`/${locale}/login`} className="font-semibold text-[#FFB27A] underline">
-          Entra a tu cuenta
+          <T>Entra a tu cuenta</T>
         </Link>{" "}
-        para guardar tus diseños y volver a abrirlos después (es gratis).
+        <T>para guardar tus diseños y volver a abrirlos después (es gratis).</T>
       </span>
     )
   return (
@@ -159,15 +160,15 @@ export function MisDisenos({
         </button>
         {idActual && (
           <button type="button" disabled={trabajando} onClick={() => guardar(true)} className="rounded-[8px] bg-[#1C2431] px-2 py-1.5 font-semibold hover:bg-[#243045] disabled:opacity-50">
-            Guardar como nuevo
+            <T>Guardar como nuevo</T>
           </button>
         )}
       </div>
       {aviso && <span className={/Guardado/.test(aviso) ? "text-[#9FE0B5]" : "text-[#F6B8AE]"}>{aviso}</span>}
       {lista === null ? (
-        <span className="text-[#8A97AB]">Cargando…</span>
+        <span className="text-[#8A97AB]"><T>Cargando…</T></span>
       ) : lista.length === 0 ? (
-        <span className="text-[11.5px] text-[#8A97AB]">Aún no tienes diseños guardados. Puedes guardar hasta {maximo}, gratis.</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Aún no tienes diseños guardados. Puedes guardar hasta</T> {maximo}<T>, gratis.</T></span>
       ) : (
         <ul className="m-0 flex max-h-56 list-none flex-col gap-1 overflow-auto p-0">
           {lista.map((d) => (

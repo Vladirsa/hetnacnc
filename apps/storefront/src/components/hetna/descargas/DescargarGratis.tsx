@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -66,7 +67,7 @@ export function DescargarGratis({ productId }: { productId: string }) {
   return (
     <div data-testid="descarga-gratis">
       <div className="mt-4 rounded-[12px] bg-[#EEF6EE] px-4 py-3">
-        <span className="text-[30px] font-bold leading-none text-[#1F5A2B]">Gratis</span>
+        <span className="text-[30px] font-bold leading-none text-[#1F5A2B]"><T>Gratis</T></span>
         <p className="mt-1 text-[13px] text-[#44433D]">
           {estado?.ilimitado
             ? "Con tu plan del Cotizador bajas todos los archivos gratis que quieras."
@@ -83,10 +84,10 @@ export function DescargarGratis({ productId }: { productId: string }) {
               href="/login"
               className="w-full rounded-sm bg-[#C2560A] py-3.5 text-center text-[16px] font-bold text-white hover:bg-[#A84A08]"
             >
-              Entrar para descargar
+              <T>Entrar para descargar</T>
             </LocalizedClientLink>
             <p className="text-center text-[13px] text-[#6B6A63]">
-              ¿No tienes cuenta? Es gratis y es la misma de la tienda.
+              <T>¿No tienes cuenta? Es gratis y es la misma de la tienda.</T>
             </p>
           </>
         ) : (
@@ -103,11 +104,11 @@ export function DescargarGratis({ productId }: { productId: string }) {
 
         {sinCupo && estado?.proxima_liberacion && (
           <p className="text-[13px] text-[#44433D]">
-            La siguiente se libera el {fecha(estado.proxima_liberacion)}. Con un{" "}
+            <T>La siguiente se libera el</T> {fecha(estado.proxima_liberacion)}<T>. Con un</T>{" "}
             <LocalizedClientLink href="/servicios/cotizador-cnc" className="font-semibold text-[#B34D07] hover:underline">
-              plan del Cotizador
+              <T>plan del Cotizador</T>
             </LocalizedClientLink>{" "}
-            no hay límite.
+            <T>no hay límite.</T>
           </p>
         )}
 

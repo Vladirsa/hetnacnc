@@ -11,6 +11,35 @@ const dashboardAppDir = (name: string) => {
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, `../../apps/${name}`)
 }
 
+// Entrar con Google, Facebook y LinkedIn (sólo clientes de la tienda). Cada red se
+// activa si existen sus llaves; sin ellas el servidor arranca igual y el botón no sale.
+// La red regresa a la tienda (/api/auth/social/<red>/regreso), que termina el registro.
+const tiendaUrl = (process.env.STOREFRONT_URL || 'https://hetnacnc.com').replace(/\/$/, '')
+const regreso = (red: string) => `${tiendaUrl}/api/auth/social/${red}/regreso`
+const proveedoresSociales: Record<string, unknown>[] = []
+if (process.env.GOOGLE_LOGIN_ID && process.env.GOOGLE_LOGIN_SECRET) {
+  proveedoresSociales.push({
+    resolve: '@medusajs/medusa/auth-google',
+    id: 'google',
+    options: { clientId: process.env.GOOGLE_LOGIN_ID, clientSecret: process.env.GOOGLE_LOGIN_SECRET, callbackUrl: regreso('google') },
+  })
+}
+if (process.env.FACEBOOK_LOGIN_ID && process.env.FACEBOOK_LOGIN_SECRET) {
+  proveedoresSociales.push({
+    resolve: './src/modules/auth-facebook',
+    id: 'facebook',
+    options: { clientId: process.env.FACEBOOK_LOGIN_ID, clientSecret: process.env.FACEBOOK_LOGIN_SECRET, callbackUrl: regreso('facebook') },
+  })
+}
+if (process.env.LINKEDIN_LOGIN_ID && process.env.LINKEDIN_LOGIN_SECRET) {
+  proveedoresSociales.push({
+    resolve: './src/modules/auth-linkedin',
+    id: 'linkedin',
+    options: { clientId: process.env.LINKEDIN_LOGIN_ID, clientSecret: process.env.LINKEDIN_LOGIN_SECRET, callbackUrl: regreso('linkedin') },
+  })
+}
+const redesActivas = proveedoresSociales.map((p) => p.id as string)
+
 // Cada forma de pago solo se activa si existen sus llaves; así el servidor arranca aunque falten.
 // Todas van dentro de UN solo módulo de pagos (Medusa no admite dos).
 const proveedoresPago: Record<string, unknown>[] = []
@@ -123,6 +152,13 @@ module.exports = withMercur({
       adminCors: process.env.ADMIN_CORS!,
       vendorCors: process.env.VENDOR_CORS!,
       authCors: process.env.AUTH_CORS!,
+      // Las redes sociales sólo para clientes; talleres (seller, member) y administración siguen con correo y contraseña
+      authMethodsPerActor: {
+        customer: ['emailpass', ...redesActivas],
+        seller: ['emailpass'],
+        member: ['emailpass'],
+        user: ['emailpass'],
+      },
       jwtSecret: secretoSesion("JWT_SECRET"),
       cookieSecret: secretoSesion("COOKIE_SECRET"),
     }
@@ -146,6 +182,7 @@ module.exports = withMercur({
               autoRegister: true,
             },
           },
+          ...proveedoresSociales,
         ],
       },
     },

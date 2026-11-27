@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { convertToLocale } from "@/lib/helpers/money"
 import type { Escalon } from "@/lib/helpers/volumen"
 
@@ -23,14 +24,14 @@ export const EscalonesVolumen = ({
   return (
     <div className="rounded-[10px] border border-[#D9C9A8] bg-[#FFFBF2] p-3">
       <p className="text-[12.5px] font-bold text-[#7A4A09]">
-        Más piezas, menos precio
+        <TS>Más piezas, menos precio</TS>
       </p>
 
       <table className="mt-2 w-full text-[13px]">
         <tbody>
           {typeof precioUnitario === "number" && precioUnitario > 0 && (
             <tr className="text-[#4A4943]">
-              <td className="py-1">1 o 2 piezas</td>
+              <td className="py-1"><TS>1 o 2 piezas</TS></td>
               <td className="py-1 text-right font-semibold text-[#1B1B18]">
                 {dinero(precioUnitario)}
               </td>
@@ -41,7 +42,7 @@ export const EscalonesVolumen = ({
           {escalones.map((e) => (
             <tr key={e.desde} className="text-[#4A4943]">
               <td className="py-1">
-                {e.desde} o más <span className="text-[#6B6A63]">c/u</span>
+                {e.desde} <TS>o más</TS> <span className="text-[#6B6A63]">c/u</span>
               </td>
               <td className="py-1 text-right font-bold text-[#1F5B29]">
                 {dinero(e.precio)}
@@ -59,8 +60,8 @@ export const EscalonesVolumen = ({
       </table>
 
       <p className="mt-2 text-[11px] text-[#8A6A33]">
-        El precio baja solo al subir la cantidad en el carrito. No hay que
-        escribir ningún código.
+        <TS>El precio baja solo al subir la cantidad en el carrito. No hay que
+        escribir ningún código.</TS>
       </p>
     </div>
   )
@@ -79,14 +80,14 @@ export const DistintivoVolumen = ({
   if (compacto) {
     return (
       <span className="text-[11px] font-semibold text-[#1F5B29]">
-        −{escalon.porcentaje}% llevando {escalon.desde}+
+        −{escalon.porcentaje}<TS>% llevando</TS> {escalon.desde}+
       </span>
     )
   }
 
   return (
     <span className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#D9C9A8] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-semibold text-[#7A4A09]">
-      −{escalon.porcentaje}% llevando {escalon.desde} o más
+      −{escalon.porcentaje}<TS>% llevando</TS> {escalon.desde} <TS>o más</TS>
     </span>
   )
 }

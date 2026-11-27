@@ -2,6 +2,7 @@
 
 // Botones de acción del HETNA Panel (licitaciones y talleres). Cada uno llama
 // a /api/app/panel/accion y recarga la página.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 async function accion(ruta: string, cuerpo: unknown, area: string): Promise<string> {
@@ -30,12 +31,12 @@ export function AccionesLicitacion({ id, etapa, etapas }: { id: string; etapa: s
     <div className="mt-2">
       <div className="flex flex-wrap gap-1.5">
         {(etapa === "en_revision" || etapa === "nueva") && (
-          <button disabled={ocupado} onClick={() => { if (confirm("¿Aprobar y mandarla a los talleres?")) correr({ accion: "aprobar" }) }} className={`${B} bg-[#0F7A4A] text-white`}>✓ Aprobar y enviar a talleres</button>
+          <button disabled={ocupado} onClick={() => { if (confirm("¿Aprobar y mandarla a los talleres?")) correr({ accion: "aprobar" }) }} className={`${B} bg-[#0F7A4A] text-white`}><T>✓ Aprobar y enviar a talleres</T></button>
         )}
-        {(etapa === "en_revision" || etapa === "nueva") && <button disabled={ocupado} onClick={() => setAbierto(abierto === "info" ? "" : "info")} className={`${B} bg-[#FFF1E6] text-[#B54708]`}>Pedir información</button>}
-        {etapa !== "cancelada" && etapa !== "cerrada" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "cancelar" ? "" : "cancelar")} className={`${B} bg-[#FDECEA] text-[#B3261E]`}>Cancelar</button>}
-        <button disabled={ocupado} onClick={() => setAbierto(abierto === "etapa" ? "" : "etapa")} className={`${B} bg-[#E8F0FB] text-[#1D4F8C]`}>Mover etapa</button>
-        <button disabled={ocupado} onClick={() => setAbierto(abierto === "nota" ? "" : "nota")} className={`${B} bg-[#F3F1EA] text-[#40403A]`}>Nota</button>
+        {(etapa === "en_revision" || etapa === "nueva") && <button disabled={ocupado} onClick={() => setAbierto(abierto === "info" ? "" : "info")} className={`${B} bg-[#FFF1E6] text-[#B54708]`}><T>Pedir información</T></button>}
+        {etapa !== "cancelada" && etapa !== "cerrada" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "cancelar" ? "" : "cancelar")} className={`${B} bg-[#FDECEA] text-[#B3261E]`}><T>Cancelar</T></button>}
+        <button disabled={ocupado} onClick={() => setAbierto(abierto === "etapa" ? "" : "etapa")} className={`${B} bg-[#E8F0FB] text-[#1D4F8C]`}><T>Mover etapa</T></button>
+        <button disabled={ocupado} onClick={() => setAbierto(abierto === "nota" ? "" : "nota")} className={`${B} bg-[#F3F1EA] text-[#40403A]`}><T>Nota</T></button>
       </div>
       {abierto && (
         <div className="mt-2 grid gap-2 rounded-xl bg-[#F8F7F2] p-3">
@@ -49,7 +50,7 @@ export function AccionesLicitacion({ id, etapa, etapas }: { id: string; etapa: s
             <button disabled={ocupado || (abierto !== "etapa" && !nota.trim())} onClick={() => correr(
               abierto === "info" ? { accion: "pedir_info", nota } : abierto === "cancelar" ? { accion: "cancelar", nota } : abierto === "etapa" ? { accion: "etapa", etapa: nuevaEtapa, nota } : { accion: "nota", nota, interna: true }
             )} className={`${B} bg-[#142033] text-white`}>{ocupado ? "Guardando…" : "Confirmar"}</button>
-            <button onClick={() => setAbierto("")} className={`${B} bg-white text-[#40403A]`}>Cerrar</button>
+            <button onClick={() => setAbierto("")} className={`${B} bg-white text-[#40403A]`}><T>Cerrar</T></button>
           </div>
         </div>
       )}
@@ -74,16 +75,16 @@ export function AccionesVerificacion({ sellerId, estado }: { sellerId: string; e
   return (
     <div className="mt-2">
       <div className="flex flex-wrap gap-1.5">
-        {estado !== "verificado" && <button disabled={ocupado} onClick={() => { if (confirm("¿Aprobar este taller? Le sale la insignia de verificado.")) correr({ accion: "aprobar" }) }} className={`${B} bg-[#0F7A4A] text-white`}>✓ Aprobar</button>}
-        {estado !== "verificado" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "rechazar" ? "" : "rechazar")} className={`${B} bg-[#FDECEA] text-[#B3261E]`}>Rechazar</button>}
-        {estado === "verificado" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "revocar" ? "" : "revocar")} className={`${B} bg-[#FFF1E6] text-[#B54708]`}>Quitar verificación</button>}
+        {estado !== "verificado" && <button disabled={ocupado} onClick={() => { if (confirm("¿Aprobar este taller? Le sale la insignia de verificado.")) correr({ accion: "aprobar" }) }} className={`${B} bg-[#0F7A4A] text-white`}><T>✓ Aprobar</T></button>}
+        {estado !== "verificado" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "rechazar" ? "" : "rechazar")} className={`${B} bg-[#FDECEA] text-[#B3261E]`}><T>Rechazar</T></button>}
+        {estado === "verificado" && <button disabled={ocupado} onClick={() => setAbierto(abierto === "revocar" ? "" : "revocar")} className={`${B} bg-[#FFF1E6] text-[#B54708]`}><T>Quitar verificación</T></button>}
       </div>
       {abierto && (
         <div className="mt-2 grid gap-2 rounded-xl bg-[#F8F7F2] p-3">
           <textarea className="min-h-[70px] rounded-lg border border-[#E7E4DC] bg-white p-2 text-[13px]" placeholder="Motivo (el taller lo ve y puede corregir)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
           <div className="flex gap-2">
             <button disabled={ocupado || !motivo.trim()} onClick={() => correr({ accion: abierto, motivo })} className={`${B} bg-[#142033] text-white`}>{ocupado ? "Guardando…" : "Confirmar"}</button>
-            <button onClick={() => setAbierto("")} className={`${B} bg-white text-[#40403A]`}>Cerrar</button>
+            <button onClick={() => setAbierto("")} className={`${B} bg-white text-[#40403A]`}><T>Cerrar</T></button>
           </div>
         </div>
       )}

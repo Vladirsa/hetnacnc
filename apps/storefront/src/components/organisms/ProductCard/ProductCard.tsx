@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import Image from "@/lib/imagenes/Imagen"
 import { Button } from "@/components/atoms/Button/Button"
 import { HttpTypes } from "@medusajs/types"
@@ -51,7 +52,7 @@ export const ProductCard = ({
                 alt={productName}
                 width={100}
                 height={100}
-                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 66vw"
                 className="object-contain aspect-square w-full object-center h-full lg:group-hover:-mt-14 transition-all duration-300 rounded-xs"
                 data-testid="product-card-image"
               />
@@ -63,7 +64,7 @@ export const ProductCard = ({
                 alt=""
                 width={100}
                 height={100}
-                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 66vw"
                 data-testid="product-card-placeholder-image"
               />
             )}
@@ -75,7 +76,7 @@ export const ProductCard = ({
           title={`See more about ${productName}`}
         >
           <Button className="absolute rounded-sm bg-action text-action-on-primary h-auto lg:h-[48px] lg:group-hover:block hidden w-full uppercase bottom-1 z-10" data-testid="product-card-see-more-button">
-            Ver más
+            <T>Ver más</T>
           </Button>
         </LocalizedClientLink>
       </div>
@@ -92,7 +93,7 @@ export const ProductCard = ({
                 {((product as { metadata?: Record<string, unknown> | null }).metadata)?.archivo_gratis === true
                   ? "Gratis"
                   : !cheapestPrice || !(Number(cheapestPrice.calculated_price_number) > 0)
-                    ? <span className="text-[#6B6A63]">Próximamente</span>
+                    ? <span className="text-[#6B6A63]"><T>Próximamente</T></span>
                     : cheapestPrice.calculated_price}
               </p>
               {Number(cheapestPrice?.calculated_price_number) > 0 && cheapestPrice?.calculated_price !==

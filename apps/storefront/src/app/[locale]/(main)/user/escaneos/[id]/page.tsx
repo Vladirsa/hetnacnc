@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -13,7 +15,7 @@ import {
   MODO_ETIQUETA,
 } from "@/lib/escaneos/formato"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Escaneo 3D",
 }
 
@@ -29,8 +31,8 @@ export default async function TallerEscaneoDetalle({
     if (!res.noAutenticado) notFound()
     return (
       <section className="pt-10 max-w-[620px]">
-        <h1 className="text-[24px] font-bold text-[#1B1B18]">No se pudo abrir el escaneo</h1>
-        <p className="mt-2 text-[15px] text-[#4A4943]">{res.mensaje}</p>
+        <h1 className="text-[24px] font-bold text-[#1B1B18]"><TS>No se pudo abrir el escaneo</TS></h1>
+        <p className="mt-2 text-[15px] text-[#4A4943]"><TS>{res.mensaje}</TS></p>
       </section>
     )
   }
@@ -44,7 +46,7 @@ export default async function TallerEscaneoDetalle({
         href="/user/escaneos"
         className="text-[14px] font-semibold text-[#6B6A63] hover:text-[#B34D07]"
       >
-        ← Escaneos
+        <TS>← Escaneos</TS>
       </LocalizedClientLink>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -56,7 +58,7 @@ export default async function TallerEscaneoDetalle({
         </span>
       </div>
       <p className="mt-1.5 text-[14px] text-[#6B6A63]">
-        {MODO_ETIQUETA[e.modo]} · {e.n_fotos} {e.n_fotos === 1 ? "foto" : "fotos"} · pedido{" "}
+        {MODO_ETIQUETA[e.modo]} · {e.n_fotos} {e.n_fotos === 1 ? "foto" : "fotos"} <TS>· pedido</TS>{" "}
         {fechaHora(e.created_at)}
       </p>
 
@@ -64,11 +66,11 @@ export default async function TallerEscaneoDetalle({
 
       {e.estatus === "fallido" && (
         <div className="mt-6 rounded-[12px] border border-[#E6C4BE] bg-[#FBF0EE] px-4 py-3.5 text-[14px] text-[#9B3225] leading-relaxed">
-          <strong>El escaneo no se pudo completar.</strong>
+          <strong><TS>El escaneo no se pudo completar.</TS></strong>
           {e.error ? <span className="block mt-1 font-mono text-[12px]">{e.error}</span> : null}
           {e.creditos_cobrados > 0 && (
             <span className="block mt-2">
-              Se te devolvieron {e.creditos_cobrados}{" "}
+              <TS>Se te devolvieron</TS> {e.creditos_cobrados}{" "}
               {e.creditos_cobrados === 1 ? "crédito" : "créditos"}.
             </span>
           )}
@@ -98,10 +100,15 @@ export default async function TallerEscaneoDetalle({
             ]}
           />
           {!descargas.stl && !descargas.glb && (
-            <p className="mt-3 text-[14px] text-[#6B6A63]">Este escaneo no tiene archivo STL para mostrar en 3D.</p>
+            <p className="mt-3 text-[14px] text-[#6B6A63]"><TS>Este escaneo no tiene archivo STL para mostrar en 3D.</TS></p>
           )}
         </div>
       )}
     </section>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

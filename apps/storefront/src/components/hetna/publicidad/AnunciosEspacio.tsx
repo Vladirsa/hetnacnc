@@ -3,6 +3,7 @@
 // Si no hay ninguno: no dibuja nada (no deja huecos), salvo que `invitar` esté
 // activo; entonces deja un banner "Anuncia tu taller aquí" que lleva a
 // /anunciate con el espacio ya elegido (así el espacio vacío se vende solo).
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { piezasDe } from "@/lib/publicidad/consultas"
 import { calcularMonto, pesos } from "@/lib/publicidad/precios"
@@ -61,19 +62,19 @@ export default async function AnunciosEspacio({
         📣
       </span>
       <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F2B98C]">Espacio disponible</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F2B98C]"><TS>Espacio disponible</TS></span>
         <span className="text-[16px] font-bold leading-snug">{frase}</span>
         <span className="text-[12.5px] leading-snug text-white/75">
-          Lo ven quienes buscan fabricación CNC · desde {pesos(calcularMonto(espacio, 7))} por semana
+          <TS>Lo ven quienes buscan fabricación CNC · desde</TS> {pesos(calcularMonto(espacio, 7))} <TS>por semana</TS>
         </span>
         {/* En celular, o en columnas angostas, el botón va como enlace dentro del texto */}
         <span className={`mt-1 text-[13px] font-bold text-[#F2B98C] underline-offset-2 group-hover:underline ${columnas ? "" : "sm:hidden"}`}>
-          Anúnciate →
+          <TS>Anúnciate →</TS>
         </span>
       </span>
       {!columnas && (
         <span className="relative hidden min-h-[44px] shrink-0 items-center rounded-lg bg-white px-4 text-[13.5px] font-bold text-[#142033] transition-colors group-hover:bg-[#FFF1E6] sm:inline-flex">
-          Anúnciate →
+          <TS>Anúnciate →</TS>
         </span>
       )}
     </LocalizedClientLink>
@@ -83,8 +84,8 @@ export default async function AnunciosEspacio({
     <section aria-label={titulo || "Publicidad"} className={className}>
       {titulo && (
         <div className="mb-2 flex items-center justify-between px-1">
-          <span className="text-[12px] font-bold uppercase tracking-wide text-[#6B6A63]">{titulo}</span>
-          {piezas.length > 0 && <span className="text-[11px] text-[#9A978F]">Patrocinado</span>}
+          <span className="text-[12px] font-bold uppercase tracking-wide text-[#6B6A63]"><TS>{titulo}</TS></span>
+          {piezas.length > 0 && <span className="text-[11px] text-[#9A978F]"><TS>Patrocinado</TS></span>}
         </div>
       )}
       <div className={contenedor}>

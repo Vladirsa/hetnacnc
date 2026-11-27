@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Headphones, Package, Truck, Users } from "lucide-react"
 
 const ITEMS = [
@@ -42,9 +43,9 @@ export default function BarraConfianza() {
               </span>
               <span className="flex flex-col leading-tight">
                 <span className="text-[13px] font-semibold text-[#142033]">
-                  {it.titulo}
+                  <TS>{it.titulo}</TS>
                 </span>
-                <span className="text-[11.5px] text-[#6B6A63]">{it.texto}</span>
+                <span className="text-[11.5px] text-[#6B6A63]"><TS>{it.texto}</TS></span>
               </span>
             </li>
           )

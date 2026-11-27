@@ -3,6 +3,7 @@
 // Biblioteca de recursos de la Academia: ligas a planos, guías, videos y
 // programas de otros sitios, con el crédito de la fuente. Se abren en el sitio
 // original (nueva pestaña). El filtro por categoría es en el navegador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import Image from "@/lib/imagenes/Imagen"
@@ -106,7 +107,7 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
       </div>
 
       {lista.length === 0 ? (
-        <p className="m-0 text-[14.5px] text-[#6B6A63]">No hay recursos con esa búsqueda.</p>
+        <p className="m-0 text-[14.5px] text-[#6B6A63]"><T>No hay recursos con esa búsqueda.</T></p>
       ) : (
         <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2 2xl:grid-cols-3">
           {lista.map((r) => (
@@ -127,13 +128,13 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
                 <span className="flex flex-1 flex-col gap-2.5 p-5 lg:p-6">
                   <span className="flex flex-wrap items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wide">
                     <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[#B34D07]">{TIPOS_RECURSO.find(([t]) => t === r.tipo)?.[1] || "Guía"}</span>
-                    {r.destacado && <span className="rounded-full bg-[#142033] px-2 py-0.5 text-white">Recomendado</span>}
+                    {r.destacado && <span className="rounded-full bg-[#142033] px-2 py-0.5 text-white"><T>Recomendado</T></span>}
                   </span>
-                  <span className="break-words text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]">{r.titulo}</span>
-                  {r.descripcion && <span className="line-clamp-3 text-[15px] leading-relaxed text-[#4A4943]">{r.descripcion}</span>}
+                  <span className="break-words text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]"><T>{r.titulo}</T></span>
+                  {r.descripcion && <span className="line-clamp-3 text-[15px] leading-relaxed text-[#4A4943]"><T>{r.descripcion}</T></span>}
                   <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-[13.5px] text-[#6B6A63]">
-                    <span className="truncate">Fuente: {r.fuente}</span>
-                    <span className="shrink-0 font-bold text-[#C2560A]">Abrir ↗</span>
+                    <span className="truncate"><T>Fuente:</T> {r.fuente}</span>
+                    <span className="shrink-0 font-bold text-[#C2560A]"><T>Abrir ↗</T></span>
                   </span>
                 </span>
               </a>
@@ -148,11 +149,11 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
           onClick={() => setTodos(true)}
           className="self-center rounded-[10px] border border-[#E7E4DC] bg-white px-5 py-2.5 text-[14px] font-bold text-[#1B1B18] hover:border-[#C2560A]"
         >
-          Ver los {visibles.length} recursos
+          <T>Ver los</T> {visibles.length} <T>recursos</T>
         </button>
       )}
       <p className="m-0 text-[12.5px] text-[#6B6A63]">
-        Estos materiales son de sus autores y se abren en su sitio original. HETNA sólo los recomienda.
+        <T>Estos materiales son de sus autores y se abren en su sitio original. HETNA sólo los recomienda.</T>
       </p>
     </div>
   )

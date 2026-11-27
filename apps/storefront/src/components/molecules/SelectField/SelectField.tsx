@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { CollapseIcon, TickThinIcon } from "@/icons"
@@ -75,7 +76,7 @@ export const SelectField = ({
                   )}
                   onClick={() => selectOptionHandler(label, value)}
                 >
-                  {label}
+                  <T>{label}</T>
                   {label === selectedOption && (
                     <TickThinIcon
                       className="absolute top-[10px] right-2"

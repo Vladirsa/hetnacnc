@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -18,7 +20,7 @@ import { trabajosAbiertos } from "@/lib/trabajos/datos"
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres/unete" },
   title: { absolute: "Únete a la red de talleres CNC HETNA y recibe proyectos" },
   description:
@@ -72,31 +74,31 @@ export default async function UneteTallerPage() {
       {/* Hero */}
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1200px] px-4 py-12 sm:py-16 lg:px-8">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Red de talleres HETNA</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">Lleva tu taller a más clientes</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Red de talleres HETNA</TS></p>
+          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>Lleva tu taller a más clientes</TS></h1>
           <p className="mt-4 max-w-2xl text-lg text-white/80">
-            Únete a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción CNC de clientes de todo México.
+            <TS>Únete a la red HETNA y recibe solicitudes de fabricación, corte, maquila y producción CNC de clientes de todo México.</TS>
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#registro" className={BTN}>
-              Registrar mi taller
+              <TS>Registrar mi taller</TS>
             </a>
             <a href="#como-funciona-taller" className="inline-flex items-center rounded-xl border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10">
-              Ver cómo funciona
+              <TS>Ver cómo funciona</TS>
             </a>
           </div>
           <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
-            <li>✓ Registro gratis</li>
+            <li><TS>✓ Registro gratis</TS></li>
             <li>
               <a href="#comisiones" className="underline decoration-white/40 underline-offset-2 hover:text-white">
-                ✓ Comisión más baja que Mercado Libre y Amazon
+                <TS>✓ Comisión más baja que Mercado Libre y Amazon</TS>
               </a>
             </li>
-            <li>✓ Tú eliges qué cotizar</li>
-            <li>✓ Cobro seguro antes de fabricar</li>
+            <li><TS>✓ Tú eliges qué cotizar</TS></li>
+            <li><TS>✓ Cobro seguro antes de fabricar</TS></li>
             {abiertos.total > 0 && (
               <li className="font-semibold text-[#F2A25F]">
-                {abiertos.total === 1 ? "1 trabajo esperando precio" : `${abiertos.total} trabajos esperando precio`} ahora
+                {abiertos.total === 1 ? "1 trabajo esperando precio" : `${abiertos.total} trabajos esperando precio`} <TS>ahora</TS>
               </li>
             )}
           </ul>
@@ -106,7 +108,7 @@ export default async function UneteTallerPage() {
       <div className="mx-auto max-w-[1200px] px-4 lg:px-8">
         {/* Cómo ganas dinero */}
         <section className="mt-12">
-          <h2 className={H2}>Cómo gana dinero tu taller con HETNA</h2>
+          <h2 className={H2}><TS>Cómo gana dinero tu taller con HETNA</TS></h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {COMO_GANAS.map(([t, d]) => (
               <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
@@ -126,7 +128,7 @@ export default async function UneteTallerPage() {
         {/* Qué puedes recibir */}
         <section className="mt-12">
           <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-extrabold text-[#142033]">Qué puedes recibir</h2>
+            <h2 className="text-xl font-extrabold text-[#142033]"><TS>Qué puedes recibir</TS></h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {RECIBES.map(([t, d]) => (
                 <li key={t}>
@@ -141,12 +143,12 @@ export default async function UneteTallerPage() {
         {abiertos.trabajos.length > 0 && (
           <section className="mt-12">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className={H2}>Trabajos que están esperando precio</h2>
+              <h2 className={H2}><TS>Trabajos que están esperando precio</TS></h2>
               <LocalizedClientLink href="/trabajos" className="text-sm font-semibold text-[#C2560A]">
-                Ver los {abiertos.total} →
+                <TS>Ver los</TS> {abiertos.total} →
               </LocalizedClientLink>
             </div>
-            <p className="mt-1 text-[#6B675C]">Solicitudes reales de clientes. Regístrate para cotizarlas.</p>
+            <p className="mt-1 text-[#6B675C]"><TS>Solicitudes reales de clientes. Regístrate para cotizarlas.</TS></p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {abiertos.trabajos.map((t) => (
                 <TarjetaTrabajo key={t.folio} trabajo={t} />
@@ -157,11 +159,11 @@ export default async function UneteTallerPage() {
 
         {/* Confianza */}
         <section className="mt-12 rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
-          <h2 className="text-2xl font-extrabold sm:text-3xl">Qué es HETNA y por qué unirte</h2>
+          <h2 className="text-2xl font-extrabold sm:text-3xl"><TS>Qué es HETNA y por qué unirte</TS></h2>
           <p className="mt-3 max-w-3xl text-white/80">
-            HETNA es una plataforma mexicana especializada en fabricación CNC: conecta a clientes que necesitan piezas con talleres
+            <TS>HETNA es una plataforma mexicana especializada en fabricación CNC: conecta a clientes que necesitan piezas con talleres
             que las fabrican. Los clientes llenan una solicitud estructurada (material, medidas, cantidad, fecha y archivo), HETNA la
-            revisa y la manda a los talleres compatibles, y el pago y el seguimiento pasan por la plataforma.
+            revisa y la manda a los talleres compatibles, y el pago y el seguimiento pasan por la plataforma.</TS>
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -180,25 +182,25 @@ export default async function UneteTallerPage() {
             <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3 border-t border-white/10 pt-5">
               {talleres.length > 0 && (
                 <div>
-                  <dt className="text-xs uppercase tracking-wider text-white/60">Talleres en la red</dt>
+                  <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Talleres en la red</TS></dt>
                   <dd className="text-2xl font-extrabold">{talleres.length}</dd>
                 </div>
               )}
               {verificados > 0 && (
                 <div>
-                  <dt className="text-xs uppercase tracking-wider text-white/60">Verificados</dt>
+                  <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Verificados</TS></dt>
                   <dd className="text-2xl font-extrabold">{verificados}</dd>
                 </div>
               )}
               {estados > 0 && (
                 <div>
-                  <dt className="text-xs uppercase tracking-wider text-white/60">Estados</dt>
+                  <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Estados</TS></dt>
                   <dd className="text-2xl font-extrabold">{estados}</dd>
                 </div>
               )}
               {abiertos.total > 0 && (
                 <div>
-                  <dt className="text-xs uppercase tracking-wider text-white/60">Trabajos esperando precio</dt>
+                  <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Trabajos esperando precio</TS></dt>
                   <dd className="text-2xl font-extrabold">{abiertos.total}</dd>
                 </div>
               )}
@@ -206,9 +208,9 @@ export default async function UneteTallerPage() {
           )}
           {quedanFundador > 0 && (
             <p className="mt-6 rounded-xl bg-[#C2560A] px-4 py-3 text-sm font-semibold">
-              Quedan {quedanFundador} lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.{" "}
+              <TS>Quedan</TS> {quedanFundador} <TS>lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.</TS>{" "}
               <LocalizedClientLink href="/talleres/fundadores" className="underline">
-                Ver detalles
+                <TS>Ver detalles</TS>
               </LocalizedClientLink>
             </p>
           )}
@@ -220,4 +222,9 @@ export default async function UneteTallerPage() {
       <div className="h-12" />
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

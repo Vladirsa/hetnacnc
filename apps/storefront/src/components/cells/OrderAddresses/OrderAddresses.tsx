@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Card } from "@/components/atoms/Card/Card"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { getRegion } from "@/lib/data/regions"
@@ -11,7 +12,7 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
   return (
     <Card className="px-4 grid sm:grid-cols-2 gap-4">
       <div className="flex flex-col ">
-        <h4 className="label-md text-primary">Dirección de envío</h4>
+        <h4 className="label-md text-primary"><TS>Dirección de envío</TS></h4>
         <p className="label-md text-secondary">
           {`${singleOrder.shipping_address.first_name} ${singleOrder.shipping_address.last_name}`}
         </p>
@@ -33,9 +34,9 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
         </p>
       </div>
       <div>
-        <h4 className="label-md text-primary">Dirección de facturación</h4>
+        <h4 className="label-md text-primary"><TS>Dirección de facturación</TS></h4>
         {singleOrder.billing_address.id === singleOrder.shipping_address.id ? (
-          <p className="label-md text-secondary">Igual que la dirección de envío</p>
+          <p className="label-md text-secondary"><TS>Igual que la dirección de envío</TS></p>
         ) : (
           <>
             <p className="label-md text-secondary">

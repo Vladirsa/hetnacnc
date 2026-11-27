@@ -2,6 +2,7 @@
 
 // Marcos y portarretratos (2D Studio): marco por capas con ranura para el
 // vidrio y la foto, texto grabado y pata para mesa o colgador.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { CampoNum, CampoTexto, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -87,7 +88,7 @@ export function GeneradorMarcos({ cabecera }: { cabecera?: React.ReactNode }) {
       </Seccion>
       <Seccion titulo="Nombre o fecha (grabado abajo)">
         <CampoTexto valor={leyenda} cambiar={setLeyenda} max={30} placeholder="Ej. Ana · 2026" />
-        {error && <span className="text-[12px] text-[#F6B8AE]">No se pudo cargar la letra.</span>}
+        {error && <span className="text-[12px] text-[#F6B8AE]"><T>No se pudo cargar la letra.</T></span>}
       </Seccion>
       <Seccion titulo="Soporte">
         <Opciones opciones={[{ id: "mesa", nombre: "Pata para mesa" }, { id: "colgador", nombre: "Para colgar" }, { id: "ninguno", nombre: "Sin soporte" }]} valor={soporte} cambiar={setSoporte} />

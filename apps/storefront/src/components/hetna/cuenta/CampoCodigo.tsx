@@ -3,6 +3,7 @@
 // Código de 6 dígitos para confirmar el correo (llega junto con la liga).
 // Sirve cuando la persona abre el correo en el celular pero se registró en la
 // computadora: copia el código aquí y su cuenta queda confirmada.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from 'react';
 
 import { confirmarConCodigo } from '@/lib/data/customer';
@@ -27,7 +28,7 @@ export function CampoCodigo({ email, alConfirmar }: { email: string; alConfirmar
   return (
     <div className="mt-4 text-left" data-testid="campo-codigo">
       <label htmlFor="codigo-verificacion" className="block text-md font-semibold">
-        ¿Prefieres escribir el código del correo?
+        <T>¿Prefieres escribir el código del correo?</T>
       </label>
       <div className="mt-2 flex gap-2">
         <input

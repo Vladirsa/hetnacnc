@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
@@ -151,7 +152,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
     <div className="mt-8 max-w-[760px] flex flex-col gap-8">
       {!soloScan && (
       <fieldset className="border-0 p-0 m-0">
-        <legend className="text-[18px] font-bold text-[#1B1B18] p-0">Qué necesitas</legend>
+        <legend className="text-[18px] font-bold text-[#1B1B18] p-0"><T>Qué necesitas</T></legend>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <OpcionModo
             activa={modo === "preview"}
@@ -173,33 +174,33 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
 
       {modo === "preview" && (
         <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">
-          <strong>Para que el modelo salga mejor:</strong>
+          <strong><T>Para que el modelo salga mejor:</T></strong>
           <ul className="m-0 mt-1.5 pl-5 list-disc flex flex-col gap-0.5">
-            <li>Foto real de la pieza (no un dibujo ni una captura de pantalla).</li>
-            <li>Fondo liso y de un color distinto a la pieza: una hoja blanca o una mesa lisa.</li>
-            <li>La pieza completa y centrada, tomada en ángulo (de 3/4), no de frente.</li>
-            <li>Buena luz, sin sombras fuertes ni reflejos.</li>
+            <li><T>Foto real de la pieza (no un dibujo ni una captura de pantalla).</T></li>
+            <li><T>Fondo liso y de un color distinto a la pieza: una hoja blanca o una mesa lisa.</T></li>
+            <li><T>La pieza completa y centrada, tomada en ángulo (de 3/4), no de frente.</T></li>
+            <li><T>Buena luz, sin sombras fuertes ni reflejos.</T></li>
           </ul>
           <span className="block mt-1.5">
-            La IA reconstruye la forma con una sola foto, así que no mide la pieza: el STL sale a 100 mm por su lado más
+            <T>La IA reconstruye la forma con una sola foto, así que no mide la pieza: el STL sale a 100 mm por su lado más
             largo y lo escalas en tu programa. Para medidas reales de maquinado usa el escaneo profesional. La foto se
-            procesa con Tencent Cloud (ver aviso de privacidad).
+            procesa con Tencent Cloud (ver aviso de privacidad).</T>
           </span>
         </div>
       )}
 
       {modo === "scan" && (
         <div className="rounded-[12px] border border-[#E2D3B8] bg-[#FBF5E9] px-4 py-3.5 text-[14px] text-[#6B5A2E] leading-relaxed">
-          <strong>Cómo salen bien las fotos:</strong> gira alrededor de la pieza sin moverla,
+          <strong><T>Cómo salen bien las fotos:</T></strong> <T>gira alrededor de la pieza sin moverla,
           cada toma traslapando con la anterior. Luz pareja y sin brillos. Si puedes, pon
           junto a la pieza algo de medida conocida (un calibrador, una moneda) para poder
-          verificar la escala.
+          verificar la escala.</T>
         </div>
       )}
 
       {modo === "scan" && (
         <label className="flex flex-col gap-1.5 max-w-[420px]">
-          <span className="text-[13px] font-semibold text-[#4A4943]">Medida real del lado más largo (mm)</span>
+          <span className="text-[13px] font-semibold text-[#4A4943]"><T>Medida real del lado más largo (mm)</T></span>
           <input
             className="w-full rounded-[10px] border border-[#E7E4DC] bg-white px-3.5 py-2.5 text-[15px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
             value={medida}
@@ -208,17 +209,17 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
             placeholder="Ej. 125.4"
           />
           <span className="text-[12.5px] text-[#6B6A63] leading-snug">
-            Mídelo con vernier o flexómetro. Las fotos dan la forma pero no el tamaño: con esta
-            medida escalamos el archivo para que salga en milímetros reales.
+            <T>Mídelo con vernier o flexómetro. Las fotos dan la forma pero no el tamaño: con esta
+            medida escalamos el archivo para que salga en milímetros reales.</T>
           </span>
           {medida && !medidaValida && (
-            <span className="text-[12.5px] text-[#9B3225]">Debe estar entre 5 y 3000 mm. ¿La escribiste en centímetros?</span>
+            <span className="text-[12.5px] text-[#9B3225]"><T>Debe estar entre 5 y 3000 mm. ¿La escribiste en centímetros?</T></span>
           )}
         </label>
       )}
 
       <label className="flex flex-col gap-1.5 max-w-[420px]">
-        <span className="text-[13px] font-semibold text-[#4A4943]">Nombre de la pieza</span>
+        <span className="text-[13px] font-semibold text-[#4A4943]"><T>Nombre de la pieza</T></span>
         <input
           className="w-full rounded-[10px] border border-[#E7E4DC] bg-white px-3.5 py-2.5 text-[15px] text-[#1B1B18] outline-none focus:border-[#C2560A]"
           value={titulo}
@@ -229,9 +230,9 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
 
       <div>
         <h2 className="text-[18px] font-bold text-[#1B1B18]">
-          Fotos{" "}
+          <T>Fotos</T>{" "}
           <span className="text-[14px] font-normal text-[#6B6A63]">
-            ({listas.length} de {MINIMO[modo]} mínimo)
+            ({listas.length} <T>de</T> {MINIMO[modo]} <T>mínimo)</T>
           </span>
         </h2>
 
@@ -278,7 +279,7 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
                     onClick={() => quitar(i)}
                     className="text-[13px] font-semibold text-[#9B3225] hover:underline"
                   >
-                    Quitar
+                    <T>Quitar</T>
                   </button>
                 )}
               </li>
@@ -302,8 +303,8 @@ export const SubirEscaneo = ({ creditosPorEscaneo, soloScan = false }: { credito
         </button>
         {modo === "scan" && (
           <p className="mt-2.5 text-[12px] text-[#6B6A63] leading-snug max-w-[520px]">
-            Los créditos se descuentan al mandar el trabajo. Si el escaneo falla, se
-            devuelven solos.
+            <T>Los créditos se descuentan al mandar el trabajo. Si el escaneo falla, se
+            devuelven solos.</T>
           </p>
         )}
         {error && <p role="alert" className="mt-3 text-[14px] font-medium text-[#9B3225]">{error}</p>}
@@ -334,9 +335,9 @@ const OpcionModo = ({
     }`}
   >
     <span className="flex items-baseline justify-between gap-3">
-      <span className="text-[16px] font-bold text-[#1B1B18]">{titulo}</span>
+      <span className="text-[16px] font-bold text-[#1B1B18]"><T>{titulo}</T></span>
       <span className="text-[13px] font-semibold text-[#B34D07]">{precio}</span>
     </span>
-    <span className="mt-1.5 block text-[13px] text-[#6B6A63] leading-relaxed">{descripcion}</span>
+    <span className="mt-1.5 block text-[13px] text-[#6B6A63] leading-relaxed"><T>{descripcion}</T></span>
   </button>
 )

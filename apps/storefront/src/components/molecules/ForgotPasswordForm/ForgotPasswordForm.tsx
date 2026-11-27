@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from 'react';
 
 import { zodResolver } from '@/lib/helpers/zod-resolver';
@@ -59,14 +60,14 @@ const Form = () => {
       className="mx-auto mt-6 w-full max-w-xl space-y-4 rounded-sm border p-4"
       data-testid="forgot-password-form-container"
     >
-      <h1 className="heading-md my-0 mb-2 uppercase text-primary">¿Olvidaste tu contraseña?</h1>
+      <h1 className="heading-md my-0 mb-2 uppercase text-primary"><T>¿Olvidaste tu contraseña?</T></h1>
       <p className="text-md">
-        Escribe el correo de tu cuenta y te mandamos una liga para elegir una contraseña nueva.
+        <T>Escribe el correo de tu cuenta y te mandamos una liga para elegir una contraseña nueva.</T>
       </p>
       {enviado && (
         <div className="rounded-sm border border-[#B7E0C8] bg-[#E6F4EC] p-3 text-md text-[#14683F]" role="status">
-          Listo. Si <b>{enviado}</b> tiene cuenta, te llegará un correo con la liga en unos minutos. Revisa también
-          spam o promociones. La liga dura <b>15 minutos</b>.
+          <T>Listo. Si</T> <b>{enviado}</b> <T>tiene cuenta, te llegará un correo con la liga en unos minutos. Revisa también
+          spam o promociones. La liga dura</T> <b><T>15 minutos</T></b>.
         </div>
       )}
       <form
@@ -102,7 +103,7 @@ const Form = () => {
               variant="tonal"
               className="flex w-full justify-center uppercase"
             >
-              Volver a iniciar sesión
+              <T>Volver a iniciar sesión</T>
             </Button>
           </Link>
         </div>

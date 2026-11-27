@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -8,7 +10,7 @@ import { conversacionCon } from "@/lib/foro/comunidad"
 import { secciones, sesionForo } from "@/lib/foro/consultas"
 import { urlMensajes } from "@/lib/foro/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "Mensajes | Foro CNC México" },
   robots: { index: false, follow: false },
 }
@@ -28,7 +30,7 @@ export default async function ConversacionPage({ params }: Props) {
             <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/login"} className="font-semibold text-[#B34D07] underline">
               {sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}
             </LocalizedClientLink>{" "}
-            para mandar mensajes.
+            <TS>para mandar mensajes.</TS>
           </p>
         </div>
       </main>
@@ -48,7 +50,7 @@ export default async function ConversacionPage({ params }: Props) {
     <main className="w-full bg-[#F4F1EA]">
       <div className="mx-auto flex max-w-[760px] flex-col gap-3 px-4 py-4 lg:py-6">
         <LocalizedClientLink href={urlMensajes} className="text-[14px] font-semibold text-[#B34D07] hover:underline">
-          ← Todos los mensajes
+          <TS>← Todos los mensajes</TS>
         </LocalizedClientLink>
         <div className="flex flex-col overflow-hidden rounded-[16px] border border-[#E7E4DC] bg-white">
           <div className="flex items-center justify-between gap-3 border-b border-[#F0EDE6] px-4 py-3">
@@ -65,13 +67,13 @@ export default async function ConversacionPage({ params }: Props) {
                       m.mio ? "rounded-br-[4px] bg-[#C2560A] text-white" : "rounded-bl-[4px] border border-[#E7E4DC] bg-white text-[#1B1B18]"
                     }`}
                   >
-                    {m.texto}
+                    <TS>{m.texto}</TS>
                   </p>
                   <span className="mt-0.5 text-[11.5px] text-[#9A978C]">{haceCuanto(m.creado)}</span>
                 </div>
               ))
             ) : (
-              <p className="m-auto text-center text-[14px] text-[#6B6A63]">Escríbele a {c.otro.nombre}. Preséntate y dile en qué te puede ayudar.</p>
+              <p className="m-auto text-center text-[14px] text-[#6B6A63]"><TS>Escríbele a</TS> {c.otro.nombre}<TS>. Preséntate y dile en qué te puede ayudar.</TS></p>
             )}
           </div>
           <div className="border-t border-[#F0EDE6] p-3">
@@ -81,4 +83,9 @@ export default async function ConversacionPage({ params }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

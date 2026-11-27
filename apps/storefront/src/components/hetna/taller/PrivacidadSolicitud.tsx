@@ -3,6 +3,7 @@
 // Paso "Privacidad" del formulario de solicitud (Licitaciones 3.0, Fase 1).
 // El cliente decide modalidad y, elemento por elemento, qué ven los talleres.
 // Manda sus valores en campos ocultos que lee FormSolicitudTaller.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import { miMembresia } from "@/lib/cotizar/solicitud-taller"
 
@@ -41,7 +42,8 @@ const MODALIDADES: { valor: string; titulo: string; texto: string }[] = [
 export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { dirigida: boolean; servicio?: string; material?: string; estado?: string }) {
   const [modalidad, setModalidad] = useState("publica")
   const [p, setP] = useState<Record<string, string>>(INICIAL)
-  const [redes, setRedes] = useState(false)
+  // Marcada de inicio: el anuncio trae más talleres (y altas nuevas). Quien no quiere, la desmarca.
+  const [redes, setRedes] = useState(true)
   const [abierto, setAbierto] = useState(false)
   // Fase 3: privada, restringida y "sólo verificados" son de la Membresía Empresarial
   const [miembro, setMiembro] = useState(false)
@@ -52,7 +54,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
 
   const privada = dirigida || modalidad === "privada"
   const resumen = useMemo(() => {
-    const que = [servicio, material && `en ${material}`].filter(Boolean).join(" ")
+    const que = servicio ? [servicio, material && `en ${material}`].filter(Boolean).join(" ") : material ? `un trabajo en ${material}` : ""
     const donde = p.ubicacion === "confidencial" ? "" : estado || ""
     return `Un cliente busca talleres CNC${que ? ` para ${que.toLowerCase()}` : ""}.${donde ? ` Ubicación: ${donde}.` : ""} Proyecto disponible para cotización en HETNA CNC.`
   }, [servicio, material, estado, p.ubicacion])
@@ -62,7 +64,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
       <input type="hidden" name="modalidad" value={dirigida ? "privada" : modalidad} />
       <input type="hidden" name="privacidad" value={JSON.stringify(p)} />
       <input type="hidden" name="solo_verificados" value={miembro && soloVerif ? "1" : ""} />
-      <input type="hidden" name="difundir_redes" value={redes && !privada ? "1" : ""} />
+      <input type="hidden" name="difundir_redes" value={redes && !privada ? "1" : "0"} />
 
       {!dirigida && (
         <div className="grid gap-2 sm:grid-cols-3">
@@ -74,9 +76,9 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
               className={`rounded-xl border p-3 text-sm ${bloqueada ? "cursor-not-allowed border-[#E7E4DC] bg-[#F7F6F2] opacity-70" : "cursor-pointer"} ${modalidad === m.valor ? "border-[#C2560A] bg-[#FFF6EE]" : bloqueada ? "" : "border-[#E7E4DC] bg-white hover:border-[#C2560A]"}`}
             >
               <input type="radio" name="_modalidad" value={m.valor} checked={modalidad === m.valor} disabled={bloqueada} onChange={() => setModalidad(m.valor)} className="sr-only" />
-              <span className="block font-bold text-[#142033]">{m.titulo}{bloqueada && " 🔒"}</span>
-              <span className="mt-0.5 block text-[12.5px] leading-snug text-[#6B675C]">{m.texto}</span>
-              {bloqueada && <span className="mt-1 block text-[11.5px] font-semibold text-[#C2560A]">Membresía Empresarial</span>}
+              <span className="block font-bold text-[#142033]"><T>{m.titulo}</T>{bloqueada && " 🔒"}</span>
+              <span className="mt-0.5 block text-[12.5px] leading-snug text-[#6B675C]"><T>{m.texto}</T></span>
+              {bloqueada && <span className="mt-1 block text-[11.5px] font-semibold text-[#C2560A]"><T>Membresía Empresarial</T></span>}
             </label>
             )
           })}
@@ -84,28 +86,28 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
       )}
       {!dirigida && !miembro && (
         <p className="text-[12.5px] text-[#6B675C]">
-          Las licitaciones privadas y restringidas, el resumen con IA y “sólo talleres verificados” son de la <b>Membresía Empresarial</b>, gratis por
-          ahora. Entra con tu cuenta y escríbenos por{" "}
+          <T>Las licitaciones privadas y restringidas, el resumen con IA y “sólo talleres verificados” son de la</T> <b><T>Membresía Empresarial</T></b><T>, gratis por
+          ahora. Entra con tu cuenta y escríbenos por</T>{" "}
           <a className="font-semibold text-[#C2560A] underline" href="https://wa.me/522217076014?text=Quiero%20la%20Membres%C3%ADa%20Empresarial%20de%20HETNA" target="_blank" rel="noreferrer">
-            WhatsApp
+            <T>WhatsApp</T>
           </a>{" "}
-          para activarla.
+          <T>para activarla.</T>
         </p>
       )}
       {!dirigida && miembro && (
         <label className="flex items-start gap-2 rounded-xl border border-[#E7E4DC] p-3 text-sm text-[#40403A]">
           <input type="checkbox" checked={soloVerif} onChange={(e) => setSoloVerif(e.target.checked)} className="mt-1 accent-[#C2560A]" />
           <span>
-            <b>Sólo talleres verificados por HETNA</b> (identidad y domicilio revisados). Recibirás menos propuestas, pero de talleres comprobados.
+            <b><T>Sólo talleres verificados por HETNA</T></b> <T>(identidad y domicilio revisados). Recibirás menos propuestas, pero de talleres comprobados.</T>
           </span>
         </label>
       )}
-      {dirigida && <p className="text-sm text-[#40403A]">Tu solicitud va sólo al taller que elegiste (privada).</p>}
+      {dirigida && <p className="text-sm text-[#40403A]"><T>Tu solicitud va sólo al taller que elegiste (privada).</T></p>}
 
       {modalidad === "privada" && !dirigida && (
         <div>
           <label className="mb-1 block text-[13px] font-semibold text-[#142033]" htmlFor="invitados">
-            Talleres que invitas
+            <T>Talleres que invitas</T>
           </label>
           <input
             id="invitados"
@@ -114,7 +116,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
             placeholder="Nombre de su tienda, separados por coma (ej. taller-lopez, cortes-mx)"
           />
           <span className="mt-1 block text-xs text-[#6B675C]">
-            Es el final de la liga de su tienda: hetnacnc.com/mx/talleres/<b>nombre</b>. También puedes invitar más después, desde tu liga.
+            <T>Es el final de la liga de su tienda: hetnacnc.com/mx/talleres/</T><b><T>nombre</T></b><T>. También puedes invitar más después, desde tu liga.</T>
           </span>
         </div>
       )}
@@ -128,15 +130,15 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
           className="mt-1 accent-[#C2560A]"
         />
         <span>
-          <b>🔏 Pedir acuerdo de confidencialidad (NDA)</b>. Ningún taller ve tu descripción, planos ni fotos, ni puede cotizar, hasta aceptar el
-          acuerdo. Ves en tu liga qué talleres lo aceptaron y cuándo.
+          <b><T>🔏 Pedir acuerdo de confidencialidad (NDA)</T></b><T>. Ningún taller ve tu descripción, planos ni fotos, ni puede cotizar, hasta aceptar el
+          acuerdo. Ves en tu liga qué talleres lo aceptaron y cuándo.</T>
         </span>
       </label>
 
       <div className="rounded-xl border border-[#E7E4DC] bg-[#FAF9F6]">
         <button type="button" onClick={() => setAbierto((x) => !x)} className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-[#142033]">
           <span>
-            🔒 Qué ven los talleres <span className="font-normal text-[#6B675C]">(tu contacto siempre está protegido)</span>
+            <T>🔒 Qué ven los talleres</T> <span className="font-normal text-[#6B675C]"><T>(tu contacto siempre está protegido)</T></span>
           </span>
           <span className="text-[#C2560A]">{abierto ? "Ocultar" : "Personalizar"}</span>
         </button>
@@ -145,7 +147,7 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
             {CONTROLES.map((c) => (
               <div key={c.clave}>
                 <label className="mb-1 block text-[13px] font-semibold text-[#142033]" htmlFor={`priv-${c.clave}`}>
-                  {c.titulo} <span className="font-normal text-[#8A867B]">· {c.ayuda}</span>
+                  <T>{c.titulo}</T> <span className="font-normal text-[#8A867B]">· <T>{c.ayuda}</T></span>
                 </label>
                 <select
                   id={`priv-${c.clave}`}
@@ -169,9 +171,9 @@ export function PrivacidadSolicitud({ dirigida, servicio, material, estado }: { 
         <label className="flex items-start gap-2 rounded-xl border border-[#E7E4DC] p-3 text-sm text-[#40403A]">
           <input type="checkbox" checked={redes} onChange={(e) => setRedes(e.target.checked)} className="mt-1 accent-[#C2560A]" />
           <span>
-            <b>Autorizo difundir un resumen de mi proyecto en redes sociales</b> para que lo vean más talleres. Se publica sólo esto, sin planos,
-            presupuesto confidencial ni contacto:
-            <span className="mt-1.5 block rounded-lg bg-[#F3F1EA] px-3 py-2 text-[12.5px] italic text-[#142033]">“{resumen}”</span>
+            <b><T>Autorizo difundir un resumen de mi proyecto en redes sociales</T></b> <T>para que lo vean más talleres. Se publica sólo esto, sin planos,
+            presupuesto confidencial ni contacto:</T>
+            <span className="mt-1.5 block rounded-lg bg-[#F3F1EA] px-3 py-2 text-[12.5px] italic text-[#142033]">“<T>{resumen}</T>”</span>
           </span>
         </label>
       )}

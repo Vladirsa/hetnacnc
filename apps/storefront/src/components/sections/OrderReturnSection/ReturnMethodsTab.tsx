@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Card } from "@/components/atoms/Card/Card"
 import { Checkbox } from "@/components/atoms/Checkbox/Checkbox"
 
@@ -18,12 +19,12 @@ export const ReturnMethodsTab = ({
     <>
       <div className="mb-8">
         <Card className="bg-secondary p-4">
-          <p className="label-lg uppercase">Métodos de devolución</p>
+          <p className="label-lg uppercase"><T>Métodos de devolución</T></p>
         </Card>
         <Card className="flex items-center justify-between p-4">
           {noShippingMethods ? (
             <div className="py-4 text-center font-bold heading-md w-full">
-              No hay métodos de envío disponibles
+              <T>No hay métodos de envío disponibles</T>
             </div>
           ) : (
             <ul>
@@ -43,7 +44,7 @@ export const ReturnMethodsTab = ({
       </div>
       <div>
         <Card className="bg-secondary p-4">
-          <p className="label-lg uppercase">Dirección de envío</p>
+          <p className="label-lg uppercase"><T>Dirección de envío</T></p>
         </Card>
         <Card className="p-4">
           <p className="label-lg">{seller.name}</p>

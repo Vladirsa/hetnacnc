@@ -2,6 +2,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -112,7 +113,7 @@ export const AutorChip = ({ a, cuando, size = 36 }: { a: Autor; cuando?: string;
       </div>
       {a.titular && <span className="text-[12.5px] text-[#44433D] truncate">{a.titular}</span>}
       <span className="text-[12.5px] text-[#6B6A63]">
-        {a.reputacion} pts{cuando ? ` · ${haceCuanto(cuando)}` : ""}
+        {a.reputacion} <T>pts</T>{cuando ? ` · ${haceCuanto(cuando)}` : ""}
       </span>
     </div>
   </div>
@@ -143,13 +144,13 @@ export const TarjetaTema = ({ t, mostrarSeccion = true }: { t: TemaResumen; most
         <InsigniaTema tipo={t.tipo} />
         {t.fijado && (
           <span className="text-[11.5px] font-bold text-[#6B6A63] inline-flex items-center gap-1">
-            <Ico n="pin" size={13} /> Fijado
+            <Ico n="pin" size={13} /> <T>Fijado</T>
           </span>
         )}
-        {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]">Patrocinado</span>}
+        {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]"><T>Patrocinado</T></span>}
         {t.resuelto && (
           <span className="text-[11.5px] font-bold text-[#16794F] inline-flex items-center gap-1">
-            <Ico n="check" size={13} /> Resuelto
+            <Ico n="check" size={13} /> <T>Resuelto</T>
           </span>
         )}
         {mostrarSeccion && (
@@ -160,7 +161,7 @@ export const TarjetaTema = ({ t, mostrarSeccion = true }: { t: TemaResumen; most
       </div>
       <h3 className="m-0 text-[16.5px] sm:text-[17px] leading-snug font-bold text-[#1B1B18]">
         <LocalizedClientLink href={urlTema(t)} className="hover:text-[#B34D07]">
-          {t.titulo}
+          <T>{t.titulo}</T>
         </LocalizedClientLink>
       </h3>
       {t.extracto && <p className="m-0 text-[14px] text-[#55544D] leading-relaxed line-clamp-2">{t.extracto}</p>}
@@ -220,7 +221,7 @@ export const Cuerpo = ({ texto }: { texto: string }) => (
                   {pedazo}
                   {k < arr.length - 1 && (
                     <span className="bg-[#FFF3E0] text-[#9A4A06] text-[12.5px] font-semibold px-1.5 py-[1px] rounded" title="Los tratos se hacen dentro de HETNA para que estés protegido">
-                      dato de contacto oculto
+                      <T>dato de contacto oculto</T>
                     </span>
                   )}
                 </span>
@@ -257,15 +258,15 @@ export const Paginacion = ({ pagina, total, porPagina, base }: { pagina: number;
     <nav className="flex items-center justify-center gap-2 pt-2" aria-label="Páginas">
       {pagina > 1 && (
         <LocalizedClientLink href={liga(pagina - 1)} className="px-4 py-2 rounded-[10px] border border-[#E7E4DC] bg-white text-[14px] font-semibold hover:border-[#C2560A]">
-          Anterior
+          <T>Anterior</T>
         </LocalizedClientLink>
       )}
       <span className="text-[13.5px] text-[#6B6A63] px-2">
-        Página {pagina} de {paginas}
+        <T>Página</T> {pagina} <T>de</T> {paginas}
       </span>
       {pagina < paginas && (
         <LocalizedClientLink href={liga(pagina + 1)} className="px-4 py-2 rounded-[10px] border border-[#E7E4DC] bg-white text-[14px] font-semibold hover:border-[#C2560A]">
-          Siguiente
+          <T>Siguiente</T>
         </LocalizedClientLink>
       )}
     </nav>
@@ -291,12 +292,12 @@ export const Migas = ({ items }: { items: { nombre: string; href?: string }[] })
 
 export const ForoCerrado = () => (
   <main className="w-full bg-[#FAF9F6] px-4 lg:px-16 py-16 flex flex-col items-center text-center gap-3">
-    <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]">Foro CNC México</h1>
+    <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]"><T>Foro CNC México</T></h1>
     <p className="m-0 text-[15.5px] text-[#6B6A63] max-w-[520px]">
-      El foro abre muy pronto. Aquí podrás preguntar, mostrar tus trabajos y encontrar talleres y proveedores de CNC en todo México.
+      <T>El foro abre muy pronto. Aquí podrás preguntar, mostrar tus trabajos y encontrar talleres y proveedores de CNC en todo México.</T>
     </p>
     <LocalizedClientLink href="/servicios/aprendizaje-cnc" className="mt-2 text-[14.5px] font-semibold text-[#B34D07] hover:underline">
-      Ver Aprendizaje CNC
+      <T>Ver Aprendizaje CNC</T>
     </LocalizedClientLink>
   </main>
 )

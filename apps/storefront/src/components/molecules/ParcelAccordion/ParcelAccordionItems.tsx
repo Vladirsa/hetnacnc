@@ -1,5 +1,6 @@
 'use client';
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useRef, useState } from 'react';
 
 import { Card } from '@/components/atoms/Card/Card'
@@ -50,14 +51,14 @@ export const ParcelAccordionItems = ({
         onClick={openHandler}
       >
         <p className="label-md col-span-3">
-          Order #{order.display_id}:{' '}
+          <T>Order #</T>{order.display_id}:{' '}
           <span className="font-semibold uppercase text-primary">{steps[status]}</span>
         </p>
         <p className="label-md col-span-2 px-2">
-          Seller: <span className="font-semibold text-primary">{order.seller.name}</span>
+          <T>Seller:</T> <span className="font-semibold text-primary">{order.seller.name}</span>
         </p>
         <p className="label-md col-span-2 px-2 text-center">
-          Shipping:{' '}
+          <T>Shipping:</T>{' '}
           <span
             className="font-semibold text-primary"
             data-testid={shippingPriceTestId}

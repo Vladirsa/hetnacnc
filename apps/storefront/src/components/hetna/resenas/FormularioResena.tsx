@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import { useRouter } from "next/navigation"
@@ -104,8 +105,8 @@ export const FormularioResena = ({
   if (listo) {
     return (
       <p className="rounded-[10px] bg-[#EAF3EE] px-3 py-2.5 text-[14px] leading-relaxed text-[#1E7A52]">
-        <strong>Gracias.</strong> Tu reseña se publica en cuanto la revisamos —
-        no desapareció, nada más no se ve todavía.
+        <strong><T>Gracias.</T></strong> <T>Tu reseña se publica en cuanto la revisamos —
+        no desapareció, nada más no se ve todavía.</T>
       </p>
     )
   }
@@ -113,9 +114,9 @@ export const FormularioResena = ({
   return (
     <div>
       <p className="text-[14px] font-bold text-[#1B1B18]">
-        Compraste esto. ¿Cómo te fue?
+        <T>Compraste esto. ¿Cómo te fue?</T>
       </p>
-      <p className="mt-0.5 text-[12px] text-[#6B6A63]">{titulo}</p>
+      <p className="mt-0.5 text-[12px] text-[#6B6A63]"><T>{titulo}</T></p>
 
       <div className="mt-2 flex items-center gap-1" onMouseLeave={() => setEncima(0)}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -145,7 +146,7 @@ export const FormularioResena = ({
 
       <div className="mt-2">
         <p className="text-[13px] font-semibold text-[#1B1B18]">
-          Agrega fotos de lo que recibiste <span className="font-normal text-[#6B6A63]">(opcional, hasta {MAX_FOTOS})</span>
+          <T>Agrega fotos de lo que recibiste</T> <span className="font-normal text-[#6B6A63]"><T>(opcional, hasta</T> {MAX_FOTOS})</span>
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {fotos.map((f) => (
@@ -193,7 +194,7 @@ export const FormularioResena = ({
         loading={enviando}
         className="mt-2 px-6 py-2.5 font-bold"
       >
-        Publicar reseña
+        <T>Publicar reseña</T>
       </Button>
     </div>
   )

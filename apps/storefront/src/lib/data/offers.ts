@@ -6,6 +6,8 @@ import { sdk } from '../client';
 import { getAuthHeaders } from './cookies';
 import { CACHE_TAGS, getGlobalCacheOptions } from './cache-tags';
 import { getRegion } from './regions';
+import { productoEn } from '@/i18n/datos';
+import { idiomaServidor } from '@/i18n/servidor';
 
 // All fields are `+`-prefixed so they MERGE with the route defaults instead of
 // replacing them. The defaults carry `product_variant.price_set.id` and the
@@ -15,7 +17,20 @@ import { getRegion } from './regions';
 const OFFER_FIELDS =
   '+seller.logo,+seller.banner,+seller.is_premium,+seller.metadata,' +
   '+calculated_price,+inventory_quantity,' +
-  '+product.id,+product.title,+product.handle,+product.thumbnail';
+  '+product.id,+product.title,+product.handle,+product.thumbnail,+product.metadata';
+
+// Nombre del producto en inglés (product.metadata.en_title) si la página está en inglés.
+const enIngles = async () => {
+  try {
+    return (await idiomaServidor()) === 'en';
+  } catch {
+    return false;
+  }
+};
+const ofertaEn = (o: OfferDTO): OfferDTO => {
+  const p = (o as { product?: unknown }).product;
+  return p ? ({ ...o, product: productoEn(p as never) } as OfferDTO) : o;
+};
 
 export const listOffers = async ({
   productId,
@@ -59,7 +74,7 @@ export const listOffers = async ({
       },
     } as never) as unknown as Promise<{ offers: OfferDTO[]; count: number }>
   )
-    .then(({ offers, count }) => ({ offers, count }))
+    .then(async ({ offers, count }) => ({ offers: (await enIngles()) ? offers.map(ofertaEn) : offers, count }))
     .catch(() => ({ offers: [], count: 0 }));
 };
 
@@ -86,6 +101,6 @@ export const retrieveOffer = async (
       },
     } as never) as unknown as Promise<{ offer: OfferDTO }>
   )
-    .then(({ offer }) => offer)
+    .then(async ({ offer }) => (offer && (await enIngles()) ? ofertaEn(offer) : offer))
     .catch(() => null);
 };

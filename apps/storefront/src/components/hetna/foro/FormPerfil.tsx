@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 
@@ -90,7 +91,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
   return (
     <form onSubmit={enviar} className="flex flex-col gap-6">
       <fieldset className="border-0 p-0 m-0 flex flex-col gap-2">
-        <legend className={`${etiqueta} mb-2`}>¿Qué eres?</legend>
+        <legend className={`${etiqueta} mb-2`}><T>¿Qué eres?</T></legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {(Object.keys(TIPOS_CUENTA) as TipoCuenta[]).map((t) => (
             <button
@@ -101,7 +102,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
               className={`text-left rounded-[10px] border px-3 py-2.5 ${d.tipo === t ? "border-[#C2560A] bg-[#FDEEE1]" : "border-[#E0DCD2] bg-white hover:border-[#C2560A]"}`}
             >
               <span className="block text-[14.5px] font-bold text-[#1B1B18]">{TIPOS_CUENTA[t].nombre}</span>
-              <span className="block text-[12.5px] text-[#6B6A63] leading-snug">{TIPOS_CUENTA[t].descripcion}</span>
+              <span className="block text-[12.5px] text-[#6B6A63] leading-snug"><T>{TIPOS_CUENTA[t].descripcion}</T></span>
             </button>
           ))}
         </div>
@@ -113,9 +114,9 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
           <input value={d.nombre} onChange={(e) => cambia("nombre", e.target.value)} maxLength={80} required className={campo} />
         </label>
         <label className="flex flex-col gap-2">
-          <span className={etiqueta}>Usuario</span>
+          <span className={etiqueta}><T>Usuario</T></span>
           <div className="flex items-center border border-[#E0DCD2] rounded-[10px] bg-white focus-within:border-[#C2560A] overflow-hidden">
-            <span className="pl-3.5 text-[14px] text-[#9A978C] whitespace-nowrap">foro-cnc/perfil/</span>
+            <span className="pl-3.5 text-[14px] text-[#9A978C] whitespace-nowrap"><T>foro-cnc/perfil/</T></span>
             <input
               value={d.usuario}
               onChange={(e) => {
@@ -127,8 +128,8 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
               className="flex-1 min-w-0 py-2.5 pr-3 text-[15px] focus:outline-none"
             />
           </div>
-          {disponible === false && <span className="text-[12.5px] text-[#A42A2A]">Ese usuario no está disponible.</span>}
-          {disponible === true && <span className="text-[12.5px] text-[#16794F]">Disponible</span>}
+          {disponible === false && <span className="text-[12.5px] text-[#A42A2A]"><T>Ese usuario no está disponible.</T></span>}
+          {disponible === true && <span className="text-[12.5px] text-[#16794F]"><T>Disponible</T></span>}
           {/* La liga quedó cortada (antes el límite era de 30 letras): se ofrece la completa.
               La vieja sigue funcionando y redirige a la nueva. */}
           {!nuevo && sugerida.length > d.usuario.length && sugerida.startsWith(d.usuario) && (
@@ -137,7 +138,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
               onClick={() => { setUsuarioTocado(true); cambia("usuario", sugerida) }}
               className="self-start text-left text-[13px] font-semibold text-[#B34D07] hover:underline"
             >
-              Tu liga está cortada. Usar la completa: {sugerida}
+              <T>Tu liga está cortada. Usar la completa:</T> {sugerida}
             </button>
           )}
         </label>
@@ -146,19 +147,19 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
       {!nuevo && (
         <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4">
           <div className="flex flex-col gap-2">
-            <span className={etiqueta}>Foto o logo</span>
+            <span className={etiqueta}><T>Foto o logo</T></span>
             <SubirFotos fotos={fotos} onCambio={(f) => { setGuardado(false); setFotos(f.slice(-1)) }} max={1} etiqueta="Foto" />
           </div>
           <div className="flex flex-col gap-2">
-            <span className={etiqueta}>Foto de portada</span>
+            <span className={etiqueta}><T>Foto de portada</T></span>
             <SubirFotos fotos={portada} onCambio={(f) => { setGuardado(false); setPortada(f.slice(-1)) }} max={1} etiqueta="Portada" />
-            <span className="text-[12.5px] text-[#6B6A63]">Una foto ancha de tu taller o de tus máquinas. Se ve arriba de tu perfil.</span>
+            <span className="text-[12.5px] text-[#6B6A63]"><T>Una foto ancha de tu taller o de tus máquinas. Se ve arriba de tu perfil.</T></span>
           </div>
         </div>
       )}
 
       <label className="flex flex-col gap-2">
-        <span className={etiqueta}>Acerca de</span>
+        <span className={etiqueta}><T>Acerca de</T></span>
         <textarea
           value={d.bio}
           onChange={(e) => cambia("bio", e.target.value)}
@@ -168,17 +169,17 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
           className={`${campo} resize-y leading-relaxed`}
         />
         <span className="text-[12.5px] text-[#6B6A63]">
-          {d.bio.length.toLocaleString("es-MX")} / {MAX_ACERCA.toLocaleString("es-MX")}. No pongas teléfono, WhatsApp ni correo: se ocultan solos y los clientes te escriben por Mensaje.
+          {d.bio.length.toLocaleString("es-MX")} / {MAX_ACERCA.toLocaleString("es-MX")}<T>. No pongas teléfono, WhatsApp ni correo: se ocultan solos y los clientes te escriben por Mensaje.</T>
         </span>
       </label>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="flex flex-col gap-2">
-          <span className={etiqueta}>Ciudad</span>
+          <span className={etiqueta}><T>Ciudad</T></span>
           <input value={d.ciudad} onChange={(e) => cambia("ciudad", e.target.value)} maxLength={80} className={campo} />
         </label>
         <label className="flex flex-col gap-2">
-          <span className={etiqueta}>Estado</span>
+          <span className={etiqueta}><T>Estado</T></span>
           <select value={d.estadoMx} onChange={(e) => cambia("estadoMx", e.target.value)} className={campo}>
             <option value="">Elige…</option>
             {ESTADOS_MX.map((e) => (
@@ -189,7 +190,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
       </div>
 
       <fieldset className="border-0 p-0 m-0 flex flex-col gap-2">
-        <legend className={`${etiqueta} mb-1`}>Zonas que atiendes</legend>
+        <legend className={`${etiqueta} mb-1`}><T>Zonas que atiendes</T></legend>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -197,7 +198,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
             onClick={() => { setVerEstados(false); cambia("zonas", d.zonas.includes(TODO_MEXICO) ? [] : [TODO_MEXICO]) }}
             className={`min-h-[44px] rounded-full border px-4 text-[14.5px] font-semibold ${d.zonas.includes(TODO_MEXICO) ? "border-[#C2560A] bg-[#FDEEE1] text-[#B34D07]" : "border-[#E0DCD2] bg-white text-[#44433D]"}`}
           >
-            🇲🇽 Todo México
+            <T>🇲🇽 Todo México</T>
           </button>
           <button
             type="button"
@@ -205,7 +206,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
             onClick={() => { setVerEstados(true); if (d.zonas.includes(TODO_MEXICO)) cambia("zonas", []) }}
             className={`min-h-[44px] rounded-full border px-4 text-[14.5px] font-semibold ${verEstados ? "border-[#C2560A] bg-[#FDEEE1] text-[#B34D07]" : "border-[#E0DCD2] bg-white text-[#44433D]"}`}
           >
-            Sólo algunos estados
+            <T>Sólo algunos estados</T>
           </button>
         </div>
         {verEstados && (
@@ -226,19 +227,19 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
             })}
           </div>
         )}
-        <span className="text-[12.5px] text-[#6B6A63]">Sólo estado y ciudad: tu domicilio nunca se publica.</span>
+        <span className="text-[12.5px] text-[#6B6A63]"><T>Sólo estado y ciudad: tu domicilio nunca se publica.</T></span>
       </fieldset>
 
       <div className="grid grid-cols-1 gap-4">
         <label className="flex flex-col gap-2">
-          <span className={etiqueta}>Programas que usas</span>
+          <span className={etiqueta}><T>Programas que usas</T></span>
           <input
             defaultValue={d.software.join(", ")}
             onChange={(e) => cambia("software", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))}
             placeholder={SUGERENCIAS_SOFTWARE.slice(0, 4).join(", ")}
             className={campo}
           />
-          <span className="text-[12.5px] text-[#6B6A63]">Sepáralos con comas.</span>
+          <span className="text-[12.5px] text-[#6B6A63]"><T>Sepáralos con comas.</T></span>
         </label>
       </div>
 
@@ -247,7 +248,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
         <button type="submit" disabled={pendiente || disponible === false} className="min-h-[48px] w-full sm:w-auto bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-6 py-3 rounded-[10px] text-[15.5px] disabled:opacity-50">
           {pendiente ? "Guardando…" : nuevo ? "Crear mi perfil" : "Guardar cambios"}
         </button>
-        {guardado && !nuevo && <span className="text-[14px] text-[#16794F]">Guardado</span>}
+        {guardado && !nuevo && <span className="text-[14px] text-[#16794F]"><T>Guardado</T></span>}
       </div>
     </form>
   )

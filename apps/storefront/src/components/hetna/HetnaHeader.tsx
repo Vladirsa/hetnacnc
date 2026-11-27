@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Suspense } from "react"
 import Image from "@/lib/imagenes/Imagen"
 import { HttpTypes } from "@medusajs/types"
@@ -68,7 +69,7 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
       {/* Barra superior (solo computadora; se esconde al bajar) */}
       <OcultarAlBajar tambienEscritorio>
         <div className="hidden md:flex bg-[#0F1826] text-[#C9D2E0] text-[12px] px-4 lg:px-16 py-2 justify-between items-center">
-          <span>Envíos a toda la República Mexicana</span>
+          <span><TS>Envíos a toda la República Mexicana</TS></span>
           <div className="flex gap-5 items-center">
             {whatsapp && (
               <a
@@ -77,11 +78,11 @@ export const HetnaHeader = async ({ locale }: { locale: string }) => {
                 rel="noopener noreferrer"
                 className="hover:text-white"
               >
-                Ayuda por WhatsApp
+                <TS>Ayuda por WhatsApp</TS>
               </a>
             )}
             <a href="/seller" className="hover:text-white">
-              Vender en HETNA CNC
+              <TS>Vender en HETNA CNC</TS>
             </a>
             <div className="flex gap-3 items-center border-l border-[#23324A] pl-4">
               {redes.map((r) => (

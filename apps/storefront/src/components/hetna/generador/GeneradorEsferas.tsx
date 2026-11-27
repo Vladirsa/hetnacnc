@@ -2,6 +2,7 @@
 
 // Esferas navideñas con nombre (2D Studio, Decoración): una esfera de una
 // sola pieza por cada nombre, lista para corte láser, plotter o impresión.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 
@@ -142,8 +143,8 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
           placeholder={"Sofía\nMateo\nAbuela"}
           className="w-full resize-y rounded-[8px] bg-[#1C2431] px-3 py-2.5 text-[15px] font-semibold text-white outline-none placeholder:text-[#5B6880] focus:ring-1 focus:ring-[#C2560A]"
         />
-        <span className="text-[12px] text-[#8A97AB]">Cada nombre sale en su propia esfera, todas en el mismo archivo.</span>
-        {sobran && <span className="text-[12px] text-[#F6B8AE]">Sólo se usan los primeros {MAX_NOMBRES} nombres.</span>}
+        <span className="text-[12px] text-[#8A97AB]"><T>Cada nombre sale en su propia esfera, todas en el mismo archivo.</T></span>
+        {sobran && <span className="text-[12px] text-[#F6B8AE]"><T>Sólo se usan los primeros</T> {MAX_NOMBRES} <T>nombres.</T></span>}
       </Seccion>
       <Seccion titulo="Letra">
         <select
@@ -168,19 +169,19 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
             cambiar={(v) => setMayusculas(v === "si")}
           />
         )}
-        {error && <span className="text-[12px] text-[#F6B8AE]">No se pudo cargar la letra. Revisa tu conexión o elige otra.</span>}
+        {error && <span className="text-[12px] text-[#F6B8AE]"><T>No se pudo cargar la letra. Revisa tu conexión o elige otra.</T></span>}
       </Seccion>
       <Seccion titulo="Tamaño">
         <CampoNum etiqueta="Ancho de la esfera" valor={ancho} cambiar={setAncho} sufijo="mm" />
         <span className="text-[12px] text-[#8A97AB]">
-          {Math.round(D)} × {Math.round(marco.medidas.alto)} mm con la argolla. De 40 a 300 mm.
+          {Math.round(D)} × {Math.round(marco.medidas.alto)} <T>mm con la argolla. De 40 a 300 mm.</T>
         </span>
       </Seccion>
       <Seccion titulo="3D e impresión 3D">
         <div className="grid grid-cols-2 gap-2">
           <CampoNum etiqueta="Grosor" valor={grosor} cambiar={setGrosor} sufijo="mm" />
           <label className="flex min-w-0 flex-col gap-1">
-            <span className="text-[12.5px] text-[#C9D2E0]">Material</span>
+            <span className="text-[12.5px] text-[#C9D2E0]"><T>Material</T></span>
             <select
               value={material}
               onChange={(e) => setMaterial(e.target.value as typeof material)}
@@ -201,7 +202,7 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
             onClick={() => setVer3D(true)}
             className="rounded-[8px] bg-[#243045] px-2 py-2.5 text-[13px] font-semibold text-white ring-1 ring-[#C2560A] hover:bg-[#2C3A52] disabled:opacity-50"
           >
-            Ver en 3D
+            <T>Ver en 3D</T>
           </button>
           <button
             type="button"
@@ -209,10 +210,10 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
             onClick={descargarSTL}
             className="rounded-[8px] bg-[#1C2431] px-2 py-2.5 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045] disabled:opacity-50"
           >
-            Descargar STL
+            <T>Descargar STL</T>
           </button>
         </div>
-        <span className="text-[12px] text-[#8A97AB]">El grosor y el material sólo cambian la vista 3D y el STL; el DXF y el SVG siguen siendo el corte en 2D.</span>
+        <span className="text-[12px] text-[#8A97AB]"><T>El grosor y el material sólo cambian la vista 3D y el STL; el DXF y el SVG siguen siendo el corte en 2D.</T></span>
         {aviso3D && <span className="text-[12px] text-[#F6B8AE]">{aviso3D}</span>}
       </Seccion>
     </div>
@@ -225,14 +226,14 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
           <div className="w-full max-w-[960px] overflow-hidden rounded-[14px] border border-[#1F2937] bg-[#0F151E]">
             <div className="flex items-center justify-between gap-3 border-b border-[#1F2937] px-4 py-2.5">
               <span className="text-[14px] font-semibold text-white">
-                Vista 3D · {MATERIALES.find((x) => x.id === material)?.nombre} de {G} mm
+                <T>Vista 3D ·</T> {MATERIALES.find((x) => x.id === material)?.nombre} <T>de</T> {G} <T>mm</T>
               </span>
               <div className="flex gap-2">
                 <button type="button" onClick={descargarSTL} className="rounded-[8px] bg-[#C2560A] px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-[#A84A08]">
-                  Descargar STL
+                  <T>Descargar STL</T>
                 </button>
                 <button type="button" onClick={() => setVer3D(false)} className="rounded-[8px] bg-[#1C2431] px-3 py-1.5 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
-                  Cerrar
+                  <T>Cerrar</T>
                 </button>
               </div>
             </div>
@@ -277,7 +278,7 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
         ["Esferas", String(r.n)],
         ...(r.soportes ? ([["Soportes agregados", String(r.soportes)]] as [string, string][]) : []),
       ]}
-      vacio={!fuente && !error ? <span className="text-[13px] text-[#8A97AB]">Cargando la letra…</span> : undefined}
+      vacio={!fuente && !error ? <span className="text-[13px] text-[#8A97AB]"><T>Cargando la letra…</T></span> : undefined}
       />
     </>
   )

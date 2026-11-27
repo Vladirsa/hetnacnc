@@ -1,6 +1,8 @@
 // /mx/anunciate — kit de medios y compra de publicidad. Los números (vistas al
 // mes y % de clics por espacio) son reales: salen de los anuncios que ya
 // corrieron en HETNA (lib/publicidad/consultas.ts metricasEspacios).
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import FormAnunciate, { type EspacioVenta } from "@/components/hetna/publicidad/FormAnunciate"
@@ -9,7 +11,7 @@ import { metricasEspacios } from "@/lib/publicidad/consultas"
 import { calcularMonto, miles, PAQUETES_VISTAS, pesos, PRECIO_30_DIAS, PRECIO_MIL_VISTAS } from "@/lib/publicidad/precios"
 import { ESPACIOS, ORDEN_ESPACIOS, nombreCorto } from "@/lib/publicidad/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "Publicidad en HETNA CNC: anuncia tu taller o tu marca" },
   description:
     "Pon tu taller, tus productos o tu marca frente a la comunidad CNC de México. Elige el espacio, paga por semana, mes, año o por vistas, y mide tus clics en tu panel.",
@@ -69,13 +71,13 @@ export default async function Anunciate({ searchParams }: Props) {
     <main className="w-full bg-[#FAF9F6]">
       <div className="max-w-[1080px] mx-auto px-4 lg:px-8 py-8 lg:py-12 flex flex-col gap-10">
         <header className="flex flex-col gap-4">
-          <p className="m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-[#B34D07]">Publicidad en HETNA CNC</p>
+          <p className="m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-[#B34D07]"><TS>Publicidad en HETNA CNC</TS></p>
           <h1 className="m-0 font-display text-[30px] sm:text-[42px] leading-[1.1] font-bold text-[#1B1B18]">
-            Pon tu taller o tu marca frente a quien compra y fabrica con CNC
+            <TS>Pon tu taller o tu marca frente a quien compra y fabrica con CNC</TS>
           </h1>
           <p className="m-0 max-w-[760px] text-[16px] leading-relaxed text-[#44433D]">
-            HETNA reúne a talleres, makers y empresas que buscan diseños, servicios de corte y maquinado, máquinas y herramientas. Tu anuncio sale donde
-            ellos ya están mirando: el inicio, la tienda, las fichas de producto, el directorio de talleres, el cotizador y el foro.
+            <TS>HETNA reúne a talleres, makers y empresas que buscan diseños, servicios de corte y maquinado, máquinas y herramientas. Tu anuncio sale donde
+            ellos ya están mirando: el inicio, la tienda, las fichas de producto, el directorio de talleres, el cotizador y el foro.</TS>
           </p>
           <ul className="m-0 grid gap-2 p-0 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -94,24 +96,24 @@ export default async function Anunciate({ searchParams }: Props) {
 
         <section aria-labelledby="t-espacios" className="flex flex-col gap-3">
           <h2 id="t-espacios" className="m-0 text-[24px] font-bold text-[#1B1B18]">
-            Espacios y tarifas
+            <TS>Espacios y tarifas</TS>
           </h2>
           <p className="m-0 text-[14px] text-[#6B6A63]">
-            Vistas y clics reales de los anuncios que ya corrieron en HETNA; se actualizan cada hora.
-            {ctrPromedio != null && <> Hoy, en promedio, {ctrPromedio}% de quienes ven un anuncio le dan clic.</>}
+            <TS>Vistas y clics reales de los anuncios que ya corrieron en HETNA; se actualizan cada hora.</TS>
+            {ctrPromedio != null && <> <TS>Hoy, en promedio,</TS> {ctrPromedio}<TS>% de quienes ven un anuncio le dan clic.</TS></>}
           </p>
           <div className="overflow-x-auto rounded-[14px] border border-[#E7E4DC] bg-white">
             <table className="w-full min-w-[860px] border-collapse text-left text-[13.5px]">
               <thead className="bg-[#F4F1EA] text-[12px] uppercase tracking-wide text-[#6B6A63]">
                 <tr>
-                  <th className="px-3 py-2.5">Espacio</th>
-                  <th className="px-3 py-2.5 text-right">Vistas al mes</th>
-                  <th className="px-3 py-2.5 text-right">Clics</th>
-                  <th className="px-3 py-2.5 text-right">Semana</th>
-                  <th className="px-3 py-2.5 text-right">Mes</th>
-                  <th className="px-3 py-2.5 text-right">3 meses</th>
-                  <th className="px-3 py-2.5 text-right">Año</th>
-                  <th className="px-3 py-2.5 text-right">1,000 vistas</th>
+                  <th className="px-3 py-2.5"><TS>Espacio</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>Vistas al mes</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>Clics</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>Semana</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>Mes</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>3 meses</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>Año</TS></th>
+                  <th className="px-3 py-2.5 text-right"><TS>1,000 vistas</TS></th>
                   <th className="px-3 py-2.5" />
                 </tr>
               </thead>
@@ -123,7 +125,7 @@ export default async function Anunciate({ searchParams }: Props) {
                       <p className="m-0 mt-0.5 max-w-[320px] text-[12.5px] leading-snug text-[#6B6A63]">{e.donde}</p>
                       <p className="m-0 mt-0.5 text-[12px] text-[#9A978F]">{e.medidas}</p>
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums">{e.vistasMes ? miles(e.vistasMes) : <span className="text-[#9A978F]">nuevo</span>}</td>
+                    <td className="px-3 py-3 text-right tabular-nums">{e.vistasMes ? miles(e.vistasMes) : <span className="text-[#9A978F]"><TS>nuevo</TS></span>}</td>
                     <td className="px-3 py-3 text-right tabular-nums">
                       {metricas[e.id]?.ctr != null ? `${metricas[e.id].ctr}%` : <span className="text-[#9A978F]">—</span>}
                     </td>
@@ -134,7 +136,7 @@ export default async function Anunciate({ searchParams }: Props) {
                     <td className="px-3 py-3 text-right tabular-nums">{pesos(e.milVistas)}</td>
                     <td className="px-3 py-3">
                       <a href={`?espacio=${e.id}#comprar`} className="inline-flex min-h-[40px] items-center rounded-[10px] border border-[#C2560A] px-3 text-[13px] font-bold text-[#B34D07] hover:bg-[#FFF6EE]">
-                        Elegir
+                        <TS>Elegir</TS>
                       </a>
                     </td>
                   </tr>
@@ -143,52 +145,52 @@ export default async function Anunciate({ searchParams }: Props) {
             </table>
           </div>
           <p className="m-0 text-[12.5px] text-[#6B6A63]">
-            Semana: para probar (sale más cara por día). 3 meses: 10% menos. Año: 25% menos. Paquetes de vistas: {PAQUETES_VISTAS.map((v) => miles(v)).join(", ")}.
+            <TS>Semana: para probar (sale más cara por día). 3 meses: 10% menos. Año: 25% menos. Paquetes de vistas:</TS> {PAQUETES_VISTAS.map((v) => miles(v)).join(", ")}.
           </p>
         </section>
 
         <section aria-labelledby="t-formas" className="grid gap-4 md:grid-cols-2">
           <h2 id="t-formas" className="sr-only">
-            Formas de pagar
+            <TS>Formas de pagar</TS>
           </h2>
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
-            <p className="m-0 text-[17px] font-bold text-[#1B1B18]">Por tiempo</p>
+            <p className="m-0 text-[17px] font-bold text-[#1B1B18]"><TS>Por tiempo</TS></p>
             <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#44433D]">
-              Ideal para talleres y proveedores: tu anuncio sale todos los días del periodo. Si en el espacio hay más anuncios que lugares, se turnan
-              para que todos salgan.
+              <TS>Ideal para talleres y proveedores: tu anuncio sale todos los días del periodo. Si en el espacio hay más anuncios que lugares, se turnan
+              para que todos salgan.</TS>
             </p>
           </div>
           <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
-            <p className="m-0 text-[17px] font-bold text-[#1B1B18]">Por vistas</p>
+            <p className="m-0 text-[17px] font-bold text-[#1B1B18]"><TS>Por vistas</TS></p>
             <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#44433D]">
-              Ideal para marcas: compras un número de vistas garantizadas y tu anuncio sale hasta cumplirlas. Si tarda más de lo estimado, sigue
-              saliendo sin costo.
+              <TS>Ideal para marcas: compras un número de vistas garantizadas y tu anuncio sale hasta cumplirlas. Si tarda más de lo estimado, sigue
+              saliendo sin costo.</TS>
             </p>
           </div>
         </section>
 
         <section aria-labelledby="t-comprar" className="flex flex-col gap-3">
           <h2 id="t-comprar" className="m-0 text-[24px] font-bold text-[#1B1B18]">
-            Contrata tu anuncio
+            <TS>Contrata tu anuncio</TS>
           </h2>
           {hayError && (
             <p role="alert" className="m-0 bg-[#FFF6E8] border border-[#F2C98F] text-[#5A3A12] rounded-[12px] px-4 py-3 text-[14px]">
-              El pago no se completó. No se te cobró nada. Puedes intentarlo de nuevo.
+              <TS>El pago no se completó. No se te cobró nada. Puedes intentarlo de nuevo.</TS>
             </p>
           )}
           <FormAnunciate espacios={espacios} inicial={espacio} />
           <p className="m-0 text-[13.5px] text-[#6B6A63]">
-            ¿Una campaña en varios espacios o por más tiempo?{" "}
+            <TS>¿Una campaña en varios espacios o por más tiempo?</TS>{" "}
             <LocalizedClientLink href="/contacto" className="font-semibold text-[#B34D07] underline">
-              Escríbenos desde Contacto
+              <TS>Escríbenos desde Contacto</TS>
             </LocalizedClientLink>{" "}
-            y te armamos un paquete.
+            <TS>y te armamos un paquete.</TS>
           </p>
         </section>
 
         <section aria-labelledby="t-faq" className="flex flex-col gap-2">
           <h2 id="t-faq" className="m-0 text-[24px] font-bold text-[#1B1B18]">
-            Preguntas frecuentes
+            <TS>Preguntas frecuentes</TS>
           </h2>
           <div className="divide-y divide-[#F0EDE6] rounded-[14px] border border-[#E7E4DC] bg-white px-5">
             {PREGUNTAS.map((p) => (
@@ -207,4 +209,9 @@ export default async function Anunciate({ searchParams }: Props) {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

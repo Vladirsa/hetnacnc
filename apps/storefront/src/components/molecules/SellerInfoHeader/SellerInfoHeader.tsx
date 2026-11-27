@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
 import { SellerAvatar } from "@/components/cells/SellerAvatar/SellerAvatar"
 import { CollapseIcon } from "@/icons"
@@ -34,7 +35,7 @@ export const SellerInfoHeader = ({
       {showReviews && (
         <div className="flex items-center gap-2">
           <StarRating starSize={14} rate={rating || 0} />
-          <span className="label-md text-secondary">{reviewCount} reviews</span>
+          <span className="label-md text-secondary">{reviewCount} <TS>reviews</TS></span>
         </div>
       )}
     </div>

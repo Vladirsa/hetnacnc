@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -54,15 +55,15 @@ export function SubirArchivosEscanear({ id }: { id: string }) {
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         <label className={`${boton} ${ocupado ? "pointer-events-none opacity-60" : ""}`}>
-          Subir escaneo (STL, OBJ, PLY, 3MF, ZIP)
+          <T>Subir escaneo (STL, OBJ, PLY, 3MF, ZIP)</T>
           <input type="file" className="sr-only" accept=".stl,.obj,.ply,.3mf,.zip" multiple onChange={(e) => elegir(e.target.files, "escaneo")} />
         </label>
         <label className={`${boton} ${ocupado ? "pointer-events-none opacity-60" : ""}`}>
-          Subir fotos
+          <T>Subir fotos</T>
           <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => elegir(e.target.files, "foto")} />
         </label>
       </div>
-      <p className="m-0 text-[12.5px] text-[#6B6A63]">Hasta {MAX_MB} MB por archivo. Si la pieza está rota, sube todos los fragmentos y, si existe, la pieza gemela sana.</p>
+      <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>Hasta</T> {MAX_MB} <T>MB por archivo. Si la pieza está rota, sube todos los fragmentos y, si existe, la pieza gemela sana.</T></p>
       {estado && <p className="m-0 text-[13px] text-[#0E2A5C]">{estado}</p>}
       {error && <p className="m-0 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[13.5px] text-[#9B1C1C]">{error}</p>}
     </div>

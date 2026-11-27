@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 /**
  * EstadisticasConfianza.tsx
  * Sección de Trust — Estadísticas animadas + Testimonios
@@ -115,7 +116,7 @@ function CounterAnimado({ numero, label, isVisible }: CounterProps) {
         {displayNumber}
         {numero >= 100 && numero !== Math.floor(numero) && '%'}
       </div>
-      <p className="text-gray-700 font-medium">{label}</p>
+      <p className="text-gray-700 font-medium"><TS>{label}</TS></p>
     </div>
   )
 }
@@ -136,7 +137,7 @@ function TestimonioCard({ testimonio }: { testimonio: Testimonio }) {
 
       {/* Mensaje */}
       <p className="text-gray-700 mb-3 leading-relaxed italic">
-        "{testimonio.mensaje}"
+        "<TS>{testimonio.mensaje}</TS>"
       </p>
 
       {/* Autor */}
@@ -180,7 +181,7 @@ export default function EstadisticasConfianza() {
         {/* Sección de Estadísticas */}
         <div className="mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-6">
-            Números que hablan por nosotros
+            <TS>Números que hablan por nosotros</TS>
           </h2>
 
           {/* Grid de estadísticas */}
@@ -209,10 +210,10 @@ export default function EstadisticasConfianza() {
         {/* Sección de Testimonios */}
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-2">
-            Lo que dicen nuestros clientes
+            <TS>Lo que dicen nuestros clientes</TS>
           </h2>
           <p className="text-gray-600 text-center mb-4 max-w-2xl mx-auto">
-            Empresas de todo México confían en HETNA para sus proyectos de fabricación.
+            <TS>Empresas de todo México confían en HETNA para sus proyectos de fabricación.</TS>
           </p>
 
           {/* Grid de testimonios */}
@@ -231,7 +232,7 @@ export default function EstadisticasConfianza() {
               href="/testimonios"
               className="inline-block text-green-600 hover:text-green-700 font-semibold transition-colors duration-300"
             >
-              Ver más testimonios y casos de éxito →
+              <TS>Ver más testimonios y casos de éxito →</TS>
             </a>
           </div>
         </div>

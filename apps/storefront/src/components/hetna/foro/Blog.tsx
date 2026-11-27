@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { type ArticuloResumen, urlArticulo } from "@/lib/foro/blog"
 import type { Cta } from "@/lib/foro/cta"
@@ -30,9 +31,9 @@ export const BloqueBlog = ({ articulos }: { articulos: ArticuloResumen[] }) =>
   articulos.length ? (
     <section className="bg-white border border-[#E7E4DC] rounded-[12px] p-4 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]">Guías y artículos del blog</h2>
+        <h2 className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>Guías y artículos del blog</TS></h2>
         <LocalizedClientLink href="/foro-cnc/blog" className="text-[13px] font-semibold text-[#C2560A]">
-          Ver todo el blog →
+          <TS>Ver todo el blog →</TS>
         </LocalizedClientLink>
       </div>
       <div className="grid gap-2.5 sm:grid-cols-3">
@@ -47,7 +48,7 @@ export const BloqueBlog = ({ articulos }: { articulos: ArticuloResumen[] }) =>
 export const GuiasSeccion = ({ guias }: { guias: ArticuloResumen[] }) =>
   guias.length ? (
     <section className="bg-[#EEF6EE] border border-[#B9DCC4] rounded-[12px] p-4 flex flex-col gap-2.5">
-      <p className="m-0 text-[13px] font-bold text-[#16794F]">📌 Antes de preguntar, revisa la guía de esta sección</p>
+      <p className="m-0 text-[13px] font-bold text-[#16794F]"><TS>📌 Antes de preguntar, revisa la guía de esta sección</TS></p>
       <div className="grid gap-2.5 sm:grid-cols-2">
         {guias.map((a) => (
           <TarjetaArticulo key={a.id} a={a} compacta />
@@ -60,7 +61,7 @@ export const GuiasSeccion = ({ guias }: { guias: ArticuloResumen[] }) =>
 export const BotonesServicio = ({ ctas, titulo = "Si prefieres resolverlo ya" }: { ctas: Cta[]; titulo?: string }) =>
   ctas.length ? (
     <section className="flex flex-col gap-2.5">
-      <p className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">{titulo}</p>
+      <p className="m-0 text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>{titulo}</TS></p>
       <div className={`grid gap-3 ${ctas.length > 1 ? "sm:grid-cols-2" : ""}`}>
         {ctas.map((c) => (
           <LocalizedClientLink
@@ -68,10 +69,10 @@ export const BotonesServicio = ({ ctas, titulo = "Si prefieres resolverlo ya" }:
             href={c.href}
             className="group flex flex-col gap-1 rounded-[14px] border border-[#F2C98F] bg-[#FFF6E8] p-4 hover:border-[#C2560A]"
           >
-            <span className="text-[15px] font-bold text-[#1B1B18]">{c.titulo}</span>
-            <span className="text-[13.5px] text-[#5A3A12]">{c.texto}</span>
+            <span className="text-[15px] font-bold text-[#1B1B18]"><TS>{c.titulo}</TS></span>
+            <span className="text-[13.5px] text-[#5A3A12]"><TS>{c.texto}</TS></span>
             <span className="mt-1 self-start rounded-full bg-[#C2560A] px-3.5 py-1.5 text-[13px] font-semibold text-white group-hover:bg-[#A84A08]">
-              {c.boton} →
+              <TS>{c.boton}</TS> →
             </span>
           </LocalizedClientLink>
         ))}

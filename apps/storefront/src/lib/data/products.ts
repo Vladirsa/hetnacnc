@@ -10,6 +10,7 @@ import { sdk } from '../client';
 import { getAuthHeaders } from './cookies';
 import { CACHE_TAGS, getGlobalCacheOptions } from './cache-tags';
 import { getRegion, retrieveRegion } from './regions';
+import { localizarProducto, localizarProductos } from '@/i18n/datos';
 
 const PRODUCT_LIST_FIELDS =
   '*variants.calculated_price,+variants.inventory_quantity,*variants.options,*attribute_values,*attribute_values.attribute';
@@ -123,7 +124,7 @@ export const listProducts = async ({
       ? JSON.stringify([region.id, queryParams, category_id, collection_id, offset])
       : null;
 
-  return (
+  const resultado = await (
     sdk.store.products.query({
       category_id,
       collection_id,
@@ -167,6 +168,11 @@ export const listProducts = async ({
         fallo: true,
       };
     });
+  // Texto en inglés (product.metadata.en_*) sólo si la página está en inglés.
+  return {
+    ...resultado,
+    response: { ...resultado.response, products: await localizarProductos(resultado.response.products) },
+  };
 };
 
 export const listProductsWithSort = async ({
@@ -234,7 +240,7 @@ export const getProductByHandle = async (handle: string, regionId: string) => {
         next,
       },
     } as never) as unknown as Promise<{ products: HttpTypes.StoreProduct[] }>
-  ).then(({ products }) => products[0]);
+  ).then(({ products }) => localizarProducto(products[0]));
 };
 
 /**
@@ -330,7 +336,7 @@ export const searchProducts = async ({
     }
     const lista = filtrarYOrdenar(todos, { min: minPrice, max: maxPrice, disponible: onlyAvailable, licencia }, sortBy);
     return {
-      products: lista.slice(offset, offset + limit),
+      products: await localizarProductos(lista.slice(offset, offset + limit)),
       count: lista.length,
       nextPage: lista.length > offset + limit ? page + 1 : null,
     };
@@ -340,5 +346,5 @@ export const searchProducts = async ({
 
   const nextPage = count > offset + limit ? page + 1 : null;
 
-  return { products, count, nextPage };
+  return { products: await localizarProductos(products), count, nextPage };
 };

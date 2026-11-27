@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { MarcarLeidos } from "@/components/hetna/foro/ComunidadCliente"
@@ -8,7 +10,7 @@ import { avisosDe } from "@/lib/foro/comunidad"
 import { secciones, sesionForo } from "@/lib/foro/consultas"
 import type { TipoAviso } from "@/lib/foro/tipos"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: { absolute: "Avisos | Foro CNC México" },
   robots: { index: false, follow: false },
 }
@@ -40,10 +42,10 @@ export default async function Avisos() {
         <div className="flex min-w-0 max-w-[760px] flex-col gap-3">
           <ChipsSecciones secciones={secs} />
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h1 className="m-0 text-[24px] font-extrabold text-[#142033]">Avisos</h1>
+            <h1 className="m-0 text-[24px] font-extrabold text-[#142033]"><TS>Avisos</TS></h1>
             {p && (
               <LocalizedClientLink href="/foro-cnc/mi-perfil#avisos" className="text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                Avisos por correo: configurar
+                <TS>Avisos por correo: configurar</TS>
               </LocalizedClientLink>
             )}
           </div>
@@ -63,7 +65,7 @@ export default async function Avisos() {
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14.5px] leading-snug text-[#1B1B18]">
                         <span aria-hidden="true">{ICONO[a.tipo]} </span>
-                        {a.texto}
+                        <TS>{a.texto}</TS>
                       </span>
                       <span className="text-[12.5px] text-[#6B6A63]">{haceCuanto(a.creado)}</span>
                     </span>
@@ -74,7 +76,7 @@ export default async function Avisos() {
             </ul>
           ) : (
             <p className="m-0 rounded-[12px] border border-dashed border-[#D9D4C8] bg-white p-8 text-center text-[15px] text-[#6B6A63]">
-              Aún no tienes avisos. Aquí te avisamos cuando te respondan, te sigan, te escriban o te pidan una respuesta.
+              <TS>Aún no tienes avisos. Aquí te avisamos cuando te respondan, te sigan, te escriban o te pidan una respuesta.</TS>
             </p>
           )}
           <MarcarLeidos hay={sinLeer} />
@@ -82,4 +84,9 @@ export default async function Avisos() {
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

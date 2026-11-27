@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -13,7 +15,7 @@ import { verSolicitud } from "@/lib/cotizar/solicitud-taller"
 
 export const dynamic = "force-dynamic"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mis propuestas",
   robots: { index: false, follow: false },
 }
@@ -50,8 +52,8 @@ export default async function PropuestasPage({
 
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 pb-16 pt-8 lg:px-6">
-      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]">Folio {s.folio}</p>
-      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]">Tu solicitud de fabricación</h1>
+      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Folio</TS> {s.folio}</p>
+      <h1 className="mt-1 text-3xl font-extrabold text-[#142033]"><TS>Tu solicitud de fabricación</TS></h1>
       <p className="mt-2 text-[#6B675C]">
         {s.estado === "revision"
           ? "Estamos revisando tu solicitud. En cuanto la aprobemos la enviamos a los talleres y te avisamos por correo."
@@ -66,22 +68,22 @@ export default async function PropuestasPage({
 
       {pago === "ok" && (
         <p className="mt-4 rounded-xl bg-[#E6F4EA] p-3 text-sm font-semibold text-[#1E7B3A]">
-          ¡Gracias! Recibimos tu pago. En unos minutos se refleja aquí.
+          <TS>¡Gracias! Recibimos tu pago. En unos minutos se refleja aquí.</TS>
         </p>
       )}
       {pago === "stripe" && (
         <p className="mt-4 rounded-xl bg-[#E6F4EA] p-3 text-sm font-semibold text-[#1E7B3A]">
-          ¡Gracias! Si pagaste con tarjeta, se refleja aquí en unos minutos. Si elegiste OXXO o transferencia SPEI, paga con la ficha que te dio Stripe: te avisamos por correo cuando llegue.
+          <TS>¡Gracias! Si pagaste con tarjeta, se refleja aquí en unos minutos. Si elegiste OXXO o transferencia SPEI, paga con la ficha que te dio Stripe: te avisamos por correo cuando llegue.</TS>
         </p>
       )}
       {pago === "pendiente" && (
         <p className="mt-4 rounded-xl bg-[#FFF1E6] p-3 text-sm font-semibold text-[#C2560A]">
-          Tu pago está en proceso. Te avisamos por correo en cuanto se confirme.
+          <TS>Tu pago está en proceso. Te avisamos por correo en cuanto se confirme.</TS>
         </p>
       )}
       {pago === "error" && (
         <p className="mt-4 rounded-xl bg-[#FDECEA] p-3 text-sm font-semibold text-[#B3261E]">
-          El pago no se completó. Puedes intentarlo de nuevo abajo.
+          <TS>El pago no se completó. Puedes intentarlo de nuevo abajo.</TS>
         </p>
       )}
 
@@ -95,10 +97,10 @@ export default async function PropuestasPage({
           className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4 hover:border-[#C2560A]"
         >
           <span>
-            <span className="block font-bold text-[#142033]">Expediente del proyecto</span>
-            <span className="block text-sm text-[#6B675C]">Archivos, propuesta, pagos, avances y entrega en un solo historial. Se puede imprimir o guardar en PDF.</span>
+            <span className="block font-bold text-[#142033]"><TS>Expediente del proyecto</TS></span>
+            <span className="block text-sm text-[#6B675C]"><TS>Archivos, propuesta, pagos, avances y entrega en un solo historial. Se puede imprimir o guardar en PDF.</TS></span>
           </span>
-          <span className="shrink-0 text-sm font-semibold text-[#C2560A]">Ver →</span>
+          <span className="shrink-0 text-sm font-semibold text-[#C2560A]"><TS>Ver →</TS></span>
         </LocalizedClientLink>
       )}
 
@@ -107,25 +109,25 @@ export default async function PropuestasPage({
       <ArchivosProtegidos token={token} s={s} />
 
       <section className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
-        <h2 className="text-lg font-extrabold text-[#142033]">Tu solicitud</h2>
-        <p className="mt-2 whitespace-pre-line text-[#40403A]">{t.descripcion}</p>
+        <h2 className="text-lg font-extrabold text-[#142033]"><TS>Tu solicitud</TS></h2>
+        <p className="mt-2 whitespace-pre-line text-[#40403A]"><TS>{t.descripcion}</TS></p>
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           {ETIQUETAS.filter(([k]) => t[k]).map(([k, label]) => (
             <div key={k}>
-              <dt className="text-[#6B675C]">{label}</dt>
+              <dt className="text-[#6B675C]"><TS>{label}</TS></dt>
               <dd className="font-semibold text-[#142033]">{t[k]}</dd>
             </div>
           ))}
           {entrega && (
             <div>
-              <dt className="text-[#6B675C]">Entrega en</dt>
+              <dt className="text-[#6B675C]"><TS>Entrega en</TS></dt>
               <dd className="font-semibold text-[#142033]">{entrega}</dd>
             </div>
           )}
         </dl>
         {archivos.length > 0 && (
           <p className="mt-4 text-sm text-[#6B675C]">
-            Archivos que subiste: <span className="font-semibold text-[#142033]">{archivos.map((a) => a.nombre).join(", ")}</span>
+            <TS>Archivos que subiste:</TS> <span className="font-semibold text-[#142033]">{archivos.map((a) => a.nombre).join(", ")}</span>
           </p>
         )}
       </section>
@@ -137,8 +139,13 @@ export default async function PropuestasPage({
       {s.estado !== "revision" && <ComparadorPropuestas token={token} solicitud={s} />}
 
       <p className="mt-8 text-center text-sm text-[#6B675C]">
-        ¿Dudas? Escríbenos desde <LocalizedClientLink href="/contacto" className="text-[#C2560A] underline">Contacto</LocalizedClientLink> con tu folio {s.folio}.
+        <TS>¿Dudas? Escríbenos desde</TS> <LocalizedClientLink href="/contacto" className="text-[#C2560A] underline"><TS>Contacto</TS></LocalizedClientLink> <TS>con tu folio</TS> {s.folio}.
       </p>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

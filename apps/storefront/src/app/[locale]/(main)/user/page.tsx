@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
@@ -15,7 +17,7 @@ import { misEnvios } from "@/lib/envios/cotizar"
 import { sesionForo } from "@/lib/foro/consultas"
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Mi cuenta",
   robots: { index: false, follow: false },
 }
@@ -179,17 +181,17 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
         <div className="flex min-w-0 flex-col gap-6 md:col-span-3">
           {bienvenida && (
             <section className="rounded-[18px] border-2 border-[#C2560A] bg-[#FDEEE1] p-5 text-[#142033]">
-              <p className="m-0 text-[20px] font-extrabold">¡Tu cuenta está activa{afiliacion ? `, afiliado ${afiliacion}` : ""}!</p>
+              <p className="m-0 text-[20px] font-extrabold"><TS>¡Tu cuenta está activa</TS>{afiliacion ? `, afiliado ${afiliacion}` : ""}!</p>
               <ul className="m-0 mt-2 space-y-1 p-0 text-[14px] text-[#40403A] [list-style:none]">
-                <li>🎁 Usa el cupón <b>BIENVENIDA</b>: $100 de descuento en tu primera compra de $800 o más.</li>
+                <li><TS>🎁 Usa el cupón</TS> <b><TS>BIENVENIDA</TS></b><TS>: $100 de descuento en tu primera compra de $800 o más.</TS></li>
                 <li>
-                  📋 Tus solicitudes de cotización ya están en{" "}
-                  <LocalizedClientLink href="/user/solicitudes" className="font-semibold text-[#C2560A] underline">Mis solicitudes</LocalizedClientLink>.
+                  <TS>📋 Tus solicitudes de cotización ya están en</TS>{" "}
+                  <LocalizedClientLink href="/user/solicitudes" className="font-semibold text-[#C2560A] underline"><TS>Mis solicitudes</TS></LocalizedClientLink>.
                 </li>
                 <li>
-                  🛠️ ¿Tienes taller?{" "}
+                  <TS>🛠️ ¿Tienes taller?</TS>{" "}
                   <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#C2560A] underline">
-                    Regístralo gratis y prueba 14 días el Cotizador CNC
+                    <TS>Regístralo gratis y prueba 14 días el Cotizador CNC</TS>
                   </LocalizedClientLink>
                   .
                 </li>
@@ -202,14 +204,14 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               {(user.first_name || user.email || "?").slice(0, 1).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className="m-0 text-[24px] font-extrabold text-[#142033] sm:text-[28px]">Hola, {user.first_name || nombre}</h1>
+              <h1 className="m-0 text-[24px] font-extrabold text-[#142033] sm:text-[28px]"><TS>Hola,</TS> {user.first_name || nombre}</h1>
               <p className="m-0 truncate text-[14px] text-[#6B6A63]">
                 {user.email}
                 {user.created_at ? ` · Cliente desde ${new Date(user.created_at).toLocaleDateString("es-MX", { month: "long", year: "numeric" })}` : ""}
               </p>
               {afiliacion && (
                 <p className="m-0 mt-1 text-[13px] text-[#142033]">
-                  Afiliado <b className="tracking-wide">{afiliacion}</b>
+                  <TS>Afiliado</TS> <b className="tracking-wide">{afiliacion}</b>
                 </p>
               )}
             </div>
@@ -243,7 +245,7 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
                 const boton = "shrink-0 rounded-full bg-white/80 px-4 py-1.5 text-[13.5px] font-semibold ring-1 ring-current hover:bg-white"
                 return (
                   <div key={i} className={`flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-3 text-[14px] ${TONOS[a.tono]}`}>
-                    <span>{a.texto}</span>
+                    <span><TS>{a.texto}</TS></span>
                     {a.externo ? (
                       <a href={a.href} className={boton}>
                         {a.accion}
@@ -262,10 +264,10 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
           {/* Últimos pedidos */}
           <section className="rounded-[18px] bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md p-5">
             <div className="flex items-baseline justify-between gap-2">
-              <h2 className="m-0 text-[17px] font-bold text-[#142033]">Tus últimas compras</h2>
+              <h2 className="m-0 text-[17px] font-bold text-[#142033]"><TS>Tus últimas compras</TS></h2>
               {pedidos.length > 0 && (
                 <LocalizedClientLink href="/user/orders" className="text-[14px] font-semibold text-[#C2560A] hover:underline">
-                  Ver todas →
+                  <TS>Ver todas →</TS>
                 </LocalizedClientLink>
               )}
             </div>
@@ -306,13 +308,13 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               </ul>
             ) : (
               <p className="m-0 mt-2 text-[14px] text-[#6B6A63]">
-                Todavía no tienes compras.{" "}
+                <TS>Todavía no tienes compras.</TS>{" "}
                 <LocalizedClientLink href="/categories" className="font-semibold text-[#C2560A] underline">
-                  Explora la tienda
+                  <TS>Explora la tienda</TS>
                 </LocalizedClientLink>{" "}
                 o{" "}
                 <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#C2560A] underline">
-                  pide que te fabriquen una pieza
+                  <TS>pide que te fabriquen una pieza</TS>
                 </LocalizedClientLink>
                 .
               </p>
@@ -338,8 +340,8 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
                       <span className="truncate rounded-full bg-[#F4F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#44433D] sm:px-2.5 sm:text-[12px]">{t.dato}</span>
                     )}
                   </span>
-                  <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]">{t.titulo}</span>
-                  <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]">{t.texto}</span>
+                  <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]"><TS>{t.titulo}</TS></span>
+                  <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]"><TS>{t.texto}</TS></span>
                 </>
               )
               // /cotizador/ y /seller no son rutas de Next con idioma
@@ -362,12 +364,17 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               <span className="text-[#44433D] group-hover:text-[#C2560A]">
                 <IconoCuenta n="ayuda" size={26} />
               </span>
-              <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]">Ayuda</span>
-              <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]">Escríbenos por WhatsApp o revisa las preguntas frecuentes.</span>
+              <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]"><TS>Ayuda</TS></span>
+              <span className="line-clamp-3 text-[12.5px] leading-snug text-[#6B6A63] sm:text-[13.5px]"><TS>Escríbenos por WhatsApp o revisa las preguntas frecuentes.</TS></span>
             </a>
           </section>
         </div>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

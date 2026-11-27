@@ -1,6 +1,7 @@
 "use client"
 
 // Numero por defecto (negocio HETNA CNC) cuando el vendedor no tiene uno registrado
+import { T } from "@/components/hetna/i18n/Idioma"
 const DEFAULT_WHATSAPP =
   process.env.NEXT_PUBLIC_WHATSAPP_DEFAULT || "522217076014"
 
@@ -43,7 +44,7 @@ export const WhatsAppButton = ({
       style={{ backgroundColor: "#25D366" }}
       data-testid="product-whatsapp-button"
     >
-      Preguntar por WhatsApp
+      <T>Preguntar por WhatsApp</T>
     </button>
   )
 }

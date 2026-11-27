@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import isEmpty from 'lodash/isEmpty';
 
 import { LoginForm } from '@/components/molecules/LoginForm/LoginForm'
@@ -66,9 +67,9 @@ export default async function UserPage({
           data-testid="orders-container"
         >
           <div>
-            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]">Mis compras</h1>
+            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]"><TS>Mis compras</TS></h1>
             <p className="m-0 mt-1 text-[14.5px] text-[#6B6A63]">
-              Rastrea tus pedidos, revisa su estado y pide factura desde el detalle de cada compra.
+              <TS>Rastrea tus pedidos, revisa su estado y pide factura desde el detalle de cada compra.</TS>
             </p>
           </div>
           {isEmpty(orders) ? (
@@ -80,13 +81,13 @@ export default async function UserPage({
                 className="text-[20px] font-bold text-[#142033]"
                 data-testid="no-orders-heading"
               >
-                Aún no tienes pedidos
+                <TS>Aún no tienes pedidos</TS>
               </h3>
               <p
                 className="mt-2 text-lg text-secondary"
                 data-testid="no-orders-description"
               >
-                Cuando compres algo en HETNA, aquí vas a ver su estado, rastreo y factura.
+                <TS>Cuando compres algo en HETNA, aquí vas a ver su estado, rastreo y factura.</TS>
               </p>
             </div>
           ) : (

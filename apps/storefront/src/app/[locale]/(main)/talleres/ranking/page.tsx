@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -10,7 +12,7 @@ import { listarTalleres, textoRespuesta, type Taller } from "@/lib/hetna/tallere
 
 export const revalidate = 1800
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres/ranking" },
   title: "Ranking de talleres CNC en México",
   description:
@@ -83,24 +85,24 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
 
   return (
     <main className="mx-auto w-full max-w-[1100px] px-4 py-8 lg:px-8">
-      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#C2560A]">HETNA Trust & Ranking</p>
+      <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#C2560A]"><TS>HETNA Trust & Ranking</TS></p>
       <h1 className="mt-1 text-3xl font-extrabold text-[#142033] sm:text-4xl">
         {proveedores ? "Proveedores con mayor cumplimiento" : `Mejores talleres${esp ? ` de ${esp.nombre.toLowerCase()}` : " CNC"}`}
         {estado ? ` en ${estado}` : " en México"}
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[#6B675C]">
-        Calculado sólo con evaluaciones de clientes en trabajos pagados y entregados dentro de HETNA. Pagar un plan o una membresía no cambia el lugar en
-        este ranking. Un taller pequeño especializado puede quedar arriba de una fábrica grande.
+        <TS>Calculado sólo con evaluaciones de clientes en trabajos pagados y entregados dentro de HETNA. Pagar un plan o una membresía no cambia el lugar en
+        este ranking. Un taller pequeño especializado puede quedar arriba de una fábrica grande.</TS>
       </p>
 
       <nav className="mt-5 flex flex-wrap gap-2" aria-label="Tipo">
-        <LocalizedClientLink href={liga({ tipo: undefined })} className={chip(!proveedores)}>Talleres</LocalizedClientLink>
-        <LocalizedClientLink href={liga({ tipo: "proveedores", esp: undefined, orden: undefined })} className={chip(proveedores)}>Proveedores</LocalizedClientLink>
+        <LocalizedClientLink href={liga({ tipo: undefined })} className={chip(!proveedores)}><TS>Talleres</TS></LocalizedClientLink>
+        <LocalizedClientLink href={liga({ tipo: "proveedores", esp: undefined, orden: undefined })} className={chip(proveedores)}><TS>Proveedores</TS></LocalizedClientLink>
       </nav>
       {!proveedores && (
         <>
           <nav className="mt-3 flex flex-wrap gap-2" aria-label="Especialidad">
-            <LocalizedClientLink href={liga({ esp: undefined })} className={chip(!esp)}>Todas</LocalizedClientLink>
+            <LocalizedClientLink href={liga({ esp: undefined })} className={chip(!esp)}><TS>Todas</TS></LocalizedClientLink>
             {ESPECIALIDADES.map((e) => (
               <LocalizedClientLink key={e.clave} href={liga({ esp: e.clave })} className={chip(esp?.clave === e.clave)}>
                 {e.nombre}
@@ -118,7 +120,7 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       )}
       {estados.length > 0 && (
         <nav className="mt-3 flex flex-wrap gap-2" aria-label="Estado">
-          <LocalizedClientLink href={liga({ estado: undefined })} className={chip(!estado)}>Todo México</LocalizedClientLink>
+          <LocalizedClientLink href={liga({ estado: undefined })} className={chip(!estado)}><TS>Todo México</TS></LocalizedClientLink>
           {estados.map((e) => (
             <LocalizedClientLink key={e} href={liga({ estado: e })} className={chip(estado === e)}>
               {e}
@@ -129,11 +131,11 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
 
       {evaluados.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[#40403A]">
-          <p className="font-bold text-[#142033]">Todavía no hay evaluaciones suficientes para este ranking.</p>
+          <p className="font-bold text-[#142033]"><TS>Todavía no hay evaluaciones suficientes para este ranking.</TS></p>
           <p className="mt-1 text-sm">
-            El ranking se llena con trabajos reales: cuando un cliente recibe su pedido, evalúa al taller.{" "}
+            <TS>El ranking se llena con trabajos reales: cuando un cliente recibe su pedido, evalúa al taller.</TS>{" "}
             {sinHistorial > 0 && `Hay ${sinHistorial} ${sinHistorial === 1 ? "taller" : "talleres"} aquí que aún no tienen evaluaciones. `}
-            <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline">Ver el directorio</LocalizedClientLink>
+            <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline"><TS>Ver el directorio</TS></LocalizedClientLink>
           </p>
         </div>
       ) : (
@@ -147,16 +149,16 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
                   <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
                     {t.nombre}
                   </LocalizedClientLink>
-                  {t.verificado ? <span className="ml-2 text-xs font-bold text-[#1E7B3A]">✓ Verificado</span> : <span className="ml-2 text-xs font-semibold text-[#8A877E]">Registrado</span>}
+                  {t.verificado ? <span className="ml-2 text-xs font-bold text-[#1E7B3A]"><TS>✓ Verificado</TS></span> : <span className="ml-2 text-xs font-semibold text-[#8A877E]"><TS>Registrado</TS></span>}
                   <p className="text-xs text-[#6B675C]">
                     {[p.ciudad, p.estado].filter(Boolean).join(", ")}
                     {p.servicios.length ? ` · ${p.servicios.slice(0, 3).join(", ")}` : ""}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center text-xs text-[#6B675C]">
-                  <div><b className="block text-lg text-[#142033]">{p.calificacion ?? "—"}</b>General</div>
-                  <div><b className="block text-lg text-[#142033]">{p.reputacion_comercial ?? "—"}</b>Comercial</div>
-                  <div><b className="block text-lg text-[#142033]">{p.capacidad_tecnica ?? "—"}</b>Técnica</div>
+                  <div><b className="block text-lg text-[#142033]">{p.calificacion ?? "—"}</b><TS>General</TS></div>
+                  <div><b className="block text-lg text-[#142033]">{p.reputacion_comercial ?? "—"}</b><TS>Comercial</TS></div>
+                  <div><b className="block text-lg text-[#142033]">{p.capacidad_tecnica ?? "—"}</b><TS>Técnica</TS></div>
                 </div>
                 <span className="w-full text-xs text-[#6B675C] sm:w-auto">
                   {p.resenas} {p.resenas === 1 ? "evaluación" : "evaluaciones"}
@@ -172,10 +174,15 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
       )}
       {evaluados.length > 0 && sinHistorial > 0 && (
         <p className="mt-4 text-sm text-[#6B675C]">
-          {sinHistorial} {sinHistorial === 1 ? "taller más aún no tiene" : "talleres más aún no tienen"} evaluaciones y no aparecen en el ranking.{" "}
-          <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline">Ver directorio completo</LocalizedClientLink>
+          {sinHistorial} {sinHistorial === 1 ? "taller más aún no tiene" : "talleres más aún no tienen"} <TS>evaluaciones y no aparecen en el ranking.</TS>{" "}
+          <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline"><TS>Ver directorio completo</TS></LocalizedClientLink>
         </p>
       )}
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }

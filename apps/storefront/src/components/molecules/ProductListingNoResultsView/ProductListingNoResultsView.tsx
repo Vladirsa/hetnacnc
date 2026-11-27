@@ -1,3 +1,4 @@
+import { T } from "@/components/hetna/i18n/Idioma"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { EMPRESA } from "@/lib/hetna/empresa"
 
@@ -30,14 +31,14 @@ const ProductListingNoResultsView = ({ busqueda, sugerencias }: Props) => {
       className="my-10 w-full rounded-2xl border border-[#E7E4DC] bg-white px-6 py-10 text-center"
       data-testid="product-listing-no-results-view"
     >
-      <h2 className="text-2xl font-extrabold text-[#142033]">No hay stock publicado</h2>
+      <h2 className="text-2xl font-extrabold text-[#142033]"><T>No hay stock publicado</T></h2>
       <p className="mx-auto mt-3 max-w-xl text-[15px] text-[#6B675C]">
         {busqueda ? (
           <>
-            Todavía no hay productos para “{busqueda}”. Pídelo y te lo cotizamos con talleres y proveedores de todo México.
+            <T>Todavía no hay productos para “</T>{busqueda}<T>”. Pídelo y te lo cotizamos con talleres y proveedores de todo México.</T>
           </>
         ) : (
-          <>Pídelo y te lo cotizamos con talleres y proveedores de todo México.</>
+          <><T>Pídelo y te lo cotizamos con talleres y proveedores de todo México.</T></>
         )}
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -45,7 +46,7 @@ const ProductListingNoResultsView = ({ busqueda, sugerencias }: Props) => {
           href="/cotizar"
           className="rounded-xl bg-[#C2560A] px-5 py-3 text-sm font-semibold text-white hover:brightness-110"
         >
-          Pedir cotización
+          <T>Pedir cotización</T>
         </LocalizedClientLink>
         <a
           href={`https://wa.me/${EMPRESA.whatsapp}?text=${encodeURIComponent(texto)}`}
@@ -53,11 +54,11 @@ const ProductListingNoResultsView = ({ busqueda, sugerencias }: Props) => {
           rel="noopener noreferrer"
           className="rounded-xl border border-[#1F9D55] px-5 py-3 text-sm font-semibold text-[#17803F] hover:bg-[#1F9D55] hover:text-white"
         >
-          Pedir por WhatsApp
+          <T>Pedir por WhatsApp</T>
         </a>
       </div>
       <div className="mt-8">
-        <p className="text-[13px] font-semibold uppercase tracking-wide text-[#8A887F]">Lo que sí tenemos</p>
+        <p className="text-[13px] font-semibold uppercase tracking-wide text-[#8A887F]"><T>Lo que sí tenemos</T></p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {enlaces.map((e) => (
             <LocalizedClientLink

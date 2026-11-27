@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { BotonesCam } from "./BotonesCam"
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
@@ -74,7 +75,7 @@ const Opcion = ({ activa, onClick, children }: { activa: boolean; onClick: () =>
 
 const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; valor: string; cambiar: (v: string) => void; sufijo?: string }) => (
   <label className="flex flex-col gap-1">
-    <span className="text-[13px] font-semibold text-[#1B1B18]">{etiqueta}</span>
+    <span className="text-[13px] font-semibold text-[#1B1B18]"><T>{etiqueta}</T></span>
     <span className="flex items-center bg-white border border-[#E7E4DC] rounded-[10px] focus-within:border-[#C2560A]">
       <input type="text" inputMode="decimal" value={valor} onChange={(e) => cambiar(e.target.value)} className="w-full min-w-0 px-3 py-2.5 text-[16px] text-[#1B1B18] bg-transparent outline-none" />
       {sufijo && <span className="pr-3 text-[13px] text-[#9A978C]">{sufijo}</span>}
@@ -85,7 +86,7 @@ const Campo = ({ etiqueta, valor, cambiar, sufijo = "mm" }: { etiqueta: string; 
 const Deslizador = ({ etiqueta, valor, min, max, paso = 1, cambiar }: { etiqueta: string; valor: number; min: number; max: number; paso?: number; cambiar: (v: number) => void }) => (
   <label className="flex flex-col gap-1">
     <span className="flex justify-between text-[13px] font-semibold text-[#1B1B18]">
-      {etiqueta}
+      <T>{etiqueta}</T>
       <span className="font-normal text-[#6B6A63]">{valor}</span>
     </span>
     <input type="range" min={min} max={max} step={paso} value={valor} onChange={(e) => cambiar(Number(e.target.value))} className="w-full accent-[#C2560A]" />
@@ -282,10 +283,10 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
   return (
     <div className="w-full bg-[#FAF9F6]">
       <section className="px-4 lg:px-8 pt-4 pb-3">
-        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full">Gratis</span>
-        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]">Litofanías y relieves 3D desde una foto</h1>
+        <span className="inline-block text-[12px] font-bold tracking-wide uppercase bg-[#E6F4EC] text-[#16794F] px-3 py-1 rounded-full"><T>Gratis</T></span>
+        <h1 className="font-display text-[26px] lg:text-[34px] font-bold m-0 mt-2 text-[#1B1B18]"><T>Litofanías y relieves 3D desde una foto</T></h1>
         <p className="m-0 mt-1 text-[15px] text-[#6B6A63] max-w-[720px]">
-          Convierte una foto en un STL: litofanía plana, curva o en cilindro para lámpara, o un relieve para tallar en router. La litofanía y el relieve por brillo se hacen en tu navegador; con «Profundidad con IA» la foto reducida se procesa en el servidor de HETNA y no se guarda.
+          <T>Convierte una foto en un STL: litofanía plana, curva o en cilindro para lámpara, o un relieve para tallar en router. La litofanía y el relieve por brillo se hacen en tu navegador; con «Profundidad con IA» la foto reducida se procesa en el servidor de HETNA y no se guarda.</T>
         </p>
       </section>
 
@@ -302,24 +303,24 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
               <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
             </svg>
             <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</span>
-            <span className="text-[12px] text-[#6B6A63]">JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</span>
+            <span className="text-[12px] text-[#6B6A63]"><T>JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</T></span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
           {error && <p className="m-0 text-[13.5px] text-[#8A1C1C]">{error}</p>}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Qué quieres hacer</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Qué quieres hacer</T></span>
             <div className="flex flex-wrap gap-2">
-              <Opcion activa={modo === "litofania"} onClick={() => cambiarModo("litofania")}>Litofanía (impresión 3D)</Opcion>
-              <Opcion activa={modo === "relieve"} onClick={() => cambiarModo("relieve")}>Relieve para router</Opcion>
+              <Opcion activa={modo === "litofania"} onClick={() => cambiarModo("litofania")}><T>Litofanía (impresión 3D)</T></Opcion>
+              <Opcion activa={modo === "relieve"} onClick={() => cambiarModo("relieve")}><T>Relieve para router</T></Opcion>
             </div>
           </div>
           {modo === "relieve" && iaLista && (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Cómo se calcula la altura</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Cómo se calcula la altura</T></span>
               <div className="flex flex-wrap gap-2">
-                <Opcion activa={altura === "ia"} onClick={() => setAltura("ia")}>✨ Profundidad con IA</Opcion>
-                <Opcion activa={altura === "brillo"} onClick={() => setAltura("brillo")}>Por brillo</Opcion>
+                <Opcion activa={altura === "ia"} onClick={() => setAltura("ia")}><T>✨ Profundidad con IA</T></Opcion>
+                <Opcion activa={altura === "brillo"} onClick={() => setAltura("brillo")}><T>Por brillo</T></Opcion>
               </div>
               <span className="text-[12.5px] text-[#6B6A63]">
                 {altura === "ia"
@@ -327,13 +328,13 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
                   : "Lo claro sale alto y lo oscuro bajo. Va bien con logotipos, dibujos y fotos en blanco y negro."}
               </span>
               {altura === "ia" && estadoIA === "cargando" && (
-                <span className="text-[13px] text-[#C2560A] font-semibold" aria-live="polite">La IA está calculando la profundidad… (unos segundos)</span>
+                <span className="text-[13px] text-[#C2560A] font-semibold" aria-live="polite"><T>La IA está calculando la profundidad… (unos segundos)</T></span>
               )}
               {altura === "ia" && estadoIA === "error" && (
                 <span className="text-[13px] text-[#8A1C1C]">
                   {errorIA}{" "}
-                  <button type="button" onClick={() => setIntentoIA((n) => n + 1)} className="underline font-semibold">Reintentar</button>{" "}
-                  o usa <button type="button" onClick={() => setAltura("brillo")} className="underline font-semibold">por brillo</button>.
+                  <button type="button" onClick={() => setIntentoIA((n) => n + 1)} className="underline font-semibold"><T>Reintentar</T></button>{" "}
+                  <T>o usa</T> <button type="button" onClick={() => setAltura("brillo")} className="underline font-semibold"><T>por brillo</T></button>.
                 </span>
               )}
               {altura === "ia" && <Deslizador etiqueta="Textura de la foto (pelo, tela, letras)" valor={textura} min={0} max={60} paso={5} cambiar={setTextura} />}
@@ -341,11 +342,11 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
           )}
           {modo === "litofania" && (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-[#1B1B18]">Forma</span>
+              <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Forma</T></span>
               <div className="flex flex-wrap gap-2">
-                <Opcion activa={forma === "plano"} onClick={() => setForma("plano")}>Plana</Opcion>
-                <Opcion activa={forma === "curvo"} onClick={() => setForma("curvo")}>Curva</Opcion>
-                <Opcion activa={forma === "cilindro"} onClick={() => setForma("cilindro")}>Cilindro (lámpara)</Opcion>
+                <Opcion activa={forma === "plano"} onClick={() => setForma("plano")}><T>Plana</T></Opcion>
+                <Opcion activa={forma === "curvo"} onClick={() => setForma("curvo")}><T>Curva</T></Opcion>
+                <Opcion activa={forma === "cilindro"} onClick={() => setForma("cilindro")}><T>Cilindro (lámpara)</T></Opcion>
               </div>
             </div>
           )}
@@ -359,14 +360,14 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
             <Campo etiqueta={modo === "litofania" ? "Espesor máximo" : "Alto máximo"} valor={max} cambiar={setMax} />
           </div>
           {modo === "litofania" && forma === "curvo" && <Campo etiqueta="Marco" valor={marco} cambiar={setMarco} />}
-          {!valido && <p className="m-0 text-[12.5px] text-[#8A1C1C]">Revisa las medidas: el máximo debe ser mayor que el mínimo.</p>}
+          {!valido && <p className="m-0 text-[12.5px] text-[#8A1C1C]"><T>Revisa las medidas: el máximo debe ser mayor que el mínimo.</T></p>}
 
           <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-[#1B1B18]">Detalle de la malla</span>
+            <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Detalle de la malla</T></span>
             <div className="flex flex-wrap gap-2">
-              {CALIDADES.map((c) => <Opcion key={c.nombre} activa={paso === c.paso} onClick={() => setPaso(c.paso)}>{c.nombre} ({c.paso} mm)</Opcion>)}
+              {CALIDADES.map((c) => <Opcion key={c.nombre} activa={paso === c.paso} onClick={() => setPaso(c.paso)}>{c.nombre} ({c.paso} <T>mm)</T></Opcion>)}
             </div>
-            {pasoReal > paso + 1e-9 && <span className="text-[12.5px] text-[#6B6A63]">Para no hacer un archivo gigante se usa un punto cada {Math.round(pasoReal * 100) / 100} mm.</span>}
+            {pasoReal > paso + 1e-9 && <span className="text-[12.5px] text-[#6B6A63]"><T>Para no hacer un archivo gigante se usa un punto cada</T> {Math.round(pasoReal * 100) / 100} <T>mm.</T></span>}
           </div>
 
           <Deslizador etiqueta="Tonos (gamma)" valor={gamma} min={0.3} max={3} paso={0.05} cambiar={setGamma} />
@@ -381,19 +382,19 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
           {!nombre && <EjemplosRelieve conIA={iaLista} />}
           {!nombre && (
             <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 text-[14.5px] text-[#6B6A63] flex flex-col gap-2">
-              <p className="m-0 font-semibold text-[#1B1B18]">Para que salga bien</p>
+              <p className="m-0 font-semibold text-[#1B1B18]"><T>Para que salga bien</T></p>
               <ul className="m-0 pl-5 flex flex-col gap-1">
-                <li>Litofanía: imprime en PLA blanco, relleno 100% y de pie (vertical).</li>
-                <li>Las fotos con buen contraste y caras de cerca se ven mejor a contraluz.</li>
-                <li>Relieve: en VCarve o Aspire importa el STL como modelo 3D, o el mapa de alturas como imagen.</li>
+                <li><T>Litofanía: imprime en PLA blanco, relleno 100% y de pie (vertical).</T></li>
+                <li><T>Las fotos con buen contraste y caras de cerca se ven mejor a contraluz.</T></li>
+                <li><T>Relieve: en VCarve o Aspire importa el STL como modelo 3D, o el mapa de alturas como imagen.</T></li>
               </ul>
             </div>
           )}
           <div className={nombre ? "flex flex-col gap-4" : "hidden"}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex gap-2">
-                <Opcion activa={vista === "luz"} onClick={() => setVista("luz")}>Con luz atrás</Opcion>
-                <Opcion activa={vista === "sombra"} onClick={() => setVista("sombra")}>Relieve</Opcion>
+                <Opcion activa={vista === "luz"} onClick={() => setVista("luz")}><T>Con luz atrás</T></Opcion>
+                <Opcion activa={vista === "sombra"} onClick={() => setVista("sombra")}><T>Relieve</T></Opcion>
               </div>
               <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{procesando || (usarIA && estadoIA === "cargando") ? "Calculando..." : ""}</span>
             </div>
@@ -421,11 +422,11 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
               </button>
               {modo === "relieve" && (
                 <button type="button" disabled={!valido || !info} onClick={bajarMapa} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                  Mapa de alturas (PNG)
+                  <T>Mapa de alturas (PNG)</T>
                 </button>
               )}
               <button type="button" disabled={preparando || !valido || !info} onClick={fabricar} className="bg-[#C2560A] hover:bg-[#A84A08] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                Fabrícamelo
+                <T>Fabrícamelo</T>
               </button>
             </div>
             {modo === "relieve" && valido && info && <BotonesCam nombre={archivo} stl={() => (ultima.current ? mallaSTL(ultima.current.a, ultima.current.o) : null)} />}
