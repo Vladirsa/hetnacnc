@@ -2,6 +2,7 @@
 
 
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import type { Propuesta } from "@/lib/cotizar/solicitud-taller"
 
 // Comparación lado a lado: una columna por taller y una fila por dato. En cada fila
@@ -56,8 +57,8 @@ const FILAS: Fila[] = [
     valor: (p) =>
       p.taller.capacidad ? (
         <span>
-          {p.taller.capacidad.resumen}
-          {p.taller.capacidad.area_mayor && <span className="block text-xs text-[#6B675C]">Área mayor {p.taller.capacidad.area_mayor}</span>}
+          <T>{p.taller.capacidad.resumen}</T>
+          {p.taller.capacidad.area_mayor && <span className="block text-xs text-[#6B675C]"><T>Área mayor</T> {p.taller.capacidad.area_mayor}</span>}
         </span>
       ) : (
         "No declarada"
@@ -100,12 +101,12 @@ export default function TablaPropuestas({
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr className="bg-[#142033] text-left text-white">
-            <th className="sticky left-0 z-10 w-40 bg-[#142033] p-3 font-semibold">Comparar</th>
+            <th className="sticky left-0 z-10 w-40 bg-[#142033] p-3 font-semibold"><T>Comparar</T></th>
             {propuestas.map((p) => (
               <th key={p.id} className="min-w-[170px] p-3 align-top font-semibold">
                 <span className="block">{p.taller.nombre}</span>
                 <span className="block text-xs font-normal text-white/70">{p.taller.estado || "México"}</span>
-                {elegida === p.id && <span className="mt-1 inline-block rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]">Elegida</span>}
+                {elegida === p.id && <span className="mt-1 inline-block rounded-full bg-[#E6F4EA] px-2 py-0.5 text-xs font-bold text-[#1E7B3A]"><T>Elegida</T></span>}
               </th>
             ))}
           </tr>
@@ -114,7 +115,7 @@ export default function TablaPropuestas({
           {FILAS.map((f, i) => (
             <tr key={f.etiqueta} className={i % 2 ? "bg-[#FAF9F6]" : "bg-white"}>
               <th scope="row" className={`sticky left-0 z-10 p-3 text-left align-top font-semibold text-[#142033] ${i % 2 ? "bg-[#FAF9F6]" : "bg-white"}`} title={f.ayuda}>
-                {f.etiqueta}
+                <T>{f.etiqueta}</T>
                 {f.ayuda && <span className="ml-1 cursor-help text-xs text-[#8A867B]">ⓘ</span>}
               </th>
               {propuestas.map((p) => {
@@ -122,7 +123,7 @@ export default function TablaPropuestas({
                 return (
                   <td key={p.id} className={`p-3 align-top text-[#40403A] ${gana ? "bg-[#E6F4EA] font-semibold text-[#1E7B3A]" : ""}`}>
                     {f.valor(p)}
-                    {gana && <span className="ml-1 text-xs">✓ mejor</span>}
+                    {gana && <span className="ml-1 text-xs"><T>✓ mejor</T></span>}
                   </td>
                 )
               })}
@@ -131,7 +132,7 @@ export default function TablaPropuestas({
           {negociacion && (
             <tr className="bg-white">
               <th scope="row" className="sticky left-0 z-10 bg-white p-3 text-left align-top font-semibold text-[#142033]" title="Versiones de la propuesta y tus contraofertas">
-                Negociación
+                <T>Negociación</T>
               </th>
               {propuestas.map((p) => (
                 <td key={p.id} className="p-3 align-top">{negociacion(p)}</td>
@@ -139,7 +140,7 @@ export default function TablaPropuestas({
             </tr>
           )}
           <tr className="bg-[#FFF8EE]">
-            <th scope="row" className="sticky left-0 z-10 bg-[#FFF8EE] p-3 text-left align-top font-semibold text-[#8A5A00]">Pregúntale antes</th>
+            <th scope="row" className="sticky left-0 z-10 bg-[#FFF8EE] p-3 text-left align-top font-semibold text-[#8A5A00]"><T>Pregúntale antes</T></th>
             {propuestas.map((p) => (
               <td key={p.id} className="p-3 align-top text-xs text-[#8A5A00]">
                 {faltan.get(p.id)?.length ? faltan.get(p.id)!.join(" · ") : "Nada pendiente"}
@@ -152,7 +153,7 @@ export default function TablaPropuestas({
               {propuestas.map((p) => (
                 <td key={p.id} className="p-3">
                   <button type="button" onClick={() => onElegir(p)} className="w-full rounded-xl bg-[#C2560A] px-3 py-2 font-semibold text-white hover:brightness-110">
-                    Elegir
+                    <T>Elegir</T>
                   </button>
                 </td>
               ))}
