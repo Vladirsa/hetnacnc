@@ -14,9 +14,11 @@ const GeneradorAnidado = dynamic(() => import("./GeneradorAnidado").then((x) => 
 const GeneradorConvertidor = dynamic(() => import("./GeneradorConvertidor").then((x) => x.GeneradorConvertidor))
 const GeneradorExtruir = dynamic(() => import("./GeneradorExtruir").then((x) => x.GeneradorExtruir))
 const GeneradorRebanado = dynamic(() => import("./GeneradorRebanado").then((x) => x.GeneradorRebanado))
+const GeneradorPruebas = dynamic(() => import("./GeneradorPruebas").then((x) => x.GeneradorPruebas))
+const GeneradorLamina = dynamic(() => import("./GeneradorLamina").then((x) => x.GeneradorLamina))
 
 
-export type ModoArchivos = "convertir" | "anidar" | "rebanar" | "extruir"
+export type ModoArchivos = "convertir" | "anidar" | "rebanar" | "extruir" | "pruebas" | "lamina"
 
 const MODOS: Modo<ModoArchivos>[] = [
   {
@@ -67,12 +69,40 @@ const MODOS: Modo<ModoArchivos>[] = [
       </>
     ),
   },
+  {
+    id: "pruebas",
+    slug: "pruebas-maquina",
+    nombre: "Pruebas",
+    nota: "Kerf, ajuste y potencia × velocidad",
+    icono: (
+      <>
+        <rect x="6" y="6" width="12" height="12" />
+        <rect x="22" y="6" width="12" height="12" />
+        <rect x="6" y="22" width="12" height="12" />
+        <rect x="22" y="22" width="12" height="12" />
+      </>
+    ),
+  },
+  {
+    id: "lamina",
+    slug: "desarrollo-lamina",
+    nombre: "Lámina",
+    nota: "Conos, transiciones, boca de pescado",
+    icono: (
+      <>
+        <path d="M8 33l6-26h12l6 26z" />
+        <path d="M11 20h18" />
+      </>
+    ),
+  },
 ]
 
 export function GeneradorArchivos({ modoInicial = "convertir" }: { modoInicial?: ModoArchivos }) {
   const [modo, setModo] = useState<ModoArchivos>(modoInicial)
   const cabecera = <SelectorModos titulo="Archivos" modos={MODOS} modo={modo} cambiar={setModo} />
   if (modo === "rebanar") return <GeneradorRebanado cabecera={cabecera} />
+  if (modo === "pruebas") return <GeneradorPruebas cabecera={cabecera} />
+  if (modo === "lamina") return <GeneradorLamina cabecera={cabecera} />
   // las demás tienen su propia pantalla: se pintan con el tema oscuro del estudio
   return (
     <div className="tema-estudio flex-1">

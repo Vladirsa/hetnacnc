@@ -12,7 +12,7 @@ const GeneradorLetrerosPlacas = dynamic(() => import("@/components/hetna/generad
 const GeneradorImagen = dynamic(() => import("@/components/hetna/generador/GeneradorImagen").then((m) => m.GeneradorImagen))
 const GeneradorArchivos = dynamic(() => import("@/components/hetna/generador/GeneradorArchivos").then((m) => m.GeneradorArchivos))
 const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve"> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve" }
-const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir" }
+const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir" | "pruebas" | "lamina"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir", "pruebas-maquina": "pruebas", "desarrollo-lamina": "lamina" }
 // relojes, marcos y lámparas: Decoración
 const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
 const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara" | "esfera"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara", "esferas-navidad": "esfera" }

@@ -413,6 +413,28 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "pruebas-maquina",
+    nombre: "Pruebas de kerf y material",
+    texto: "Mide el kerf de tu láser, encuentra el ajuste de tus ranuras y la mejor potencia × velocidad para cada material.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Prueba de kerf y matriz de potencia y velocidad para láser gratis",
+    descripcion:
+      "Tres pruebas para calibrar tu máquina: medir el kerf (ancho de corte) con un marco de 10 tiras, encontrar la ranura que ajusta justo con tu material y una matriz de potencia × velocidad con una capa de color por cuadro para LightBurn. Descarga gratis el SVG, DXF o PDF.",
+    meta: "Calibra tu láser gratis: prueba de kerf, prueba de ajuste de ranuras y matriz de potencia × velocidad con capas para LightBurn.",
+  },
+  {
+    slug: "desarrollo-lamina",
+    nombre: "Desarrollo de lámina",
+    texto: "Plantillas planas para pailería y plasma: conos y reducciones, transición cuadrado a redondo y boca de pescado.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Desarrollo de lámina gratis: cono, cuadrado a redondo y boca de pescado (DXF)",
+    descripcion:
+      "Pon las medidas y descarga gratis la plantilla plana en DXF para cortar en plasma o láser: cono y cono truncado (reducción) en una o varias partes, transición de cuadrado o rectángulo a redondo por triangulación con líneas de doblez, y boca de pescado para unir tubos a cualquier ángulo. Con el espesor de la lámina.",
+    meta: "Plantillas de lámina en DXF gratis: cono y reducción, transición cuadrado a redondo y boca de pescado para tubos. Para plasma.",
+  },
+  {
     slug: "placa-redonda",
     nombre: "Placa redonda con texto en arco",
     texto: "Letrero redondo: texto en arco arriba y abajo, monograma al centro y aro. DXF para láser o router.",
@@ -540,6 +562,8 @@ export const PESTANA_DE_MODO: Record<string, string> = {
   "anidado-piezas": "convertidor",
   "rebanado-capas": "convertidor",
   "svg-a-stl": "convertidor",
+  "pruebas-maquina": "convertidor",
+  "desarrollo-lamina": "convertidor",
   // Decoración
   "marcos-portarretratos": "relojes",
   "lamparas-capas": "relojes",
