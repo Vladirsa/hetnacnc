@@ -259,12 +259,12 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
       <div className="overflow-hidden rounded-3xl bg-[#142033] p-6 text-white sm:p-10">
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><T>Servicio</T></p>
         <h2 className="mt-1 text-3xl font-extrabold sm:text-4xl">
-          {raiz ? "¿Necesitas que te fabriquen algo?" : info.titulo}
+          <T>{raiz ? "¿Necesitas que te fabriquen algo?" : info.titulo}</T>
         </h2>
         <p className="mt-2 max-w-2xl text-white/75">
-          {raiz
+          <T>{raiz
             ? "Dinos qué necesitas y talleres de todo México compiten por hacerlo. Comparas precio y tiempo de entrega, eliges y pagas dentro de HETNA."
-            : info.texto}
+            : info.texto}</T>
         </p>
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {caminos.map((c) => (
@@ -314,7 +314,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
         <div>
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="text-lg font-extrabold text-[#142033]">
-              {soloEste ? `Trabajos de ${info.titulo.toLowerCase()} buscando taller` : "Trabajos buscando taller ahora"}
+              <T>{soloEste ? `Trabajos de ${info.titulo.toLowerCase()} buscando taller` : "Trabajos buscando taller ahora"}</T>
             </h3>
             <LocalizedClientLink
               href={soloEste && servicioTrabajos ? `/trabajos?servicio=${encodeURIComponent(servicioTrabajos)}` : "/trabajos"}
@@ -329,7 +329,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
             ))}
           </div>
           <p className="mt-3 text-sm text-[#6B675C]">
-            <T>¿Tienes taller?</T>{" "}
+            <T>¿Tienes taller?</T><T>{" "}</T>
             <a href="/seller/solicitudes" className="font-semibold text-[#C2560A]">
               <T>Entra a tu panel y manda tu propuesta</T>
             </a>
@@ -343,7 +343,7 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-6">
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="text-lg font-extrabold text-[#142033]">
-              {raiz ? "Talleres de la red" : `Talleres que ofrecen ${info.titulo.toLowerCase()}`}
+              <T>{raiz ? "Talleres de la red" : `Talleres que ofrecen ${info.titulo.toLowerCase()}`}</T>
             </h3>
             <LocalizedClientLink href="/talleres" className="text-sm font-semibold text-[#C2560A]">
               <T>Ver todos →</T>
@@ -365,14 +365,14 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
                 </span>
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5">
-                    <span className="truncate font-bold text-[#142033]">{t.nombre}</span>
+                    <span className="truncate font-bold text-[#142033]"><T>{t.nombre}</T></span>
                     {t.verificado && (
                       <span title="Verificado por HETNA" className="shrink-0 text-xs font-bold text-[#1F5A2B]">
                         ✓
                       </span>
                     )}
                   </span>
-                  <span className="block truncate text-xs text-[#6B675C]">{ubicacion(t.perfil) || "México"}</span>
+                  <span className="block truncate text-xs text-[#6B675C]"><T>{ubicacion(t.perfil) || "México"}</T></span>
                 </span>
               </LocalizedClientLink>
             ))}
@@ -390,8 +390,8 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
           <li key={n} className="flex gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#FFF1E6] font-extrabold text-[#C2560A]">{n}</span>
             <span>
-              <span className="block font-bold text-[#142033]">{t}</span>
-              <span className="text-sm text-[#6B675C]">{d}</span>
+              <span className="block font-bold text-[#142033]"><T>{t}</T></span>
+              <span className="text-sm text-[#6B675C]"><T>{d}</T></span>
             </span>
           </li>
         ))}
@@ -417,8 +417,8 @@ export default async function ServicioCategoria({ handle }: { handle: string }) 
         <h3 className="mb-2 text-lg font-extrabold text-[#142033]"><T>Preguntas frecuentes</T></h3>
         {PREGUNTAS_FABRICACION.map((q) => (
           <details key={q.p} className="border-t border-[#E7E4DC] py-3 first:border-t-0">
-            <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
-            <p className="mt-2 text-sm text-[#44433D]">{q.r}</p>
+            <summary className="cursor-pointer font-semibold text-[#142033]"><T>{q.p}</T></summary>
+            <p className="mt-2 text-sm text-[#44433D]"><T>{q.r}</T></p>
           </details>
         ))}
         <script
