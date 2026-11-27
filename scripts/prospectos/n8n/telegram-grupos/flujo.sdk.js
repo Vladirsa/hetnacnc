@@ -129,18 +129,41 @@ const horario = trigger({
   }
 });
 
+// Diseños publicados de la tienda (GET /admin/disenos-digitales/lista, 27 nov 2026).
+// Antes salían de la tabla digital_factory_productos de n8n, que no coincidía con la tienda.
+const header = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Header de acceso',
+    parameters: { mode: 'runOnceForAllItems', language: 'javaScript', jsCode: "return [{ json: { authHeader: 'Basic ' + Buffer.from($env.MEDUSA_ADMIN_SECRET_KEY + ':').toString('base64') } }];" }
+  }
+});
+
+const pedir = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.2,
+  config: {
+    name: 'Pedir diseños a la tienda',
+    parameters: {
+      method: 'GET',
+      url: expr('{{ $env.MEDUSA_BACKEND_URL }}/admin/disenos-digitales/lista'),
+      sendHeaders: true,
+      headerParameters: { parameters: [{ name: 'Authorization', value: expr("{{ $('Header de acceso').first().json.authHeader }}") }] },
+      options: { timeout: 60000 }
+    }
+  }
+});
+
 const disenos = node({
-  type: 'n8n-nodes-base.dataTable',
-  version: 1.1,
+  type: 'n8n-nodes-base.code',
+  version: 2,
   config: {
     name: 'Diseños publicados',
     parameters: {
-      resource: 'row',
-      operation: 'get',
-      dataTableId: { __rl: true, mode: 'id', value: 'yJDDrczHzHuY30uF', cachedResultName: 'digital_factory_productos' },
-      matchType: 'allConditions',
-      filters: { conditions: [{ keyName: 'estado', condition: 'eq', keyValue: 'PUBLISHED' }] },
-      returnAll: true
+      mode: 'runOnceForAllItems',
+      language: 'javaScript',
+      jsCode: "return ($input.first().json.disenos || []).map((d) => ({ json: { sku: d.sku, slug_ia: d.handle, titulo_comercial_ia: d.titulo, descripcion_corta_ia: d.resumen, precio_final_ia: d.precio_mxn, gratis: d.gratis, formatos: d.formatos, imagen_url: d.imagen_url } }));"
     }
   }
 });
@@ -245,6 +268,8 @@ const anotar = node({
 
 export default workflow('telegram-grupos', 'Redes - Publicaciones para grupos de Telegram')
   .add(horario)
+  .to(header)
+  .to(pedir)
   .to(disenos)
   .to(comprobar)
   .to(compartidos)
