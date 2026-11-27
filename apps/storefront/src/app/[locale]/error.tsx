@@ -55,7 +55,7 @@ export default function ErrorDeSeccion({
         </div>
 
         <p className="mt-5 text-[13px] leading-relaxed text-[#6B6A63]">
-          <T>¿Ibas a pagar y no te deja?</T>{" "}
+          <T>¿Ibas a pagar y no te deja?</T><T>{" "}</T>
           <a
             href={ligaWhatsApp("Hola, me salió un error en la página al intentar comprar.")}
             target="_blank"
@@ -63,14 +63,14 @@ export default function ErrorDeSeccion({
             className="font-semibold text-[#B34D07] underline"
           >
             <T>Escríbenos por WhatsApp</T>
-          </a>{" "}
-          <T>y lo cerramos contigo.</T> {EMPRESA.horario}.
+          </a><T>{" "}</T>
+          <T>y lo cerramos contigo.</T> <T>{EMPRESA.horario}</T>.
         </p>
 
         {/* El digest es el identificador que Next deja también en el log del
             servidor: con él se encuentra el error exacto de este visitante. */}
         {error.digest && (
-          <p className="mt-3 text-[11px] text-[#A5A29A]"><T>Referencia:</T> {error.digest}</p>
+          <p className="mt-3 text-[11px] text-[#A5A29A]"><T>Referencia:</T> <T>{error.digest}</T></p>
         )}
       </div>
     </main>
