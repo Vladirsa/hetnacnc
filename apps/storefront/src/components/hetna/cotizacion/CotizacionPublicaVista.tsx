@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { DIAS_VIGENCIA_PROPUESTA } from "@/lib/hetna/promesas"
 import { useEffect, useState } from "react"
 
@@ -126,17 +127,17 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
             <img src={c.taller.logo} alt={c.taller.nombre} className="h-16 w-16 rounded-[12px] object-contain" />
           ) : null}
           <div className="min-w-0 flex-1">
-            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Cotización {c.folio}</p>
+            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Cotización</T> {c.folio}</p>
             <h1 className="m-0 text-[24px] font-bold leading-tight text-[#142033]">{c.taller.nombre}</h1>
             <p className="m-0 mt-1 text-[14px] text-[#40403A]">
-              {fecha(c.creada)} · vigente hasta el {fecha(vence(c).toISOString())}
+              {fecha(c.creada)} <T>· vigente hasta el</T> {fecha(vence(c).toISOString())}
             </p>
           </div>
           <Estado c={c} aceptada={aceptada} rechazada={rechazada} />
         </div>
         {c.cliente ? (
           <p className="m-0 mt-4 text-[15px] text-[#40403A]">
-            Para: <b className="text-[#1B1B18]">{c.cliente.nombre}</b>
+            <T>Para:</T> <b className="text-[#1B1B18]">{c.cliente.nombre}</b>
             {c.cliente.empresa ? ` · ${c.cliente.empresa}` : ""}
           </p>
         ) : null}
@@ -144,10 +145,10 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
 
       {/* Aviso al volver de Mercado Pago */}
       {pago === "ok" && c.anticipo.estado !== "pagado" ? (
-        <Aviso tono="info">Recibimos tu pago. En unos segundos aparece aquí confirmado.</Aviso>
+        <Aviso tono="info"><T>Recibimos tu pago. En unos segundos aparece aquí confirmado.</T></Aviso>
       ) : null}
-      {pago === "pendiente" ? <Aviso tono="info">Tu pago quedó pendiente (por ejemplo, pago en efectivo). Cuando se acredite, aparecerá aquí.</Aviso> : null}
-      {pago === "error" ? <Aviso tono="error">El pago no se completó. Puedes intentarlo de nuevo.</Aviso> : null}
+      {pago === "pendiente" ? <Aviso tono="info"><T>Tu pago quedó pendiente (por ejemplo, pago en efectivo). Cuando se acredite, aparecerá aquí.</T></Aviso> : null}
+      {pago === "error" ? <Aviso tono="error"><T>El pago no se completó. Puedes intentarlo de nuevo.</T></Aviso> : null}
 
       {/* Seguimiento del pedido */}
       {c.pedido ? <Seguimiento p={c.pedido} /> : null}
@@ -156,7 +157,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
 
       {/* Partidas */}
       <section className={caja}>
-        <h2 className="m-0 text-[17px] font-bold text-[#142033]">Lo cotizado</h2>
+        <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Lo cotizado</T></h2>
         <div className="mt-3 divide-y divide-[#EFEDE7]">
           {c.items.map((i, k) => (
             <div key={k} className="flex flex-wrap items-start justify-between gap-2 py-3">
@@ -183,7 +184,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           {c.iva ? <Fila k={`${moneda === "PEN" ? "IGV" : moneda === "USD" ? "Impuesto" : "IVA"} ${c.iva_pct}%`} v={mxn(c.iva)} /> : null}
           {c.envio && !totales.ivaConEnvio ? <Fila k={c.iva ? "Envío (sin IVA)" : "Envío"} v={mxn(c.envio)} /> : null}
           <div className="flex justify-between pt-1 text-[18px] font-bold text-[#142033]">
-            <dt>Total</dt>
+            <dt><T>Total</T></dt>
             <dd className="m-0">{mxn(c.total)} {moneda}</dd>
           </div>
         </dl>
@@ -192,7 +193,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
       {/* Condiciones */}
       {c.metodo_pago || c.condicion_entrega || c.fecha_entrega || c.dias_habiles || c.notas ? (
         <section className={caja}>
-          <h2 className="m-0 text-[17px] font-bold text-[#142033]">Condiciones</h2>
+          <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Condiciones</T></h2>
           <dl className="mt-3 grid gap-2 text-[14px] text-[#40403A] sm:grid-cols-2">
             {c.metodo_pago ? <Dato k="Forma de pago" v={c.metodo_pago} /> : null}
             {c.condicion_entrega ? <Dato k="Entrega" v={c.condicion_entrega} /> : null}
@@ -206,15 +207,15 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
       {/* Aceptar / pagar */}
       <section className={caja}>
         {rechazada ? (
-          <p className="m-0 text-[15px] text-[#40403A]">Esta cotización fue marcada como rechazada. Si quieres retomarla, escríbele al taller.</p>
+          <p className="m-0 text-[15px] text-[#40403A]"><T>Esta cotización fue marcada como rechazada. Si quieres retomarla, escríbele al taller.</T></p>
         ) : c.vencida && !aceptada ? (
-          <p className="m-0 text-[15px] text-[#40403A]">Esta cotización venció el {fecha(vence(c).toISOString())}. Pide al taller que la renueve.</p>
+          <p className="m-0 text-[15px] text-[#40403A]"><T>Esta cotización venció el</T> {fecha(vence(c).toISOString())}<T>. Pide al taller que la renueve.</T></p>
         ) : (
           <>
             {!aceptada ? (
               <>
-                <h2 className="m-0 text-[17px] font-bold text-[#142033]">¿Aceptas esta cotización?</h2>
-                <p className="m-0 mt-1 text-[14px] text-[#40403A]">Escribe tu nombre y acepta. El taller recibe el aviso al momento.</p>
+                <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>¿Aceptas esta cotización?</T></h2>
+                <p className="m-0 mt-1 text-[14px] text-[#40403A]"><T>Escribe tu nombre y acepta. El taller recibe el aviso al momento.</T></p>
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <input className={campo} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" maxLength={120} />
                   <button type="button" className={boton} disabled={trabajando !== "" || !nombre.trim()} onClick={aceptar}>
@@ -224,19 +225,19 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
               </>
             ) : (
               <p className="m-0 text-[15px] text-[#1B1B18]">
-                ✅ Aceptada{c.aceptada?.por ? ` por ${c.aceptada.por}` : ""}{c.aceptada?.en ? ` el ${fecha(c.aceptada.en)}` : ""}.
+                <T>✅ Aceptada</T>{c.aceptada?.por ? ` por ${c.aceptada.por}` : ""}{c.aceptada?.en ? ` el ${fecha(c.aceptada.en)}` : ""}.
               </p>
             )}
 
             {c.anticipo.estado !== "sin_anticipo" ? (
               <div className="mt-5 rounded-[12px] bg-[#FAF9F6] p-4">
-                <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Anticipo</p>
+                <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Anticipo</T></p>
                 {c.anticipo.estado === "pagado" ? (
-                  <p className="m-0 mt-1 text-[16px] font-semibold text-[#1B1B18]">✅ Anticipo pagado: {mxn(c.anticipo.pagado)}</p>
+                  <p className="m-0 mt-1 text-[16px] font-semibold text-[#1B1B18]"><T>✅ Anticipo pagado:</T> {mxn(c.anticipo.pagado)}</p>
                 ) : (
                   <>
                     <p className="m-0 mt-1 text-[22px] font-bold text-[#142033]">{mxn(resta)} {moneda}</p>
-                    {c.anticipo.pagado > 0 ? <p className="m-0 text-[13px] text-[#7A776E]">Ya pagaste {mxn(c.anticipo.pagado)} de {mxn(c.anticipo.monto)}.</p> : null}
+                    {c.anticipo.pagado > 0 ? <p className="m-0 text-[13px] text-[#7A776E]"><T>Ya pagaste</T> {mxn(c.anticipo.pagado)} <T>de</T> {mxn(c.anticipo.monto)}.</p> : null}
                     {metodos.mercadopago || metodos.paypal ? (
                       <>
                         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -262,12 +263,12 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                           {metodos.paypal && c.anticipo.paypal_en_dolares
                             ? "PayPal cobra en dólares estadounidenses al tipo de cambio del día; verás el monto exacto antes de pagar. "
                             : ""}
-                          El pago llega directo a {c.taller.nombre}.
+                          <T>El pago llega directo a</T> {c.taller.nombre}.
                           {!aceptada ? " Al pagar, la cotización queda aceptada." : ""}
                         </p>
                       </>
                     ) : (
-                      <p className="m-0 mt-2 text-[13px] text-[#40403A]">Ponte de acuerdo con el taller para el pago del anticipo.</p>
+                      <p className="m-0 mt-2 text-[13px] text-[#40403A]"><T>Ponte de acuerdo con el taller para el pago del anticipo.</T></p>
                     )}
                   </>
                 )}
@@ -280,17 +281,17 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
         <div className="mt-5 flex flex-wrap gap-2">
           {c.pdf ? (
             <a href={c.pdf} target="_blank" rel="noopener" className={botonClaro}>
-              Descargar PDF
+              <T>Descargar PDF</T>
             </a>
           ) : null}
           {wa ? (
             <a href={wa} target="_blank" rel="noopener" className={botonClaro}>
-              Escribir por WhatsApp
+              <T>Escribir por WhatsApp</T>
             </a>
           ) : null}
           {c.taller.correo ? (
             <a href={`mailto:${c.taller.correo}?subject=${encodeURIComponent(`Cotización ${c.folio}`)}`} className={botonClaro}>
-              Mandar correo
+              <T>Mandar correo</T>
             </a>
           ) : null}
         </div>
@@ -311,7 +312,7 @@ function Estado({ c, aceptada, rechazada }: { c: CotizacionPublica; aceptada: bo
         : c.vencida
           ? ["Vencida", "bg-[#F3F2EE] text-[#7A776E]"]
           : ["Por aceptar", "bg-[#FFF4EA] text-[#C2560A]"]
-  return <span className={`rounded-full px-3 py-1 text-[13px] font-semibold ${color}`}>{texto}</span>
+  return <span className={`rounded-full px-3 py-1 text-[13px] font-semibold ${color}`}><T>{texto}</T></span>
 }
 
 function Fila({ k, v }: { k: string; v: string }) {
@@ -359,16 +360,16 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
   return (
     <section className={caja}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="m-0 text-[17px] font-bold text-[#142033]">Tu pedido {p.folio}</h2>
+        <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Tu pedido</T> {p.folio}</h2>
         {p.entregado ? (
-          <span className="text-[13px] text-[#1E7B3A]">Entregado el {fecha(p.entregado)}</span>
+          <span className="text-[13px] text-[#1E7B3A]"><T>Entregado el</T> {fecha(p.entregado)}</span>
         ) : p.fecha_estimada && !cancelado ? (
-          <span className="text-[13px] text-[#7A776E]">Entrega estimada: {fecha(p.fecha_estimada)}</span>
+          <span className="text-[13px] text-[#7A776E]"><T>Entrega estimada:</T> {fecha(p.fecha_estimada)}</span>
         ) : null}
       </div>
 
       {cancelado ? (
-        <p className="m-0 mt-3 text-[15px] text-[#B42318]">Este pedido fue cancelado. Si tienes dudas, escríbele al taller.</p>
+        <p className="m-0 mt-3 text-[15px] text-[#B42318]"><T>Este pedido fue cancelado. Si tienes dudas, escríbele al taller.</T></p>
       ) : (
         <ol className="m-0 mt-4 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-7 sm:gap-1">
           {ETAPAS.map((e, i) => {
@@ -392,15 +393,15 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
 
       {p.envio ? (
         <div className="mt-5 rounded-[12px] bg-[#FAF9F6] p-4">
-          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Envío</p>
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Envío</T></p>
           <p className="m-0 mt-1 text-[15px] text-[#1B1B18]">
             {p.envio.paqueteria ? <b>{p.envio.paqueteria} · </b> : null}
-            Guía <span className="font-mono">{p.envio.guia}</span>
+            <T>Guía</T> <span className="font-mono">{p.envio.guia}</span>
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {p.envio.rastreo ? (
               <a href={p.envio.rastreo} target="_blank" rel="noopener" className={boton}>
-                Rastrear envío
+                <T>Rastrear envío</T>
               </a>
             ) : null}
             <button
@@ -423,7 +424,7 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
 
       {p.fotos.length ? (
         <div className="mt-5">
-          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Fotos del avance</p>
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Fotos del avance</T></p>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {p.fotos.map((f, k) => (
               <a key={k} href={f.url} target="_blank" rel="noopener" className="block overflow-hidden rounded-[10px] border border-[#E7E4DC]">
@@ -437,12 +438,12 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
 
       {p.avances.length ? (
         <div className="mt-5">
-          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">Historial</p>
+          <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Historial</T></p>
           <ul className="m-0 mt-2 list-none space-y-2 p-0">
             {[...p.avances].reverse().map((a, k) => (
               <li key={k} className="text-[14px] text-[#40403A]">
                 <b className="text-[#1B1B18]">{etapa(a.etapa)}</b> · {fecha(a.fecha)}
-                {a.nota ? <span className="block text-[13px] text-[#7A776E]">{a.nota}</span> : null}
+                {a.nota ? <span className="block text-[13px] text-[#7A776E]"><T>{a.nota}</T></span> : null}
               </li>
             ))}
           </ul>
@@ -459,10 +460,10 @@ function InvitacionTaller({ refCodigo }: { refCodigo: string | null }) {
   const href = `/cotizador/${refCodigo ? `?ref=${encodeURIComponent(refCodigo)}` : ""}`
   return (
     <section className="rounded-[16px] border border-[#E7E4DC] bg-[#F7F6F2] p-5 text-center">
-      <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]">¿Tienes un taller CNC?</p>
-      <p className="m-0 mt-1 text-[18px] font-bold text-[#142033]">Cotiza así de rápido con HETNA Cotizador</p>
+      <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>¿Tienes un taller CNC?</T></p>
+      <p className="m-0 mt-1 text-[18px] font-bold text-[#142033]"><T>Cotiza así de rápido con HETNA Cotizador</T></p>
       <p className="m-0 mx-auto mt-2 max-w-[460px] text-[14px] text-[#40403A]">
-        Subes tu DXF o STL y te da tiempo de máquina, costo y precio con tu margen. Mandas la cotización por WhatsApp con liga como esta, y cobras el anticipo en línea.
+        <T>Subes tu DXF o STL y te da tiempo de máquina, costo y precio con tu margen. Mandas la cotización por WhatsApp con liga como esta, y cobras el anticipo en línea.</T>
       </p>
       <a
         href={href}
@@ -471,8 +472,8 @@ function InvitacionTaller({ refCodigo }: { refCodigo: string | null }) {
         {refCodigo ? "Pruébalo gratis · 1 mes extra con esta invitación" : "Pruébalo gratis"}
       </a>
       <p className="m-0 mt-3 text-[12px] text-[#7A776E]">
-        Cotización hecha con el Cotizador de{" "}
-        <a href="/cotizador" className="underline">HETNA CNC</a>.
+        <T>Cotización hecha con el Cotizador de</T>{" "}
+        <a href="/cotizador" className="underline"><T>HETNA CNC</T></a>.
       </p>
     </section>
   )
