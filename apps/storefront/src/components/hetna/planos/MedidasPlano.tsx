@@ -3,6 +3,7 @@
 // "Modifica las medidas" de un plano: el cliente escribe ancho, fondo y alto y
 // la página se vuelve a dibujar con esas medidas (?ancho=&fondo=&alto=). Los
 // espesores del triplay no cambian: sólo se estiran los huecos (lib/planos/medidas.ts).
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
@@ -64,7 +65,7 @@ export default function MedidasPlano({ original, actual, ajustado = false }: { o
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button type="submit" disabled={cargando} className="inline-flex min-h-[44px] items-center rounded-[12px] bg-[#FF6A1A] px-5 text-[15px] font-bold text-white disabled:opacity-60">
-          {cargando ? "Recalculando…" : "Aplicar medidas"}
+          <Tr>{cargando ? "Recalculando…" : "Aplicar medidas"}</Tr>
         </button>
         {cambiado ? (
           <button type="button" onClick={() => { setV(original); ir(null) }} className="text-[14px] font-semibold text-[#B34D07]">
