@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
@@ -303,8 +304,8 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               </svg>
             </span>
             <div className="min-w-0">
-              <h1 className="m-0 text-[16px] font-bold leading-tight">{esquema.nombre}</h1>
-              <p className="m-0 text-[12px] text-[#8A97AB]">{esquema.descripcion || "Caja para corte láser y router"}</p>
+              <h1 className="m-0 text-[16px] font-bold leading-tight"><Tr>{esquema.nombre}</Tr></h1>
+              <p className="m-0 text-[12px] text-[#8A97AB]"><Tr>{esquema.descripcion || "Caja para corte láser y router"}</Tr></p>
             </div>
           </div>
         </div>
@@ -320,7 +321,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                 onClick={() => elegirMaterial(m)}
                 className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${material === m.nombre ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045] hover:text-white"}`}
               >
-                {m.nombre}
+                <Tr>{m.nombre}</Tr>
               </button>
             ))}
           </div>
@@ -364,7 +365,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                 href={`/disenar/cajas/${o.id}${conMedidas}`}
                 className="rounded-full border border-dashed border-[#2B3648] px-2.5 py-1 text-[11.5px] font-semibold text-[#C9D2E0] hover:border-[#F28A3C] hover:text-white"
               >
-                {o.nombre}
+                <Tr>{o.nombre}</Tr>
               </LocalizedClientLink>
             ))}
             <LocalizedClientLink href="/disenar/cajas" className="rounded-full border border-dashed border-[#C2560A]/60 px-2.5 py-1 text-[11.5px] font-bold text-[#F28A3C] hover:border-[#F28A3C]">
@@ -374,7 +375,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         </section>
 
         <p className="m-0 text-[12px] leading-relaxed text-[#8A97AB]">
-          <T>DXF para router o plasma; SVG o LightBurn para láser. ¿Router sin CAM? Pásalo a</T>{" "}
+          <T>DXF para router o plasma; SVG o LightBurn para láser. ¿Router sin CAM? Pásalo a</T><Tr>{" "}</Tr>
           <LocalizedClientLink href="/cam/subir" className="font-semibold text-[#F28A3C] hover:underline">
             <T>DXF a G-code</T>
           </LocalizedClientLink>
@@ -386,10 +387,10 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         </div>
 
         <p className="m-0 text-[11.5px] text-[#5B6880]">
-          <T>Motor:</T>{" "}
+          <T>Motor:</T><Tr>{" "}</Tr>
           <a href="https://github.com/florianfesti/boxes" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#8A97AB] hover:underline">
             <T>Boxes.py</T>
-          </a>{" "}
+          </a><Tr>{" "}</Tr>
           <T>(GPL-3.0), sin modificar. Interfaz y conexión con talleres: HETNA.</T>
         </p>
 
@@ -398,7 +399,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
           <div className="grid grid-cols-4 gap-1.5">
             {FORMATOS.map((f, i) => (
               <Boton key={f.id} tipo={i === 0 ? "primario" : "secundario"} titulo={f.para} descarga href={rutaArchivo(locale, "generar", esquema.id, `formato=${f.id}&descargar=1&${query}`)}>
-                {f.nombre}
+                <Tr>{f.nombre}</Tr>
               </Boton>
             ))}
           </div>
@@ -430,7 +431,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                   pestana === id ? "bg-[#C2560A]/20 text-[#F28A3C] ring-1 ring-[#C2560A]/50" : "text-[#C9D2E0] hover:bg-[#1C2431]"
                 }`}
               >
-                {txt}
+                <Tr>{txt}</Tr>
               </button>
             ))}
           </div>
@@ -443,7 +444,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
               ] as const
             ).map(([t, fn]) => (
               <button key={t} type="button" onClick={fn} aria-label={t === "+" ? "Acercar" : t === "−" ? "Alejar" : t} className="rounded-[7px] px-2.5 py-1 hover:bg-[#1C2431] hover:text-white">
-                {t}
+                <Tr>{t}</Tr>
               </button>
             ))}
         </div>
@@ -452,7 +453,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
             {svgCrudo && !error ? (
               <Piezas3D svg={svgCrudo} espesor={Number(valores.thickness) || 3} />
             ) : (
-              <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]">{error || "Dibujando…"}</div>
+              <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]"><Tr>{error || "Dibujando…"}</Tr></div>
             )}
           </div>
         )}
@@ -469,10 +470,10 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
                   className="flex flex-col gap-1 rounded-[12px] border border-[#2B3648] bg-[#1C2431] p-3.5 hover:border-[#F28A3C]"
                 >
                   <span className="flex items-center justify-between text-[15px] font-bold text-white">
-                    {f.nombre}
-                    <span className="text-[11px] font-semibold text-[#8A97AB]">.{f.ext}</span>
+                    <Tr>{f.nombre}</Tr>
+                    <span className="text-[11px] font-semibold text-[#8A97AB]">.<Tr>{f.ext}</Tr></span>
                   </span>
-                  <span className="text-[12.5px] leading-snug text-[#C9D2E0]">{f.para}</span>
+                  <span className="text-[12.5px] leading-snug text-[#C9D2E0]"><Tr>{f.para}</Tr></span>
                   {f.nota && <span className="text-[11.5px] leading-snug text-[#F2D29B]"><T>{f.nota}</T></span>}
                 </a>
               ))}
@@ -541,7 +542,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
           {error && (
             <div className="absolute inset-0 grid place-items-center p-6">
               <div className="max-w-[420px] rounded-[12px] bg-[#3A1C1C] p-4 text-center text-[14px] text-[#F6B8AE]">
-                <strong className="text-white"><T>No se pudo dibujar.</T></strong> {error} <T>Revisa que las medidas sean mayores que varias veces el espesor.</T>
+                <strong className="text-white"><T>No se pudo dibujar.</T></strong> <Tr>{error}</Tr> <T>Revisa que las medidas sean mayores que varias veces el espesor.</T>
               </div>
             </div>
           )}
@@ -550,7 +551,7 @@ export const GeneradorCajas = ({ esquema, locale }: { esquema: EsquemaCajas; loc
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#1F2937] bg-[#0F141C] px-4 py-2 text-[12.5px] text-[#8A97AB]">
           {medidas && (
             <span>
-              <T>Medidas:</T> <b className="text-white">{medidas} <T>mm</T></b>
+              <T>Medidas:</T> <b className="text-white"><Tr>{medidas}</Tr> <T>mm</T></b>
             </span>
           )}
           {valores.thickness !== undefined && (
