@@ -1,12 +1,23 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import type { HttpTypes } from "@medusajs/types"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from '@/components/atoms/Button/Button'
 import { CustomCarousel as Carousel } from '@/components/cells/Carousel/Carousel'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import { CategoryCard } from '@/components/organisms/CategoryCard/CategoryCard'
-import { listCategoriesAccion as listCategories } from '@/lib/data/categories-accion';
+import { listCategoriesAccion } from '@/lib/data/categories-accion';
 
-export const EmptyCart = async () => {
-  const { categories } = await listCategories();
+// Componente de cliente (va dentro de CartItems): un componente async no
+// funciona en el navegador, así que las categorías se piden al montarse.
+export const EmptyCart = () => {
+  const [categories, setCategories] = useState<HttpTypes.StoreProductCategory[]>([])
+  useEffect(() => {
+    listCategoriesAccion()
+      .then((r) => setCategories(r?.categories ?? []))
+      .catch(() => {})
+  }, [])
 
   return (
     <div>
