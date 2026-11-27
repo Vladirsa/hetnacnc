@@ -1,5 +1,5 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { estadoRequisitos } from "../lib/requisitos-vendedor"
 import { publicacionAutomatica } from "../lib/social-hub"
@@ -18,9 +18,21 @@ export default async function productCreatedSocialPost({
       data: [product],
     } = await query.graph({
       entity: "product",
-      fields: ["id", "title", "description", "handle", "thumbnail", "images.url", "metadata", "sellers.id"],
+      fields: ["id", "title", "description", "handle", "status", "thumbnail", "images.url", "metadata", "sellers.id"],
       filters: { id: event.data.id },
     })
+    if (!product) return
+
+    // Borradores (27 nov 2026): no se anuncian (la liga daría 404). Se marcan como pendientes
+    // y se anuncian la primera vez que se publican (evento product.updated).
+    const meta = (product.metadata || {}) as Record<string, unknown>
+    if (event.name === "product.updated") {
+      if (product.status !== "published" || meta.redes_pendiente !== true) return
+      await (container.resolve(Modules.PRODUCT) as any).updateProducts(product.id, { metadata: { ...meta, redes_pendiente: false } })
+    } else if (product.status !== "published") {
+      await (container.resolve(Modules.PRODUCT) as any).updateProducts(product.id, { metadata: { ...meta, redes_pendiente: true } })
+      return
+    }
 
     if (!product?.thumbnail && !product?.images?.length) {
       // Sin imagen no hay nada que publicar en redes.
@@ -92,5 +104,5 @@ export default async function productCreatedSocialPost({
 }
 
 export const config: SubscriberConfig = {
-  event: "product.created",
+  event: ["product.created", "product.updated"],
 }

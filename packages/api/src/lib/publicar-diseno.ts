@@ -49,6 +49,9 @@ export type FichaDiseno = {
   // Licencia del diseño (lib/licencias.ts). Sin ella, personal.
   licencia?: "personal" | "comercial_limitada" | "comercial_ampliada"
   licencia_piezas?: number
+  // Crear el producto en borrador (lo revisa y publica el dueño desde el admin).
+  // Lo usa scripts/importar-disenos-tienda.ts con los diseños de scripts/disenos/.
+  borrador?: boolean
 }
 
 export type DisenoPublicado = {
@@ -280,7 +283,7 @@ export async function publicarDiseno(
             subtitle: ficha.descripcion_corta,
             description: descripcionHtml(ficha),
             handle: ficha.handle,
-            status: "published" as const,
+            status: ficha.borrador ? ("draft" as const) : ("published" as const),
             discountable: true,
             thumbnail: ficha.imagen_url,
             images: ficha.imagen_url ? [{ url: ficha.imagen_url }] : [],
