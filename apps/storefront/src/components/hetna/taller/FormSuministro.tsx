@@ -3,6 +3,7 @@
 // Licitación de suministro (Licitaciones 3.0, Fase 2): el cliente pide
 // material, herramientas o insumos y los PROVEEDORES de HETNA le cotizan.
 // Usa el mismo motor que la fabricación (privacidad, propuestas, comparación).
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -71,10 +72,10 @@ export default function FormSuministro() {
   if (estado === "ok") {
     return (
       <div className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-6">
-        <p className="text-lg font-extrabold text-[#142033]">¡Listo! Tu solicitud {folio} ya va para los proveedores.</p>
-        <p className="mt-2 text-sm text-[#40403A]">Te llega un correo con la liga para comparar las cotizaciones y elegir. Revisa también spam.</p>
+        <p className="text-lg font-extrabold text-[#142033]"><T>¡Listo! Tu solicitud</T> {folio} <T>ya va para los proveedores.</T></p>
+        <p className="mt-2 text-sm text-[#40403A]"><T>Te llega un correo con la liga para comparar las cotizaciones y elegir. Revisa también spam.</T></p>
         <LocalizedClientLink href="/cotizar/suministro" className="mt-4 inline-block font-semibold text-[#C2560A] underline">
-          Pedir otro material
+          <T>Pedir otro material</T>
         </LocalizedClientLink>
       </div>
     )
@@ -84,7 +85,7 @@ export default function FormSuministro() {
     <form onSubmit={enviar} className="grid gap-5 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-7">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={ETIQUETA} htmlFor="categoria">Tipo de producto</label>
+          <label className={ETIQUETA} htmlFor="categoria"><T>Tipo de producto</T></label>
           <select id="categoria" name="categoria" className={CAMPO} defaultValue={CATEGORIAS[0]}>
             {CATEGORIAS.map((c) => (
               <option key={c}>{c}</option>
@@ -92,15 +93,15 @@ export default function FormSuministro() {
           </select>
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="producto">¿Qué necesitas? *</label>
+          <label className={ETIQUETA} htmlFor="producto"><T>¿Qué necesitas? *</T></label>
           <input id="producto" name="producto" required className={CAMPO} placeholder="Ej. Lámina de aluminio 5052 cal. 14" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="cantidad">Cantidad *</label>
+          <label className={ETIQUETA} htmlFor="cantidad"><T>Cantidad *</T></label>
           <input id="cantidad" name="cantidad" required className={CAMPO} placeholder="Ej. 20" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="unidad">Unidad</label>
+          <label className={ETIQUETA} htmlFor="unidad"><T>Unidad</T></label>
           <select id="unidad" name="unidad" className={CAMPO} defaultValue="piezas">
             {["piezas", "hojas", "metros", "kilos", "cajas", "litros", "juegos"].map((u) => (
               <option key={u}>{u}</option>
@@ -108,15 +109,15 @@ export default function FormSuministro() {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className={ETIQUETA} htmlFor="especificacion">Especificación (medidas, espesor, diámetro…)</label>
+          <label className={ETIQUETA} htmlFor="especificacion"><T>Especificación (medidas, espesor, diámetro…)</T></label>
           <input id="especificacion" name="especificacion" className={CAMPO} placeholder="Ej. 1220 x 2440 mm, 1.9 mm de espesor" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="marca">Marca preferida (opcional)</label>
+          <label className={ETIQUETA} htmlFor="marca"><T>Marca preferida (opcional)</T></label>
           <input id="marca" name="marca" className={CAMPO} placeholder="Ej. Onsrud, Amana, cualquiera" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="frecuencia">¿Cada cuándo?</label>
+          <label className={ETIQUETA} htmlFor="frecuencia"><T>¿Cada cuándo?</T></label>
           <select id="frecuencia" name="frecuencia" className={CAMPO} defaultValue="Una sola vez">
             {["Una sola vez", "Cada semana", "Cada mes", "Cada trimestre"].map((u) => (
               <option key={u}>{u}</option>
@@ -124,26 +125,26 @@ export default function FormSuministro() {
           </select>
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="fecha">¿Para cuándo?</label>
+          <label className={ETIQUETA} htmlFor="fecha"><T>¿Para cuándo?</T></label>
           <input id="fecha" name="fecha" className={CAMPO} placeholder="Ej. esta semana" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="presupuesto">Presupuesto aproximado (opcional)</label>
+          <label className={ETIQUETA} htmlFor="presupuesto"><T>Presupuesto aproximado (opcional)</T></label>
           <input id="presupuesto" name="presupuesto" className={CAMPO} placeholder="Ej. $8,000 MXN" />
         </div>
         <div className="sm:col-span-2">
-          <label className={ETIQUETA} htmlFor="descripcion">Detalles (opcional)</label>
+          <label className={ETIQUETA} htmlFor="descripcion"><T>Detalles (opcional)</T></label>
           <textarea id="descripcion" name="descripcion" rows={3} className={CAMPO} placeholder="Acabado, certificado de material, factura, etc." />
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={ETIQUETA} htmlFor="ciudad">Ciudad de entrega</label>
+          <label className={ETIQUETA} htmlFor="ciudad"><T>Ciudad de entrega</T></label>
           <input id="ciudad" name="ciudad" className={CAMPO} />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="estado_mx">Estado</label>
+          <label className={ETIQUETA} htmlFor="estado_mx"><T>Estado</T></label>
           <select id="estado_mx" className={CAMPO} value={estadoMx} onChange={(e) => setEstadoMx(e.target.value)}>
             <option value="">Selecciona</option>
             {ESTADOS.map((x) => (
@@ -152,36 +153,36 @@ export default function FormSuministro() {
           </select>
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="cp">Código postal</label>
+          <label className={ETIQUETA} htmlFor="cp"><T>Código postal</T></label>
           <input id="cp" name="cp" inputMode="numeric" className={CAMPO} />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="acepta_envio">¿Envío por paquetería?</label>
+          <label className={ETIQUETA} htmlFor="acepta_envio"><T>¿Envío por paquetería?</T></label>
           <select id="acepta_envio" name="acepta_envio" className={CAMPO} defaultValue="Sí">
             <option>Sí</option>
             <option value="No">No, paso a recoger</option>
           </select>
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="nombre">Tu nombre</label>
+          <label className={ETIQUETA} htmlFor="nombre"><T>Tu nombre</T></label>
           <input id="nombre" name="nombre" className={CAMPO} autoComplete="name" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="empresa">Empresa (opcional)</label>
+          <label className={ETIQUETA} htmlFor="empresa"><T>Empresa (opcional)</T></label>
           <input id="empresa" name="empresa" className={CAMPO} autoComplete="organization" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="email">Correo *</label>
+          <label className={ETIQUETA} htmlFor="email"><T>Correo *</T></label>
           <input id="email" name="email" type="email" required className={CAMPO} autoComplete="email" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="whatsapp">WhatsApp</label>
+          <label className={ETIQUETA} htmlFor="whatsapp"><T>WhatsApp</T></label>
           <input id="whatsapp" name="whatsapp" type="tel" className={CAMPO} placeholder="10 dígitos" />
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-[15px] font-extrabold text-[#142033]">Privacidad: tú decides qué se ve</p>
+        <p className="mb-2 text-[15px] font-extrabold text-[#142033]"><T>Privacidad: tú decides qué se ve</T></p>
         <PrivacidadSolicitud dirigida={false} estado={estadoMx} />
       </div>
       <input type="text" name="sitio_web" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
@@ -190,9 +191,9 @@ export default function FormSuministro() {
         <button type="submit" disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110 disabled:opacity-60">
           {estado === "enviando" ? "Enviando…" : "Pedir cotizaciones a proveedores"}
         </button>
-        <span className="text-xs text-[#6B675C]">Gratis y sin compromiso. Tus datos los ve sólo HETNA, salvo lo que tú autorices.</span>
+        <span className="text-xs text-[#6B675C]"><T>Gratis y sin compromiso. Tus datos los ve sólo HETNA, salvo lo que tú autorices.</T></span>
       </div>
-      {estado === "error" && <p className="text-sm text-[#B3261E]">{mensaje}</p>}
+      {estado === "error" && <p className="text-sm text-[#B3261E]"><T>{mensaje}</T></p>}
     </form>
   )
 }
