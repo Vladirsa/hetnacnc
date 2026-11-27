@@ -65,15 +65,15 @@ export default async function MiAnuncio({ searchParams }: Props) {
       <div className="max-w-[760px] mx-auto px-4 py-10 flex flex-col gap-5">
         <header className="flex flex-col gap-1">
           <p className="m-0 text-[13px] font-bold uppercase tracking-[0.08em] text-[#B34D07]"><TS>Mi anuncio en HETNA</TS></p>
-          <h1 className="m-0 font-display text-[28px] font-bold text-[#1B1B18]">{e.anunciante}</h1>
+          <h1 className="m-0 font-display text-[28px] font-bold text-[#1B1B18]"><TS>{e.anunciante}</TS></h1>
           <p className="m-0 text-[14.5px] text-[#44433D]">
-            {espacio} · {porVistas ? `${miles(e.vistas_compradas as number)} vistas` : `${e.dias} días`} · {pesos(e.monto)}
+            <TS>{espacio}</TS> · <TS>{porVistas ? `${miles(e.vistas_compradas as number)} vistas` : `${e.dias} días`}</TS> · {pesos(e.monto)}
           </p>
         </header>
 
         <section className={`rounded-[14px] px-5 py-4 ${estado.c}`} aria-live="polite">
-          <p className="m-0 text-[17px] font-bold">{estado.t}</p>
-          <p className="m-0 mt-0.5 text-[14px]">{estado.d}</p>
+          <p className="m-0 text-[17px] font-bold"><TS>{estado.t}</TS></p>
+          <p className="m-0 mt-0.5 text-[14px]"><TS>{estado.d}</TS></p>
         </section>
 
         <section className="grid grid-cols-3 gap-3" aria-label="Resultados">
@@ -83,8 +83,8 @@ export default async function MiAnuncio({ searchParams }: Props) {
             ["% de clics", ctr],
           ].map(([k, v]) => (
             <div key={k} className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
-              <p className="m-0 text-[12.5px] text-[#6B6A63]">{k}</p>
-              <p className="m-0 mt-1 text-[26px] font-bold tabular-nums text-[#1B1B18]">{v}</p>
+              <p className="m-0 text-[12.5px] text-[#6B6A63]"><TS>{k}</TS></p>
+              <p className="m-0 mt-1 text-[26px] font-bold tabular-nums text-[#1B1B18]"><TS>{v}</TS></p>
             </div>
           ))}
         </section>
@@ -93,7 +93,7 @@ export default async function MiAnuncio({ searchParams }: Props) {
           {porVistas ? (
             <>
               <p className="m-0 text-[14.5px] text-[#1B1B18]">
-                <b>{miles(vistas)}</b> <TS>de</TS> {miles(e.vistas_compradas as number)} <TS>vistas (</TS>{avance}%)
+                <b>{miles(vistas)}</b> <TS>de</TS> {miles(e.vistas_compradas as number)} <TS>vistas (</TS><TS>{avance}</TS>%)
               </p>
               <div className="h-3 w-full overflow-hidden rounded-full bg-[#F0EDE6]" role="progressbar" aria-valuenow={avance ?? 0} aria-valuemin={0} aria-valuemax={100}>
                 <div className="h-full rounded-full bg-[#C2560A]" style={{ width: `${avance}%` }} />
@@ -114,7 +114,7 @@ export default async function MiAnuncio({ searchParams }: Props) {
             </p>
           )}
           <p className="m-0 text-[13px] text-[#6B6A63]">
-            <TS>Al hacer clic, tu anuncio lleva a:</TS> <span className="break-all font-mono text-[12.5px]">{e.enlace}</span>
+            <TS>Al hacer clic, tu anuncio lleva a:</TS> <span className="break-all font-mono text-[12.5px]"><TS>{e.enlace}</TS></span>
           </p>
         </section>
 
@@ -123,7 +123,7 @@ export default async function MiAnuncio({ searchParams }: Props) {
             href={`/anunciate?espacio=${e.espacio}#comprar`}
             className="inline-flex min-h-[48px] items-center justify-center rounded-[12px] bg-[#C2560A] px-6 font-bold text-white hover:bg-[#A84A08]"
           >
-            {e.estado === "vencido" ? "Volver a anunciarme" : "Renovar o contratar otro"}
+            <TS>{e.estado === "vencido" ? "Volver a anunciarme" : "Renovar o contratar otro"}</TS>
           </LocalizedClientLink>
           <LocalizedClientLink
             href="/contacto"

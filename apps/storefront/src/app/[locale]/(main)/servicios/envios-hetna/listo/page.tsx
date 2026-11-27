@@ -18,16 +18,16 @@ export default async function EnvioListoPage({ searchParams }: { searchParams: P
 
   return (
     <main className="mx-auto w-full max-w-[640px] px-4 py-14 text-center">
-      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Envíos HETNA</TS>{folio ? ` · ${folio}` : ""}</p>
+      <p className="text-sm font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Envíos HETNA</TS><TS>{folio ? ` · ${folio}` : ""}</TS></p>
       <h1 className="mt-2 text-3xl font-extrabold text-[#142033]">
-        {aprobado ? "¡Pago recibido!" : pendiente ? "Tu pago está en proceso" : "No se completó el pago"}
+        <TS>{aprobado ? "¡Pago recibido!" : pendiente ? "Tu pago está en proceso" : "No se completó el pago"}</TS>
       </h1>
       <p className="mt-3 text-[#40403A]">
-        {aprobado
+        <TS>{aprobado
           ? "Estamos generando tu guía. Te la enviaremos por correo con el número de rastreo."
           : pendiente
             ? "En cuanto Mercado Pago confirme tu pago te avisaremos por correo y generaremos tu guía."
-            : "Puedes volver a cotizar e intentarlo de nuevo. No se hizo ningún cargo."}
+            : "Puedes volver a cotizar e intentarlo de nuevo. No se hizo ningún cargo."}</TS>
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white">

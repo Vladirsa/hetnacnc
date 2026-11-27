@@ -193,7 +193,7 @@ export default function EnviosHetnaPage() {
           {DIFERENTE.map((x) => (
             <li key={x} className="flex gap-2 text-sm text-white/90">
               <span className="font-bold text-[#F2A25F]">✓</span>
-              {x}
+              <TS>{x}</TS>
             </li>
           ))}
         </ul>
@@ -216,8 +216,8 @@ export default function EnviosHetnaPage() {
           {PASOS.map(([n, t, d]) => (
             <li key={n} className="list-none rounded-2xl border border-[#E7E4DC] bg-white p-6">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-[#C2560A] font-extrabold text-white">{n}</span>
-              <h3 className="mt-3 text-lg font-extrabold text-[#142033]">{t}</h3>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <h3 className="mt-3 text-lg font-extrabold text-[#142033]"><TS>{t}</TS></h3>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </li>
           ))}
         </ol>
@@ -232,8 +232,8 @@ export default function EnviosHetnaPage() {
               <li key={t} className="flex gap-3">
                 <span className="mt-0.5 font-bold text-[#C2560A]">✓</span>
                 <span>
-                  <strong className="block text-[#142033]">{t}</strong>
-                  <span className="text-sm text-[#6B675C]">{d}</span>
+                  <strong className="block text-[#142033]"><TS>{t}</TS></strong>
+                  <span className="text-sm text-[#6B675C]"><TS>{d}</TS></span>
                 </span>
               </li>
             ))}
@@ -244,12 +244,12 @@ export default function EnviosHetnaPage() {
           <ul className="mt-4 flex flex-wrap gap-2 p-0">
             {QUE_ENVIAR.map((x) => (
               <li key={x} className="list-none rounded-full bg-[#F3F1EA] px-3 py-1.5 text-sm font-medium text-[#40403A]">
-                {x}
+                <TS>{x}</TS>
               </li>
             ))}
           </ul>
           <p className="mt-4 text-sm text-[#6B675C]">
-            <TS>No se envían materiales peligrosos (inflamables, químicos, gases, baterías sueltas). ¿Duda con tu pieza?</TS>{" "}
+            <TS>No se envían materiales peligrosos (inflamables, químicos, gases, baterías sueltas). ¿Duda con tu pieza?</TS><TS>{" "}</TS>
             <a href={WHATSAPP_AYUDA} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#C2560A] underline">
               <TS>Pregúntanos</TS>
             </a>
@@ -271,7 +271,7 @@ export default function EnviosHetnaPage() {
                 {...(t.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className="mt-4 inline-flex justify-center rounded-xl border border-[#C2560A] px-4 py-2.5 text-sm font-semibold text-[#C2560A] hover:bg-[#FFF1E6]"
               >
-                {t.accion}
+                <TS>{t.accion}</TS>
               </a>
             </div>
           ))}
@@ -284,15 +284,15 @@ export default function EnviosHetnaPage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VENTAJAS.map(([t, d]) => (
             <div key={t} className="rounded-2xl bg-white p-5">
-              <p className="font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
         <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 p-0 text-sm font-semibold text-[#142033]">
           {CONFIANZA.map(([i, t]) => (
             <li key={t} className="list-none">
-              <span aria-hidden="true">{i}</span> {t}
+              <span aria-hidden="true">{i}</span> <TS>{t}</TS>
             </li>
           ))}
         </ul>
@@ -307,7 +307,7 @@ export default function EnviosHetnaPage() {
               {TALLERES.map((x) => (
                 <li key={x} className="flex list-none gap-2 text-[#40403A]">
                   <span className="font-bold text-[#C2560A]">✓</span>
-                  {x}
+                  <TS>{x}</TS>
                 </li>
               ))}
             </ul>
@@ -333,22 +333,22 @@ export default function EnviosHetnaPage() {
           {PREGUNTAS.map(([q, a]) => (
             <details key={q} className="group rounded-2xl border border-[#E7E4DC] bg-white p-5 open:shadow-sm">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-[#142033]">
-                {q}
+                <TS>{q}</TS>
                 <span className="text-xl text-[#C2560A] transition group-open:rotate-45" aria-hidden="true">
                   +
                 </span>
               </summary>
-              <p className="mt-3 text-[#40403A]">{a}</p>
+              <p className="mt-3 text-[#40403A]"><TS>{a}</TS></p>
             </details>
           ))}
         </div>
       </section>
 
       <p className="mt-4 text-center text-sm text-[#6B675C]">
-        <TS>Lee las</TS>{" "}
+        <TS>Lee las</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/servicios/envios-hetna/condiciones" className="font-semibold text-[#C2560A] underline">
           <TS>condiciones de Envíos HETNA</TS>
-        </LocalizedClientLink>{" "}
+        </LocalizedClientLink><TS>{" "}</TS>
         <TS>(medidas, sobrepeso, evidencia y protección).</TS>
       </p>
 

@@ -4,6 +4,7 @@
 // diseño digital: personal, comercial limitada (con número de piezas) o
 // comercial ampliada. La ficha del diseño lo muestra antes de pagar y la
 // tienda permite filtrar por licencia.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -16,6 +17,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Licencias",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -63,8 +66,8 @@ function Fila({ d, alGuardar }) {
     <div style={S.card}>
       {d.foto ? <img src={d.foto} alt="" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8 }} /> : null}
       <div style={{ flex: 1, minWidth: 180 }}>
-        <strong style={{ fontSize: 14 }}>{d.titulo}</strong>
-        <div style={{ fontSize: 12, color: "#6B675C" }}>{OPCIONES.find((o) => o.valor === licencia)?.texto}</div>
+        <strong style={{ fontSize: 14 }}><T>{d.titulo}</T></strong>
+        <div style={{ fontSize: 12, color: "#6B675C" }}><T>{OPCIONES.find((o) => o.valor === licencia)?.texto}</T></div>
       </div>
       <select style={S.select} value={licencia} onChange={(e) => setLicencia(e.target.value)} aria-label={`Licencia de ${d.titulo}`}>
         {OPCIONES.map((o) => (
@@ -75,15 +78,15 @@ function Fila({ d, alGuardar }) {
       </select>
       {licencia === "comercial_limitada" && (
         <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
-          Hasta
+          <T>Hasta</T>
           <input type="number" min={1} max={1000000} style={S.input} value={piezas} onChange={(e) => setPiezas(e.target.value)} />
-          piezas
+          <T>piezas</T>
         </label>
       )}
       <button type="button" style={{ ...S.btn, opacity: cambio ? 1 : 0.5 }} disabled={!cambio} onClick={guardar}>
-        Guardar
+        <T>Guardar</T>
       </button>
-      {estado && <span style={{ fontSize: 12, color: estado === "Guardado" ? "#17633A" : "#6B675C" }}>{estado}</span>}
+      {estado && <span style={{ fontSize: 12, color: estado === "Guardado" ? "#17633A" : "#6B675C" }}><T>{estado}</T></span>}
     </div>
   )
 }
@@ -105,18 +108,18 @@ export default function Licencias() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Licencias de mis diseños</h1>
+      <h1 style={S.h1}><T>Licencias de mis diseños</T></h1>
       <p style={S.sub}>
-        Elige qué puede hacer el comprador con cada archivo. La licencia sale en la ficha del diseño antes de pagar, y los
+        <T>Elige qué puede hacer el comprador con cada archivo. La licencia sale en la ficha del diseño antes de pagar, y los
         clientes pueden filtrar la tienda por licencia. Si no eliges ninguna, el diseño se vende con la licencia personal.
-        Con ninguna licencia se permite revender ni compartir el archivo.{" "}
+        Con ninguna licencia se permite revender ni compartir el archivo.</T><T>{" "}</T>
         <a href="https://hetnacnc.com/mx/licencias-disenos" target="_blank" rel="noreferrer" style={{ color: "#B34D07", fontWeight: 600 }}>
-          Ver las tres licencias
+          <T>Ver las tres licencias</T>
         </a>
       </p>
-      {error && <p style={{ color: "#B91C1C" }}>{error}</p>}
-      {!disenos && !error && <p style={S.sub}>Cargando…</p>}
-      {disenos && !disenos.length && <p style={S.sub}>Todavía no tienes diseños digitales publicados.</p>}
+      {error && <p style={{ color: "#B91C1C" }}><T>{error}</T></p>}
+      {!disenos && !error && <p style={S.sub}><T>Cargando…</T></p>}
+      {disenos && !disenos.length && <p style={S.sub}><T>Todavía no tienes diseños digitales publicados.</T></p>}
       <div style={{ display: "grid", gap: 8 }}>
         {(disenos || []).map((d) => (
           <Fila

@@ -39,7 +39,7 @@ export default function Devoluciones() {
       <ul>
         <li>
           <strong><TS>Tu pago está protegido.</TS></strong> <TS>Cuando compras dentro de HETNA, el vendedor o taller no recibe tu dinero hasta que
-          tocas «Todo bien, liberar pago» en tu compra. Si no haces nada, se libera solo</TS> {EMPRESA.diasLiberacion} <TS>días después de la entrega.</TS>
+          tocas «Todo bien, liberar pago» en tu compra. Si no haces nada, se libera solo</TS> <TS>{EMPRESA.diasLiberacion}</TS> <TS>días después de la entrega.</TS>
         </li>
         <li>
           <strong><TS>Quien resuelve es el vendedor o taller.</TS></strong> <TS>Cada producto lo vende y lo envía un vendedor o taller registrado: es
@@ -89,7 +89,7 @@ export default function Devoluciones() {
       <h3><TS>Cambio de opinión o compra equivocada</TS></h3>
       <ul>
         <li>
-          <TS>Productos físicos nuevos: tienes</TS> <strong>{EMPRESA.diasDevolucion} <TS>días naturales</TS></strong> <TS>desde que lo recibes. Debe estar sin uso,
+          <TS>Productos físicos nuevos: tienes</TS> <strong><TS>{EMPRESA.diasDevolucion}</TS> <TS>días naturales</TS></strong> <TS>desde que lo recibes. Debe estar sin uso,
           completo, con etiquetas y en su empaque original.</TS>
         </li>
         <li><TS>El envío de regreso lo pagas tú. Al recibirlo y revisarlo, el vendedor te reembolsa el precio del producto.</TS></li>
@@ -123,7 +123,7 @@ export default function Devoluciones() {
       <ul>
         <li>
           <TS>Si</TS> <strong><TS>no llega, llega dañado, incompleto o es distinto</TS></strong> <TS>a lo publicado, se te devuelve tu dinero completo y el
-          proveedor paga el regreso. Repórtalo dentro de los</TS> {EMPRESA.diasDevolucion} <TS>días naturales siguientes a la entrega, con fotos.</TS>
+          proveedor paga el regreso. Repórtalo dentro de los</TS> <TS>{EMPRESA.diasDevolucion}</TS> <TS>días naturales siguientes a la entrega, con fotos.</TS>
         </li>
         <li>
           <TS>No se aceptan devoluciones por cambio de opinión, salvo en los casos que la ley lo exija. En ese caso el producto se regresa al
@@ -145,7 +145,7 @@ export default function Devoluciones() {
         </li>
         <li>
           <TS>Cancelación: antes de que el taller reporte avance, recuperas el 100 %. Después, se reembolsa según el avance y los materiales ya
-          comprados. Los detalles están en</TS>{" "}
+          comprados. Los detalles están en</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/reclamaciones"><TS>Reclamaciones y mediación</TS></LocalizedClientLink>.
         </li>
       </ul>
@@ -160,7 +160,7 @@ export default function Devoluciones() {
       <ul>
         <li><TS>Por el mismo medio con el que pagaste. Puede ser total, parcial (sólo lo que falló) o un reenvío o reposición.</TS></li>
         <li>
-          {`Se realiza en un máximo de ${EMPRESA.diasReembolso} días naturales`} <TS>después de que el vendedor recibe y revisa el producto (o de
+          <TS>{`Se realiza en un máximo de ${EMPRESA.diasReembolso} días naturales`}</TS> <TS>después de que el vendedor recibe y revisa el producto (o de
           que se resuelve el caso, si no hay que regresar nada). Tu banco puede tardar unos días más en reflejarlo.</TS>
         </li>
         <li>
@@ -168,7 +168,7 @@ export default function Devoluciones() {
           el vendedor cubre los envíos.</TS>
         </li>
         <li>
-          <TS>Si reportas cuando el pago ya se le liberó al vendedor (hasta el día</TS> {EMPRESA.diasDevolucion} <TS>después de la entrega) y el reclamo
+          <TS>Si reportas cuando el pago ya se le liberó al vendedor (hasta el día</TS> <TS>{EMPRESA.diasDevolucion}</TS> <TS>después de la entrega) y el reclamo
           procede, igual se te reembolsa: HETNA se lo descuenta al vendedor de sus siguientes ventas.</TS>
         </li>
       </ul>
@@ -189,7 +189,7 @@ export default function Devoluciones() {
         </li>
       </ol>
       <p><TS>Si no puedes entrar a tu cuenta, escríbenos por</TS> {medioContacto()} <TS>con tu número de pedido.</TS></p>
-      <p><TS>Atendemos en horario:</TS> {EMPRESA.horario}.</p>
+      <p><TS>Atendemos en horario:</TS> <TS>{EMPRESA.horario}</TS>.</p>
 
       <h2><TS>Garantía</TS></h2>
       <p>
@@ -210,8 +210,8 @@ export default function Devoluciones() {
 
       <p className="text-sm text-[#6B675C]">
         <TS>Esta política no limita los derechos que te da la Ley Federal de Protección al Consumidor ni tu derecho de acudir a la PROFECO; si
-        hubiera diferencia, prevalece lo más favorable para ti como consumidor. Consulta también los</TS>{" "}
-        <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> y{" "}
+        hubiera diferencia, prevalece lo más favorable para ti como consumidor. Consulta también los</TS><TS>{" "}</TS>
+        <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> y<TS>{" "}</TS>
         <LocalizedClientLink href="/reclamaciones"><TS>Reclamaciones y mediación</TS></LocalizedClientLink>.
       </p>
     </PaginaInfo>

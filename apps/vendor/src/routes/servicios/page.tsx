@@ -4,6 +4,7 @@
 // páginas de Diseño 2D/3D y Programación CAM, con el botón «Pedir cotización»
 // que abre una solicitud directa a este taller. No se compran en el carrito.
 // Ver packages/api/src/lib/paquetes-servicio.ts.
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -16,6 +17,8 @@ const Etiqueta = (props) => (
 
 export const config: RouteConfig = {
   label: "Mis servicios",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Etiqueta,
 }
 
@@ -99,22 +102,22 @@ export default function MisServiciosPage() {
     }
   }
 
-  if (!datos && !msg) return <div style={S.page}><p style={S.meta}>Cargando…</p></div>
+  if (!datos && !msg) return <div style={S.page}><p style={S.meta}><T>Cargando…</T></p></div>
   const categorias = datos?.categorias || {}
   const max = datos?.max || 12
 
   return (
     <div style={S.page}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}>Mis servicios</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}><T>Mis servicios</T></h1>
       <p style={S.meta}>
-        Publica lo que haces con un precio «desde»: diseño CAD, modelado 3D, programación CAM, vectorizado… Sale en tu perfil y en las páginas de Diseño
-        2D/3D y Programación CAM de HETNA, con un botón «Pedir cotización» que te llega directo como solicitud. El precio final lo mandas tú en tu propuesta.
+        <T>Publica lo que haces con un precio «desde»: diseño CAD, modelado 3D, programación CAM, vectorizado… Sale en tu perfil y en las páginas de Diseño
+        2D/3D y Programación CAM de HETNA, con un botón «Pedir cotización» que te llega directo como solicitud. El precio final lo mandas tú en tu propuesta.</T>
       </p>
       {datos?.handle && (
         <p style={S.meta}>
-          Así se ve tu perfil:{" "}
+          <T>Así se ve tu perfil:</T><T>{" "}</T>
           <a href={`/mx/talleres/${datos.handle}`} target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
-            hetnacnc.com/mx/talleres/{datos.handle}
+            <T>hetnacnc.com/mx/talleres/</T><T>{datos.handle}</T>
           </a>
         </p>
       )}
@@ -122,12 +125,12 @@ export default function MisServiciosPage() {
       <div style={{ marginTop: 16 }}>
         {lista.length === 0 && (
           <div style={S.card}>
-            <p style={{ margin: 0, fontWeight: 700 }}>Todavía no publicas servicios.</p>
-            <p style={S.meta}>Empieza con un ejemplo y cámbialo a tu gusto:</p>
+            <p style={{ margin: 0, fontWeight: 700 }}><T>Todavía no publicas servicios.</T></p>
+            <p style={S.meta}><T>Empieza con un ejemplo y cámbialo a tu gusto:</T></p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
               {EJEMPLOS.map((e) => (
                 <button key={e.titulo} type="button" style={S.btn2} onClick={() => setLista((l) => [...l, { ...e }])}>
-                  + {e.titulo}
+                  + <T>{e.titulo}</T>
                 </button>
               ))}
             </div>
@@ -137,24 +140,24 @@ export default function MisServiciosPage() {
         {lista.map((p, i) => (
           <div key={p.id || i} style={S.card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong style={{ color: "#142033" }}>Servicio {i + 1}</strong>
+              <strong style={{ color: "#142033" }}><T>Servicio</T> {i + 1}</strong>
               <button type="button" onClick={() => quitar(i)} style={{ ...S.btn2, padding: "5px 12px", color: "#B3261E" }}>
-                Quitar
+                <T>Quitar</T>
               </button>
             </div>
-            <label style={S.label}>Nombre del servicio</label>
-            <input style={S.input} maxLength={80} value={p.titulo} onChange={(e) => cambiar(i, "titulo", e.target.value)} placeholder="Vectorizar logo para corte láser" />
+            <label style={S.label}><T>Nombre del servicio</T></label>
+            <input style={S.input} maxLength={80} value={p.titulo} onChange={(e) => cambiar(i, "titulo", e.target.value)} placeholder={traducir("Vectorizar logo para corte láser")} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
               <div>
-                <label style={S.label}>Precio desde (MXN)</label>
+                <label style={S.label}><T>Precio desde (MXN)</T></label>
                 <input style={S.input} inputMode="numeric" value={p.desde} onChange={(e) => cambiar(i, "desde", e.target.value.replace(/[^\d]/g, ""))} placeholder="350" />
               </div>
               <div>
-                <label style={S.label}>Entrega (días hábiles)</label>
+                <label style={S.label}><T>Entrega (días hábiles)</T></label>
                 <input style={S.input} inputMode="numeric" value={p.entrega_dias ?? ""} onChange={(e) => cambiar(i, "entrega_dias", e.target.value.replace(/[^\d]/g, ""))} placeholder="2" />
               </div>
               <div>
-                <label style={S.label}>Dónde aparece</label>
+                <label style={S.label}><T>Dónde aparece</T></label>
                 <select style={S.input} value={p.categoria} onChange={(e) => cambiar(i, "categoria", e.target.value)}>
                   {Object.entries(categorias).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -164,29 +167,29 @@ export default function MisServiciosPage() {
                 </select>
               </div>
             </div>
-            <label style={S.label}>Qué incluye</label>
+            <label style={S.label}><T>Qué incluye</T></label>
             <textarea
               style={{ ...S.input, minHeight: 70 }}
               maxLength={600}
               value={p.descripcion}
               onChange={(e) => cambiar(i, "descripcion", e.target.value)}
-              placeholder="Formatos que entregas, rondas de cambios, qué necesitas del cliente…"
+              placeholder={traducir("Formatos que entregas, rondas de cambios, qué necesitas del cliente…")}
             />
-            <label style={S.label}>Modelo 3D de muestra (opcional)</label>
+            <label style={S.label}><T>Modelo 3D de muestra (opcional)</T></label>
             {p.modelo_3d ? (
               <p style={{ ...S.meta, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ color: "#1E7B3A", fontWeight: 700 }}>✓ Modelo 3D listo</span>
+                <span style={{ color: "#1E7B3A", fontWeight: 700 }}><T>✓ Modelo 3D listo</T></span>
                 <button type="button" onClick={() => cambiar(i, "modelo_3d", null)} style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }}>
-                  Quitar modelo
+                  <T>Quitar modelo</T>
                 </button>
               </p>
             ) : (
               <div>
                 <input type="file" accept=".stl,.zip" disabled={subiendo !== -1} onChange={(e) => subirModelo(i, e.target.files?.[0])} />
                 <p style={S.meta}>
-                  {subiendo === i
+                  <T>{subiendo === i
                     ? "Preparando la muestra 3D…"
-                    : "Sube un STL (o ZIP con STL) de un trabajo tuyo, hasta 25 MB. El cliente lo gira en 3D antes de cotizar. Publicamos una versión simplificada; tu archivo original no se guarda ni se puede descargar."}
+                    : "Sube un STL (o ZIP con STL) de un trabajo tuyo, hasta 25 MB. El cliente lo gira en 3D antes de cotizar. Publicamos una versión simplificada; tu archivo original no se guarda ni se puede descargar."}</T>
                 </p>
               </div>
             )}
@@ -195,15 +198,15 @@ export default function MisServiciosPage() {
 
         {lista.length > 0 && lista.length < max && (
           <button type="button" style={S.btn2} onClick={() => setLista((l) => [...l, vacio()])}>
-            + Agregar otro servicio
+            <T>+ Agregar otro servicio</T>
           </button>
         )}
       </div>
 
-      <p style={{ ...S.meta, marginTop: 14 }}>Sin teléfonos, correos ni redes: los clientes te contactan y te pagan dentro de HETNA.</p>
-      {msg && <p style={{ margin: "10px 0 0", fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+      <p style={{ ...S.meta, marginTop: 14 }}><T>Sin teléfonos, correos ni redes: los clientes te contactan y te pagan dentro de HETNA.</T></p>
+      {msg && <p style={{ margin: "10px 0 0", fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></p>}
       <button type="button" onClick={guardar} disabled={guardando} style={{ ...S.btn, marginTop: 12, opacity: guardando ? 0.6 : 1 }}>
-        {guardando ? "Guardando…" : "Guardar servicios"}
+        <T>{guardando ? "Guardando…" : "Guardar servicios"}</T>
       </button>
     </div>
   )

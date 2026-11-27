@@ -67,11 +67,11 @@ export async function ComparativaComisiones() {
             {filas.map((f) => (
               <tr key={f.quien} className={`border-t border-[#E7E4DC] align-top ${f.hetna ? "bg-[#FFF4EA]" : ""}`}>
                 <td className="px-4 py-3 font-semibold text-[#142033]">
-                  {f.quien}
-                  <span className="mt-0.5 block text-[12.5px] font-normal text-[#6B675C] sm:hidden">{f.regla}</span>
+                  <TS>{f.quien}</TS>
+                  <span className="mt-0.5 block text-[12.5px] font-normal text-[#6B675C] sm:hidden"><TS>{f.regla}</TS></span>
                 </td>
-                <td className="hidden px-4 py-3 text-[#4A4740] sm:table-cell">{f.regla}</td>
-                <td className={`whitespace-nowrap px-4 py-3 text-right font-bold ${f.hetna ? "text-[#C2560A]" : "text-[#1B1B18]"}`}>{f.cobro}</td>
+                <td className="hidden px-4 py-3 text-[#4A4740] sm:table-cell"><TS>{f.regla}</TS></td>
+                <td className={`whitespace-nowrap px-4 py-3 text-right font-bold ${f.hetna ? "text-[#C2560A]" : "text-[#1B1B18]"}`}><TS>{f.cobro}</TS></td>
               </tr>
             ))}
           </tbody>
@@ -82,7 +82,7 @@ export async function ComparativaComisiones() {
           <TS>• Vendes con el nombre de tu taller y</TS> <b><TS>emites tu factura (CFDI) directamente a tu cliente</TS></b>.
         </li>
         <li>
-          <TS>• Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión.</TS>{" "}
+          <TS>• Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión.</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/terminos-vendedores" className="font-semibold text-[#C2560A] underline">
             <TS>Ver todas las tarifas</TS>
           </LocalizedClientLink>

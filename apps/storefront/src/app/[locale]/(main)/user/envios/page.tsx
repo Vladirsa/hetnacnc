@@ -78,14 +78,14 @@ export default async function MisEnvios() {
             >
               <div className="text-sm text-[#40403A]">
                 <strong className="block text-[15px] text-[#142033]">
-                  {s.folio} · {s.referencia}
+                  <TS>{s.folio}</TS> · <TS>{s.referencia}</TS>
                 </strong>
                 {s.kg_cotizado != null && s.kg_reportado != null && (
                   <span>
-                    <TS>Cotizado</TS> {s.kg_cotizado} <TS>kg · la paquetería reportó</TS> {s.kg_reportado} <TS>kg ·</TS>{" "}
+                    <TS>Cotizado</TS> <TS>{s.kg_cotizado}</TS> <TS>kg · la paquetería reportó</TS> <TS>{s.kg_reportado}</TS> <TS>kg ·</TS><TS>{" "}</TS>
                   </span>
                 )}
-                <strong>{pesos(s.monto)} <TS>MXN</TS></strong> · {s.estado_nombre}
+                <strong>{pesos(s.monto)} <TS>MXN</TS></strong> · <TS>{s.estado_nombre}</TS>
               </div>
               {s.pago_url && (
                 <a href={s.pago_url} className="rounded-xl bg-[#C2560A] px-5 py-2.5 font-semibold text-white hover:brightness-110">
@@ -102,7 +102,7 @@ export default async function MisEnvios() {
       )}
       {r.ok && envios.length === 0 && (
         <p className="mt-6 rounded-2xl border border-dashed border-[#D9D4C8] bg-white p-8 text-center text-[#6B675C]">
-          <TS>Aún no tienes envíos.</TS>{" "}
+          <TS>Aún no tienes envíos.</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/servicios/envios-hetna#cotizar-envio" className="font-semibold text-[#C2560A] underline">
             <TS>Cotiza el primero</TS>
           </LocalizedClientLink>
@@ -118,20 +118,20 @@ export default async function MisEnvios() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="m-0 text-lg font-extrabold text-[#142033]">
-                    {e.folio} <span className="text-sm font-normal text-[#6B675C]">· {e.tarifa?.paqueteria} {e.tarifa?.servicio}</span>
+                    <TS>{e.folio}</TS> <span className="text-sm font-normal text-[#6B675C]">· <TS>{e.tarifa?.paqueteria}</TS> <TS>{e.tarifa?.servicio}</TS></span>
                   </p>
                   <p className="m-0 text-sm text-[#40403A]">
-                    {e.origen?.municipio || e.origen?.cp} → {e.destino?.municipio || e.destino?.cp} · {e.paquete?.largo}×{e.paquete?.ancho}×
-                    {e.paquete?.alto} <TS>cm ·</TS> {e.paquete?.peso} <TS>kg cotizados</TS>
+                    {e.origen?.municipio || e.origen?.cp} → {e.destino?.municipio || e.destino?.cp} · <TS>{e.paquete?.largo}</TS>×<TS>{e.paquete?.ancho}</TS>×
+                    <TS>{e.paquete?.alto}</TS> <TS>cm ·</TS> <TS>{e.paquete?.peso}</TS> <TS>kg cotizados</TS>
                   </p>
                   <p className="m-0 text-sm text-[#6B675C]">
                     {pesos(e.precio)} <TS>MXN</TS>
-                    {e.proteccion_valor ? ` · protegido por ${pesos(e.proteccion_valor)}` : ""}
-                    {e.contenido_estado === "usado" ? " · usado" : ""}
+                    <TS>{e.proteccion_valor ? ` · protegido por ${pesos(e.proteccion_valor)}` : ""}</TS>
+                    <TS>{e.contenido_estado === "usado" ? " · usado" : ""}</TS>
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${color}`}>{estado}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${color}`}><TS>{estado}</TS></span>
                   {e.pago_url && (
                     <a href={e.pago_url} className="text-sm font-semibold text-[#C2560A] underline">
                       <TS>Pagar ahora</TS>
@@ -139,7 +139,7 @@ export default async function MisEnvios() {
                   )}
                   {e.guia?.url && (
                     <a href={e.guia.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#C2560A] underline">
-                      <TS>Descargar guía</TS> {e.guia.numero || ""}
+                      <TS>Descargar guía</TS> <TS>{e.guia.numero || ""}</TS>
                     </a>
                   )}
                 </div>

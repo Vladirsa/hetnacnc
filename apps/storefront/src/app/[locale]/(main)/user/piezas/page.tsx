@@ -41,7 +41,7 @@ export default async function MisPiezasPage() {
         </div>
         {!piezas.length ? (
           <div className="mt-8 rounded-[14px] border border-[#E7E4DC] bg-white p-6 text-[15px] text-[#4A4943]">
-            <TS>Todavía no has mandado piezas a fabricar con tu cuenta.</TS>{" "}
+            <TS>Todavía no has mandado piezas a fabricar con tu cuenta.</TS><TS>{" "}</TS>
             <LocalizedClientLink href="/cotizar" className="font-semibold text-[#C2560A] underline"><TS>Pide tu primera cotización</TS></LocalizedClientLink>.
           </div>
         ) : (
@@ -51,23 +51,23 @@ export default async function MisPiezasPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-semibold text-[#6B675C]">
-                      {p.folio} · {new Date(p.creada).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                      <TS>{p.folio}</TS> · {new Date(p.creada).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
-                    <p className="mt-1 line-clamp-2 text-[15px] font-semibold text-[#1B1B18]">{p.descripcion || p.necesidad || "Pieza"}</p>
+                    <p className="mt-1 line-clamp-2 text-[15px] font-semibold text-[#1B1B18]"><TS>{p.descripcion || p.necesidad || "Pieza"}</TS></p>
                     <p className="mt-1 text-[13px] text-[#4A4943]">
-                      {[p.servicio, p.material, p.medidas, p.cantidad && `${p.cantidad}`, p.acabado].filter(Boolean).join(" · ")}
+                      <TS>{[p.servicio, p.material, p.medidas, p.cantidad && `${p.cantidad}`, p.acabado].filter(Boolean).join(" · ")}</TS>
                     </p>
                     <p className="mt-1 text-[12px] text-[#6B675C]">
-                      {p.archivos.length
+                      <TS>{p.archivos.length
                         ? `📎 ${p.archivos.map((a) => a.nombre).join(", ")}`
                         : p.archivos_borrados
                           ? "Los archivos ya se borraron (más de 180 días); al repetir súbelos de nuevo."
-                          : "Sin archivos"}
+                          : "Sin archivos"}</TS>
                     </p>
                     {p.taller && (
                       <p className="mt-1 text-[12px] text-[#0F7A4A]">
-                        <TS>Lo hizo</TS> {p.taller.nombre}
-                        {p.taller.precio != null ? ` por ${pesos(p.taller.precio)}` : ""}
+                        <TS>Lo hizo</TS> <TS>{p.taller.nombre}</TS>
+                        <TS>{p.taller.precio != null ? ` por ${pesos(p.taller.precio)}` : ""}</TS>
                       </p>
                     )}
                   </div>
@@ -77,7 +77,7 @@ export default async function MisPiezasPage() {
                     </LocalizedClientLink>
                     {p.taller?.handle && (
                       <LocalizedClientLink href={`/user/piezas/${encodeURIComponent(p.folio)}?taller=${encodeURIComponent(p.taller.handle)}`} className="rounded-[10px] border border-[#E7E4DC] px-4 py-2 text-center text-[13px] font-semibold text-[#142033]">
-                        <TS>Pedírselo a</TS> {p.taller.nombre.split(" ").slice(0, 2).join(" ")}
+                        <TS>Pedírselo a</TS> <TS>{p.taller.nombre.split(" ").slice(0, 2).join(" ")}</TS>
                       </LocalizedClientLink>
                     )}
                   </div>

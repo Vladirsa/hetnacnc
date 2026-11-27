@@ -53,21 +53,21 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
 
       <article className="mt-3 rounded-3xl border border-[#E7E4DC] bg-white p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-bold text-[#6B675C]">{t.folio}</span>
+          <span className="font-bold text-[#6B675C]"><TS>{t.folio}</TS></span>
           {abierta ? (
             <span className="rounded-full bg-[#EEF6EE] px-2.5 py-0.5 font-bold text-[#1F5A2B]">
-              {dias === 0 ? "Recibe propuestas hasta hoy" : `Recibe propuestas ${dias === 1 ? "1 día más" : `${dias} días más`}`}
+              <TS>{dias === 0 ? "Recibe propuestas hasta hoy" : `Recibe propuestas ${dias === 1 ? "1 día más" : `${dias} días más`}`}</TS>
             </span>
           ) : (
             <span className="rounded-full bg-[#F3F1EA] px-2.5 py-0.5 font-bold text-[#6B675C]">
-              {t.estado === "asignada" ? "El cliente ya eligió taller" : "Ya no recibe propuestas"}
+              <TS>{t.estado === "asignada" ? "El cliente ya eligió taller" : "Ya no recibe propuestas"}</TS>
             </span>
           )}
-          <span className="text-[#6B675C]">· {t.propuestas === 1 ? "1 propuesta" : `${t.propuestas} propuestas`}</span>
+          <span className="text-[#6B675C]">· <TS>{t.propuestas === 1 ? "1 propuesta" : `${t.propuestas} propuestas`}</TS></span>
         </div>
 
         <h1 className="mt-2 text-2xl font-extrabold leading-snug text-[#142033] sm:text-3xl">{tituloTrabajo(t)}</h1>
-        {lugar && <p className="mt-1 text-[#6B675C]"><TS>📍 Entrega en</TS> {lugar}</p>}
+        {lugar && <p className="mt-1 text-[#6B675C]"><TS>📍 Entrega en</TS> <TS>{lugar}</TS></p>}
 
         {t.descripcion ? (
           <p className="mt-5 whitespace-pre-line text-[#2B2A26]"><TS>{t.descripcion}</TS></p>
@@ -76,7 +76,7 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
             <TS>🔒 El cliente reservó la descripción completa para los talleres que autorice. Regístrate como taller y pide acceso desde tu panel.</TS>
           </p>
         )}
-        {t.presupuesto && <p className="mt-3 text-sm text-[#40403A]"><b><TS>Presupuesto del cliente:</TS></b> {t.presupuesto}</p>}
+        {t.presupuesto && <p className="mt-3 text-sm text-[#40403A]"><b><TS>Presupuesto del cliente:</TS></b> <TS>{t.presupuesto}</TS></p>}
         {t.modalidad === "restringida" && (
           <p className="mt-3 text-sm text-[#40403A]"><TS>🔐 Licitación restringida: los planos se comparten sólo con los talleres que el cliente autoriza.</TS></p>
         )}
@@ -115,19 +115,19 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
         <section className="rounded-2xl bg-[#142033] p-6 text-white">
           <h2 className="text-lg font-extrabold"><TS>¿Eres taller?</TS></h2>
           <p className="mt-1 text-sm text-white/75">
-            {abierta
+            <TS>{abierta
               ? "Manda tu precio y tiempo de entrega. Si el cliente te elige, te paga directo a tu Mercado Pago o PayPal (o por HETNA si no los conectas)."
-              : "Este ya cerró, pero cada semana llegan trabajos nuevos. Regístrate gratis y te avisamos."}
+              : "Este ya cerró, pero cada semana llegan trabajos nuevos. Regístrate gratis y te avisamos."}</TS>
           </p>
           {/* Quien llega desde el anuncio en redes casi nunca tiene cuenta: primero el registro */}
           <LocalizedClientLink
             href="/talleres/unete"
             className="mt-4 inline-block rounded-xl bg-[#C2560A] px-5 py-3 font-semibold text-white hover:brightness-110"
           >
-            {abierta ? "Regístrate gratis y cotiza" : "Regístrate gratis"}
+            <TS>{abierta ? "Regístrate gratis y cotiza" : "Regístrate gratis"}</TS>
           </LocalizedClientLink>
           <a href="/seller/solicitudes" className="mt-3 block text-sm font-semibold text-white/85 underline hover:text-white">
-            {abierta ? "¿Ya tienes cuenta? Cotizar este trabajo" : "¿Ya tienes cuenta? Ver trabajos en mi panel"}
+            <TS>{abierta ? "¿Ya tienes cuenta? Cotizar este trabajo" : "¿Ya tienes cuenta? Ver trabajos en mi panel"}</TS>
           </a>
         </section>
         <section className="rounded-2xl border border-[#E7E4DC] bg-[#FBFAF6] p-6">

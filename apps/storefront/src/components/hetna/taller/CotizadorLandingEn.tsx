@@ -108,7 +108,7 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
                 {[["Economy", "$1,240"], ["Standard", "$1,480"], ["Rush", "$1,890"]].map(([n, p]) => (
                   <div key={n} className={`rounded-[8px] border p-1.5 text-center ${n === "Standard" ? "border-[#C2560A] bg-[#FFF3EA]" : "border-[#E7E4DC]"}`}>
                     <div className="text-[10.5px] text-[#6B6A63]">{n}</div>
-                    <div className="font-bold">{p}</div>
+                    <div className="font-bold"><TS>{p}</TS></div>
                   </div>
                 ))}
               </div>
@@ -129,7 +129,7 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
           </p>
           <ul className="m-0 p-0 list-none flex flex-wrap gap-2">
             {["CNC router", "Laser (CO₂ and fiber)", "Plasma", "Milling and turning", "3D printing", "Signs and woodwork"].map((x) => (
-              <li key={x} className="text-[13px] font-semibold bg-white border border-[#E7E4DC] rounded-full px-3 py-1 text-[#142033]">{x}</li>
+              <li key={x} className="text-[13px] font-semibold bg-white border border-[#E7E4DC] rounded-full px-3 py-1 text-[#142033]"><TS>{x}</TS></li>
             ))}
           </ul>
         </section>
@@ -142,8 +142,8 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
               <li key={v.t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex gap-3">
                 <span className="text-[26px] leading-none" aria-hidden="true">{v.i}</span>
                 <div>
-                  <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">{v.t}</h3>
-                  <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63] leading-relaxed">{v.d}</p>
+                  <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]"><TS>{v.t}</TS></h3>
+                  <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63] leading-relaxed"><TS>{v.d}</TS></p>
                 </div>
               </li>
             ))}
@@ -157,8 +157,8 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
             {STEPS.map(([t, d], i) => (
               <li key={t} className="bg-white border border-[#E7E4DC] rounded-[14px] p-5 flex flex-col gap-2">
                 <span className="w-8 h-8 rounded-full bg-[#142033] text-white text-[14px] font-bold flex items-center justify-center">{i + 1}</span>
-                <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]">{t}</h3>
-                <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed">{d}</p>
+                <h3 className="m-0 text-[15.5px] font-bold text-[#1B1B18]"><TS>{t}</TS></h3>
+                <p className="m-0 text-[13.5px] text-[#6B6A63] leading-relaxed"><TS>{d}</TS></p>
               </li>
             ))}
           </ol>
@@ -174,27 +174,27 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
             {planes(precios).map((p) => (
               <div key={p.name} className={`bg-white rounded-[14px] p-5 flex flex-col gap-3 border ${p.featured ? "border-[#C2560A] border-2" : "border-[#E7E4DC]"}`}>
                 <div className="flex items-center justify-between">
-                  <h3 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]">{p.name}</h3>
+                  <h3 className="m-0 font-display text-[20px] font-bold text-[#1B1B18]"><TS>{p.name}</TS></h3>
                   {p.featured && <span className="text-[11px] font-bold uppercase tracking-wide bg-[#FDEEE1] text-[#B34D07] px-2 py-0.5 rounded-full"><TS>Most popular</TS></span>}
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-[28px] font-bold text-[#1B1B18]">{p.price}</span>
-                  <span className="text-[13px] text-[#6B6A63]">{p.note}</span>
+                  <span className="text-[28px] font-bold text-[#1B1B18]"><TS>{p.price}</TS></span>
+                  <span className="text-[13px] text-[#6B6A63]"><TS>{p.note}</TS></span>
                 </div>
-                <p className="m-0 text-[13px] text-[#6B6A63]">{p.for}</p>
+                <p className="m-0 text-[13px] text-[#6B6A63]"><TS>{p.for}</TS></p>
                 <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[13.5px] text-[#1B1B18]">
                   {p.points.map((x) => (
-                    <li key={x} className="flex gap-2"><span className="text-[#16794F]" aria-hidden="true">✓</span>{x}</li>
+                    <li key={x} className="flex gap-2"><span className="text-[#16794F]" aria-hidden="true">✓</span><TS>{x}</TS></li>
                   ))}
                 </ul>
                 <a href={REGISTRO_US} className={`mt-auto text-center font-semibold px-4 py-2.5 rounded-[10px] text-[14px] ${p.featured ? "bg-[#C2560A] hover:brightness-110 text-white" : "border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18]"}`}>
-                  {p.name === "Free" ? "Start free" : "Start 14-day free trial"}
+                  <TS>{p.name === "Free" ? "Start free" : "Start 14-day free trial"}</TS>
                 </a>
               </div>
             ))}
           </div>
           <p className="m-0 text-[13px] text-[#6B6A63]">
-            {precios.paypal ? "Paid plans are billed monthly through PayPal (card or PayPal account). " : ""}<TS>Cancel anytime and keep your plan until the end of the paid month.</TS>
+            <TS>{precios.paypal ? "Paid plans are billed monthly through PayPal (card or PayPal account). " : ""}</TS><TS>Cancel anytime and keep your plan until the end of the paid month.</TS>
           </p>
         </section>
 
@@ -214,8 +214,8 @@ export function CotizadorLandingEn({ precios }: { precios: PreciosUsd }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {FAQ.map(([q, a]) => (
               <details key={q} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3">
-                <summary className="cursor-pointer text-[14.5px] font-bold text-[#1B1B18]">{q}</summary>
-                <p className="m-0 mt-2 text-[13.5px] text-[#6B6A63] leading-relaxed">{a}</p>
+                <summary className="cursor-pointer text-[14.5px] font-bold text-[#1B1B18]"><TS>{q}</TS></summary>
+                <p className="m-0 mt-2 text-[13.5px] text-[#6B6A63] leading-relaxed"><TS>{a}</TS></p>
               </details>
             ))}
           </div>

@@ -22,21 +22,21 @@ export default async function PanelTalleres({ params, searchParams }: { params: 
       <Pestanas base={`/${locale}/panel/talleres`} actual={estado} opciones={ESTADOS.map(([k, n]) => ({ clave: k, nombre: n }))} />
       <Tarjeta>
         <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer"><TS>Dashboard →</TS></a>}><TS>Verificación de talleres</TS></Titulo>
-        {error && <Vacio><TS>No pude leer las verificaciones:</TS> {error}</Vacio>}
+        {error && <Vacio><TS>No pude leer las verificaciones:</TS> <TS>{error}</TS></Vacio>}
         {!error && lista.length === 0 && <Vacio><TS>Nada en este estado.</TS></Vacio>}
         <ul className="divide-y divide-[#EFEDE6]">
           {lista.map((t) => (
             <li key={t.seller_id} className="py-3">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[14px] font-extrabold text-[#142033]">{t.nombre}</p>
+                <p className="text-[14px] font-extrabold text-[#142033]"><TS>{t.nombre}</TS></p>
                 <Etiqueta color={COLOR[t.estado] || "gris"}>{t.estado.replace("_", " ")}</Etiqueta>
               </div>
-              <p className="mt-0.5 text-[12px] text-[#6B675C]">{t.email}{t.telefono ? ` · ${t.telefono}` : ""} · {t.archivos.length} <TS>documento(s)</TS>{t.faltan?.length ? ` · faltan: ${t.faltan.join(", ")}` : ""}</p>
-              <p className="text-[11px] text-[#9A968B]">{t.enviado_en ? `enviado ${hace(t.enviado_en)}` : ""}{t.motivo ? ` · ${t.motivo}` : ""}</p>
+              <p className="mt-0.5 text-[12px] text-[#6B675C]"><TS>{t.email}</TS><TS>{t.telefono ? ` · ${t.telefono}` : ""}</TS> · <TS>{t.archivos.length}</TS> <TS>documento(s)</TS><TS>{t.faltan?.length ? ` · faltan: ${t.faltan.join(", ")}` : ""}</TS></p>
+              <p className="text-[11px] text-[#9A968B]"><TS>{t.enviado_en ? `enviado ${hace(t.enviado_en)}` : ""}</TS><TS>{t.motivo ? ` · ${t.motivo}` : ""}</TS></p>
               {t.archivos.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {t.archivos.map((a) => (
-                    <a key={a.id} href={`/api/app/panel/archivo?seller=${t.seller_id}&id=${a.id}`} target="_blank" rel="noreferrer" className="rounded-md bg-[#E8F0FB] px-2 py-1 text-[11px] font-semibold text-[#1D4F8C]">📄 {a.tipo}</a>
+                    <a key={a.id} href={`/api/app/panel/archivo?seller=${t.seller_id}&id=${a.id}`} target="_blank" rel="noreferrer" className="rounded-md bg-[#E8F0FB] px-2 py-1 text-[11px] font-semibold text-[#1D4F8C]">📄 <TS>{a.tipo}</TS></a>
                   ))}
                 </div>
               )}

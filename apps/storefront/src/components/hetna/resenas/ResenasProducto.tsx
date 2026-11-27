@@ -39,10 +39,10 @@ export const ResenasProducto = ({
 
       {total === 0 ? (
         <p className="mt-2 text-[14px] leading-relaxed text-[#4A4943]">
-          <TS>Todavía no hay reseñas.</TS>{" "}
-          {pendiente
+          <TS>Todavía no hay reseñas.</TS><TS>{" "}</TS>
+          <TS>{pendiente
             ? "Tú lo compraste: tu reseña sería la primera."
-            : "Las escriben quienes ya lo compraron, así que las que veas aquí son de compras reales."}
+            : "Las escriben quienes ya lo compraron, así que las que veas aquí son de compras reales."}</TS>
         </p>
       ) : (
         <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-8">
@@ -54,8 +54,8 @@ export const ResenasProducto = ({
               <Estrellas valor={promedio || 0} size={18} />
             </p>
             <p className="mt-1 text-[13px] text-[#6B6A63]">
-              {total} {total === 1 ? "reseña" : "reseñas"}
-              {datos.con_fotos ? ` · ${datos.con_fotos} con fotos 📷` : ""}
+              {total} <TS>{total === 1 ? "reseña" : "reseñas"}</TS>
+              <TS>{datos.con_fotos ? ` · ${datos.con_fotos} con fotos 📷` : ""}</TS>
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export const ResenasProducto = ({
             {desglose.map((d) => (
               <div key={d.estrellas} className="flex items-center gap-2 py-0.5">
                 <dt className="w-10 shrink-0 text-right text-[12px] text-[#6B6A63]">
-                  {d.estrellas} ★
+                  <TS>{d.estrellas}</TS> ★
                 </dt>
                 <dd className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#F0EEE8]">
@@ -108,7 +108,7 @@ export const ResenasProducto = ({
 
               {r.comentario && (
                 <p className="mt-1.5 text-[14px] leading-relaxed text-[#1B1B18]">
-                  {r.comentario}
+                  <TS>{r.comentario}</TS>
                 </p>
               )}
 
@@ -132,7 +132,7 @@ export const ResenasProducto = ({
                 <div className="mt-2 rounded-[10px] border-l-[3px] border-[#C2560A] bg-[#FFF8F3] px-3 py-2">
                   <p className="text-[12px] font-bold text-[#B34D07]"><TS>Respuesta del taller</TS></p>
                   <p className="mt-0.5 text-[13px] leading-relaxed text-[#4A4943]">
-                    {r.respuesta_taller}
+                    <TS>{r.respuesta_taller}</TS>
                   </p>
                 </div>
               )}

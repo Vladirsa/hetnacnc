@@ -50,8 +50,8 @@ export default function Reclamaciones() {
         </li>
         <li>
           <strong><TS>En compras de la tienda</TS></strong><TS>, desde</TS> <LocalizedClientLink href="/user/orders"><TS>Mis compras</TS></LocalizedClientLink><TS>: abre el pedido y toca
-          «Tengo un problema», elige el motivo, explícalo y sube fotos o video. Puedes hacerlo hasta</TS> {EMPRESA.diasDevolucion} <TS>días naturales después de la
-          entrega (después, sólo garantía). Si no puedes entrar a tu cuenta, escríbenos por</TS> {medioContacto()}<TS>. Los plazos de devolución están en la</TS>{" "}
+          «Tengo un problema», elige el motivo, explícalo y sube fotos o video. Puedes hacerlo hasta</TS> <TS>{EMPRESA.diasDevolucion}</TS> <TS>días naturales después de la
+          entrega (después, sólo garantía). Si no puedes entrar a tu cuenta, escríbenos por</TS> {medioContacto()}<TS>. Los plazos de devolución están en la</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/devoluciones"><TS>Política de devoluciones</TS></LocalizedClientLink>.
         </li>
       </ol>
@@ -70,7 +70,7 @@ export default function Reclamaciones() {
         </li>
       </ol>
       <p>
-        <TS>Este procedimiento no limita tu derecho de acudir a la PROFECO o a los tribunales. Atendemos en horario:</TS> {EMPRESA.horario}.
+        <TS>Este procedimiento no limita tu derecho de acudir a la PROFECO o a los tribunales. Atendemos en horario:</TS> <TS>{EMPRESA.horario}</TS>.
       </p>
 
       <h2><TS>4. Casos más comunes</TS></h2>
@@ -115,10 +115,10 @@ export default function Reclamaciones() {
       <h3><TS>Compras de la tienda</TS></h3>
       <ul>
         <li><TS>Cuando el cliente toca «Todo bien, liberar pago» en su compra: confirma que llegó completo y en buen estado.</TS></li>
-        <li><TS>Si el cliente no hace nada,</TS> {EMPRESA.diasLiberacion} <TS>días después de la entrega.</TS></li>
+        <li><TS>Si el cliente no hace nada,</TS> <TS>{EMPRESA.diasLiberacion}</TS> <TS>días después de la entrega.</TS></li>
         <li>
-          <TS>Si el cliente reporta un problema, el pago se congela hasta que HETNA decide. Si el reclamo llega cuando el pago ya se liberó (hasta el día</TS>{" "}
-          {EMPRESA.diasDevolucion}<TS>) y procede, el reembolso y la guía de regreso a cargo del vendedor se descuentan de sus siguientes ventas.</TS>
+          <TS>Si el cliente reporta un problema, el pago se congela hasta que HETNA decide. Si el reclamo llega cuando el pago ya se liberó (hasta el día</TS><TS>{" "}</TS>
+          <TS>{EMPRESA.diasDevolucion}</TS><TS>) y procede, el reembolso y la guía de regreso a cargo del vendedor se descuentan de sus siguientes ventas.</TS>
         </li>
         <li><TS>La guía de regreso la paga el vendedor si la culpa fue suya, y el cliente si se arrepintió de la compra.</TS></li>
       </ul>
@@ -136,7 +136,7 @@ export default function Reclamaciones() {
       </ul>
 
       <p className="text-sm text-[#6B675C]">
-        <TS>Esta política complementa los</TS> <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> <TS>(cláusulas 4 y 6) y la</TS>{" "}
+        <TS>Esta política complementa los</TS> <LocalizedClientLink href="/terminos-y-condiciones"><TS>Términos y condiciones</TS></LocalizedClientLink> <TS>(cláusulas 4 y 6) y la</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/devoluciones"><TS>Política de devoluciones</TS></LocalizedClientLink><TS>; si hubiera diferencia, prevalece lo más favorable para el
         cliente consumidor.</TS>
       </p>

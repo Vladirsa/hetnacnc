@@ -33,19 +33,19 @@ export default function LicenciasDisenos() {
         const l = LICENCIAS[k]
         return (
           <section key={k}>
-            <h2><TS>Licencia</TS> {l.nombre}</h2>
+            <h2><TS>Licencia</TS> <TS>{l.nombre}</TS></h2>
             <p><TS>{l.resumen}</TS></p>
             <ul>
               {l.permisos.map((p) => (
                 <li key={p.que}>
-                  {p.si ? "Sí" : "No"}: {p.que.toLowerCase()}
-                  {p.nota ? ` (${p.nota})` : ""}.
+                  <TS>{p.si ? "Sí" : "No"}</TS>: {p.que.toLowerCase()}
+                  <TS>{p.nota ? ` (${p.nota})` : ""}</TS>.
                 </li>
               ))}
             </ul>
             {k === "comercial_limitada" && (
               <p>
-                <TS>El número de piezas lo pone el vendedor en cada diseño y lo ves en la ficha. Si no indica otro, son</TS>{" "}
+                <TS>El número de piezas lo pone el vendedor en cada diseño y lo ves en la ficha. Si no indica otro, son</TS><TS>{" "}</TS>
                 {PIEZAS_POR_OMISION} <TS>piezas en total.</TS>
               </p>
             )}
@@ -56,7 +56,7 @@ export default function LicenciasDisenos() {
       <h2><TS>Reglas para las tres</TS></h2>
       <ul>
         {REGLAS_COMUNES.map((r) => (
-          <li key={r}>{r}</li>
+          <li key={r}><TS>{r}</TS></li>
         ))}
       </ul>
 
@@ -66,8 +66,8 @@ export default function LicenciasDisenos() {
         vendedor desde la ficha del diseño, con el botón «Preguntar al taller», antes de comprar.</TS>
       </p>
       <p>
-        <TS>Las devoluciones de archivos siguen la</TS>{" "}
-        <LocalizedClientLink href="/devoluciones"><TS>política de devoluciones</TS></LocalizedClientLink><TS>, y el uso de la tienda los</TS>{" "}
+        <TS>Las devoluciones de archivos siguen la</TS><TS>{" "}</TS>
+        <LocalizedClientLink href="/devoluciones"><TS>política de devoluciones</TS></LocalizedClientLink><TS>, y el uso de la tienda los</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/terminos-y-condiciones"><TS>términos y condiciones</TS></LocalizedClientLink> <TS>(cláusula 8).</TS>
       </p>
     </PaginaInfo>

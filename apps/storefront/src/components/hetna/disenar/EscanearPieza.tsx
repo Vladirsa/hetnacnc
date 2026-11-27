@@ -61,8 +61,8 @@ export const EscanearPieza = async ({ locale }: { locale: string }) => {
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F07A1A]/20 text-[13px] font-bold text-[#F59A4A]">
                   {i + 1}
                 </span>
-                <p className="m-0 mt-2 text-[15px] font-bold">{p.t}</p>
-                <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-white/60">{p.d}</p>
+                <p className="m-0 mt-2 text-[15px] font-bold"><TS>{p.t}</TS></p>
+                <p className="m-0 mt-1 text-[13.5px] leading-relaxed text-white/60"><TS>{p.d}</TS></p>
               </li>
             ))}
           </ol>

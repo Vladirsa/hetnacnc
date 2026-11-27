@@ -185,7 +185,7 @@ export function GeneradorCortadores() {
             ] as [TipoForma, string][]
           ).map(([id, txt]) => (
             <button key={id} type="button" onClick={() => setTipo(id)} aria-pressed={tipo === id} className={botonSel(tipo === id)}>
-              {txt}
+              <T>{txt}</T>
             </button>
           ))}
         </div>
@@ -193,8 +193,8 @@ export function GeneradorCortadores() {
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {ICONOS_TEXTURA.map((i) => (
               <button key={i.id} type="button" onClick={() => setIcono(i.id)} aria-pressed={icono === i.id} title={i.nombre} className={botonSel(icono === i.id)}>
-                <span className="block text-[18px] leading-none">{i.simbolo}</span>
-                <span className="mt-1 block text-[10.5px]">{i.nombre}</span>
+                <span className="block text-[18px] leading-none"><T>{i.simbolo}</T></span>
+                <span className="mt-1 block text-[10.5px]"><T>{i.nombre}</T></span>
               </button>
             ))}
           </div>
@@ -203,7 +203,7 @@ export function GeneradorCortadores() {
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {FORMAS_CLASICAS.map((c) => (
               <button key={c.id} type="button" onClick={() => setClasica(c.id)} aria-pressed={clasica === c.id} className={botonSel(clasica === c.id)}>
-                {c.nombre}
+                <T>{c.nombre}</T>
               </button>
             ))}
           </div>
@@ -225,7 +225,7 @@ export function GeneradorCortadores() {
             <Etiqueta><T>Tu dibujo en SVG</T></Etiqueta>
             <input type="file" accept=".svg,image/svg+xml" onChange={(e) => subirSvg(e.target.files?.[0])} className="text-[13px] text-[#C9D2E0]" />
             <span className="text-[11.5px] text-[#8A97AB]">
-              {svg ? `Cargado: ${svg.nombre}` : "La silueta como trazo cerrado. ¿Tienes una foto?"}{" "}
+              <T>{svg ? `Cargado: ${svg.nombre}` : "La silueta como trazo cerrado. ¿Tienes una foto?"}</T><T>{" "}</T>
               {!svg && (
                 <a href={`/${locale}/disenar/vectorizador`} className="underline">
                   <T>Pásala a SVG con el vectorizador</T>
@@ -249,7 +249,7 @@ export function GeneradorCortadores() {
                   style={{ fontFamily: `"hl-${t.id}", sans-serif`, fontWeight: t.peso }}
                   className={`h-10 truncate rounded-[8px] px-2 text-[15px] ${fuenteId === t.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}
                 >
-                  {t.nombre}
+                  <T>{t.nombre}</T>
                 </button>
               ))}
             </div>
@@ -277,7 +277,7 @@ export function GeneradorCortadores() {
             ] as [TipoSello, string][]
           ).map(([id, txt]) => (
             <button key={id} type="button" onClick={() => setTipoSello(id)} aria-pressed={tipoSello === id} className={botonSel(tipoSello === id)}>
-              {txt}
+              <T>{txt}</T>
             </button>
           ))}
         </div>
@@ -293,7 +293,7 @@ export function GeneradorCortadores() {
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {ICONOS_TEXTURA.map((i) => (
               <button key={i.id} type="button" onClick={() => setIconoSello(i.id)} aria-pressed={iconoSello === i.id} title={i.nombre} className={botonSel(iconoSello === i.id)}>
-                <span className="block text-[18px] leading-none">{i.simbolo}</span>
+                <span className="block text-[18px] leading-none"><T>{i.simbolo}</T></span>
               </button>
             ))}
           </div>
@@ -306,20 +306,20 @@ export function GeneradorCortadores() {
       </Seccion>
       <PanelColores mc={mc} />
 
-      {error && <Aviso tipo="error">{error}</Aviso>}
+      {error && <Aviso tipo="error"><T>{error}</T></Aviso>}
       {r?.errores.map((e) => (
         <Aviso key={e} tipo="error">
-          {e}
+          <T>{e}</T>
         </Aviso>
       ))}
-      {listo && r!.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
+      {listo && r!.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
   const diseno2d = (
     <div className="flex h-full flex-col gap-3 p-4">
       {!listo ? (
-        <p className="m-0 text-[14px] text-[#8A97AB]">{cargando ? "Cargando tipografía…" : tipo === "svg" && !svg ? "Sube tu dibujo en SVG." : "Elige una forma."}</p>
+        <p className="m-0 text-[14px] text-[#8A97AB]"><T>{cargando ? "Cargando tipografía…" : tipo === "svg" && !svg ? "Sube tu dibujo en SVG." : "Elige una forma."}</T></p>
       ) : (
         <>
           <Datos
@@ -390,7 +390,7 @@ export function GeneradorCortadores() {
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </div>
   )
 
@@ -406,7 +406,7 @@ export function GeneradorCortadores() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {medidas}{r!.sello ? " · con sello" : ""}</span> : null}
+      barra={listo ? <span>· <T>{medidas}</T><T>{r!.sello ? " · con sello" : ""}</T></span> : null}
     />
   )
 }

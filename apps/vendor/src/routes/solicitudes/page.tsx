@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -11,6 +12,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Solicitudes",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -40,9 +43,9 @@ const S = {
 function Plazo({ cierra }) {
   if (!cierra) return null
   const h = (new Date(cierra).getTime() - Date.now()) / 3600000
-  if (h <= 0) return <span style={S.tag("#F3F1EA", "#6B675C")}>Cerrada</span>
+  if (h <= 0) return <span style={S.tag("#F3F1EA", "#6B675C")}><T>Cerrada</T></span>
   const texto = h < 1 ? "Cierra en menos de 1 h" : h < 48 ? `Cierra en ${Math.round(h)} h` : `Cierra en ${Math.round(h / 24)} días`
-  return h < 24 ? <span style={S.tag("#FDECEA", "#B3261E")}>⏱ {texto}</span> : <span style={S.tag("#F3F1EA", "#55544D")}>{texto}</span>
+  return h < 24 ? <span style={S.tag("#FDECEA", "#B3261E")}>⏱ <T>{texto}</T></span> : <span style={S.tag("#F3F1EA", "#55544D")}><T>{texto}</T></span>
 }
 
 // Panel lateral para responder una solicitud sin perder la lista (rediseño nov 2026)
@@ -60,11 +63,11 @@ function PanelLateral({ titulo, sub, alCerrar, children }) {
       <div role="dialog" aria-label={titulo} style={{ position: "relative", width: "min(520px, 100%)", height: "100%", overflowY: "auto", background: "#FFFFFF", boxShadow: "-12px 0 32px -12px rgba(20,32,51,0.35)", padding: "22px 22px 40px", boxSizing: "border-box" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
           <div>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C2560A" }}>Responder solicitud</p>
-            <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: "#142033" }}>{titulo}</p>
-            {sub && <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6B675C" }}>{sub}</p>}
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#C2560A" }}><T>Responder solicitud</T></p>
+            <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 800, color: "#142033" }}><T>{titulo}</T></p>
+            {sub && <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6B675C" }}><T>{sub}</T></p>}
           </div>
-          <button type="button" onClick={alCerrar} aria-label="Cerrar" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E4DC", background: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
+          <button type="button" onClick={alCerrar} aria-label={traducir("Cerrar")} style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E4DC", background: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
         </div>
         {children}
       </div>
@@ -122,12 +125,12 @@ function PedirAcceso({ sol }) {
     <span style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
       {estado === "ninguno" && (
         <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} disabled={enviando} onClick={pedir}>
-          {enviando ? "Enviando..." : "🔑 Pedir acceso al cliente"}
+          <T>{enviando ? "Enviando..." : "🔑 Pedir acceso al cliente"}</T>
         </button>
       )}
-      {estado === "pendiente" && <span style={{ color: "#8A5A00", fontSize: 12 }}>⏳ Pediste acceso: esperando al cliente</span>}
-      {estado === "rechazado" && <span style={{ color: "#6B675C", fontSize: 12 }}>El cliente no autorizó el acceso. Cotiza con lo visible o hazle una pregunta.</span>}
-      {error && <span style={{ color: "#B3261E", fontSize: 12 }}>{error}</span>}
+      {estado === "pendiente" && <span style={{ color: "#8A5A00", fontSize: 12 }}><T>⏳ Pediste acceso: esperando al cliente</T></span>}
+      {estado === "rechazado" && <span style={{ color: "#6B675C", fontSize: 12 }}><T>El cliente no autorizó el acceso. Cotiza con lo visible o hazle una pregunta.</T></span>}
+      {error && <span style={{ color: "#B3261E", fontSize: 12 }}><T>{error}</T></span>}
     </span>
   )
 }
@@ -174,26 +177,26 @@ function AcuerdoNda({ sol, alAceptar }) {
   }
   return (
     <div style={{ margin: "10px 0", background: "#FFF6EE", border: "1px solid #F2D4B8", borderRadius: 8, padding: "10px 12px", fontSize: 13 }}>
-      <b>🔏 Este cliente pide acuerdo de confidencialidad.</b> Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.
+      <b><T>🔏 Este cliente pide acuerdo de confidencialidad.</T></b> <T>Para ver la descripción, los planos y las fotos, y para cotizar, primero léelo y acéptalo.</T>
       {texto === null ? (
         <div style={{ marginTop: 8 }}>
           <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} onClick={leer}>
-            Leer el acuerdo
+            <T>Leer el acuerdo</T>
           </button>
         </div>
       ) : (
         <div style={{ marginTop: 8 }}>
-          <div style={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid #E7E4DC", borderRadius: 6, padding: 10, color: "#40403A" }}>{texto}</div>
+          <div style={{ whiteSpace: "pre-line", maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid #E7E4DC", borderRadius: 6, padding: 10, color: "#40403A" }}><T>{texto}</T></div>
           <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
             <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} />
-            Leí el acuerdo y lo acepto a nombre de mi taller.
+            <T>Leí el acuerdo y lo acepto a nombre de mi taller.</T>
           </label>
           <button type="button" style={{ ...S.btn, marginTop: 8, padding: "6px 14px", fontSize: 13 }} disabled={!acepto || enviando} onClick={aceptar}>
-            {enviando ? "Guardando..." : "Aceptar acuerdo"}
+            <T>{enviando ? "Guardando..." : "Aceptar acuerdo"}</T>
           </button>
         </div>
       )}
-      {error && <div style={{ color: "#B3261E", marginTop: 6 }}>{error}</div>}
+      {error && <div style={{ color: "#B3261E", marginTop: 6 }}><T>{error}</T></div>}
     </div>
   )
 }
@@ -220,10 +223,10 @@ function BotonExpediente({ sol }) {
   return (
     <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
       <button type="button" style={{ ...S.btn2, padding: "6px 12px", fontSize: 13 }} disabled={cargando} onClick={abrir}>
-        {cargando ? "Abriendo..." : "📁 Expediente del proyecto"}
+        <T>{cargando ? "Abriendo..." : "📁 Expediente del proyecto"}</T>
       </button>
-      <span style={{ color: "#6B675C", fontSize: 12 }}>Archivos, propuesta, pagos, avances y entrega en un solo historial.</span>
-      {error && <span style={{ color: "#B3261E", fontSize: 12 }}>{error}</span>}
+      <span style={{ color: "#6B675C", fontSize: 12 }}><T>Archivos, propuesta, pagos, avances y entrega en un solo historial.</T></span>
+      {error && <span style={{ color: "#B3261E", fontSize: 12 }}><T>{error}</T></span>}
     </div>
   )
 }
@@ -256,11 +259,11 @@ function ArchivosCliente({ sol }) {
     <div style={{ marginTop: 10, background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 8, padding: "8px 12px", fontSize: 13 }}>
       {!ligas ? (
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <span>📎 {archivos.length} {archivos.length === 1 ? "archivo del cliente" : "archivos del cliente"}: {archivos.map((a) => a.nombre).join(", ")}</span>
+          <span>📎 <T>{archivos.length}</T> <T>{archivos.length === 1 ? "archivo del cliente" : "archivos del cliente"}</T>: <T>{archivos.map((a) => a.nombre).join(", ")}</T></span>
           <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} disabled={cargando} onClick={pedir}>
-            {cargando ? "Preparando..." : "Descargar"}
+            <T>{cargando ? "Preparando..." : "Descargar"}</T>
           </button>
-          {error && <span style={{ color: "#B3261E" }}>{error}</span>}
+          {error && <span style={{ color: "#B3261E" }}><T>{error}</T></span>}
         </div>
       ) : (
         <div style={{ display: "grid", gap: 4 }}>
@@ -268,7 +271,7 @@ function ArchivosCliente({ sol }) {
             a.url ? (
               <span key={i} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
-                  ⬇ {a.nombre} <span style={{ color: "#6B675C", fontWeight: 400 }}>({pesoLegible(a.tamano)})</span>
+                  ⬇ <T>{a.nombre}</T> <span style={{ color: "#6B675C", fontWeight: 400 }}>({pesoLegible(a.tamano)})</span>
                 </a>
                 {/\.(dxf|svg|stl|obj)$/i.test(a.nombre) && (
                   <a
@@ -277,27 +280,27 @@ function ArchivosCliente({ sol }) {
                     rel="noopener noreferrer"
                     style={{ color: "#1a3a5c", fontWeight: 600, fontSize: 12 }}
                   >
-                    👁 Ver la pieza
+                    <T>👁 Ver la pieza</T>
                   </a>
                 )}
               </span>
             ) : a.bloqueado ? (
               <span key={i} style={{ color: "#6B675C" }}>
-                🔒 {a.nombre}:{" "}
-                {a.motivo === "nda"
+                🔒 <T>{a.nombre}</T>:<T>{" "}</T>
+                <T>{a.motivo === "nda"
                   ? "acepta el acuerdo de confidencialidad para descargarlo"
                   : a.motivo === "solo_elegido"
                     ? "el cliente lo comparte sólo con el taller que elija"
-                    : "el cliente lo comparte sólo con talleres autorizados"}
+                    : "el cliente lo comparte sólo con talleres autorizados"}</T>
               </span>
             ) : (
-              <span key={i} style={{ color: "#B3261E" }}>{a.nombre}: no disponible, intenta más tarde</span>
+              <span key={i} style={{ color: "#B3261E" }}><T>{a.nombre}</T><T>: no disponible, intenta más tarde</T></span>
             )
           )}
           {ligas.some((a) => a.bloqueado && !a.motivo) && <PedirAcceso sol={sol} />}
           <span style={{ color: "#6B675C", fontSize: 12 }}>
-            Las ligas duran una hora y cada descarga queda registrada (el cliente ve quién bajó sus archivos). Los planos son confidenciales:
-            úsalos sólo para cotizar y fabricar este trabajo.
+            <T>Las ligas duran una hora y cada descarga queda registrada (el cliente ve quién bajó sus archivos). Los planos son confidenciales:
+            úsalos sólo para cotizar y fabricar este trabajo.</T>
           </span>
         </div>
       )}
@@ -335,13 +338,13 @@ function FormNoPuedo({ sol, alGuardar, alCancelar }) {
     <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {MOTIVOS.map(([v, l]) => (
-          <button key={v} type="button" style={S.tab(motivo === v)} onClick={() => setMotivo(v)}>{l}</button>
+          <button key={v} type="button" style={S.tab(motivo === v)} onClick={() => setMotivo(v)}><T>{l}</T></button>
         ))}
       </div>
       {motivo && (
         <>
           <label style={{ ...S.label, marginTop: 10 }}>
-            {motivo === "mas_info" ? "¿Qué necesitas saber? (HETNA se lo pregunta al cliente)" : "Nota para HETNA (opcional)"}
+            <T>{motivo === "mas_info" ? "¿Qué necesitas saber? (HETNA se lo pregunta al cliente)" : "Nota para HETNA (opcional)"}</T>
           </label>
           <textarea style={S.area} value={nota} onChange={(e) => setNota(e.target.value)}
             placeholder={motivo === "mas_info" ? "Ej. ¿Qué espesor de lámina? ¿El archivo trae cotas?" : "Ej. Tengo la máquina ocupada hasta el día 15."} />
@@ -349,10 +352,10 @@ function FormNoPuedo({ sol, alGuardar, alCancelar }) {
       )}
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
         <button type="button" style={{ ...S.btn, background: "#142033", opacity: !motivo || enviando ? 0.6 : 1 }} disabled={!motivo || enviando} onClick={enviar}>
-          {enviando ? "Guardando..." : motivo === "mas_info" ? "Pedir información" : "Guardar respuesta"}
+          <T>{enviando ? "Guardando..." : motivo === "mas_info" ? "Pedir información" : "Guardar respuesta"}</T>
         </button>
-        <button type="button" style={{ ...S.btn2, border: 0 }} onClick={alCancelar}>Cancelar</button>
-        {msg && <span style={{ fontSize: 14, color: "#B3261E" }}>{msg}</span>}
+        <button type="button" style={{ ...S.btn2, border: 0 }} onClick={alCancelar}><T>Cancelar</T></button>
+        {msg && <span style={{ fontSize: 14, color: "#B3261E" }}><T>{msg}</T></span>}
       </div>
     </div>
   )
@@ -385,22 +388,22 @@ function Conversacion({ sol }) {
   }
   return (
     <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
-      <b style={{ fontSize: 14 }}>💬 Conversación con el cliente</b>
-      <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>Mientras el cliente no comparta su contacto o no firmen el acuerdo, correos, teléfonos y ligas se ocultan.</p>
+      <b style={{ fontSize: 14 }}><T>💬 Conversación con el cliente</T></b>
+      <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}><T>Mientras el cliente no comparta su contacto o no firmen el acuerdo, correos, teléfonos y ligas se ocultan.</T></p>
       <div style={{ maxHeight: 260, overflowY: "auto", background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 8, display: "grid", gap: 6 }}>
-        {lista.length === 0 && <span style={{ fontSize: 13, color: "#8A867B" }}>Sin mensajes todavía. Confirma con el cliente los detalles del trabajo.</span>}
+        {lista.length === 0 && <span style={{ fontSize: 13, color: "#8A867B" }}><T>Sin mensajes todavía. Confirma con el cliente los detalles del trabajo.</T></span>}
         {lista.map((m) => (
           <div key={m.id} style={{ justifySelf: m.mio ? "end" : "start", maxWidth: "85%", background: m.mio ? "#142033" : "#fff", color: m.mio ? "#fff" : "#142033", border: m.mio ? 0 : "1px solid #E7E4DC", borderRadius: 12, padding: "6px 10px", fontSize: 13 }}>
-            <div style={{ whiteSpace: "pre-wrap" }}>{m.texto}</div>
+            <div style={{ whiteSpace: "pre-wrap" }}><T>{m.texto}</T></div>
             <div style={{ fontSize: 11, opacity: 0.6 }}>{fechaCorta(m.fecha)}</div>
           </div>
         ))}
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-        <textarea style={{ ...S.area, minHeight: 44 }} value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)} placeholder="Escribe tu mensaje…" />
-        <button type="button" style={S.btn} onClick={enviar} disabled={!texto.trim()}>Enviar</button>
+        <textarea style={{ ...S.area, minHeight: 44 }} value={texto} maxLength={2000} onChange={(e) => setTexto(e.target.value)} placeholder={traducir("Escribe tu mensaje…")} />
+        <button type="button" style={S.btn} onClick={enviar} disabled={!texto.trim()}><T>Enviar</T></button>
       </div>
-      {error && <p style={{ color: "#B3261E", fontSize: 13 }}>{error}</p>}
+      {error && <p style={{ color: "#B3261E", fontSize: 13 }}><T>{error}</T></p>}
     </div>
   )
 }
@@ -453,97 +456,97 @@ function AcuerdoSafeDeal({ sol }) {
     <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
       {a.apartados.map((ap, i) => (
         <label key={ap.clave} style={{ fontSize: 13 }}>
-          <b>{i + 1}. {ap.titulo}</b>
+          <b>{i + 1}. <T>{ap.titulo}</T></b>
           <textarea style={S.area} value={cond[ap.clave] || ""} maxLength={3000} onChange={(e) => setCond({ ...cond, [ap.clave]: e.target.value })} />
         </label>
       ))}
       <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" style={S.btn} disabled={ocupado} onClick={async () => { if (await hacer({ accion: "guardar", condiciones: cond }, "Guardado. El cliente debe revisar y aprobar.")) setEditando(false) }}>{k ? "Guardar cambios" : "Proponer al cliente"}</button>
-        <button type="button" style={S.btn2} onClick={() => { setEditando(false); setCond(k?.condiciones || a.sugerencia || {}) }}>Cancelar</button>
+        <button type="button" style={S.btn} disabled={ocupado} onClick={async () => { if (await hacer({ accion: "guardar", condiciones: cond }, "Guardado. El cliente debe revisar y aprobar.")) setEditando(false) }}><T>{k ? "Guardar cambios" : "Proponer al cliente"}</T></button>
+        <button type="button" style={S.btn2} onClick={() => { setEditando(false); setCond(k?.condiciones || a.sugerencia || {}) }}><T>Cancelar</T></button>
       </div>
     </div>
   )
   return (
     <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <b style={{ fontSize: 14 }}>🤝 Acuerdo HETNA SafeDeal</b>
-        <span style={S.tag("#F3F1EA", "#6B675C")}>Opcional</span>
-        {firmado && <span style={S.tag("#E6F4EA", "#1E7B3A")}>Firmado por ambos</span>}
+        <b style={{ fontSize: 14 }}><T>🤝 Acuerdo HETNA SafeDeal</T></b>
+        <span style={S.tag("#F3F1EA", "#6B675C")}><T>Opcional</T></span>
+        {firmado && <span style={S.tag("#E6F4EA", "#1E7B3A")}><T>Firmado por ambos</T></span>}
       </div>
       {!firmado && (
         <p style={{ fontSize: 13, background: "#FFF8EE", border: "1px solid #F2C98F", borderRadius: 8, padding: "8px 10px", margin: "8px 0 0" }}>
-          <b>⚠️ Recomendado para el bienestar de los dos.</b> Deja por escrito qué entregas, cuándo, a qué precio y cómo te pagan. Te protege de cambios de alcance y pagos atrasados, y al cliente le da certeza sobre calidad y confidencialidad.
+          <b><T>⚠️ Recomendado para el bienestar de los dos.</T></b> <T>Deja por escrito qué entregas, cuándo, a qué precio y cómo te pagan. Te protege de cambios de alcance y pagos atrasados, y al cliente le da certeza sobre calidad y confidencialidad.</T>
         </p>
       )}
-      {a.leyenda && <p style={{ fontSize: 12, color: "#C2560A", fontWeight: 600, margin: "6px 0 0" }}>{a.leyenda}</p>}
+      {a.leyenda && <p style={{ fontSize: 12, color: "#C2560A", fontWeight: 600, margin: "6px 0 0" }}><T>{a.leyenda}</T></p>}
       {a.contactos_liberados && a.contacto_otro && (
         <p style={{ fontSize: 13, background: "#EEF6F0", borderRadius: 8, padding: "8px 10px" }}>
-          <b>Contacto del cliente:</b> {[a.contacto_otro.nombre, a.contacto_otro.empresa, a.contacto_otro.email, a.contacto_otro.telefono && `Tel. ${a.contacto_otro.telefono}`, a.contacto_otro.whatsapp && `WhatsApp ${a.contacto_otro.whatsapp}`].filter(Boolean).join(" · ")}
+          <b><T>Contacto del cliente:</T></b> <T>{[a.contacto_otro.nombre, a.contacto_otro.empresa, a.contacto_otro.email, a.contacto_otro.telefono && `Tel. ${a.contacto_otro.telefono}`, a.contacto_otro.whatsapp && `WhatsApp ${a.contacto_otro.whatsapp}`].filter(Boolean).join(" · ")}</T>
         </p>
       )}
-      {!k && !editando && <button type="button" style={{ ...S.btn, marginTop: 8 }} onClick={() => setEditando(true)}>Preparar el acuerdo</button>}
+      {!k && !editando && <button type="button" style={{ ...S.btn, marginTop: 8 }} onClick={() => setEditando(true)}><T>Preparar el acuerdo</T></button>}
       {((!k && editando) || (k?.estado === "borrador" && editando)) && campos()}
       {k?.estado === "borrador" && !editando && (
         <div style={{ marginTop: 8, fontSize: 13 }}>
-          <p style={{ margin: 0 }}>Versión {k.version} · Cliente: {k.aprobo_cliente ? "✓ aprobó" : "pendiente"} · Taller: {k.aprobo_taller ? "✓ aprobó" : "pendiente"}</p>
+          <p style={{ margin: 0 }}><T>Versión</T> <T>{k.version}</T> <T>· Cliente:</T> <T>{k.aprobo_cliente ? "✓ aprobó" : "pendiente"}</T> <T>· Taller:</T> <T>{k.aprobo_taller ? "✓ aprobó" : "pendiente"}</T></p>
           <div style={{ background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 6 }}>
             {a.apartados.map((ap, i) => (
-              <div key={ap.clave} style={{ marginBottom: 6 }}><b>{i + 1}. {ap.titulo}</b><div style={{ whiteSpace: "pre-wrap", color: "#40403A" }}>{k.condiciones?.[ap.clave] || "—"}</div></div>
+              <div key={ap.clave} style={{ marginBottom: 6 }}><b>{i + 1}. <T>{ap.titulo}</T></b><div style={{ whiteSpace: "pre-wrap", color: "#40403A" }}><T>{k.condiciones?.[ap.clave] || "—"}</T></div></div>
             ))}
           </div>
           <details style={{ fontSize: 12, color: "#6B675C", marginTop: 6 }}>
-            <summary style={{ cursor: "pointer", fontWeight: 600 }}>Papel de HETNA ({a.modalidad === "conecta" ? "el cliente te paga directo" : "el cliente paga por medio de HETNA"})</summary>
-            <p style={{ margin: "4px 0 0" }}>{a.clausula_hetna}</p>
+            <summary style={{ cursor: "pointer", fontWeight: 600 }}><T>Papel de HETNA (</T><T>{a.modalidad === "conecta" ? "el cliente te paga directo" : "el cliente paga por medio de HETNA"}</T>)</summary>
+            <p style={{ margin: "4px 0 0" }}><T>{a.clausula_hetna}</T></p>
           </details>
           {k.pendientes?.length > 0 && (
             <p style={{ background: "#FFF7ED", color: "#7C2D12", borderRadius: 8, padding: "6px 10px", margin: "6px 0 0" }}>
-              Antes de aprobar, completen lo que dice «indicar» o «por definir» en: {k.pendientes.join(", ")}. Usa «Proponer cambios».
+              <T>Antes de aprobar, completen lo que dice «indicar» o «por definir» en:</T> <T>{k.pendientes.join(", ")}</T><T>. Usa «Proponer cambios».</T>
             </p>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            {!k.yo_aprobe && <button type="button" style={S.btn} disabled={ocupado || k.pendientes?.length > 0} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}>✓ Apruebo estas condiciones</button>}
-            <button type="button" style={S.btn2} onClick={() => setEditando(true)}>Proponer cambios</button>
+            {!k.yo_aprobe && <button type="button" style={S.btn} disabled={ocupado || k.pendientes?.length > 0} onClick={() => hacer({ accion: "aprobar", huella: k.huella }, "Aprobaste las condiciones.")}><T>✓ Apruebo estas condiciones</T></button>}
+            <button type="button" style={S.btn2} onClick={() => setEditando(true)}><T>Proponer cambios</T></button>
           </div>
         </div>
       )}
       {k?.estado === "listo" && (
         <div style={{ marginTop: 8, fontSize: 13, display: "grid", gap: 8 }}>
-          <p style={{ margin: 0 }}>Ambos aprobaron la versión {k.version}. <a href="#" style={{ color: "#C2560A" }} onClick={(e) => { e.preventDefault(); bajar("contrato") }}>Descarga y revisa el PDF</a>.</p>
-          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}>SHA-256: {k.sha256}</span>
+          <p style={{ margin: 0 }}><T>Ambos aprobaron la versión</T> <T>{k.version}</T>. <a href="#" style={{ color: "#C2560A" }} onClick={(e) => { e.preventDefault(); bajar("contrato") }}><T>Descarga y revisa el PDF</T></a>.</p>
+          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}><T>SHA-256:</T> <T>{k.sha256}</T></span>
           {!k.yo_firme ? (
             <div style={S.grid}>
-              <input style={S.input} placeholder="Tu nombre completo" value={firma.nombre} onChange={(e) => setFirma({ ...firma, nombre: e.target.value })} />
-              <input style={S.input} placeholder="Taller o empresa que representas" value={firma.representacion} onChange={(e) => setFirma({ ...firma, representacion: e.target.value })} />
-              <label style={{ gridColumn: "1 / -1" }}><input type="checkbox" checked={firma.acepto} onChange={(e) => setFirma({ ...firma, acepto: e.target.checked })} /> Leí el contrato (versión {k.version}) y acepto firmarlo electrónicamente.</label>
-              <label style={{ gridColumn: "1 / -1" }}><input type="checkbox" checked={firma.autorizo_contacto} onChange={(e) => setFirma({ ...firma, autorizo_contacto: e.target.checked })} /> {a.autorizacion_contacto}</label>
-              <p style={{ gridColumn: "1 / -1", margin: 0, fontSize: 12, color: "#6B675C" }}>Al firmar las dos partes, te mandamos a tu correo una copia del contrato y de la constancia de firmas.</p>
+              <input style={S.input} placeholder={traducir("Tu nombre completo")} value={firma.nombre} onChange={(e) => setFirma({ ...firma, nombre: e.target.value })} />
+              <input style={S.input} placeholder={traducir("Taller o empresa que representas")} value={firma.representacion} onChange={(e) => setFirma({ ...firma, representacion: e.target.value })} />
+              <label style={{ gridColumn: "1 / -1" }}><input type="checkbox" checked={firma.acepto} onChange={(e) => setFirma({ ...firma, acepto: e.target.checked })} /> <T>Leí el contrato (versión</T> <T>{k.version}</T><T>) y acepto firmarlo electrónicamente.</T></label>
+              <label style={{ gridColumn: "1 / -1" }}><input type="checkbox" checked={firma.autorizo_contacto} onChange={(e) => setFirma({ ...firma, autorizo_contacto: e.target.checked })} /> <T>{a.autorizacion_contacto}</T></label>
+              <p style={{ gridColumn: "1 / -1", margin: 0, fontSize: 12, color: "#6B675C" }}><T>Al firmar las dos partes, te mandamos a tu correo una copia del contrato y de la constancia de firmas.</T></p>
               {!enviado ? (
-                <button type="button" style={S.btn} disabled={ocupado || !firma.acepto || !firma.autorizo_contacto || firma.nombre.trim().length < 5} onClick={async () => { const d = await hacer({ accion: "codigo" }); if (d) setEnviado(d.correo || "tu correo") }}>Enviarme el código</button>
+                <button type="button" style={S.btn} disabled={ocupado || !firma.acepto || !firma.autorizo_contacto || firma.nombre.trim().length < 5} onClick={async () => { const d = await hacer({ accion: "codigo" }); if (d) setEnviado(d.correo || "tu correo") }}><T>Enviarme el código</T></button>
               ) : (
                 <>
                   <input style={S.input} inputMode="numeric" maxLength={6} placeholder={`Código enviado a ${enviado}`} value={firma.codigo} onChange={(e) => setFirma({ ...firma, codigo: e.target.value.replace(/\D/g, "") })} />
-                  <button type="button" style={S.btn} disabled={ocupado || firma.codigo.length !== 6 || !firma.autorizo_contacto} onClick={() => hacer({ accion: "firmar", ...firma, sha256: k.sha256 }, "¡Firmaste!")}>Firmar contrato</button>
+                  <button type="button" style={S.btn} disabled={ocupado || firma.codigo.length !== 6 || !firma.autorizo_contacto} onClick={() => hacer({ accion: "firmar", ...firma, sha256: k.sha256 }, "¡Firmaste!")}><T>Firmar contrato</T></button>
                 </>
               )}
             </div>
           ) : (
-            <b style={{ color: "#1E7B3A" }}>✓ Ya firmaste. Falta la firma del cliente.</b>
+            <b style={{ color: "#1E7B3A" }}><T>✓ Ya firmaste. Falta la firma del cliente.</T></b>
           )}
-          <button type="button" style={{ ...S.btn2, justifySelf: "start" }} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada: haz tus cambios.")}>Cambiar condiciones (versión nueva)</button>
+          <button type="button" style={{ ...S.btn2, justifySelf: "start" }} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada: haz tus cambios.")}><T>Cambiar condiciones (versión nueva)</T></button>
         </div>
       )}
       {firmado && (
         <div style={{ marginTop: 8, fontSize: 13, display: "grid", gap: 6 }}>
-          <span>Firmado el {fechaCorta(k.firmado_en)} por {k.firmas.map((f) => f.nombre).join(" y ")}. Nadie puede modificar esta versión.</span>
-          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}>SHA-256: {k.sha256}</span>
+          <span><T>Firmado el</T> {fechaCorta(k.firmado_en)} <T>por</T> <T>{k.firmas.map((f) => f.nombre).join(" y ")}</T><T>. Nadie puede modificar esta versión.</T></span>
+          <span style={{ fontSize: 11, color: "#8A867B", wordBreak: "break-all" }}><T>SHA-256:</T> <T>{k.sha256}</T></span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" style={S.btn} onClick={() => bajar("contrato", k.version)}>Descargar contrato</button>
-            <button type="button" style={S.btn2} onClick={() => bajar("constancia", k.version)}>Constancia de firmas</button>
-            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada.")}>Modificar (versión nueva)</button>
+            <button type="button" style={S.btn} onClick={() => bajar("contrato", k.version)}><T>Descargar contrato</T></button>
+            <button type="button" style={S.btn2} onClick={() => bajar("constancia", k.version)}><T>Constancia de firmas</T></button>
+            <button type="button" style={S.btn2} disabled={ocupado} onClick={() => hacer({ accion: "guardar", condiciones: k.condiciones }, "Versión nueva creada.")}><T>Modificar (versión nueva)</T></button>
           </div>
         </div>
       )}
-      {nota && <p style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</p>}
+      {nota && <p style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}><T>{nota.t}</T></p>}
     </div>
   )
 }
@@ -558,11 +561,11 @@ function RepCliente({ rep }) {
   const hechos = m && (m.pagados || m.cancelados_tras_elegir)
     ? ` · pagó ${m.pagados} ${m.pagados === 1 ? "trabajo" : "trabajos"}${m.cancelados_tras_elegir ? ` · canceló ${m.cancelados_tras_elegir} tras elegir` : ""}`
     : ""
-  if (!rep.evaluaciones) return <span style={S.tag("#F3F1EA", "#6B675C")} title="Todavía no tiene evaluaciones de otros talleres">Cliente nuevo{hechos}</span>
+  if (!rep.evaluaciones) return <span style={S.tag("#F3F1EA", "#6B675C")} title={traducir("Todavía no tiene evaluaciones de otros talleres")}><T>Cliente nuevo</T><T>{hechos}</T></span>
   const buena = rep.promedio >= 4
   return (
     <span style={S.tag(buena ? "#E6F4EA" : "#FFF8EE", buena ? "#1E7B3A" : "#8A5A00")} title={rep.suficiente ? "Evaluado por talleres en trabajos pagados" : "Historial todavía insuficiente"}>
-      Cliente ★ {rep.promedio} · {rep.evaluaciones} {rep.evaluaciones === 1 ? "evaluación" : "evaluaciones"}{!rep.suficiente ? " (poco historial)" : ""}{hechos}
+      <T>Cliente ★</T> <T>{rep.promedio}</T> · <T>{rep.evaluaciones}</T> <T>{rep.evaluaciones === 1 ? "evaluación" : "evaluaciones"}</T><T>{!rep.suficiente ? " (poco historial)" : ""}</T><T>{hechos}</T>
     </span>
   )
 }
@@ -600,14 +603,14 @@ function EvaluarCliente({ sol }) {
   const r = d.recibida
   return (
     <div style={{ marginTop: 12, border: "1px solid #E7E4DC", borderRadius: 10, padding: 12, fontSize: 13 }}>
-      <b style={{ fontSize: 14 }}>⭐ Evaluación mutua</b>
-      {!d.puede_evaluar && !d.dada && <p style={{ margin: "4px 0 0", color: "#6B675C" }}>Cuando entregues y el cliente haya pagado, podrás evaluarlo. Su reputación ayuda a otros talleres a elegir con quién trabajar.</p>}
+      <b style={{ fontSize: 14 }}><T>⭐ Evaluación mutua</T></b>
+      {!d.puede_evaluar && !d.dada && <p style={{ margin: "4px 0 0", color: "#6B675C" }}><T>Cuando entregues y el cliente haya pagado, podrás evaluarlo. Su reputación ayuda a otros talleres a elegir con quién trabajar.</T></p>}
       {d.puede_evaluar && (!d.dada || editando) && (
         <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
-          <span style={{ color: "#6B675C" }}>Evalúa al cliente. Se publica cuando los dos evalúen (o en {d.dias_publicacion} días); antes nadie ve la evaluación del otro.</span>
+          <span style={{ color: "#6B675C" }}><T>Evalúa al cliente. Se publica cuando los dos evalúen (o en</T> <T>{d.dias_publicacion}</T> <T>días); antes nadie ve la evaluación del otro.</T></span>
           {d.indicadores.map((i) => (
             <div key={i.clave} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span>{i.nombre}</span>
+              <span><T>{i.nombre}</T></span>
               <span>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button key={n} type="button" aria-label={`${i.nombre} ${n} de 5`} onClick={() => setNotas({ ...notas, [i.clave]: n })} style={{ background: "none", border: 0, fontSize: 20, cursor: "pointer", color: n <= (notas[i.clave] || 0) ? "#C2560A" : "#D9D5C9", padding: "0 1px" }}>★</button>
@@ -615,35 +618,35 @@ function EvaluarCliente({ sol }) {
               </span>
             </div>
           ))}
-          <textarea style={S.area} maxLength={1000} placeholder="Comentario (opcional)" value={comentario} onChange={(e) => setComentario(e.target.value)} />
-          <button type="button" style={{ ...S.btn, justifySelf: "start" }} disabled={!completo} onClick={() => post({ accion: "evaluar", ...notas, comentario }, "Evaluación guardada.")}>Enviar evaluación</button>
+          <textarea style={S.area} maxLength={1000} placeholder={traducir("Comentario (opcional)")} value={comentario} onChange={(e) => setComentario(e.target.value)} />
+          <button type="button" style={{ ...S.btn, justifySelf: "start" }} disabled={!completo} onClick={() => post({ accion: "evaluar", ...notas, comentario }, "Evaluación guardada.")}><T>Enviar evaluación</T></button>
         </div>
       )}
       {d.dada && !editando && (
         <p style={{ margin: "6px 0 0" }}>
-          Evaluaste al cliente: <b>{Number(d.dada.promedio).toFixed(1)} / 5</b>{d.dada.retenida ? " (en revisión de HETNA)" : d.dada.publicada ? " · publicada" : " · se publica cuando el cliente evalúe"}{" "}
-          {!d.dada.publicada && <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setEditando(true)}>Cambiar</button>}
+          <T>Evaluaste al cliente:</T> <b>{Number(d.dada.promedio).toFixed(1)} / 5</b><T>{d.dada.retenida ? " (en revisión de HETNA)" : d.dada.publicada ? " · publicada" : " · se publica cuando el cliente evalúe"}</T><T>{" "}</T>
+          {!d.dada.publicada && <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setEditando(true)}><T>Cambiar</T></button>}
         </p>
       )}
-      {d.recibida_pendiente && <p style={{ margin: "6px 0 0", color: "#6B675C" }}>El cliente ya te evaluó. La verás cuando tú lo evalúes (o en {d.dias_publicacion} días).</p>}
+      {d.recibida_pendiente && <p style={{ margin: "6px 0 0", color: "#6B675C" }}><T>El cliente ya te evaluó. La verás cuando tú lo evalúes (o en</T> <T>{d.dias_publicacion}</T> <T>días).</T></p>}
       {r && (
         <div style={{ background: "#FAF9F6", borderRadius: 8, padding: 8, marginTop: 8 }}>
-          <b>El cliente te evaluó: {Number(r.promedio).toFixed(1)} / 5</b>
-          {r.comentario && <div style={{ marginTop: 4 }}>“{r.comentario}”</div>}
-          {r.respuesta && <div style={{ marginTop: 4, color: "#40403A" }}>Tu respuesta: {r.respuesta}</div>}
+          <b><T>El cliente te evaluó:</T> {Number(r.promedio).toFixed(1)} / 5</b>
+          {r.comentario && <div style={{ marginTop: 4 }}>“<T>{r.comentario}</T>”</div>}
+          {r.respuesta && <div style={{ marginTop: 4, color: "#40403A" }}><T>Tu respuesta:</T> <T>{r.respuesta}</T></div>}
           <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setModo("responder")}>Responder</button>
-            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12, color: "#B3261E", borderColor: "#B3261E" }} onClick={() => setModo("reclamar")}>Pedir revisión</button>
+            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => setModo("responder")}><T>Responder</T></button>
+            <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12, color: "#B3261E", borderColor: "#B3261E" }} onClick={() => setModo("reclamar")}><T>Pedir revisión</T></button>
           </div>
           {modo && (
             <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
               <textarea style={{ ...S.area, minHeight: 44 }} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={modo === "reclamar" ? "¿Por qué no es correcta?" : "Respuesta pública"} />
-              <button type="button" style={S.btn} onClick={() => post({ accion: modo, texto }, modo === "reclamar" ? "Reclamación enviada a HETNA." : "Respuesta publicada.")}>Enviar</button>
+              <button type="button" style={S.btn} onClick={() => post({ accion: modo, texto }, modo === "reclamar" ? "Reclamación enviada a HETNA." : "Respuesta publicada.")}><T>Enviar</T></button>
             </div>
           )}
         </div>
       )}
-      {nota && <p style={{ color: nota.ok ? "#1E7B3A" : "#B3261E", margin: "6px 0 0" }}>{nota.t}</p>}
+      {nota && <p style={{ color: nota.ok ? "#1E7B3A" : "#B3261E", margin: "6px 0 0" }}><T>{nota.t}</T></p>}
     </div>
   )
 }
@@ -699,29 +702,29 @@ function Hitos({ sol }) {
       setOcupado(null)
     }
   }
-  if (!hitos) return <p style={{ fontSize: 12, color: "#6B675C", margin: "10px 0 0" }}>Cargando hitos…</p>
+  if (!hitos) return <p style={{ fontSize: 12, color: "#6B675C", margin: "10px 0 0" }}><T>Cargando hitos…</T></p>
   if (!hitos.length) return null
   const color = { hecho: "#1E7B3A", atrasado: "#B3261E", pendiente: "#8A867B" }
   return (
     <div style={{ marginTop: 10, borderTop: "1px solid #E7E4DC", paddingTop: 10 }}>
       <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#142033" }}>
-        Hitos de producción · {hitos.filter((h) => h.estado === "hecho").length} de {hitos.length} listos
+        <T>Hitos de producción ·</T> <T>{hitos.filter((h) => h.estado === "hecho").length}</T> <T>de</T> <T>{hitos.length}</T> <T>listos</T>
       </p>
       {hitos.map((h) => (
         <div key={h.clave} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.2fr) 140px 1fr", gap: 8, alignItems: "center", padding: "6px 0", borderBottom: "1px dashed #E7E4DC" }}>
           <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13, fontWeight: 600, color: color[h.estado] }}>
             <input type="checkbox" checked={h.estado === "hecho"} disabled={ocupado === h.clave}
               onChange={(e) => guardar(h.clave, { hecho: e.target.checked })} />
-            {h.nombre}
-            {h.estado === "atrasado" && <span style={S.tag("#FDECEA", "#B3261E")}>Atrasado</span>}
+            <T>{h.nombre}</T>
+            {h.estado === "atrasado" && <span style={S.tag("#FDECEA", "#B3261E")}><T>Atrasado</T></span>}
           </label>
-          <input type="date" style={{ ...S.input, height: 32 }} defaultValue={h.fecha_plan || ""} title="Fecha planeada"
+          <input type="date" style={{ ...S.input, height: 32 }} defaultValue={h.fecha_plan || ""} title={traducir("Fecha planeada")}
             onBlur={(e) => e.target.value && e.target.value !== h.fecha_plan && guardar(h.clave, { fecha_plan: e.target.value })} />
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <input style={{ ...S.input, height: 32, flex: "1 1 160px" }} defaultValue={h.nota || ""} placeholder="Nota para el cliente" maxLength={600}
+            <input style={{ ...S.input, height: 32, flex: "1 1 160px" }} defaultValue={h.nota || ""} placeholder={traducir("Nota para el cliente")} maxLength={600}
               onBlur={(e) => e.target.value !== (h.nota || "") && guardar(h.clave, { nota: e.target.value })} />
             <label style={{ ...S.btn2, padding: "5px 10px", fontSize: 12, cursor: "pointer" }}>
-              📷 Foto{h.fotos.length ? " (" + h.fotos.length + ")" : ""}
+              <T>📷 Foto</T><T>{h.fotos.length ? " (" + h.fotos.length + ")" : ""}</T>
               <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }}
                 onChange={(e) => { subirFoto(h.clave, e.target.files && e.target.files[0]); e.target.value = "" }} />
             </label>
@@ -733,7 +736,7 @@ function Hitos({ sol }) {
           </div>
         </div>
       ))}
-      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></p>}
     </div>
   )
 }
@@ -748,7 +751,7 @@ function Pedido({ sol, alGuardar }) {
   if (!sol.pagada) {
     return (
       <p style={{ marginTop: 10, fontSize: 13, color: "#B34D07", background: "#FFF1E6", borderRadius: 8, padding: "8px 12px" }}>
-        Esperando el pago del cliente. No empieces a fabricar hasta que te avisemos que pagó.
+        <T>Esperando el pago del cliente. No empieces a fabricar hasta que te avisemos que pagó.</T>
       </p>
     )
   }
@@ -782,23 +785,23 @@ function Pedido({ sol, alGuardar }) {
   return (
     <div style={{ marginTop: 12, background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <span style={S.tag("#E6F4EA", "#1E7B3A")}>{sol.etapa_nombre || "En producción"}</span>
-        {sol.envio?.guia && <span style={{ fontSize: 13 }}>Guía {sol.envio.paqueteria} <strong>{sol.envio.guia}</strong></span>}
-        {sol.etapa === "entregada" && <span style={{ fontSize: 13, color: "#6B675C" }}>Esperando que el cliente confirme que lo recibió.</span>}
+        <span style={S.tag("#E6F4EA", "#1E7B3A")}><T>{sol.etapa_nombre || "En producción"}</T></span>
+        {sol.envio?.guia && <span style={{ fontSize: 13 }}><T>Guía</T> <T>{sol.envio.paqueteria}</T> <strong><T>{sol.envio.guia}</T></strong></span>}
+        {sol.etapa === "entregada" && <span style={{ fontSize: 13, color: "#6B675C" }}><T>Esperando que el cliente confirme que lo recibió.</T></span>}
       </div>
       {sol.cobro && (
         <p style={{ fontSize: 13, color: "#40403A", margin: "8px 0 0" }}>
-          {sol.cobro.modo === "taller"
+          <T>{sol.cobro.modo === "taller"
             ? `Cobro directo a tu cuenta · pagado ${pesos(pagado)} de ${pesos(precio)}${falta > 0 ? ` · falta ${pesos(falta)}: el cliente lo paga desde su liga; avísale con un avance cuando esté listo.` : " · liquidado."}`
-            : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos el pago completo al confirmar la entrega.`}
+            : `Cobra HETNA · pagado ${pesos(pagado)}. Te transferimos el pago completo al confirmar la entrega.`}</T>
         </p>
       )}
       <Hitos sol={sol} />
       {!modo && (
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-          <button type="button" style={S.btn2} onClick={() => setModo("avance")}>Contar un avance al cliente</button>
+          <button type="button" style={S.btn2} onClick={() => setModo("avance")}><T>Contar un avance al cliente</T></button>
           {!yaEntregada && (
-            <button type="button" style={S.btn} onClick={() => setModo("entregada")}>Marcar como entregado / enviado</button>
+            <button type="button" style={S.btn} onClick={() => setModo("entregada")}><T>Marcar como entregado / enviado</T></button>
           )}
         </div>
       )}
@@ -807,24 +810,24 @@ function Pedido({ sol, alGuardar }) {
           {modo === "entregada" && (
             <div style={S.grid}>
               <div>
-                <label style={S.label}>Paquetería</label>
-                <input style={S.input} value={f.paqueteria} onChange={(e) => set("paqueteria", e.target.value)} placeholder="Estafeta, DHL, entrega en persona…" />
+                <label style={S.label}><T>Paquetería</T></label>
+                <input style={S.input} value={f.paqueteria} onChange={(e) => set("paqueteria", e.target.value)} placeholder={traducir("Estafeta, DHL, entrega en persona…")} />
               </div>
               <div>
-                <label style={S.label}>Número de guía</label>
+                <label style={S.label}><T>Número de guía</T></label>
                 <input style={S.input} value={f.guia} onChange={(e) => set("guia", e.target.value)} />
               </div>
             </div>
           )}
-          <label style={{ ...S.label, marginTop: 10 }}>{modo === "avance" ? "¿Qué avance le cuentas?" : "Nota para el cliente (opcional)"}</label>
+          <label style={{ ...S.label, marginTop: 10 }}><T>{modo === "avance" ? "¿Qué avance le cuentas?" : "Nota para el cliente (opcional)"}</T></label>
           <textarea style={S.area} value={f.nota} onChange={(e) => set("nota", e.target.value)}
             placeholder={modo === "avance" ? "Ej. Ya cortamos las piezas; mañana pintamos." : "Ej. Va en 2 cajas."} />
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
             <button type="button" style={{ ...S.btn, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={enviar}>
-              {enviando ? "Enviando..." : modo === "avance" ? "Enviar avance" : "Confirmar entrega"}
+              <T>{enviando ? "Enviando..." : modo === "avance" ? "Enviar avance" : "Confirmar entrega"}</T>
             </button>
-            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setModo(null)}>Cancelar</button>
-            {msg && <span style={{ fontSize: 14, color: "#B3261E" }}>{msg}</span>}
+            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setModo(null)}><T>Cancelar</T></button>
+            {msg && <span style={{ fontSize: 14, color: "#B3261E" }}><T>{msg}</T></span>}
           </div>
         </div>
       )}
@@ -873,9 +876,9 @@ function Preguntas({ sol, alGuardar }) {
         <div style={{ background: "#FAF9F6", border: "1px solid #E7E4DC", borderRadius: 8, padding: "8px 12px", display: "grid", gap: 6 }}>
           {lista.map((q) => (
             <div key={q.id}>
-              <div><span style={{ color: "#6B675C" }}>{q.mia ? "Tú preguntaste:" : "Otro taller preguntó:"}</span> {q.pregunta}</div>
+              <div><span style={{ color: "#6B675C" }}><T>{q.mia ? "Tú preguntaste:" : "Otro taller preguntó:"}</T></span> <T>{q.pregunta}</T></div>
               <div style={{ color: q.respuesta ? "#1E7B3A" : "#9B978C" }}>
-                <strong>Cliente:</strong> {q.respuesta || "todavía no contesta"}
+                <strong><T>Cliente:</T></strong> <T>{q.respuesta || "todavía no contesta"}</T>
               </div>
             </div>
           ))}
@@ -883,22 +886,22 @@ function Preguntas({ sol, alGuardar }) {
       )}
       {puede && !abierto && (
         <button type="button" style={{ ...S.btn2, border: 0, padding: "6px 0", color: "#C2560A" }} onClick={() => setAbierto(true)}>
-          ¿Te falta un dato? Pregúntale al cliente
+          <T>¿Te falta un dato? Pregúntale al cliente</T>
         </button>
       )}
       {abierto && (
         <div style={{ marginTop: 6 }}>
-          <textarea style={S.area} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Ej. ¿Qué espesor de acrílico? ¿Las piezas llevan barreno?" />
+          <textarea style={S.area} maxLength={600} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={traducir("Ej. ¿Qué espesor de acrílico? ¿Las piezas llevan barreno?")} />
           <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
             <button type="button" style={{ ...S.btn, background: "#142033", opacity: enviando || texto.trim().length < 8 ? 0.6 : 1 }} disabled={enviando || texto.trim().length < 8} onClick={enviar}>
-              {enviando ? "Enviando..." : "Enviar pregunta"}
+              <T>{enviando ? "Enviando..." : "Enviar pregunta"}</T>
             </button>
-            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setAbierto(false)}>Cancelar</button>
-            <span style={{ color: "#6B675C", fontSize: 12 }}>La respuesta la verán todos los talleres. Hasta 3 preguntas.</span>
+            <button type="button" style={{ ...S.btn2, border: 0 }} onClick={() => setAbierto(false)}><T>Cancelar</T></button>
+            <span style={{ color: "#6B675C", fontSize: 12 }}><T>La respuesta la verán todos los talleres. Hasta 3 preguntas.</T></span>
           </div>
         </div>
       )}
-      {msg && <div style={{ marginTop: 6, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</div>}
+      {msg && <div style={{ marginTop: 6, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></div>}
     </div>
   )
 }
@@ -944,27 +947,27 @@ function Contraofertas({ sol, alResponder }) {
   }
   return (
     <div style={{ margin: "10px 0", border: "1px solid #F3D9C4", background: "#FFF8F2", borderRadius: 10, padding: "8px 12px" }}>
-      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#142033" }}>Contraofertas del cliente</p>
+      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#142033" }}><T>Contraofertas del cliente</T></p>
       {sol.mi_propuesta.contraofertas.map((c) => (
         <div key={c.id} style={{ marginTop: 6, fontSize: 13, color: "#40403A" }}>
           <span>
-            Pide: {queRide(c) || "—"}
-            {c.mensaje ? " · “" + c.mensaje + "”" : ""}
+            <T>Pide:</T> <T>{queRide(c) || "—"}</T>
+            <T>{c.mensaje ? " · “" + c.mensaje + "”" : ""}</T>
           </span>
           <span style={{ display: "block", fontSize: 12, fontWeight: 700, color: (ESTADO_CONTRA[c.estado] || [])[1] }}>{(ESTADO_CONTRA[c.estado] || [c.estado])[0]}</span>
-          {c.nota_taller && <span style={{ display: "block", fontSize: 12, fontStyle: "italic", color: "#6B675C" }}>Tu nota: “{c.nota_taller}”</span>}
+          {c.nota_taller && <span style={{ display: "block", fontSize: 12, fontStyle: "italic", color: "#6B675C" }}><T>Tu nota: “</T><T>{c.nota_taller}</T>”</span>}
           {c.estado === "pendiente" && sol.estado === "abierta" && (
             <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
               {(c.precio != null || c.dias != null) && (
-                <button type="button" style={{ ...S.btn, padding: "6px 14px", fontSize: 13 }} disabled={enviando === c.id} onClick={() => responder(c, "aceptar")}>Aceptar</button>
+                <button type="button" style={{ ...S.btn, padding: "6px 14px", fontSize: 13 }} disabled={enviando === c.id} onClick={() => responder(c, "aceptar")}><T>Aceptar</T></button>
               )}
-              <button type="button" style={S.btn2} disabled={enviando === c.id} onClick={() => responder(c, "rechazar")}>Rechazar</button>
-              <span style={{ fontSize: 12, color: "#6B675C", alignSelf: "center" }}>o corrige tu propuesta</span>
+              <button type="button" style={S.btn2} disabled={enviando === c.id} onClick={() => responder(c, "rechazar")}><T>Rechazar</T></button>
+              <span style={{ fontSize: 12, color: "#6B675C", alignSelf: "center" }}><T>o corrige tu propuesta</T></span>
             </div>
           )}
         </div>
       ))}
-      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+      {msg && <p style={{ margin: "6px 0 0", fontSize: 12, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></p>}
     </div>
   )
 }
@@ -1079,42 +1082,42 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
     <div style={{ marginTop: 14, borderTop: "1px solid #E7E4DC", paddingTop: 14 }}>
       {base && (base.garantia || base.condiciones_pago) && (
         <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#17633A", background: "#EEF7F0", padding: "8px 10px", borderRadius: 8 }}>
-          Pusimos tu garantía y condiciones de pago de tu última propuesta. Sólo escribe precio y días; revisa lo demás.
+          <T>Pusimos tu garantía y condiciones de pago de tu última propuesta. Sólo escribe precio y días; revisa lo demás.</T>
         </p>
       )}
       {p && (
         <div style={{ marginBottom: 10 }}>
-          <label style={S.label}>Motivo del cambio (lo ve el cliente en el historial · versión {p.version || 1} → {(p.version || 1) + 1})</label>
+          <label style={S.label}><T>Motivo del cambio (lo ve el cliente en el historial · versión</T> {p.version || 1} → {(p.version || 1) + 1})</label>
           <input style={S.input} value={f.motivo_cambio} onChange={(e) => set("motivo_cambio", e.target.value)} maxLength={500}
-            placeholder="Ej: ajusté el precio por cantidad / cambié el material" />
+            placeholder={traducir("Ej: ajusté el precio por cantidad / cambié el material")} />
         </div>
       )}
       <div style={S.grid}>
         <div>
-          <label style={S.label}>Precio total ({f.moneda}, con IVA) *</label>
+          <label style={S.label}><T>Precio total (</T><T>{f.moneda}</T><T>, con IVA) *</T></label>
           <input style={S.input} inputMode="decimal" value={f.precio} onChange={(e) => set("precio", e.target.value)} placeholder="3500" />
         </div>
         <div>
-          <label style={S.label}>Moneda</label>
+          <label style={S.label}><T>Moneda</T></label>
           <select style={S.input} value={f.moneda} onChange={(e) => set("moneda", e.target.value)}>
             <option value="MXN">Pesos (MXN)</option>
             <option value="USD">Dólares (USD)</option>
           </select>
         </div>
         <div>
-          <label style={S.label}>Días de fabricación *</label>
+          <label style={S.label}><T>Días de fabricación *</T></label>
           <input style={S.input} type="number" min="1" value={f.dias} onChange={(e) => setDias(e.target.value)} placeholder="5" />
         </div>
         <div>
-          <label style={S.label}>Fecha estimada de entrega *</label>
+          <label style={S.label}><T>Fecha estimada de entrega *</T></label>
           <input style={S.input} type="date" min={new Date().toISOString().slice(0, 10)} value={f.fecha_entrega} onChange={(e) => { setFechaAMano(true); set("fecha_entrega", e.target.value) }} />
         </div>
         <div>
-          <label style={S.label}>Vigencia (días) *</label>
+          <label style={S.label}><T>Vigencia (días) *</T></label>
           <input style={S.input} type="number" min="1" value={f.vigencia_dias} onChange={(e) => set("vigencia_dias", e.target.value)} />
         </div>
         <div>
-          <label style={S.label}>Anticipo para empezar</label>
+          <label style={S.label}><T>Anticipo para empezar</T></label>
           <select style={S.input} value={f.anticipo_pct} onChange={(e) => set("anticipo_pct", Number(e.target.value))} disabled={!directo}>
             <option value={100}>Pago completo al elegir</option>
             <option value={70}>70% y el resto antes de entregar</option>
@@ -1125,54 +1128,54 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
         <div style={{ display: "flex", alignItems: "end" }}>
           <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 14 }}>
             <input type="checkbox" checked={f.incluye_envio} onChange={(e) => set("incluye_envio", e.target.checked)} />
-            El precio incluye envío
+            <T>El precio incluye envío</T>
           </label>
         </div>
       </div>
       <p style={{ color: "#6B675C", fontSize: 12, margin: "6px 0 0" }}>
-        {directo
+        <T>{directo
           ? `Si ganas, el cliente te paga directo a tu ${cobroTaller.mercadopago ? "Mercado Pago" : "PayPal"}. HETNA no cobra comisión.`
-          : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos completo al confirmar la entrega. Conéctalos en la app para pedir anticipo y cobrar directo.`}
+          : `Sin Mercado Pago ni PayPal conectados, el cliente paga el 100% a HETNA y te lo transferimos completo al confirmar la entrega. Conéctalos en la app para pedir anticipo y cobrar directo.`}</T>
       </p>
       <p style={{ margin: "14px 0 4px", fontSize: 13, fontWeight: 700, color: "#142033" }}>
-        Propuesta formal <span style={{ fontWeight: 400, color: "#6B675C" }}>— los campos con * son obligatorios para que el cliente compare todas las propuestas con los mismos datos</span>
+        <T>Propuesta formal</T> <span style={{ fontWeight: 400, color: "#6B675C" }}><T>— los campos con * son obligatorios para que el cliente compare todas las propuestas con los mismos datos</T></span>
       </p>
       <div style={S.grid}>
         <div>
-          <label style={S.label}>Material y especificaciones *</label>
-          <textarea style={S.area} value={f.materiales} onChange={(e) => set("materiales", e.target.value)} placeholder="Ej. Acero A36 cal. 14, pintura electrostática negra" />
+          <label style={S.label}><T>Material y especificaciones *</T></label>
+          <textarea style={S.area} value={f.materiales} onChange={(e) => set("materiales", e.target.value)} placeholder={traducir("Ej. Acero A36 cal. 14, pintura electrostática negra")} />
         </div>
         <div>
-          <label style={S.label}>Operaciones / procesos</label>
-          <textarea style={S.area} value={f.operaciones} onChange={(e) => set("operaciones", e.target.value)} placeholder="Ej. Corte plasma, doblez, soldadura MIG, pintura" />
+          <label style={S.label}><T>Operaciones / procesos</T></label>
+          <textarea style={S.area} value={f.operaciones} onChange={(e) => set("operaciones", e.target.value)} placeholder={traducir("Ej. Corte plasma, doblez, soldadura MIG, pintura")} />
         </div>
         <div>
-          <label style={S.label}>Condiciones de pago *</label>
-          <textarea style={S.area} value={f.condiciones_pago} onChange={(e) => set("condiciones_pago", e.target.value)} placeholder="Ej. 50% para empezar y 50% contra entrega; factura CFDI" />
+          <label style={S.label}><T>Condiciones de pago *</T></label>
+          <textarea style={S.area} value={f.condiciones_pago} onChange={(e) => set("condiciones_pago", e.target.value)} placeholder={traducir("Ej. 50% para empezar y 50% contra entrega; factura CFDI")} />
         </div>
         <div>
-          <label style={S.label}>Garantía *</label>
-          <textarea style={S.area} value={f.garantia} onChange={(e) => set("garantia", e.target.value)} placeholder="Ej. Reposición sin costo por defecto de fabricación en 30 días" />
+          <label style={S.label}><T>Garantía *</T></label>
+          <textarea style={S.area} value={f.garantia} onChange={(e) => set("garantia", e.target.value)} placeholder={traducir("Ej. Reposición sin costo por defecto de fabricación en 30 días")} />
         </div>
       </div>
-      <label style={{ ...S.label, marginTop: 10 }}>Observaciones técnicas</label>
-      <textarea style={S.area} value={f.observaciones} onChange={(e) => set("observaciones", e.target.value)} placeholder="Ej. Tolerancia ±0.2 mm; recomendamos radio de 1 mm en esquinas" />
-      <label style={{ ...S.label, marginTop: 10 }}>Condiciones (material incluido, acabado, tolerancias…)</label>
-      <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder="Ej. Incluye material MDF 6 mm y lijado." />
+      <label style={{ ...S.label, marginTop: 10 }}><T>Observaciones técnicas</T></label>
+      <textarea style={S.area} value={f.observaciones} onChange={(e) => set("observaciones", e.target.value)} placeholder={traducir("Ej. Tolerancia ±0.2 mm; recomendamos radio de 1 mm en esquinas")} />
+      <label style={{ ...S.label, marginTop: 10 }}><T>Condiciones (material incluido, acabado, tolerancias…)</T></label>
+      <textarea style={S.area} value={f.condiciones} onChange={(e) => set("condiciones", e.target.value)} placeholder={traducir("Ej. Incluye material MDF 6 mm y lijado.")} />
       <div style={{ marginTop: 10, fontSize: 13 }}>
-        <strong>Archivos adjuntos</strong> <span style={{ color: "#6B675C" }}>(tu cotización en PDF, planos o fotos de trabajos parecidos; máx. 5)</span>
-        {!p && <div style={{ color: "#6B675C", marginTop: 4 }}>Primero envía tu propuesta; después podrás adjuntar archivos.</div>}
+        <strong><T>Archivos adjuntos</T></strong> <span style={{ color: "#6B675C" }}><T>(tu cotización en PDF, planos o fotos de trabajos parecidos; máx. 5)</T></span>
+        {!p && <div style={{ color: "#6B675C", marginTop: 4 }}><T>Primero envía tu propuesta; después podrás adjuntar archivos.</T></div>}
         {p && (
           <div style={{ display: "grid", gap: 4, marginTop: 6 }}>
             {adjuntos.map((a) => (
               <span key={a.clave} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                📎 {a.nombre}
-                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(a.clave)}>Quitar</button>
+                📎 <T>{a.nombre}</T>
+                <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => quitar(a.clave)}><T>Quitar</T></button>
               </span>
             ))}
             {adjuntos.length < 5 && (
               <label style={{ ...S.btn2, padding: "4px 10px", fontSize: 12, display: "inline-block", width: "fit-content", cursor: "pointer" }}>
-                {subiendo ? "Subiendo..." : "+ Adjuntar archivo"}
+                <T>{subiendo ? "Subiendo..." : "+ Adjuntar archivo"}</T>
                 <input type="file" hidden disabled={subiendo} accept=".pdf,.dxf,.dwg,.step,.stp,.stl,.svg,.png,.jpg,.jpeg,.webp,.xls,.xlsx,.doc,.docx" onChange={(e) => { subir(e.target.files?.[0]); e.target.value = "" }} />
               </label>
             )}
@@ -1180,13 +1183,13 @@ function FormPropuesta({ sol, alGuardar, cobroTaller }) {
         )}
       </div>
       <p style={{ color: "#6B675C", fontSize: 12, margin: "4px 0 10px" }}>
-        No escribas teléfonos, correos ni ligas: se ocultan automáticamente. Todo el trato va por HETNA.
+        <T>No escribas teléfonos, correos ni ligas: se ocultan automáticamente. Todo el trato va por HETNA.</T>
       </p>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <button type="button" style={{ ...S.btn, opacity: enviando ? 0.6 : 1 }} disabled={enviando} onClick={enviar}>
-          {enviando ? "Enviando..." : p ? "Actualizar propuesta" : "Enviar propuesta"}
+          <T>{enviando ? "Enviando..." : p ? "Actualizar propuesta" : "Enviar propuesta"}</T>
         </button>
-        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</span>}
+        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></span>}
       </div>
     </div>
   )
@@ -1203,16 +1206,16 @@ function Cupo({ cupo }) {
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 260px" }}>
           <div style={{ fontWeight: 700, color }}>
-            {sinLimite
+            <T>{sinLimite
               ? `Plan ${cupo.nombre}: propuestas sin límite`
               : agotado
                 ? `Plan ${cupo.nombre}: ya usaste tus ${cupo.limite} propuesta${cupo.limite === 1 ? "" : "s"} de este mes`
-                : `Plan ${cupo.nombre}: te ${cupo.quedan === 1 ? "queda" : "quedan"} ${cupo.quedan} de ${cupo.limite} propuesta${cupo.limite === 1 ? "" : "s"} este mes`}
+                : `Plan ${cupo.nombre}: te ${cupo.quedan === 1 ? "queda" : "quedan"} ${cupo.quedan} de ${cupo.limite} propuesta${cupo.limite === 1 ? "" : "s"} este mes`}</T>
           </div>
           <div style={{ fontSize: 13, color: "#6B675C", marginTop: 2 }}>
-            {sinLimite
+            <T>{sinLimite
               ? "Cotiza todas las solicitudes que quieras."
-              : "El cupo se renueva el día 1. Corregir una propuesta ya enviada y las solicitudes que te mandan directo a ti no cuentan."}
+              : "El cupo se renueva el día 1. Corregir una propuesta ya enviada y las solicitudes que te mandan directo a ti no cuentan."}</T>
           </div>
           {!sinLimite && (
             <div style={{ height: 6, background: "#E7E4DC", borderRadius: 3, marginTop: 8, overflow: "hidden", maxWidth: 320 }}>
@@ -1222,8 +1225,8 @@ function Cupo({ cupo }) {
         </div>
         {!sinLimite && (
           <div style={{ fontSize: 13, color: "#3D3A33", flex: "1 1 220px" }}>
-            {cupo.plan === "gratis" ? "Con el plan Taller mandas 5 al mes y con Pro, sin límite." : "Con el plan Pro mandas propuestas sin límite."}{" "}
-            Cámbialo en la app HETNA CNC para talleres, en <b>Mi plan</b>.
+            <T>{cupo.plan === "gratis" ? "Con el plan Taller mandas 5 al mes y con Pro, sin límite." : "Con el plan Pro mandas propuestas sin límite."}</T><T>{" "}</T>
+            <T>Cámbialo en la app HETNA CNC para talleres, en</T> <b><T>Mi plan</T></b>.
           </div>
         )}
       </div>
@@ -1249,13 +1252,13 @@ function FiltroClientes({ filtro, alCambiar }) {
   return (
     <div style={{ ...S.card, padding: "10px 14px", fontSize: 13 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <span>👥 {texto}{filtro?.ocultas ? ` (${filtro.ocultas} oculta${filtro.ocultas === 1 ? "" : "s"} por tu filtro)` : ""}</span>
-        <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} onClick={() => setAbierto(!abierto)}>{abierto ? "Cerrar" : "Elegir clientes"}</button>
+        <span>👥 <T>{texto}</T><T>{filtro?.ocultas ? ` (${filtro.ocultas} oculta${filtro.ocultas === 1 ? "" : "s"} por tu filtro)` : ""}</T></span>
+        <button type="button" style={{ ...S.btn2, padding: "4px 10px", fontSize: 12 }} onClick={() => setAbierto(!abierto)}><T>{abierto ? "Cerrar" : "Elegir clientes"}</T></button>
       </div>
       {abierto && (
         <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-          <span style={{ color: "#6B675C" }}>Los talleres evalúan a cada cliente al terminar un trabajo. Si eliges un mínimo, no te llegarán solicitudes de clientes por debajo de él. Lo que te piden directo a ti y las invitaciones te llegan siempre.</span>
-          <label>Recibir solicitudes de{" "}
+          <span style={{ color: "#6B675C" }}><T>Los talleres evalúan a cada cliente al terminar un trabajo. Si eliges un mínimo, no te llegarán solicitudes de clientes por debajo de él. Lo que te piden directo a ti y las invitaciones te llegan siempre.</T></span>
+          <label><T>Recibir solicitudes de</T><T>{" "}</T>
             <select style={{ ...S.input, width: "auto", height: 32 }} value={f.minimo} onChange={(e) => setF({ ...f, minimo: Number(e.target.value) })}>
               <option value={0}>todos los clientes</option>
               <option value={4}>clientes con ★ 4 o más</option>
@@ -1263,12 +1266,12 @@ function FiltroClientes({ filtro, alCambiar }) {
             </select>
           </label>
           {f.minimo > 0 && (
-            <label><input type="checkbox" checked={f.nuevos} onChange={(e) => setF({ ...f, nuevos: e.target.checked })} /> También clientes nuevos (todavía sin evaluaciones)</label>
+            <label><input type="checkbox" checked={f.nuevos} onChange={(e) => setF({ ...f, nuevos: e.target.checked })} /> <T>También clientes nuevos (todavía sin evaluaciones)</T></label>
           )}
-          <button type="button" style={{ ...S.btn, justifySelf: "start" }} onClick={guardar}>Guardar</button>
+          <button type="button" style={{ ...S.btn, justifySelf: "start" }} onClick={guardar}><T>Guardar</T></button>
         </div>
       )}
-      {nota && <span style={{ color: "#1E7B3A" }}>{nota}</span>}
+      {nota && <span style={{ color: "#1E7B3A" }}><T>{nota}</T></span>}
     </div>
   )
 }
@@ -1319,8 +1322,8 @@ export default function SolicitudesPage() {
     cargar()
   }, [])
 
-  if (error) return <div style={S.page}>{error}</div>
-  if (!datos) return <div style={S.page}>Cargando...</div>
+  if (error) return <div style={S.page}><T>{error}</T></div>
+  if (!datos) return <div style={S.page}><T>Cargando...</T></div>
 
   // Las opciones salen de las solicitudes mismas: sólo se ofrece filtrar por
   // lo que de verdad hay, y no hay otra lista de servicios que mantener.
@@ -1346,9 +1349,9 @@ export default function SolicitudesPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Bolsa de proyectos</h1>
+      <h1 style={S.h1}><T>Bolsa de proyectos</T></h1>
       <p style={S.sub}>
-        Clientes que buscan taller. Manda tu precio y tiempo; el cliente compara y elige. Los talleres con membresía aparecen primero.
+        <T>Clientes que buscan taller. Manda tu precio y tiempo; el cliente compara y elige. Los talleres con membresía aparecen primero.</T>
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 14 }}>
@@ -1358,9 +1361,9 @@ export default function SolicitudesPage() {
           ["Ganadas", ganadas, ganadas ? "¡a producir!" : "todavía ninguna", ganadas ? "#1E7B3A" : "#6B675C"],
         ].map(([t, n, pie, color]) => (
           <div key={t} style={{ ...S.card, marginBottom: 0, padding: 16 }}>
-            <p style={{ margin: 0, fontSize: 13, color: "#55544D", fontWeight: 600 }}>{t}</p>
+            <p style={{ margin: 0, fontSize: 13, color: "#55544D", fontWeight: 600 }}><T>{t}</T></p>
             <p style={{ margin: "6px 0 2px", fontSize: 28, fontWeight: 800, color: "#142033" }}>{n}</p>
-            <p style={{ margin: 0, fontSize: 12, color }}>{pie}</p>
+            <p style={{ margin: 0, fontSize: 12, color }}><T>{pie}</T></p>
           </div>
         ))}
       </div>
@@ -1373,23 +1376,23 @@ export default function SolicitudesPage() {
         <div style={{ ...S.card, padding: "10px 14px", fontSize: 13, background: cobroTaller.mercadopago || cobroTaller.paypal ? "#F0F7F1" : "#FFFAEB" }}>
           {cobroTaller.mercadopago || cobroTaller.paypal ? (
             <>
-              ✓ Cobras directo a tu {[cobroTaller.mercadopago && "Mercado Pago", cobroTaller.paypal && "PayPal"].filter(Boolean).join(" y ")}. Puedes pedir anticipo.
-              <strong>Sin comisión de HETNA</strong>: el pago es completo para ti.
+              <T>✓ Cobras directo a tu</T> <T>{[cobroTaller.mercadopago && "Mercado Pago", cobroTaller.paypal && "PayPal"].filter(Boolean).join(" y ")}</T><T>. Puedes pedir anticipo.</T>
+              <strong><T>Sin comisión de HETNA</T></strong><T>: el pago es completo para ti.</T>
             </>
           ) : (
             <>
-              Conecta tu <strong>Mercado Pago o PayPal</strong> en la app HETNA CNC para talleres (Configuración → Cobros en línea) y cobra directo,
-              con anticipo. Mientras, el cliente paga a HETNA y te transferimos el pago completo al entregar. <strong>Sin comisión.</strong>
+              <T>Conecta tu</T> <strong><T>Mercado Pago o PayPal</T></strong> <T>en la app HETNA CNC para talleres (Configuración → Cobros en línea) y cobra directo,
+              con anticipo. Mientras, el cliente paga a HETNA y te transferimos el pago completo al entregar.</T> <strong><T>Sin comisión.</T></strong>
             </>
           )}
         </div>
       )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-        <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}>Por cotizar ({nuevas.length})</button>
-        <button type="button" style={S.tab(vista === "enviadas")} onClick={() => setVista("enviadas")}>Mis propuestas ({enviadas.length})</button>
+        <button type="button" style={S.tab(vista === "nuevas")} onClick={() => setVista("nuevas")}><T>Por cotizar (</T><T>{nuevas.length}</T>)</button>
+        <button type="button" style={S.tab(vista === "enviadas")} onClick={() => setVista("enviadas")}><T>Mis propuestas (</T><T>{enviadas.length}</T>)</button>
         {descartadas.length > 0 && (
-          <button type="button" style={S.tab(vista === "descartadas")} onClick={() => setVista("descartadas")}>No puedo ({descartadas.length})</button>
+          <button type="button" style={S.tab(vista === "descartadas")} onClick={() => setVista("descartadas")}><T>No puedo (</T><T>{descartadas.length}</T>)</button>
         )}
       </div>
 
@@ -1408,11 +1411,11 @@ export default function SolicitudesPage() {
 
       {!lista.length && (
         <div style={{ ...S.card, textAlign: "center", color: "#6B675C" }}>
-          {vista === "nuevas"
+          <T>{vista === "nuevas"
             ? "Por ahora no hay solicitudes nuevas. Te avisamos por correo cuando llegue una."
             : vista === "enviadas"
               ? "Aún no has enviado propuestas."
-              : "No has descartado solicitudes."}
+              : "No has descartado solicitudes."}</T>
         </div>
       )}
 
@@ -1423,44 +1426,44 @@ export default function SolicitudesPage() {
           <div key={s.id} style={S.card}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <strong>{s.folio}</strong>
+                <strong><T>{s.folio}</T></strong>
                 <RepCliente rep={s.reputacion_cliente} />
-                {s.para_mi && <span style={S.tag("#FFF1E6", "#C2560A")}>Te eligieron a ti</span>}
-                {s.modalidad === "privada" && !s.para_mi && <span style={S.tag("#EEF2FB", "#1a3a5c")}>Privada · te invitaron</span>}
-                {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}>Restringida</span>}
-                {s.tipo === "suministro" && <span style={S.tag("#EEF6F0", "#1E7B3A")}>📦 Suministro</span>}
-                {p?.estado === "elegida" && <span style={S.tag("#E6F4EA", "#1E7B3A")}>¡Ganaste!</span>}
-                {p?.version > 1 && <span style={S.tag("#EAF1FB", "#1F5FBF")}>Versión {p.version}</span>}
-                {p?.contraofertas?.some((c) => c.estado === "pendiente") && <span style={S.tag("#FFF1E6", "#C2560A")}>Contraoferta pendiente</span>}
-                {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}>No elegida</span>}
+                {s.para_mi && <span style={S.tag("#FFF1E6", "#C2560A")}><T>Te eligieron a ti</T></span>}
+                {s.modalidad === "privada" && !s.para_mi && <span style={S.tag("#EEF2FB", "#1a3a5c")}><T>Privada · te invitaron</T></span>}
+                {s.modalidad === "restringida" && <span style={S.tag("#FFF8E6", "#8A5A00")}><T>Restringida</T></span>}
+                {s.tipo === "suministro" && <span style={S.tag("#EEF6F0", "#1E7B3A")}><T>📦 Suministro</T></span>}
+                {p?.estado === "elegida" && <span style={S.tag("#E6F4EA", "#1E7B3A")}><T>¡Ganaste!</T></span>}
+                {p?.version > 1 && <span style={S.tag("#EAF1FB", "#1F5FBF")}><T>Versión</T> <T>{p.version}</T></span>}
+                {p?.contraofertas?.some((c) => c.estado === "pendiente") && <span style={S.tag("#FFF1E6", "#C2560A")}><T>Contraoferta pendiente</T></span>}
+                {p?.estado === "descartada" && <span style={S.tag("#F3F1EA", "#6B675C")}><T>No elegida</T></span>}
                 <span style={{ color: "#6B675C", fontSize: 12 }}>
-                  {s.propuestas_recibidas} {s.propuestas_recibidas === 1 ? "propuesta" : "propuestas"}
+                  <T>{s.propuestas_recibidas}</T> <T>{s.propuestas_recibidas === 1 ? "propuesta" : "propuestas"}</T>
                 </span>
                 {s.estado === "abierta" && <Plazo cierra={s.cierra_en} />}
               </div>
               {[t.ciudad, t.estado_mx].filter(Boolean).length > 0 && (
-                <span style={{ color: "#6B675C", fontSize: 13 }}>📍 {[t.ciudad, t.estado_mx].filter(Boolean).join(", ")}</span>
+                <span style={{ color: "#6B675C", fontSize: 13 }}>📍 <T>{[t.ciudad, t.estado_mx].filter(Boolean).join(", ")}</T></span>
               )}
             </div>
 
             {p?.contraofertas?.length > 0 && <Contraofertas sol={s} alResponder={cargar} />}
-            {t.cliente && t.cliente !== "Cliente HETNA" && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#40403A" }}>👤 {t.cliente}</p>}
+            {t.cliente && t.cliente !== "Cliente HETNA" && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#40403A" }}>👤 <T>{t.cliente}</T></p>}
             <AcuerdoNda sol={s} alAceptar={cargar} />
             {t.descripcion_restringida && t.nda_requerido && !t.nda_aceptado ? null : t.descripcion_restringida ? (
               <div style={{ margin: "10px 0", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px", fontSize: 13, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <span>🔒 El cliente reservó la descripción completa para los talleres que autorice.</span>
+                <span><T>🔒 El cliente reservó la descripción completa para los talleres que autorice.</T></span>
                 <PedirAcceso sol={s} />
               </div>
             ) : (
-              <p style={{ whiteSpace: "pre-line", margin: "10px 0", color: "#40403A" }}>{t.descripcion}</p>
+              <p style={{ whiteSpace: "pre-line", margin: "10px 0", color: "#40403A" }}><T>{t.descripcion}</T></p>
             )}
-            {t.presupuesto_confidencial && <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6B675C" }}>Presupuesto: confidencial</p>}
+            {t.presupuesto_confidencial && <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6B675C" }}><T>Presupuesto: confidencial</T></p>}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 13 }}>
               {CAMPOS.filter(([k]) => t[k]).map(([k, l]) => (
-                <span key={k}><span style={{ color: "#6B675C" }}>{l}:</span> <strong>{t[k]}</strong></span>
+                <span key={k}><span style={{ color: "#6B675C" }}><T>{l}</T>:</span> <strong>{t[k]}</strong></span>
               ))}
               {/^https?:\/\//i.test(String(t.archivo || "")) && (
-                <a href={t.archivo} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>Ver archivos</a>
+                <a href={t.archivo} target="_blank" rel="noopener noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}><T>Ver archivos</T></a>
               )}
             </div>
 
@@ -1468,11 +1471,11 @@ export default function SolicitudesPage() {
 
             {s.mi_respuesta && (
               <p style={{ marginTop: 10, fontSize: 13, color: "#6B675C" }}>
-                Respondiste: <strong style={{ color: "#142033" }}>{s.mi_respuesta.texto}</strong>
-                {s.mi_respuesta.nota ? ` — ${s.mi_respuesta.nota}` : ""}
+                <T>Respondiste:</T> <strong style={{ color: "#142033" }}><T>{s.mi_respuesta.texto}</T></strong>
+                <T>{s.mi_respuesta.nota ? ` — ${s.mi_respuesta.nota}` : ""}</T>
                 {descartada(s) && (
                   <button type="button" style={{ ...S.btn2, border: 0, padding: "0 8px", fontSize: 12, color: "#C2560A" }} onClick={() => deshacer(s)}>
-                    Deshacer
+                    <T>Deshacer</T>
                   </button>
                 )}
               </p>
@@ -1480,20 +1483,20 @@ export default function SolicitudesPage() {
 
             {p && (
               <p style={{ marginTop: 10, fontSize: 14 }}>
-                Tu propuesta: <strong>{pesos(p.precio)}</strong> · {p.dias} días {p.incluye_envio ? "· envío incluido" : ""}
-                {p.anticipo_pct && p.anticipo_pct < 100 ? ` · anticipo ${p.anticipo_pct}%` : ""}
+                <T>Tu propuesta:</T> <strong>{pesos(p.precio)}</strong> · <T>{p.dias}</T> <T>días</T> <T>{p.incluye_envio ? "· envío incluido" : ""}</T>
+                <T>{p.anticipo_pct && p.anticipo_pct < 100 ? ` · anticipo ${p.anticipo_pct}%` : ""}</T>
               </p>
             )}
 
             {p?.estado === "descartada" && s.eleccion && (
               <p style={{ marginTop: 8, fontSize: 13, color: "#40403A", background: "#F3F1EA", borderRadius: 8, padding: "8px 12px" }}>
-                El cliente eligió un precio entre <strong>{pesos(s.eleccion.desde)}</strong> y <strong>{pesos(s.eleccion.hasta)}</strong> con entrega en{" "}
-                <strong>{s.eleccion.dias} días</strong>.{" "}
-                {p.precio > s.eleccion.hasta
+                <T>El cliente eligió un precio entre</T> <strong>{pesos(s.eleccion.desde)}</strong> y <strong>{pesos(s.eleccion.hasta)}</strong> <T>con entrega en</T><T>{" "}</T>
+                <strong><T>{s.eleccion.dias}</T> <T>días</T></strong>.<T>{" "}</T>
+                <T>{p.precio > s.eleccion.hasta
                   ? "Tu precio quedó arriba."
                   : p.precio < s.eleccion.desde
                     ? "Tu precio quedó abajo: pesó más otra cosa (tiempo, calificación o condiciones)."
-                    : "Tu precio estuvo muy cerca."}
+                    : "Tu precio estuvo muy cerca."}</T>
               </p>
             )}
 
@@ -1507,7 +1510,7 @@ export default function SolicitudesPage() {
                 href={`${window.location.pathname.replace(/\/solicitudes.*$/, "")}/promocion?solicitud=${s.id}`}
                 style={{ display: "inline-block", marginTop: 10, fontSize: 13, fontWeight: 600, color: "#C2560A" }}
               >
-                📹 Sube un video de este trabajo y lo publicamos en las redes de HETNA con tu nombre
+                <T>📹 Sube un video de este trabajo y lo publicamos en las redes de HETNA con tu nombre</T>
               </a>
             )}
 
@@ -1519,11 +1522,11 @@ export default function SolicitudesPage() {
               ) : (
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   <button type="button" style={p ? S.btn2 : S.btn} onClick={() => { setNoPuedo(null); setAbierta(s.id) }}>
-                    {p ? "Cambiar mi propuesta" : "Cotizar"}
+                    <T>{p ? "Cambiar mi propuesta" : "Cotizar"}</T>
                   </button>
                   {!p && (
                     <button type="button" style={{ ...S.btn2, borderColor: "#D9D5C9", color: "#6B675C" }} onClick={() => { setAbierta(null); setNoPuedo(s.id) }}>
-                      No puedo / necesito info
+                      <T>No puedo / necesito info</T>
                     </button>
                   )}
                 </div>
@@ -1541,7 +1544,7 @@ export default function SolicitudesPage() {
         >
           {solAbierta.trabajo?.descripcion && !solAbierta.trabajo?.descripcion_restringida && (
             <p style={{ whiteSpace: "pre-line", margin: "0 0 12px", color: "#40403A", fontSize: 13.5, background: "#F8F7F3", borderRadius: 10, padding: "10px 12px" }}>
-              {solAbierta.trabajo.descripcion}
+              <T>{solAbierta.trabajo.descripcion}</T>
             </p>
           )}
           <FormPropuesta sol={solAbierta} cobroTaller={cobroTaller} alGuardar={() => { cargar(); setAbierta(null) }} />

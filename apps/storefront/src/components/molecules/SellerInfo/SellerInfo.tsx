@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { SellerDTO } from "@mercurjs/types"
 import LocalizedClientLink from "../LocalizedLink/LocalizedLink"
 import { SellerInfoHeader } from "../SellerInfoHeader/SellerInfoHeader"
@@ -34,7 +35,7 @@ export const SellerInfo = ({
           href={`/sellers/${seller.handle}`}
           aria-label={`View ${name} seller`}
         >
-          {headerContent}
+          <TS>{headerContent}</TS>
         </LocalizedClientLink>
       ) : (
         headerContent

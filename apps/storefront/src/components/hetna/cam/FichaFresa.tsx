@@ -95,7 +95,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
 
   return (
     <div className="flex flex-col gap-2.5 rounded-[10px] border border-[#2B3648] bg-[#111722] p-3">
-      <b className="text-[13px]">{inicial ? "Editar herramienta" : "Alta de herramienta"}</b>
+      <b className="text-[13px]"><T>{inicial ? "Editar herramienta" : "Alta de herramienta"}</T></b>
       <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre (ej. Compresión 1/4 2 filos)" maxLength={40} className={campoTexto} />
       <input value={grupo} onChange={(e) => setGrupo(e.target.value)} placeholder="Grupo (ej. Madera, Aluminio, Grabado)" maxLength={30} list="grupos-fresa" className={campoTexto} />
       <datalist id="grupos-fresa">
@@ -137,7 +137,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         <CampoNum etiqueta="Número en máquina (T)" valor={t.numero} cambiar={pon("numero")} sufijo="" />
       </div>
       {avisos.map((a) => (
-        <span key={a} className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]">{a}</span>
+        <span key={a} className="rounded-[8px] bg-[#2a1a0c] px-2.5 py-1.5 text-[12px] leading-snug text-[#F6C79B]"><T>{a}</T></span>
       ))}
 
       <span className="text-[12px] font-bold uppercase tracking-wide text-[#8A97AB]"><T>Avances y velocidades</T></span>
@@ -164,11 +164,11 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
         <Boton tipo="primario" onClick={calcular}><T>Calcular avances y velocidades</T></Boton>
         {calculo && (
           <span className="text-[12px] leading-snug text-[#9BE3B8]">
-            <T>Carga de viruta</T> {calculo.carga} <T>mm por filo · la fresa se flexiona ≈</T> {calculo.deflexion} <T>mm con ese voladizo.</T>
+            <T>Carga de viruta</T> <T>{calculo.carga}</T> <T>mm por filo · la fresa se flexiona ≈</T> <T>{calculo.deflexion}</T> <T>mm con ese voladizo.</T>
           </span>
         )}
         {calculo?.avisos.map((a) => (
-          <span key={a} className="text-[12px] leading-snug text-[#F6C79B]">{a}</span>
+          <span key={a} className="text-[12px] leading-snug text-[#F6C79B]"><T>{a}</T></span>
         ))}
         <a href="/mx/calculadora-cnc" target="_blank" rel="noreferrer" className="text-[12px] text-[#F28A3C] underline">
           <T>Abrir la Calculadora CNC completa (potencia, par, tiempo…)</T>
@@ -188,7 +188,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
           <T>¿No la tienes? Búscala en la tienda HETNA</T>
         </a>
       )}
-      {error && <span className="text-[12px] text-[#F6B8AE]">{error}</span>}
+      {error && <span className="text-[12px] text-[#F6B8AE]"><T>{error}</T></span>}
       <div className="flex gap-2">
         <Boton
           tipo="verde"
@@ -200,7 +200,7 @@ export function FichaFresa({ inicial, guardar, cancelar, grupos = [] }: { inicia
             guardar(f)
           }}
         >
-          {inicial ? "Guardar cambios" : "Dar de alta"}
+          <T>{inicial ? "Guardar cambios" : "Dar de alta"}</T>
         </Boton>
         {cancelar && <Boton onClick={cancelar}><T>Cancelar</T></Boton>}
       </div>

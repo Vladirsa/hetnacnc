@@ -50,8 +50,8 @@ export default function CreadoresPage() {
           {POR_QUE.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-3xl">{i}</p>
-              <p className="mt-2 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-2 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
@@ -61,7 +61,7 @@ export default function CreadoresPage() {
           {PASOS.map((p, i) => (
             <li key={p} className="flex gap-3 rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <span className="text-2xl font-black text-[#C2560A]">{i + 1}</span>
-              <span className="text-[15px] text-[#40403A]">{p}</span>
+              <span className="text-[15px] text-[#40403A]"><TS>{p}</TS></span>
             </li>
           ))}
         </ol>

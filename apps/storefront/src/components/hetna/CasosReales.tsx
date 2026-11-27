@@ -43,8 +43,8 @@ export default async function CasosReales({ titulo = "Trabajos reales", compacto
             <div className="p-3">
               <p className="m-0 text-[14px] font-bold text-[#142033]"><TS>{c.titulo}</TS></p>
               <p className="m-0 mt-1 text-[12.5px] leading-snug text-[#6B675C]">
-                {[c.tipo_trabajo, c.material, c.ciudad].filter(Boolean).join(" · ")}
-                {c.tiempo_entrega ? <><br /><TS>Entregado en</TS> {c.tiempo_entrega}</> : null}
+                <TS>{[c.tipo_trabajo, c.material, c.ciudad].filter(Boolean).join(" · ")}</TS>
+                {c.tiempo_entrega ? <><br /><TS>Entregado en</TS> <TS>{c.tiempo_entrega}</TS></> : null}
               </p>
             </div>
           </li>

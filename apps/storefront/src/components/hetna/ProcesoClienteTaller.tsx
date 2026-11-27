@@ -67,7 +67,7 @@ const Ruta = ({
             : "bg-[#C2560A] text-white hover:bg-[#A84A08]")
         }
       >
-        {accion}
+        <TS>{accion}</TS>
       </LocalizedClientLink>
     </div>
 

@@ -89,7 +89,7 @@ export default async function ForoInicio({ params, searchParams }: Props) {
               {numeros.map(([n, t]) => (
                 <div key={String(t)} className="bg-white border border-[#E7E4DC] rounded-[10px] px-3 py-2">
                   <span className="block text-[18px] font-extrabold text-[#142033]">{n}</span>
-                  <span className="text-[12px] text-[#6B6A63]">{t}</span>
+                  <span className="text-[12px] text-[#6B6A63]"><TS>{t}</TS></span>
                 </div>
               ))}
             </div>
@@ -102,8 +102,8 @@ export default async function ForoInicio({ params, searchParams }: Props) {
             >
               <span>
                 <strong>
-                  {sinResponder.total} {sinResponder.total === 1 ? "pregunta espera" : "preguntas esperan"} <TS>su primera respuesta.</TS>
-                </strong>{" "}
+                  {sinResponder.total} <TS>{sinResponder.total === 1 ? "pregunta espera" : "preguntas esperan"}</TS> <TS>su primera respuesta.</TS>
+                </strong><TS>{" "}</TS>
                 <TS>¿Sabes de esto? Responder suma puntos y lleva gente a tu perfil.</TS>
               </span>
               <span className="shrink-0 font-semibold text-[#B34D07]"><TS>Ver →</TS></span>
@@ -112,7 +112,7 @@ export default async function ForoInicio({ params, searchParams }: Props) {
           {portada && <BloqueBlog articulos={blog.articulos} />}
           {buscar ? (
             <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]">
-              {lista.total} {lista.total === 1 ? "resultado" : "resultados"} <TS>para “</TS>{buscar}”
+              {lista.total} <TS>{lista.total === 1 ? "resultado" : "resultados"}</TS> <TS>para “</TS><TS>{buscar}</TS>”
             </h2>
           ) : null}
           <Pestanas
@@ -134,7 +134,7 @@ export default async function ForoInicio({ params, searchParams }: Props) {
           ) : (
             <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[12px] p-8 text-center flex flex-col items-center gap-3">
               <p className="m-0 text-[15px] text-[#44433D]">
-                {buscar ? "No encontramos temas con esas palabras. Pregúntalo tú y la comunidad te ayuda." : "Todavía no hay temas aquí. ¡Sé el primero en publicar!"}
+                <TS>{buscar ? "No encontramos temas con esas palabras. Pregúntalo tú y la comunidad te ayuda." : "Todavía no hay temas aquí. ¡Sé el primero en publicar!"}</TS>
               </p>
               <BotonPublicar />
             </div>

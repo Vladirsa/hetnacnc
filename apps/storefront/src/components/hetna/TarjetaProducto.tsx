@@ -188,7 +188,7 @@ export default function TarjetaProducto({
             )}
             {hayDescuento && porcentaje > 0 && (
               <span className="rounded-md bg-[#9B3225] px-2 py-0.5 text-[11px] font-bold text-white">
-                −{porcentaje}%
+                −<TS>{porcentaje}</TS>%
               </span>
             )}
           </div>
@@ -221,22 +221,22 @@ export default function TarjetaProducto({
                 <span className="rounded bg-[#C2560A] px-1.5 py-0.5 text-white"><TS>HETNA oficial</TS></span>
               ) : (
                 <span className="max-w-[120px] truncate rounded px-1.5 py-0.5 text-[#1F4E8C] ring-1 ring-[#C3D6F0]" title={vendedor.nombre}>
-                  <TS>Taller ·</TS> {vendedor.nombre}
+                  <TS>Taller ·</TS> <TS>{vendedor.nombre}</TS>
                 </span>
               ))}
           </span>
           <span className="min-h-[34px] text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-2">
-            {product.title}
+            <TS>{product.title}</TS>
           </span>
 
           {descarga && (
             <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-semibold">
               {fmts.slice(0, 3).map((f) => (
                 <span key={f} className="rounded border border-[#D4D9DF] px-1.5 py-0.5 text-[#1E2329]">
-                  {f}
+                  <TS>{f}</TS>
                 </span>
               ))}
-              {licencia && <span className="text-[#6B6A63]"><TS>Lic.</TS> {licencia}</span>}
+              {licencia && <span className="text-[#6B6A63]"><TS>Lic.</TS> <TS>{licencia}</TS></span>}
             </span>
           )}
 
@@ -261,7 +261,7 @@ export default function TarjetaProducto({
 
           {pocas && (
             <span className="text-[11.5px] font-bold text-[#9B3225]">
-              {existencias === 1 ? "Queda 1" : `Quedan ${existencias}`}
+              <TS>{existencias === 1 ? "Queda 1" : `Quedan ${existencias}`}</TS>
             </span>
           )}
 

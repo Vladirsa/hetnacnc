@@ -6,6 +6,7 @@
 //   POST /vendor/hetna-ingles/:id           -> guarda el inglés
 //   POST /vendor/hetna-ingles/:id/traducir  -> propuesta de la IA (no guarda)
 // Ver packages/api/src/lib/productos-ingles.ts.
+import { T } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -18,6 +19,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Productos en inglés",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -153,8 +156,8 @@ function Editor({ producto, ia, limites, alGuardar }) {
 
   const campo = (k, titulo, ref, max) => (
     <div>
-      <label style={S.label}>{titulo}</label>
-      {ref ? <p style={S.ref}>Español: {ref}</p> : null}
+      <label style={S.label}><T>{titulo}</T></label>
+      {ref ? <p style={S.ref}><T>Español:</T> <T>{ref}</T></p> : null}
       <input style={S.input} maxLength={max} value={f[k]} onChange={(e) => set(k, e.target.value)} />
     </div>
   )
@@ -163,27 +166,27 @@ function Editor({ producto, ia, limites, alGuardar }) {
     <div style={{ borderTop: "1px solid #EFECE4", marginTop: 12, paddingTop: 4 }}>
       {campo("en_title", "Nombre en inglés", es.title, limites?.en_title || 200)}
       {es.subtitle ? campo("en_subtitle", "Subtítulo en inglés", es.subtitle, limites?.en_subtitle || 300) : null}
-      <label style={S.label}>Descripción en inglés</label>
-      {es.description ? <p style={S.ref}>Español: {recorta(es.description)}</p> : null}
+      <label style={S.label}><T>Descripción en inglés</T></label>
+      {es.description ? <p style={S.ref}><T>Español:</T> {recorta(es.description)}</p> : null}
       <textarea style={S.area} value={f.en_description} onChange={(e) => set("en_description", e.target.value)} />
-      <p style={S.ref}>Deja una línea en blanco entre párrafos. Para una lista empieza cada renglón con «• ». Para negritas: **así**.</p>
+      <p style={S.ref}><T>Deja una línea en blanco entre párrafos. Para una lista empieza cada renglón con «• ». Para negritas: **así**.</T></p>
       {es.seo_title ? campo("en_seo_title", "Título para Google (inglés)", es.seo_title, limites?.en_seo_title || 90) : null}
       {es.meta_description ? campo("en_meta_description", "Descripción para Google (inglés)", es.meta_description, limites?.en_meta_description || 200) : null}
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14, alignItems: "center" }}>
         <button type="button" style={{ ...S.btn, opacity: guardando ? 0.6 : 1 }} disabled={guardando} onClick={guardar}>
-          {guardando ? "Guardando…" : "Guardar"}
+          <T>{guardando ? "Guardando…" : "Guardar"}</T>
         </button>
         {ia && (
           <button type="button" style={{ ...S.btn2, opacity: traduciendo ? 0.6 : 1 }} disabled={traduciendo} onClick={traducir}>
-            {traduciendo ? "Traduciendo…" : "Traducir automático"}
+            <T>{traduciendo ? "Traduciendo…" : "Traducir automático"}</T>
           </button>
         )}
         <a href={TIENDA_US + producto.handle} target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600, fontSize: 13 }}>
-          Ver en la tienda en inglés ↗
+          <T>Ver en la tienda en inglés ↗</T>
         </a>
       </div>
-      {msg && <p style={{ margin: "10px 0 0", fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</p>}
+      {msg && <p style={{ margin: "10px 0 0", fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></p>}
     </div>
   )
 }
@@ -214,40 +217,40 @@ export default function ProductosInglesPage() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Productos en inglés</h1>
+      <h1 style={S.h1}><T>Productos en inglés</T></h1>
       <p style={S.sub}>
-        Tus productos también se venden a clientes de Estados Unidos en <strong>hetnacnc.com/us</strong>. Si no escribes nada, HETNA los traduce
+        <T>Tus productos también se venden a clientes de Estados Unidos en</T> <strong><T>hetnacnc.com/us</T></strong><T>. Si no escribes nada, HETNA los traduce
         solo cuando los publicas o los cambias. Aquí puedes revisar esa traducción, corregirla o escribirla tú. Lo que guardes aquí manda: la
-        traducción automática ya no lo cambia.
+        traducción automática ya no lo cambia.</T>
       </p>
 
-      {error && <div style={{ ...S.card, color: "#B3261E" }}>{error}</div>}
-      {!datos && !error && <p style={S.sub}>Cargando…</p>}
+      {error && <div style={{ ...S.card, color: "#B3261E" }}><T>{error}</T></div>}
+      {!datos && !error && <p style={S.sub}><T>Cargando…</T></p>}
 
       {datos && (
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
             <button type="button" style={S.filtro(filtro === "todos")} onClick={() => setFiltro("todos")}>
-              Todos ({productos.length})
+              <T>Todos (</T><T>{productos.length}</T>)
             </button>
             <button type="button" style={S.filtro(filtro === "falta")} onClick={() => setFiltro("falta")}>
-              Falta inglés ({cuenta.falta})
+              <T>Falta inglés (</T><T>{cuenta.falta}</T>)
             </button>
             <button type="button" style={S.filtro(filtro === "vieja")} onClick={() => setFiltro("vieja")}>
-              Por revisar ({cuenta.vieja})
+              <T>Por revisar (</T><T>{cuenta.vieja}</T>)
             </button>
             <button type="button" style={S.filtro(filtro === "lista")} onClick={() => setFiltro("lista")}>
-              En inglés ({cuenta.lista})
+              <T>En inglés (</T><T>{cuenta.lista}</T>)
             </button>
           </div>
 
           {productos.length === 0 && (
             <div style={S.card}>
-              <p style={{ margin: 0, fontWeight: 700 }}>Todavía no tienes productos.</p>
-              <p style={S.sub}>Cuando publiques uno, aquí podrás revisar cómo se ve en inglés.</p>
+              <p style={{ margin: 0, fontWeight: 700 }}><T>Todavía no tienes productos.</T></p>
+              <p style={S.sub}><T>Cuando publiques uno, aquí podrás revisar cómo se ve en inglés.</T></p>
             </div>
           )}
-          {productos.length > 0 && lista.length === 0 && <p style={S.sub}>No hay productos en esta lista.</p>}
+          {productos.length > 0 && lista.length === 0 && <p style={S.sub}><T>No hay productos en esta lista.</T></p>}
 
           {lista.map((p) => {
             const e = ESTADO[p.traduccion] || ESTADO.falta
@@ -261,22 +264,22 @@ export default function ProductosInglesPage() {
                     <div style={{ width: 56, height: 56, borderRadius: 8, background: "#F3F1EA", flex: "0 0 56px" }} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontWeight: 700, color: "#142033", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.es.title}</p>
+                    <p style={{ margin: 0, fontWeight: 700, color: "#142033", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><T>{p.es.title}</T></p>
                     <p style={{ ...S.ref, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {p.en.en_title ? `EN: ${p.en.en_title}` : "Sin nombre en inglés"}
-                      {p.auto && p.en.en_title ? " · traducido automático" : ""}
+                      <T>{p.en.en_title ? `EN: ${p.en.en_title}` : "Sin nombre en inglés"}</T>
+                      <T>{p.auto && p.en.en_title ? " · traducido automático" : ""}</T>
                     </p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: e.c, background: e.f, borderRadius: 999, padding: "4px 10px", whiteSpace: "nowrap" }}>{e.t}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: e.c, background: e.f, borderRadius: 999, padding: "4px 10px", whiteSpace: "nowrap" }}><T>{e.t}</T></span>
                   <button type="button" style={S.btn2} onClick={() => setAbierto(abiertoAqui ? null : p.id)}>
-                    {abiertoAqui ? "Cerrar" : "Editar"}
+                    <T>{abiertoAqui ? "Cerrar" : "Editar"}</T>
                   </button>
                 </div>
                 {abiertoAqui && <Editor producto={p} ia={datos.ia} limites={datos.limites} alGuardar={alGuardar(p.id)} />}
               </div>
             )
           })}
-          <p style={{ ...S.ref, marginTop: 14 }}>Sin teléfonos, correos ni redes: los clientes te contactan y te pagan dentro de HETNA.</p>
+          <p style={{ ...S.ref, marginTop: 14 }}><T>Sin teléfonos, correos ni redes: los clientes te contactan y te pagan dentro de HETNA.</T></p>
         </>
       )}
     </div>

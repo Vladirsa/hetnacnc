@@ -6,14 +6,14 @@ export const Tarjeta = ({ children, className = "" }: { children: React.ReactNod
 export const Titulo = ({ children, extra }: { children: React.ReactNode; extra?: React.ReactNode }) => (
   <div className="mb-3 flex items-center justify-between">
     <h2 className="text-[15px] font-extrabold text-[#142033]">{children}</h2>
-    {extra}
+    <TS>{extra}</TS>
   </div>
 )
 export const Kpi = ({ etiqueta, valor, antes, sufijo }: { etiqueta: string; valor: string; antes?: string; sufijo?: string }) => (
   <div className="rounded-xl bg-[#F8F7F2] p-3">
     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B675C]"><TS>{etiqueta}</TS></p>
-    <p className="mt-1 text-[22px] font-black leading-none text-[#142033]">{valor}{sufijo && <span className="text-sm font-semibold text-[#6B675C]"> {sufijo}</span>}</p>
-    {antes && <p className="mt-1 text-[11px] text-[#6B675C]">{antes}</p>}
+    <p className="mt-1 text-[22px] font-black leading-none text-[#142033]"><TS>{valor}</TS>{sufijo && <span className="text-sm font-semibold text-[#6B675C]"> <TS>{sufijo}</TS></span>}</p>
+    {antes && <p className="mt-1 text-[11px] text-[#6B675C]"><TS>{antes}</TS></p>}
   </div>
 )
 export const Etiqueta = ({ color, children }: { color: "rojo" | "ambar" | "azul" | "verde" | "gris"; children: React.ReactNode }) => {
@@ -25,7 +25,7 @@ export const Pestanas = ({ base, actual, opciones }: { base: string; actual: str
   <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
     {opciones.map((o) => (
       <a key={o.clave} href={`${base}?f=${o.clave}`} className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-semibold ${actual === o.clave ? "border-[#142033] bg-[#142033] text-white" : "border-[#E7E4DC] bg-white text-[#40403A]"}`}>
-        {o.nombre}{typeof o.n === "number" ? ` · ${o.n}` : ""}
+        <TS>{o.nombre}</TS><TS>{typeof o.n === "number" ? ` · ${o.n}` : ""}</TS>
       </a>
     ))}
   </div>

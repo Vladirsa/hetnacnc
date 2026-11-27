@@ -63,7 +63,7 @@ const Marca = ({ si }: { si: boolean }) => (
     className={`mt-[2px] flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${si ? "bg-[#E8F5EC] text-[#17803F]" : "bg-[#FDECEC] text-[#B91C1C]"}`}
     aria-label={si ? "Sí" : "No"}
   >
-    {si ? "✓" : "✕"}
+    <TS>{si ? "✓" : "✕"}</TS>
   </span>
 )
 
@@ -81,7 +81,7 @@ export function ColumnaDescarga({ product, vendedor }: { product: Producto; vend
         <ul className="flex flex-wrap gap-1.5" aria-label="Lo más importante">
           {pastillas.map((t) => (
             <li key={t} className="rounded-full border border-[#D4D9DF] bg-[#F4F5F7] px-2.5 py-1 text-[12.5px] font-semibold leading-tight text-[#1E2329]">
-              {t}
+              <TS>{t}</TS>
             </li>
           ))}
         </ul>
@@ -99,7 +99,7 @@ export function ModificarDiseno({ product, vendedor }: { product: Producto; vend
           <TS>¿Lo quieres ya fabricado o con otras medidas?</TS>
         </h2>
         <p className="m-0 mt-1 text-[13px] text-[#3A414B]">
-          <TS>Pide una modificación</TS>{vendedor?.name ? ` a ${vendedor.name}` : ""} <TS>o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.</TS>
+          <TS>Pide una modificación</TS><TS>{vendedor?.name ? ` a ${vendedor.name}` : ""}</TS> <TS>o a los talleres de la red: te mandan su propuesta y pagas dentro de HETNA.</TS>
         </p>
         <LocalizedClientLink
           href={ligaModificacion(product, vendedor)}
@@ -217,8 +217,8 @@ export function AbajoDescarga({
                   ...(typeof m.archivo_gratis === "boolean" && m.archivo_gratis ? ([["Precio", "Gratis, con tu cuenta"]] as [string, string][]) : []),
                 ].map(([k, v]) => (
                   <div key={k} className="contents">
-                    <dt className="border-b border-[#EEF0F2] py-2 font-semibold text-[#1E2329]">{k}</dt>
-                    <dd className="fuente-mono m-0 border-b border-[#EEF0F2] py-2 text-[13.5px] text-[#2E333A]">{v}</dd>
+                    <dt className="border-b border-[#EEF0F2] py-2 font-semibold text-[#1E2329]"><TS>{k}</TS></dt>
+                    <dd className="fuente-mono m-0 border-b border-[#EEF0F2] py-2 text-[13.5px] text-[#2E333A]"><TS>{v}</TS></dd>
                   </div>
                 ))}
               </dl>
@@ -230,14 +230,14 @@ export function AbajoDescarga({
             contenido: (
               <div className="text-[14px] text-[#2E333A]">
                 <p className="m-0">
-                  <strong><TS>Licencia</TS> {licencia.nombre}.</strong> <TS>{licencia.resumen}</TS>
+                  <strong><TS>Licencia</TS> <TS>{licencia.nombre}</TS>.</strong> <TS>{licencia.resumen}</TS>
                 </p>
                 <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
                   {licencia.permisos.map((x) => (
                     <li key={x.que} className="flex gap-2">
                       <Marca si={x.si} />
                       <span>
-                        {x.que}
+                        <TS>{x.que}</TS>
                         {x.nota ? <span className="text-[#5B6370]"> (<TS>{x.nota}</TS>)</span> : null}
                       </span>
                     </li>
@@ -246,15 +246,15 @@ export function AbajoDescarga({
                 <p className="m-0 mt-4 font-semibold text-[#1E2329]"><TS>Aplica a todas las licencias</TS></p>
                 <ul className="mt-1 list-disc space-y-1 pl-5 text-[#3A414B]">
                   {REGLAS_COMUNES.map((r) => (
-                    <li key={r}>{r}</li>
+                    <li key={r}><TS>{r}</TS></li>
                   ))}
                 </ul>
                 <p className="m-0 mt-3 text-[13px] text-[#5B6370]">
-                  <TS>Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.</TS>{" "}
+                  <TS>Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.</TS><TS>{" "}</TS>
                   <LocalizedClientLink href="/devoluciones" className="underline">
                     <TS>Ver política</TS>
-                  </LocalizedClientLink>{" "}
-                  ·{" "}
+                  </LocalizedClientLink><TS>{" "}</TS>
+                  ·<TS>{" "}</TS>
                   <LocalizedClientLink href="/licencias-disenos" className="underline">
                     <TS>Comparar las tres licencias</TS>
                   </LocalizedClientLink>
@@ -273,14 +273,14 @@ export function AbajoDescarga({
             <ul className="mt-2 grid gap-1.5 text-[13.5px] text-[#1E2329]">
               <li className="flex gap-2">
                 <Marca si />
-                <span>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}<TS>, listo para tu CAM.</TS></span>
+                <span><TS>{fmt ? `El archivo en ${fmt}` : "El archivo del diseño"}</TS><TS>, listo para tu CAM.</TS></span>
               </li>
               {programas.length > 0 && (
                 <li className="flex gap-2">
                   <Marca si />
                   <span>
-                    <TS>Se abre en:</TS> <b className="font-semibold">{programas.join(", ")}</b>
-                    {" "}<TS>y cualquier programa que lea</TS> {formatosDe(product).join(" o ")}.
+                    <TS>Se abre en:</TS> <b className="font-semibold"><TS>{programas.join(", ")}</TS></b>
+                    <TS>{" "}</TS><TS>y cualquier programa que lea</TS> <TS>{formatosDe(product).join(" o ")}</TS>.
                   </span>
                 </li>
               )}
@@ -288,23 +288,23 @@ export function AbajoDescarga({
                 <li key={k} className="flex gap-2">
                   <Marca si />
                   <span>
-                    {k}: {v}
+                    <TS>{k}</TS>: <TS>{v}</TS>
                   </span>
                 </li>
               ))}
               <li className="flex gap-2">
                 <Marca si />
                 <span>
-                  <TS>Lo descargas en</TS>{" "}
+                  <TS>Lo descargas en</TS><TS>{" "}</TS>
                   <LocalizedClientLink href="/user/descargas" className="font-semibold underline">
                     <TS>Mi cuenta › Mis descargas</TS>
-                  </LocalizedClientLink>{" "}
+                  </LocalizedClientLink><TS>{" "}</TS>
                   <TS>en cuanto se confirma el pago.</TS>
                 </span>
               </li>
               <li className="flex gap-2">
                 <Marca si />
-                <span><TS>Licencia</TS> {licencia.nombre} <TS>a tu nombre.</TS></span>
+                <span><TS>Licencia</TS> <TS>{licencia.nombre}</TS> <TS>a tu nombre.</TS></span>
               </li>
             </ul>
           </section>
@@ -324,14 +324,14 @@ export function AbajoDescarga({
             <li key={p.n} className="flex gap-3 sm:flex-col sm:gap-2">
               <span className="fuente-mono flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#E85D04] text-[15px] font-bold text-white">{p.n}</span>
               <div>
-                <p className="m-0 text-[16px] font-bold text-[#1E2329]">{p.t}</p>
+                <p className="m-0 text-[16px] font-bold text-[#1E2329]"><TS>{p.t}</TS></p>
                 <p className="m-0 mt-0.5 text-[14px] leading-snug text-[#5B6370]">
                   {p.n === "02" ? (
                     <>
-                      <TS>El archivo aparece en</TS>{" "}
+                      <TS>El archivo aparece en</TS><TS>{" "}</TS>
                       <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#1E2329] underline">
                         <TS>Mi cuenta › Mis descargas</TS>
-                      </LocalizedClientLink>{" "}
+                      </LocalizedClientLink><TS>{" "}</TS>
                       <TS>en cuanto se confirma el pago.</TS>
                     </>
                   ) : (

@@ -90,7 +90,7 @@ export default async function TrabajosPage({
           </LocalizedClientLink>
         )}
         <span className="ml-auto self-center text-sm text-[#6B675C]">
-          {total === 1 ? "1 trabajo abierto" : `${total} trabajos abiertos`}
+          <TS>{total === 1 ? "1 trabajo abierto" : `${total} trabajos abiertos`}</TS>
         </span>
       </form>
 
@@ -103,7 +103,7 @@ export default async function TrabajosPage({
       ) : (
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-8 text-center">
           <p className="font-bold text-[#142033]">
-            {filtrado ? "No hay trabajos abiertos con ese filtro." : "Ahora mismo no hay trabajos abiertos."}
+            <TS>{filtrado ? "No hay trabajos abiertos con ese filtro." : "Ahora mismo no hay trabajos abiertos."}</TS>
           </p>
           <p className="mt-1 text-sm text-[#6B675C]">
             <TS>¿Necesitas fabricar algo? Publícalo y los talleres te mandan propuestas en días.</TS>

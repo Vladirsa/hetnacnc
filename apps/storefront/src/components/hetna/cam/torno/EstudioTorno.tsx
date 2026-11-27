@@ -10,6 +10,7 @@
 // Etapa 2: vista 3D, estrías, espiral (salomónica) y "Mis diseños", que se
 // guardan en este navegador y se pueden bajar / subir como archivo .json.
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState } from "react"
@@ -594,7 +595,7 @@ export function EstudioTorno() {
                   onClick={() => cargarEjemplo(i)}
                   className="rounded-full border border-[#E7E4DC] px-3 py-1 text-[12px] font-semibold text-[#4A4943] hover:border-[#C2560A] hover:text-[#B34D07]"
                 >
-                  {e.nombre}
+                  <Tr>{e.nombre}</Tr>
                 </button>
               ))}
             </div>
@@ -607,7 +608,7 @@ export function EstudioTorno() {
                 onClick={() => setVista(v)}
                 className={`rounded-[8px] px-3 py-1.5 ${vista === v ? "bg-[#1B1B18] text-white" : "text-[#4A4943]"}`}
               >
-                {v === "3d" ? "Vista 3D" : "Perfil"}
+                <Tr>{v === "3d" ? "Vista 3D" : "Perfil"}</Tr>
               </button>
             ))}
           </div>
@@ -757,12 +758,12 @@ export function EstudioTorno() {
           <section className={caja}>
             <h2 className="text-[17px] font-bold text-[#1B1B18]"><T>Resultado</T></h2>
             {error && (
-              <p className="mt-3 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[14px] text-[#9B1C1C]">{error}</p>
+              <p className="mt-3 rounded-[10px] bg-[#FDECEC] px-3 py-2 text-[14px] text-[#9B1C1C]"><Tr>{error}</Tr></p>
             )}
-            {info && <p className="mt-3 text-[14px] font-semibold text-[#16794F]">{info}</p>}
+            {info && <p className="mt-3 text-[14px] font-semibold text-[#16794F]"><Tr>{info}</Tr></p>}
             {avisos.map((a, i) => (
               <p key={i} className="mt-2 rounded-[10px] bg-[#FFF8EC] px-3 py-2 text-[13px] text-[#7A4A06]">
-                ⚠ {a}
+                ⚠ <Tr>{a}</Tr>
               </p>
             ))}
             {gcode !== null && (
@@ -772,7 +773,7 @@ export function EstudioTorno() {
                   onClick={descargar}
                   className="mt-4 rounded-[10px] bg-[#C2560A] px-5 py-2.5 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
                 >
-                  {bajando ? "Preparando…" : "⬇ Descargar archivo .nc"}
+                  <Tr>{bajando ? "Preparando…" : "⬇ Descargar archivo .nc"}</Tr>
                 </button>
                 <div className="mt-2">
                   {negado ? (
@@ -818,13 +819,13 @@ export function EstudioTorno() {
               <T>Guardar</T>
             </button>
           </div>
-          {avisoDiseno && <p className="mt-2 text-[12px] text-[#16794F]">{avisoDiseno}</p>}
+          {avisoDiseno && <p className="mt-2 text-[12px] text-[#16794F]"><Tr>{avisoDiseno}</Tr></p>}
           {disenos.length > 0 && (
             <ul className="mt-3 flex max-h-[180px] flex-col gap-1 overflow-auto">
               {disenos.map((d) => (
                 <li key={d.nombre} className="flex items-center justify-between gap-2 rounded-[8px] px-2 py-1 hover:bg-[#F7F5EF]">
                   <button type="button" onClick={() => abrirDiseno(d)} className="min-w-0 flex-1 truncate text-left text-[13px] text-[#1B1B18]">
-                    {d.nombre}
+                    <Tr>{d.nombre}</Tr>
                   </button>
                   <button
                     type="button"
@@ -981,11 +982,11 @@ export function EstudioTorno() {
           disabled={generando}
           className="rounded-[10px] bg-[#C2560A] px-5 py-3 text-[15px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-60"
         >
-          {generando ? "Generando…" : "Generar G-code"}
+          <Tr>{generando ? "Generando…" : "Generar G-code"}</Tr>
         </button>
 
         <p className="rounded-[10px] border border-[#F0D9B5] bg-[#FFF8EC] px-3 py-2.5 text-[12px] leading-relaxed text-[#7A4A06]">
-          <T>Ejes: A gira la pieza,</T> {ejeLargo} <T>recorre el largo y Z es el radio de corte, con Z0 en el centro
+          <T>Ejes: A gira la pieza,</T> <Tr>{ejeLargo}</Tr> <T>recorre el largo y Z es el radio de corte, con Z0 en el centro
           del eje rotativo. En Mach3 revisa que el eje A esté habilitado, sin límites de giro y con
           &quot;Rot 360 rollover&quot; apagado. Prueba el programa primero en aire o con material de descarte.</T>
         </p>

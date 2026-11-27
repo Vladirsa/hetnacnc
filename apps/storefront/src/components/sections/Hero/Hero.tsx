@@ -30,9 +30,9 @@ export const Hero = ({ image, heading, paragraph, buttons }: HeroProps) => {
         <div className="border rounded-sm w-full px-6 flex items-end h-[calc(100%-144px)]">
           <div>
             <h2 className="font-bold mb-6 uppercase display-md max-w-[652px] text-4xl md:text-5xl leading-tight">
-              {heading}
+              <TS>{heading}</TS>
             </h2>
-            <p className="text-lg mb-8">{paragraph}</p>
+            <p className="text-lg mb-8"><TS>{paragraph}</TS></p>
           </div>
         </div>
         {buttons.length && (

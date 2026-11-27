@@ -5,6 +5,7 @@
 // Antes sólo se podía poner a mano en Metadata.
 //   GET  /vendor/hetna-ficha        -> productos del taller con su ficha
 //   POST /vendor/hetna-ficha/:id    -> guarda (packages/api/src/lib/ficha-extendida.ts)
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import { faltantesProducto } from "../../lib/datos-faltantes"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
@@ -18,6 +19,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Ficha del producto",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -90,7 +93,7 @@ function Chips({ valores, onChange, max }) {
       <div>
         {valores.map((v) => (
           <span key={v} style={S.chip}>
-            {v}
+            <T>{v}</T>
             <button type="button" aria-label={`Quitar ${v}`} style={{ ...S.quitar, padding: "0 4px" }} onClick={() => onChange(valores.filter((x) => x !== v))}>
               ×
             </button>
@@ -101,7 +104,7 @@ function Chips({ valores, onChange, max }) {
         <input
           style={{ ...S.input, flex: "1 1 220px" }}
           value={texto}
-          placeholder="Escribe y presiona Enter (ej. Mach3)"
+          placeholder={traducir("Escribe y presiona Enter (ej. Mach3)")}
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === ",") {
@@ -113,10 +116,10 @@ function Chips({ valores, onChange, max }) {
         />
       </div>
       <div style={{ fontSize: 12, color: "#6B675C" }}>
-        Sugerencias:{" "}
+        <T>Sugerencias:</T><T>{" "}</T>
         {SUGERENCIAS.filter((s) => !valores.includes(s)).slice(0, 10).map((s) => (
           <button key={s} type="button" onClick={() => agregar(s)} style={{ ...S.chip, border: 0, cursor: "pointer", padding: "3px 10px", fontSize: 12 }}>
-            + {s}
+            + <T>{s}</T>
           </button>
         ))}
       </div>
@@ -228,14 +231,14 @@ function Editor({ producto, limites, alGuardar }) {
   return (
     <div style={{ borderTop: "1px solid #E7E4DC", marginTop: 14, paddingTop: 14 }}>
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Datos clave</h3>
+        <h3 style={S.h2}><T>Datos clave</T></h3>
         <p style={S.ayuda}>
-          Salen junto al precio y en Especificaciones. Lo que dejes vacío no se muestra (nunca sale un espacio en blanco). En archivos digitales y
-          servicios no hace falta elegir tipo.
+          <T>Salen junto al precio y en Especificaciones. Lo que dejes vacío no se muestra (nunca sale un espacio en blanco). En archivos digitales y
+          servicios no hace falta elegir tipo.</T>
         </p>
         <div style={S.fila}>
           <div style={{ flex: "1 1 260px" }}>
-            <label style={S.label}>Tipo de producto</label>
+            <label style={S.label}><T>Tipo de producto</T></label>
             <select style={S.input} value={f.tipo_producto || ""} onChange={(e) => set("tipo_producto", e.target.value)}>
               {TIPOS.map(([v, t]) => (
                 <option key={v} value={v}>{t}</option>
@@ -243,134 +246,134 @@ function Editor({ producto, limites, alGuardar }) {
             </select>
           </div>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Material</label>
-            <input style={S.input} value={f.material || ""} maxLength={160} placeholder="Ej. MDF 18 mm, carburo, acero de 1/4 pulgada" onChange={(e) => set("material", e.target.value)} />
+            <label style={S.label}><T>Material</T></label>
+            <input style={S.input} value={f.material || ""} maxLength={160} placeholder={traducir("Ej. MDF 18 mm, carburo, acero de 1/4 pulgada")} onChange={(e) => set("material", e.target.value)} />
           </div>
         </div>
         <div style={S.fila}>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Medida principal</label>
-            <input style={S.input} value={f.medida_principal || ""} maxLength={160} placeholder="Ej. 25 × 15 cm, zanco 6 mm" onChange={(e) => set("medida_principal", e.target.value)} />
+            <label style={S.label}><T>Medida principal</T></label>
+            <input style={S.input} value={f.medida_principal || ""} maxLength={160} placeholder={traducir("Ej. 25 × 15 cm, zanco 6 mm")} onChange={(e) => set("medida_principal", e.target.value)} />
           </div>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Uso o para qué sirve</label>
-            <input style={S.input} value={f.uso || ""} maxLength={160} placeholder="Ej. Corte de MDF y triplay" onChange={(e) => set("uso", e.target.value)} />
+            <label style={S.label}><T>Uso o para qué sirve</T></label>
+            <input style={S.input} value={f.uso || ""} maxLength={160} placeholder={traducir("Ej. Corte de MDF y triplay")} onChange={(e) => set("uso", e.target.value)} />
           </div>
         </div>
         <div style={S.fila}>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Entrega</label>
-            <input style={S.input} value={f.entrega || ""} maxLength={160} placeholder="Ej. Sale en 1 a 2 días hábiles" onChange={(e) => set("entrega", e.target.value)} />
+            <label style={S.label}><T>Entrega</T></label>
+            <input style={S.input} value={f.entrega || ""} maxLength={160} placeholder={traducir("Ej. Sale en 1 a 2 días hábiles")} onChange={(e) => set("entrega", e.target.value)} />
           </div>
           {f.tipo_producto === "a_medida" && (
             <div style={{ flex: "1 1 220px" }}>
-              <label style={S.label}>Tiempo de producción</label>
-              <input style={S.input} value={f.tiempo_produccion || ""} maxLength={160} placeholder="Ej. 5 a 7 días hábiles" onChange={(e) => set("tiempo_produccion", e.target.value)} />
+              <label style={S.label}><T>Tiempo de producción</T></label>
+              <input style={S.input} value={f.tiempo_produccion || ""} maxLength={160} placeholder={traducir("Ej. 5 a 7 días hábiles")} onChange={(e) => set("tiempo_produccion", e.target.value)} />
             </div>
           )}
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Garantía</label>
-            <input style={S.input} value={f.garantia || ""} maxLength={160} placeholder="Ej. 30 días por defecto de fabricación" onChange={(e) => set("garantia", e.target.value)} />
+            <label style={S.label}><T>Garantía</T></label>
+            <input style={S.input} value={f.garantia || ""} maxLength={160} placeholder={traducir("Ej. 30 días por defecto de fabricación")} onChange={(e) => set("garantia", e.target.value)} />
           </div>
         </div>
         <div style={S.fila}>
           <div style={{ flex: "1 1 260px" }}>
-            <label style={S.label}>Qué incluye (uno por renglón)</label>
+            <label style={S.label}><T>Qué incluye (uno por renglón)</T></label>
             <textarea style={S.area} value={comoTexto(f.incluye)} placeholder={"Ej.\nTabla tallada\nAcabado con barniz"} onChange={(e) => set("incluye", e.target.value)} />
           </div>
           <div style={{ flex: "1 1 260px" }}>
-            <label style={S.label}>Qué no incluye (uno por renglón)</label>
+            <label style={S.label}><T>Qué no incluye (uno por renglón)</T></label>
             <textarea style={S.area} value={comoTexto(f.no_incluye)} placeholder={"Ej.\nSoporte de pared\nPersonalización con nombre"} onChange={(e) => set("no_incluye", e.target.value)} />
           </div>
         </div>
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Datos técnicos</h3>
-        <p style={S.ayuda}>Salen en Especificaciones. Escribe sólo lo que puedas garantizar.</p>
+        <h3 style={S.h2}><T>Datos técnicos</T></h3>
+        <p style={S.ayuda}><T>Salen en Especificaciones. Escribe sólo lo que puedas garantizar.</T></p>
         <div style={S.fila}>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Medidas generales</label>
-            <input style={S.input} value={f.medidas} maxLength={120} placeholder="Ej. 120 × 80 × 15 mm" onChange={(e) => set("medidas", e.target.value)} />
+            <label style={S.label}><T>Medidas generales</T></label>
+            <input style={S.input} value={f.medidas} maxLength={120} placeholder={traducir("Ej. 120 × 80 × 15 mm")} onChange={(e) => set("medidas", e.target.value)} />
           </div>
           <div style={{ flex: "1 1 220px" }}>
-            <label style={S.label}>Tolerancia</label>
-            <input style={S.input} value={f.tolerancia} maxLength={120} placeholder="Ej. ±0.1 mm en barrenos" onChange={(e) => set("tolerancia", e.target.value)} />
+            <label style={S.label}><T>Tolerancia</T></label>
+            <input style={S.input} value={f.tolerancia} maxLength={120} placeholder={traducir("Ej. ±0.1 mm en barrenos")} onChange={(e) => set("tolerancia", e.target.value)} />
           </div>
         </div>
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Vista 3D (modelo de muestra)</h3>
+        <h3 style={S.h2}><T>Vista 3D (modelo de muestra)</T></h3>
         <p style={S.ayuda}>
-          El cliente lo puede girar en la tienda antes de comprar. <b>Este archivo es público:</b> sube una versión simplificada o de baja resolución, nunca el archivo que vendes. STL, OBJ, DXF o SVG, hasta {MAX_VISTA_MB} MB.
+          <T>El cliente lo puede girar en la tienda antes de comprar.</T> <b><T>Este archivo es público:</T></b> <T>sube una versión simplificada o de baja resolución, nunca el archivo que vendes. STL, OBJ, DXF o SVG, hasta</T> {MAX_VISTA_MB} <T>MB.</T>
         </p>
         {f.vista_previa ? (
           <div style={S.fila}>
             <span style={{ ...S.chip, paddingRight: 12 }}>✓ {decodeURIComponent(f.vista_previa.split("?")[0].split("/").pop() || "modelo")}</span>
-            <button type="button" style={S.quitar} onClick={() => set("vista_previa", "")}>Quitar</button>
+            <button type="button" style={S.quitar} onClick={() => set("vista_previa", "")}><T>Quitar</T></button>
           </div>
         ) : (
           <label style={{ ...S.btn2, display: "inline-block", opacity: subiendo ? 0.6 : 1 }}>
-            {subiendo ? "Subiendo..." : "Subir modelo de muestra"}
+            <T>{subiendo ? "Subiendo..." : "Subir modelo de muestra"}</T>
             <input type="file" hidden accept=".stl,.obj,.dxf,.svg" disabled={subiendo} onChange={(e) => { const a = e.target.files?.[0]; e.target.value = ""; if (a) subirVista(a) }} />
           </label>
         )}
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Fotos de la pieza fabricada</h3>
-        <p style={S.ayuda}>Fotos reales de la pieza ya cortada o impresa. Dan mucha más confianza que un render. Hasta {limites.fotos_fabricada}.</p>
+        <h3 style={S.h2}><T>Fotos de la pieza fabricada</T></h3>
+        <p style={S.ayuda}><T>Fotos reales de la pieza ya cortada o impresa. Dan mucha más confianza que un render. Hasta</T> <T>{limites.fotos_fabricada}</T>.</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
           {f.fotos_fabricada.map((u, i) => (
             <div key={u} style={{ position: "relative" }}>
               <img src={u} alt="" width={84} height={84} style={{ borderRadius: 8, objectFit: "cover", border: "1px solid #E7E4DC" }} />
-              <button type="button" aria-label="Quitar foto" onClick={() => quitar("fotos_fabricada", i)} style={{ position: "absolute", top: 2, right: 2, background: "#fff", border: "1px solid #E7E4DC", borderRadius: 999, width: 24, height: 24, cursor: "pointer", color: "#B3261E", fontWeight: 700 }}>×</button>
+              <button type="button" aria-label={traducir("Quitar foto")} onClick={() => quitar("fotos_fabricada", i)} style={{ position: "absolute", top: 2, right: 2, background: "#fff", border: "1px solid #E7E4DC", borderRadius: 999, width: 24, height: 24, cursor: "pointer", color: "#B3261E", fontWeight: 700 }}>×</button>
             </div>
           ))}
         </div>
         {f.fotos_fabricada.length < limites.fotos_fabricada && (
           <label style={{ ...S.btn2, display: "inline-block", opacity: subiendo ? 0.6 : 1 }}>
-            {subiendo ? "Subiendo..." : "Subir fotos"}
+            <T>{subiendo ? "Subiendo..." : "Subir fotos"}</T>
             <input type="file" hidden multiple accept="image/jpeg,image/png,image/webp" disabled={subiendo} onChange={(e) => { const a = e.target.files; if (a?.length) subirFotos(a); e.target.value = "" }} />
           </label>
         )}
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Compatibilidad</h3>
-        <p style={S.ayuda}>Controladores, programas o máquinas con los que funciona. Ayuda a que lo encuentren y evita devoluciones.</p>
+        <h3 style={S.h2}><T>Compatibilidad</T></h3>
+        <p style={S.ayuda}><T>Controladores, programas o máquinas con los que funciona. Ayuda a que lo encuentren y evita devoluciones.</T></p>
         <Chips valores={f.compatibilidad} max={limites.compatibilidad} onChange={(v) => set("compatibilidad", v)} />
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Videos</h3>
-        <p style={S.ayuda}>Ligas de YouTube o Vimeo: el producto funcionando, la instalación o una prueba de corte.</p>
+        <h3 style={S.h2}><T>Videos</T></h3>
+        <p style={S.ayuda}><T>Ligas de YouTube o Vimeo: el producto funcionando, la instalación o una prueba de corte.</T></p>
         {f.videos.map((v, i) => (
           <div key={i} style={S.fila}>
-            <input style={{ ...S.input, flex: "1 1 280px" }} value={v} placeholder="https://www.youtube.com/watch?v=..." onChange={(e) => cambiar("videos", i, null, e.target.value)} />
-            <button type="button" style={S.quitar} onClick={() => quitar("videos", i)}>Quitar</button>
+            <input style={{ ...S.input, flex: "1 1 280px" }} value={v} placeholder={traducir("https://www.youtube.com/watch?v=...")} onChange={(e) => cambiar("videos", i, null, e.target.value)} />
+            <button type="button" style={S.quitar} onClick={() => quitar("videos", i)}><T>Quitar</T></button>
           </div>
         ))}
         {f.videos.length < limites.videos && (
-          <button type="button" style={S.btn2} onClick={() => set("videos", [...f.videos, ""])}>+ Agregar video</button>
+          <button type="button" style={S.btn2} onClick={() => set("videos", [...f.videos, ""])}><T>+ Agregar video</T></button>
         )}
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Archivos para descargar</h3>
-        <p style={S.ayuda}>Manual, ficha técnica, plano o diagrama de conexión. Súbelo aquí (hasta {MAX_MB} MB) o pega una liga de Google Drive, Dropbox u OneDrive.</p>
+        <h3 style={S.h2}><T>Archivos para descargar</T></h3>
+        <p style={S.ayuda}><T>Manual, ficha técnica, plano o diagrama de conexión. Súbelo aquí (hasta</T> {MAX_MB} <T>MB) o pega una liga de Google Drive, Dropbox u OneDrive.</T></p>
         {f.archivos.map((a, i) => (
           <div key={i} style={S.fila}>
-            <input style={{ ...S.input, flex: "1 1 180px" }} value={a.nombre} placeholder="Nombre (ej. Manual de usuario)" onChange={(e) => cambiar("archivos", i, "nombre", e.target.value)} />
-            <input style={{ ...S.input, flex: "2 1 260px" }} value={a.url} placeholder="https://..." onChange={(e) => cambiar("archivos", i, "url", e.target.value)} />
-            <button type="button" style={S.quitar} onClick={() => quitar("archivos", i)}>Quitar</button>
+            <input style={{ ...S.input, flex: "1 1 180px" }} value={a.nombre} placeholder={traducir("Nombre (ej. Manual de usuario)")} onChange={(e) => cambiar("archivos", i, "nombre", e.target.value)} />
+            <input style={{ ...S.input, flex: "2 1 260px" }} value={a.url} placeholder={traducir("https://...")} onChange={(e) => cambiar("archivos", i, "url", e.target.value)} />
+            <button type="button" style={S.quitar} onClick={() => quitar("archivos", i)}><T>Quitar</T></button>
           </div>
         ))}
         {f.archivos.length < limites.archivos && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <label style={{ ...S.btn2, display: "inline-block", opacity: subiendo ? 0.6 : 1 }}>
-              {subiendo ? "Subiendo..." : "Subir archivo"}
+              <T>{subiendo ? "Subiendo..." : "Subir archivo"}</T>
               <input
                 type="file"
                 hidden
@@ -382,43 +385,43 @@ function Editor({ producto, limites, alGuardar }) {
                 }}
               />
             </label>
-            <button type="button" style={S.btn2} onClick={() => set("archivos", [...f.archivos, { nombre: "", url: "" }])}>+ Pegar una liga</button>
+            <button type="button" style={S.btn2} onClick={() => set("archivos", [...f.archivos, { nombre: "", url: "" }])}><T>+ Pegar una liga</T></button>
           </div>
         )}
       </section>
 
       <section style={{ marginBottom: 18 }}>
-        <h3 style={S.h2}>Preguntas frecuentes</h3>
-        <p style={S.ayuda}>Lo que más te preguntan antes de comprar. Google también las muestra en sus resultados.</p>
+        <h3 style={S.h2}><T>Preguntas frecuentes</T></h3>
+        <p style={S.ayuda}><T>Lo que más te preguntan antes de comprar. Google también las muestra en sus resultados.</T></p>
         {f.faq.map((q, i) => (
           <div key={i} style={{ ...S.card, padding: 12, background: "#FAF9F5" }}>
-            <label style={S.label}>Pregunta</label>
-            <input style={S.input} value={q.pregunta} placeholder="¿Incluye el spindle?" onChange={(e) => cambiar("faq", i, "pregunta", e.target.value)} />
-            <label style={{ ...S.label, marginTop: 8 }}>Respuesta</label>
-            <textarea style={S.area} value={q.respuesta} placeholder="Sí, incluye spindle de 2.2 kW enfriado por agua." onChange={(e) => cambiar("faq", i, "respuesta", e.target.value)} />
+            <label style={S.label}><T>Pregunta</T></label>
+            <input style={S.input} value={q.pregunta} placeholder={traducir("¿Incluye el spindle?")} onChange={(e) => cambiar("faq", i, "pregunta", e.target.value)} />
+            <label style={{ ...S.label, marginTop: 8 }}><T>Respuesta</T></label>
+            <textarea style={S.area} value={q.respuesta} placeholder={traducir("Sí, incluye spindle de 2.2 kW enfriado por agua.")} onChange={(e) => cambiar("faq", i, "respuesta", e.target.value)} />
             <div style={{ textAlign: "right" }}>
-              <button type="button" style={S.quitar} onClick={() => quitar("faq", i)}>Quitar pregunta</button>
+              <button type="button" style={S.quitar} onClick={() => quitar("faq", i)}><T>Quitar pregunta</T></button>
             </div>
           </div>
         ))}
         {f.faq.length < limites.faq && (
-          <button type="button" style={S.btn2} onClick={() => set("faq", [...f.faq, { pregunta: "", respuesta: "" }])}>+ Agregar pregunta</button>
+          <button type="button" style={S.btn2} onClick={() => set("faq", [...f.faq, { pregunta: "", respuesta: "" }])}><T>+ Agregar pregunta</T></button>
         )}
       </section>
 
       <p style={{ color: "#6B675C", fontSize: 12, margin: "0 0 10px" }}>
-        No escribas teléfonos, correos ni ligas en los textos: se ocultan automáticamente. Todo el trato va por HETNA.
+        <T>No escribas teléfonos, correos ni ligas en los textos: se ocultan automáticamente. Todo el trato va por HETNA.</T>
       </p>
       <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <button type="button" style={{ ...S.btn, opacity: guardando ? 0.6 : 1 }} disabled={guardando || subiendo} onClick={guardar}>
-          {guardando ? "Guardando..." : "Guardar ficha"}
+          <T>{guardando ? "Guardando..." : "Guardar ficha"}</T>
         </button>
         {producto.handle && producto.estado === "published" && (
           <a href={TIENDA + producto.handle} target="_blank" rel="noreferrer" style={{ fontSize: 14, color: "#142033", fontWeight: 600 }}>
-            Ver en la tienda
+            <T>Ver en la tienda</T>
           </a>
         )}
-        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</span>}
+        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></span>}
       </div>
     </div>
   )
@@ -452,26 +455,26 @@ export default function FichaPage() {
     return (datos?.productos || []).filter((p) => !t || String(p.titulo).toLowerCase().includes(t))
   }, [datos, buscar])
 
-  if (error) return <div style={S.page}>{error}</div>
-  if (!datos) return <div style={S.page}>Cargando...</div>
+  if (error) return <div style={S.page}><T>{error}</T></div>
+  if (!datos) return <div style={S.page}><T>Cargando...</T></div>
 
   const actualizar = (id, ficha) =>
     setDatos((d) => ({ ...d, productos: d.productos.map((p) => (p.id === id ? { ...p, ficha, completa: cuantos(ficha) } : p)) }))
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Ficha del producto</h1>
+      <h1 style={S.h1}><T>Ficha del producto</T></h1>
       <p style={S.sub}>
-        Agrega medidas y tolerancia, una vista 3D de muestra, fotos de la pieza fabricada, compatibilidad, videos, manuales y preguntas frecuentes. Aparecen en la página del producto y le dan más confianza al cliente para comprar.
+        <T>Agrega medidas y tolerancia, una vista 3D de muestra, fotos de la pieza fabricada, compatibilidad, videos, manuales y preguntas frecuentes. Aparecen en la página del producto y le dan más confianza al cliente para comprar.</T>
       </p>
 
       {datos.productos.length > 6 && (
-        <input style={{ ...S.input, marginBottom: 14 }} value={buscar} placeholder="Buscar producto..." onChange={(e) => setBuscar(e.target.value)} />
+        <input style={{ ...S.input, marginBottom: 14 }} value={buscar} placeholder={traducir("Buscar producto...")} onChange={(e) => setBuscar(e.target.value)} />
       )}
 
       {!datos.productos.length && (
         <div style={{ ...S.card, textAlign: "center", color: "#6B675C" }}>
-          Todavía no tienes productos. Publica el primero en <b>Publicar producto</b> y vuelve aquí para completar su ficha.
+          <T>Todavía no tienes productos. Publica el primero en</T> <b><T>Publicar producto</T></b> <T>y vuelve aquí para completar su ficha.</T>
         </div>
       )}
 
@@ -484,17 +487,17 @@ export default function FichaPage() {
               <div style={{ width: 56, height: 56, borderRadius: 8, background: "#F3F1EA", flex: "0 0 auto" }} />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.titulo}</div>
+              <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><T>{p.titulo}</T></div>
               <div style={{ fontSize: 13, color: p.completa === 4 ? "#1E7B3A" : "#6B675C" }}>
-                {p.completa === 4 ? "Ficha completa" : `${p.completa} de 4 secciones`}
-                {p.estado !== "published" ? " · todavía no está publicado" : ""}
+                <T>{p.completa === 4 ? "Ficha completa" : `${p.completa} de 4 secciones`}</T>
+                <T>{p.estado !== "published" ? " · todavía no está publicado" : ""}</T>
               </div>
               {faltantesProducto(p).length > 0 && (
-                <div style={{ fontSize: 12.5, color: "#B34D07", marginTop: 2 }}>Falta: {faltantesProducto(p).join(", ")}</div>
+                <div style={{ fontSize: 12.5, color: "#B34D07", marginTop: 2 }}><T>Falta:</T> <T>{faltantesProducto(p).join(", ")}</T></div>
               )}
             </div>
             <button type="button" style={S.btn2} onClick={() => setAbierto(abierto === p.id ? null : p.id)}>
-              {abierto === p.id ? "Cerrar" : p.completa ? "Editar ficha" : "Completar ficha"}
+              <T>{abierto === p.id ? "Cerrar" : p.completa ? "Editar ficha" : "Completar ficha"}</T>
             </button>
           </div>
           {abierto === p.id && <Editor producto={p} limites={datos.limites} alGuardar={(ficha) => actualizar(p.id, ficha)} />}

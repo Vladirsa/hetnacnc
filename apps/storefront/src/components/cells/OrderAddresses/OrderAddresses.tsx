@@ -14,10 +14,10 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
       <div className="flex flex-col ">
         <h4 className="label-md text-primary"><TS>Dirección de envío</TS></h4>
         <p className="label-md text-secondary">
-          {`${singleOrder.shipping_address.first_name} ${singleOrder.shipping_address.last_name}`}
+          <TS>{`${singleOrder.shipping_address.first_name} ${singleOrder.shipping_address.last_name}`}</TS>
         </p>
         <p className="label-md text-secondary">
-          {`${singleOrder.shipping_address.address_1}, ${
+          <TS>{`${singleOrder.shipping_address.address_1}, ${
             singleOrder.shipping_address.postal_code
           } ${singleOrder.shipping_address.city}${
             singleOrder.shipping_address.province
@@ -27,10 +27,10 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
             region
               ? `, ${region.name}`
               : `, ${singleOrder.shipping_address.country_code?.toUpperCase()}`
-          }`}
+          }`}</TS>
         </p>
         <p className="label-md text-secondary">
-          {`${user.email}, ${singleOrder.shipping_address.phone || user.phone}`}
+          <TS>{`${user.email}, ${singleOrder.shipping_address.phone || user.phone}`}</TS>
         </p>
       </div>
       <div>
@@ -40,10 +40,10 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
         ) : (
           <>
             <p className="label-md text-secondary">
-              {`${singleOrder.billing_address.first_name} ${singleOrder.billing_address.last_name}`}
+              <TS>{`${singleOrder.billing_address.first_name} ${singleOrder.billing_address.last_name}`}</TS>
             </p>
             <p className="label-md text-secondary">
-              {`${singleOrder.billing_address.address_1}, ${
+              <TS>{`${singleOrder.billing_address.address_1}, ${
                 singleOrder.billing_address.postal_code
               } ${singleOrder.billing_address.city}${
                 singleOrder.billing_address.province
@@ -53,12 +53,12 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
                 region
                   ? `, ${region.name}`
                   : `, ${singleOrder.billing_address.country_code?.toUpperCase()}`
-              }`}
+              }`}</TS>
             </p>
             <p className="label-md text-secondary">
-              {`${user.email}, ${
+              <TS>{`${user.email}, ${
                 singleOrder.billing_address.phone || user.phone
-              }`}
+              }`}</TS>
             </p>
           </>
         )}

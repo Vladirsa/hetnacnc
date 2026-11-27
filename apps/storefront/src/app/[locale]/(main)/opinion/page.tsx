@@ -26,7 +26,7 @@ export default async function OpinionPage({ searchParams }: { searchParams: Prom
     <main className="container pb-16">
       <div className="mx-auto max-w-[640px] py-8 lg:py-12">
         <h1 className="text-[26px] font-bold text-[#1B1B18] lg:text-[32px]">
-          {encuesta?.nombre ? `Gracias, ${encuesta.nombre}. ` : ""}<TS>¿Qué mejorarías de HETNA CNC?</TS>
+          <TS>{encuesta?.nombre ? `Gracias, ${encuesta.nombre}. ` : ""}</TS><TS>¿Qué mejorarías de HETNA CNC?</TS>
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-[#4A4943]">
           <TS>Estamos construyendo la plataforma con talleres y clientes como tú. Cuéntanos qué te gusta, qué te falta o qué te gustaría que inventáramos.
@@ -36,10 +36,10 @@ export default async function OpinionPage({ searchParams }: { searchParams: Prom
         <div className="mt-6">
           {t && !encuesta ? (
             <p className="rounded-[12px] bg-[#FFFAEB] p-4 text-[15px] text-[#4A4943]">
-              <TS>La liga del correo ya venció. Si tienes cuenta,</TS>{" "}
+              <TS>La liga del correo ya venció. Si tienes cuenta,</TS><TS>{" "}</TS>
               <LocalizedClientLink href="/login" className="font-semibold text-[#C2560A]">
                 <TS>inicia sesión</TS>
-              </LocalizedClientLink>{" "}
+              </LocalizedClientLink><TS>{" "}</TS>
               <TS>y vuelve a esta página, o escríbenos por WhatsApp al 221 707 6014.</TS>
             </p>
           ) : sesion ? (

@@ -35,7 +35,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
   try { d = await adminFetch<Datos>("/admin/hetna-estrategia") } catch (e) { error = (e as Error).message }
   let f4: Fase4 | null = null
   try { f4 = await adminFetch<Fase4>("/admin/hetna-fase4") } catch {}
-  if (!d) return <Vacio><TS>No pude leer los indicadores:</TS> {error}</Vacio>
+  if (!d) return <Vacio><TS>No pude leer los indicadores:</TS> <TS>{error}</TS></Vacio>
   const a = d.actual, b = d.anterior
   const pctDetectados = a.archivos_revisados ? Math.round((a.archivos_con_problema / a.archivos_revisados) * 100) : null
   return (
@@ -71,7 +71,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
 
       {f4 && (
         <Tarjeta>
-          <Titulo extra={<Etiqueta color={f4.config.activa ? "verde" : "gris"}>{f4.config.activa ? "encendida" : "apagada"}</Etiqueta>}><TS>Fase 4: HETNA responde</TS></Titulo>
+          <Titulo extra={<Etiqueta color={f4.config.activa ? "verde" : "gris"}><TS>{f4.config.activa ? "encendida" : "apagada"}</TS></Etiqueta>}><TS>Fase 4: HETNA responde</TS></Titulo>
           <p className="mb-2 text-[12px] text-[#6B675C]">
             <TS>HETNA cobra y retiene el pago, garantiza la fecha (compensa si el taller se atrasa), servicio exprés y crédito a empresas. Se enciende sólo con estas claves en el .env del backend; antes, revísalo con tu contador y tu abogado.</TS>
           </p>
@@ -80,9 +80,9 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
               <li key={x.clave} className="flex items-start justify-between gap-2 py-2 text-[13px]">
                 <span>
                   <code className="text-[12px] font-bold text-[#142033]">{x.clave}</code>
-                  <span className="block text-[12px] text-[#6B675C]">{x.para}</span>
+                  <span className="block text-[12px] text-[#6B675C]"><TS>{x.para}</TS></span>
                 </span>
-                <Etiqueta color={x.listo ? "verde" : "ambar"}>{x.listo ? "lista" : "falta"}</Etiqueta>
+                <Etiqueta color={x.listo ? "verde" : "ambar"}><TS>{x.listo ? "lista" : "falta"}</TS></Etiqueta>
               </li>
             ))}
           </ul>
@@ -92,7 +92,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
               <ul className="divide-y divide-[#EFEDE6]">
                 {f4.compensaciones.filter((c) => c.estado === "pendiente").map((c) => (
                   <li key={c.solicitud_id} className="py-2 text-[13px]">
-                    <b>{c.folio}</b> · {c.dias_tarde} {c.dias_tarde === 1 ? "día" : "días"} <TS>tarde · compensar</TS> <b>${Number(c.monto).toLocaleString("es-MX")}</b> <TS>de $</TS>{Number(c.total).toLocaleString("es-MX")}
+                    <b><TS>{c.folio}</TS></b> · <TS>{c.dias_tarde}</TS> <TS>{c.dias_tarde === 1 ? "día" : "días"}</TS> <TS>tarde · compensar</TS> <b>${Number(c.monto).toLocaleString("es-MX")}</b> <TS>de $</TS>{Number(c.total).toLocaleString("es-MX")}
                     <MarcarCompensacion id={c.solicitud_id} />
                   </li>
                 ))}
@@ -113,11 +113,11 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
             {d.en_riesgo.map((r) => (
               <li key={r.folio} className="flex justify-between gap-3 py-2 text-[13px]">
                 <a href={`/${locale}/panel/licitaciones?f=${encodeURIComponent(r.folio)}`} className="font-semibold text-[#142033] hover:text-[#C2560A]">
-                  {r.folio}
-                  <span className="font-normal text-[#6B675C]">{r.que ? ` · ${r.que}` : ""}{r.ciudad ? ` · ${r.ciudad}` : ""}</span>
+                  <TS>{r.folio}</TS>
+                  <span className="font-normal text-[#6B675C]"><TS>{r.que ? ` · ${r.que}` : ""}</TS><TS>{r.ciudad ? ` · ${r.ciudad}` : ""}</TS></span>
                 </a>
                 <span className={`whitespace-nowrap ${r.horas >= 24 ? "font-semibold text-[#B3261E]" : "text-[#8A3B05]"}`}>
-                  {r.horas} h{r.recordada ? " · recordada" : ""}{r.ronda > 1 ? ` · ronda ${r.ronda}` : ""}
+                  <TS>{r.horas}</TS> h<TS>{r.recordada ? " · recordada" : ""}</TS><TS>{r.ronda > 1 ? ` · ronda ${r.ronda}` : ""}</TS>
                 </span>
               </li>
             ))}
@@ -134,11 +134,11 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
             {a.origenes.map((o) => (
               <li key={`${o.fuente}|${o.campana}`} className="flex justify-between gap-3 py-2 text-[13px]">
                 <span className="font-semibold">
-                  {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
-                  {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
+                  <TS>{o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}</TS>
+                  {o.campana && <span className="font-normal text-[#6B675C]"> · <TS>{o.campana}</TS></span>}
                 </span>
                 <span className="whitespace-nowrap text-[#40403A]">
-                  {o.solicitudes} <TS>solicitudes ·</TS> {o.con_propuesta_elegida} <TS>eligieron taller</TS>
+                  <TS>{o.solicitudes}</TS> <TS>solicitudes ·</TS> <TS>{o.con_propuesta_elegida}</TS> <TS>eligieron taller</TS>
                 </span>
               </li>
             ))}
@@ -155,10 +155,10 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
             {d.talleres_origen.map((o) => (
               <li key={`${o.fuente}|${o.campana}`} className="flex justify-between gap-3 py-2 text-[13px]">
                 <span className="font-semibold">
-                  {o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}
-                  {o.campana && <span className="font-normal text-[#6B675C]"> · {o.campana}</span>}
+                  <TS>{o.fuente === "directo" ? "Directo / sin campaña" : o.fuente}</TS>
+                  {o.campana && <span className="font-normal text-[#6B675C]"> · <TS>{o.campana}</TS></span>}
                 </span>
-                <span className="whitespace-nowrap text-[#40403A]">{o.registros} <TS>registros</TS></span>
+                <span className="whitespace-nowrap text-[#40403A]"><TS>{o.registros}</TS> <TS>registros</TS></span>
               </li>
             ))}
           </ul>
@@ -174,7 +174,7 @@ export default async function PanelEstrategia({ params }: { params: Promise<{ lo
             {d.latam.map((p) => (
               <li key={p.pais} className="flex justify-between py-2 text-[13px]">
                 <span className="font-semibold">{PAIS[p.pais] || p.pais}</span>
-                <span className="text-[#40403A]">{p.talleres} <TS>talleres ·</TS> {p.clientes} <TS>clientes</TS></span>
+                <span className="text-[#40403A]"><TS>{p.talleres}</TS> <TS>talleres ·</TS> <TS>{p.clientes}</TS> <TS>clientes</TS></span>
               </li>
             ))}
           </ul>

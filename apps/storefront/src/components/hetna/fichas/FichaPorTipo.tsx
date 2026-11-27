@@ -22,8 +22,8 @@ const Lista = ({ titulo, items, marca = "✓" }: { titulo: string; items: string
       <ul className="mt-1 space-y-1">
         {items.map((t) => (
           <li key={t} className="flex gap-2">
-            <span className="shrink-0 text-[#C2560A]">{marca}</span>
-            <span>{t}</span>
+            <span className="shrink-0 text-[#C2560A]"><TS>{marca}</TS></span>
+            <span><TS>{t}</TS></span>
           </li>
         ))}
       </ul>
@@ -36,24 +36,24 @@ export const BloqueLicencia = ({ metadata }: { metadata: Meta }) => {
   return (
     <div className="mt-3 rounded-[10px] border border-[#E7E4DC] bg-[#FAF6EF] p-3 text-[13.5px]" data-testid="bloque-licencia">
       <p className="m-0">
-        <strong className="text-[#142033]"><TS>Licencia</TS> {licencia.nombre}</strong>
-        {piezas ? ` · hasta ${piezas.toLocaleString("es-MX")} piezas` : ""}. <TS>{licencia.resumen}</TS>
+        <strong className="text-[#142033]"><TS>Licencia</TS> <TS>{licencia.nombre}</TS></strong>
+        <TS>{piezas ? ` · hasta ${piezas.toLocaleString("es-MX")} piezas` : ""}</TS>. <TS>{licencia.resumen}</TS>
       </p>
       <ul className="mt-2 grid gap-1 sm:grid-cols-2">
         {licencia.permisos.map((p) => (
           <li key={p.que} className="flex gap-2">
             <span className={p.si ? "text-[#17803F]" : "text-[#B91C1C]"} aria-label={p.si ? "Sí" : "No"}>
-              {p.si ? "✓" : "✕"}
+              <TS>{p.si ? "✓" : "✕"}</TS>
             </span>
             <span>
-              {p.que}
+              <TS>{p.que}</TS>
               {p.nota ? <span className="text-[#6B6A63]"> (<TS>{p.nota}</TS>)</span> : null}
             </span>
           </li>
         ))}
       </ul>
       <p className="m-0 mt-2 text-[12.5px] text-[#6B6A63]">
-        {REGLAS_COMUNES[0]}{" "}
+        <TS>{REGLAS_COMUNES[0]}</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/licencias-disenos" className="font-semibold text-[#B34D07] underline">
           <TS>Ver las tres licencias</TS>
         </LocalizedClientLink>
@@ -68,7 +68,7 @@ export const FichaDigital = ({ metadata }: { metadata: Meta }) => {
   return (
     <Caja titulo="Qué recibes">
       <p className="m-0">
-        <strong><TS>Descarga inmediata tras el pago</TS></strong><TS>, en</TS>{" "}
+        <strong><TS>Descarga inmediata tras el pago</TS></strong><TS>, en</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/user/descargas" className="font-semibold text-[#B34D07] underline">
           <TS>Mi cuenta › Mis descargas</TS>
         </LocalizedClientLink>
@@ -78,15 +78,15 @@ export const FichaDigital = ({ metadata }: { metadata: Meta }) => {
         <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
           {d.filas.map(([k, v]) => (
             <div key={k} className="contents">
-              <dt className="font-semibold text-[#142033]">{k}</dt>
-              <dd className="m-0">{v}</dd>
+              <dt className="font-semibold text-[#142033]"><TS>{k}</TS></dt>
+              <dd className="m-0"><TS>{v}</TS></dd>
             </div>
           ))}
         </dl>
       )}
       <BloqueLicencia metadata={metadata} />
       <p className="mt-2 text-[13px] text-[#6B6A63]">
-        <TS>Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.</TS>{" "}
+        <TS>Sin devolución una vez descargado, salvo que el archivo esté dañado o no corresponda a lo anunciado.</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/devoluciones" className="underline">
           <TS>Ver política</TS>
         </LocalizedClientLink>
@@ -102,11 +102,11 @@ export const ResumenServicio = ({ metadata }: { metadata: Meta }) => {
     <div className="mt-4 rounded-[10px] border border-[#E7E4DC] bg-[#FAF6EF] p-3 text-[13.5px] text-[#40403A]" data-testid="resumen-servicio">
       {d.entregables.length > 0 && (
         <p className="m-0">
-          <strong className="text-[#142033]"><TS>Recibes:</TS></strong> {d.entregables.join(", ")}.
+          <strong className="text-[#142033]"><TS>Recibes:</TS></strong> <TS>{d.entregables.join(", ")}</TS>.
         </p>
       )}
       <p className="m-0 mt-1">
-        <strong className="text-[#142033]"><TS>Plazo:</TS></strong> {d.tiempo}
+        <strong className="text-[#142033]"><TS>Plazo:</TS></strong> <TS>{d.tiempo}</TS>
       </p>
       <a href="#detalle-servicio" className="mt-1 inline-block font-semibold text-[#B34D07] underline">
         <TS>Qué incluye y qué necesitas</TS>
@@ -133,7 +133,7 @@ export const FichaServicio = ({ metadata }: { metadata: Meta }) => {
       <Lista titulo="Entregables" items={d.entregables} />
       <div className="mt-3">
         <p className="m-0 font-semibold text-[#142033]"><TS>Tiempo de entrega</TS></p>
-        <p className="m-0 mt-1">{d.tiempo}</p>
+        <p className="m-0 mt-1"><TS>{d.tiempo}</TS></p>
       </div>
       <Lista titulo="Qué necesitas antes de pagar" items={d.necesitas} marca="•" />
       {d.pasos.length > 0 && (
@@ -141,7 +141,7 @@ export const FichaServicio = ({ metadata }: { metadata: Meta }) => {
           <p className="m-0 font-semibold text-[#142033]"><TS>Pasos</TS></p>
           <ol className="mt-1 list-decimal space-y-1 pl-5">
             {d.pasos.map((p) => (
-              <li key={p}>{p}</li>
+              <li key={p}><TS>{p}</TS></li>
             ))}
           </ol>
         </div>

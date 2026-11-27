@@ -56,7 +56,7 @@ export default function PorQueHetna() {
         </div>
 
         <p className="mt-8 text-center text-[20px] md:text-[28px] font-extrabold leading-tight text-[#142033]">
-          <TS>Menos tiempo buscando proveedores.</TS>{" "}
+          <TS>Menos tiempo buscando proveedores.</TS><TS>{" "}</TS>
           <span className="text-[#C2560A]"><TS>Más tiempo fabricando.</TS></span>
         </p>
       </div>

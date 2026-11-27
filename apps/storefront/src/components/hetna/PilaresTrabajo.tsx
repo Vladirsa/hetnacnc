@@ -84,7 +84,7 @@ function PilarCard({ pilar, isVisible, delay }: PilarCardProps) {
           <div
             className={`w-10 h-10 rounded-full bg-gradient-to-br ${pilar.color} flex items-center justify-center mb-2 transform transition-transform duration-300 group-hover:scale-110`}
           >
-            <span className="text-lg font-bold text-white">{pilar.numero}</span>
+            <span className="text-lg font-bold text-white"><TS>{pilar.numero}</TS></span>
           </div>
           <IconComponent className={`w-8 h-8 ${pilar.colorText}`} strokeWidth={1.5} />
         </div>

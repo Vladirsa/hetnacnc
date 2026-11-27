@@ -37,7 +37,7 @@ export default async function ForoMiPerfil({ searchParams }: Props) {
         <Migas items={[{ nombre: "Foro CNC", href: "/foro-cnc" }, { nombre: p ? "Editar perfil" : "Crear perfil" }]} />
         <div className="flex items-end justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]">{p ? "Tu perfil" : "Crea tu perfil del foro"}</h1>
+            <h1 className="font-display text-[28px] font-bold m-0 text-[#1B1B18]"><TS>{p ? "Tu perfil" : "Crea tu perfil del foro"}</TS></h1>
             <p className="m-0 mt-1.5 text-[14.5px] text-[#6B6A63] max-w-[620px]">
               <TS>Tu perfil es tu tarjeta de presentación en la comunidad: los clientes ven quién eres, qué máquinas tienes y tus trabajos.</TS>
             </p>

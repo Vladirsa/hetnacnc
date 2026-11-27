@@ -67,7 +67,7 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
         <Migas items={[{ nombre: "Inicio", href: "/" }, { nombre: "Foro CNC", href: "/foro-cnc" }, { nombre: s.nombre }]} />
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-[28px] lg:text-[34px] font-bold m-0 text-[#1B1B18]">{s.nombre}</h1>
+            <h1 className="font-display text-[28px] lg:text-[34px] font-bold m-0 text-[#1B1B18]"><TS>{s.nombre}</TS></h1>
             <p className="m-0 mt-1.5 text-[15px] text-[#6B6A63] max-w-[680px] leading-relaxed"><TS>{s.descripcion}</TS></p>
             {s.soloNegocios && (
               <p className="m-0 mt-2 text-[13px] text-[#9A4A06]"><TS>Aquí solo publican talleres, proveedores y marcas. Todos pueden responder.</TS></p>
@@ -120,7 +120,7 @@ export default async function ForoSeccion({ params, searchParams }: Props) {
               </div>
             ) : (
               <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[14px] p-8 text-center flex flex-col items-center gap-3">
-                <p className="m-0 text-[15px] text-[#44433D]"><TS>Todavía no hay temas en</TS> {s.nombre}<TS>. ¡Abre el primero!</TS></p>
+                <p className="m-0 text-[15px] text-[#44433D]"><TS>Todavía no hay temas en</TS> <TS>{s.nombre}</TS><TS>. ¡Abre el primero!</TS></p>
                 <BotonPublicar seccion={s.slug} />
               </div>
             )}

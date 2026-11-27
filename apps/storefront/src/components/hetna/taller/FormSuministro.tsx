@@ -72,7 +72,7 @@ export default function FormSuministro() {
   if (estado === "ok") {
     return (
       <div className="rounded-2xl border border-[#1E7B3A]/30 bg-[#EEF6F0] p-6">
-        <p className="text-lg font-extrabold text-[#142033]"><T>¡Listo! Tu solicitud</T> {folio} <T>ya va para los proveedores.</T></p>
+        <p className="text-lg font-extrabold text-[#142033]"><T>¡Listo! Tu solicitud</T> <T>{folio}</T> <T>ya va para los proveedores.</T></p>
         <p className="mt-2 text-sm text-[#40403A]"><T>Te llega un correo con la liga para comparar las cotizaciones y elegir. Revisa también spam.</T></p>
         <LocalizedClientLink href="/cotizar/suministro" className="mt-4 inline-block font-semibold text-[#C2560A] underline">
           <T>Pedir otro material</T>
@@ -189,7 +189,7 @@ export default function FormSuministro() {
 
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110 disabled:opacity-60">
-          {estado === "enviando" ? "Enviando…" : "Pedir cotizaciones a proveedores"}
+          <T>{estado === "enviando" ? "Enviando…" : "Pedir cotizaciones a proveedores"}</T>
         </button>
         <span className="text-xs text-[#6B675C]"><T>Gratis y sin compromiso. Tus datos los ve sólo HETNA, salvo lo que tú autorices.</T></span>
       </div>

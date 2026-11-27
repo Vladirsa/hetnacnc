@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { Label } from '@/components/atoms/Label/Label'
 import { HttpTypes } from '@medusajs/types';
 
@@ -12,7 +13,7 @@ export const ProductTags = ({
     // ensanchaba toda la ficha a 630-730 px (menú y barra inferior corridos).
     <div className='flex flex-wrap gap-2'>
       {tags.map(({ id, value }) => (
-        <Label key={id}>{value}</Label>
+        <Label key={id}><TS>{value}</TS></Label>
       ))}
     </div>
   );

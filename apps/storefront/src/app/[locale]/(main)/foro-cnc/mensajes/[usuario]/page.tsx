@@ -28,8 +28,8 @@ export default async function ConversacionPage({ params }: Props) {
         <div className="mx-auto max-w-[760px] px-4 py-8">
           <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-6 text-[15px] text-[#44433D]">
             <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/login"} className="font-semibold text-[#B34D07] underline">
-              {sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}
-            </LocalizedClientLink>{" "}
+              <TS>{sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}</TS>
+            </LocalizedClientLink><TS>{" "}</TS>
             <TS>para mandar mensajes.</TS>
           </p>
         </div>
@@ -73,7 +73,7 @@ export default async function ConversacionPage({ params }: Props) {
                 </div>
               ))
             ) : (
-              <p className="m-auto text-center text-[14px] text-[#6B6A63]"><TS>Escríbele a</TS> {c.otro.nombre}<TS>. Preséntate y dile en qué te puede ayudar.</TS></p>
+              <p className="m-auto text-center text-[14px] text-[#6B6A63]"><TS>Escríbele a</TS> <TS>{c.otro.nombre}</TS><TS>. Preséntate y dile en qué te puede ayudar.</TS></p>
             )}
           </div>
           <div className="border-t border-[#F0EDE6] p-3">

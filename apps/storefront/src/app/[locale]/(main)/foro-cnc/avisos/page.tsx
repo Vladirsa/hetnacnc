@@ -51,9 +51,9 @@ export default async function Avisos() {
           </div>
           {!p ? (
             <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-6 text-[15px] text-[#44433D]">
-              {sesion ? "Crea tu perfil del foro para recibir avisos." : "Entra con tu cuenta para ver tus avisos."}{" "}
+              <TS>{sesion ? "Crea tu perfil del foro para recibir avisos." : "Entra con tu cuenta para ver tus avisos."}</TS><TS>{" "}</TS>
               <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/login"} className="font-semibold text-[#B34D07] underline">
-                {sesion ? "Crear perfil" : "Entrar"}
+                <TS>{sesion ? "Crear perfil" : "Entrar"}</TS>
               </LocalizedClientLink>
             </p>
           ) : lista.length ? (
@@ -61,10 +61,10 @@ export default async function Avisos() {
               {lista.map((a) => (
                 <li key={a.id} className={`border-b border-[#F0EDE6] last:border-0 ${a.leido ? "" : "bg-[#FFF8EE]"}`}>
                   <LocalizedClientLink href={a.url || "/foro-cnc"} className="flex items-start gap-3 px-4 py-3 hover:bg-[#F6F4EF]">
-                    {a.actor ? <Avatar a={a.actor} size={40} /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-[#F4F1EA] text-[18px]">{ICONO[a.tipo]}</span>}
+                    {a.actor ? <Avatar a={a.actor} size={40} /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-[#F4F1EA] text-[18px]"><TS>{ICONO[a.tipo]}</TS></span>}
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14.5px] leading-snug text-[#1B1B18]">
-                        <span aria-hidden="true">{ICONO[a.tipo]} </span>
+                        <span aria-hidden="true"><TS>{ICONO[a.tipo]}</TS> </span>
                         <TS>{a.texto}</TS>
                       </span>
                       <span className="text-[12.5px] text-[#6B6A63]">{haceCuanto(a.creado)}</span>

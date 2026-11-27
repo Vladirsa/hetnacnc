@@ -4,6 +4,7 @@
 //   Diseño digital: disponible al momento.
 //   Producto físico: disponible N días después de entregado.
 // El pago lo hace HETNA por transferencia a la cuenta que el taller guardó.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -17,6 +18,8 @@ const Cartera = (props) => (
 
 export const config: RouteConfig = {
   label: "Mi saldo",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Cartera,
 }
 
@@ -46,23 +49,23 @@ export default function SaldoPage() {
       .catch(() => setError("No se pudo cargar tu saldo. Recarga la página."))
   }, [])
 
-  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}>{error}</p></div>
-  if (!datos) return <div style={S.page}><p style={S.meta}>Cargando…</p></div>
+  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}><T>{error}</T></p></div>
+  if (!datos) return <div style={S.page}><p style={S.meta}><T>Cargando…</T></p></div>
 
   const monedas = Object.keys(datos.resumen || {})
   return (
     <div style={S.page}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}>Mi saldo</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}><T>Mi saldo</T></h1>
       <p style={S.meta}>
-        Diseños digitales: disponibles al momento. Productos físicos: disponibles en cuanto el cliente libera el pago, o
-        solos {datos.dias_liberacion} días después de entregados. Si el cliente reporta un problema, el pago se congela
-        (ve Reclamos). HETNA te transfiere lo disponible a la cuenta que guardaste en tu perfil.
+        <T>Diseños digitales: disponibles al momento. Productos físicos: disponibles en cuanto el cliente libera el pago, o
+        solos</T> <T>{datos.dias_liberacion}</T> <T>días después de entregados. Si el cliente reporta un problema, el pago se congela
+        (ve Reclamos). HETNA te transfiere lo disponible a la cuenta que guardaste en tu perfil.</T>
       </p>
 
       {monedas.length === 0 ? (
         <div style={{ ...S.card, marginTop: 16 }}>
-          <p style={{ margin: 0, fontWeight: 600 }}>Aún no tienes ventas registradas.</p>
-          <p style={S.meta}>Cuando vendas, aquí verás cuánto tienes pendiente, disponible y pagado.</p>
+          <p style={{ margin: 0, fontWeight: 600 }}><T>Aún no tienes ventas registradas.</T></p>
+          <p style={S.meta}><T>Cuando vendas, aquí verás cuánto tienes pendiente, disponible y pagado.</T></p>
         </div>
       ) : (
         monedas.map((m) => (
@@ -70,11 +73,11 @@ export default function SaldoPage() {
             {["pendiente", "disponible", "pagado"].map((e) => (
               <div key={e} style={{ ...S.card, marginBottom: 0, ...(e === "disponible" ? { background: "linear-gradient(135deg,#142033,#22334F)", color: "#fff" } : {}) }}>
                 <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: e === "disponible" ? "#F2A65E" : COLOR[e].c }}>
-                  {e === "pendiente" ? "Pendiente de entrega" : e === "disponible" ? "Disponible" : "Ya pagado"}
+                  <T>{e === "pendiente" ? "Pendiente de entrega" : e === "disponible" ? "Disponible" : "Ya pagado"}</T>
                 </p>
                 <p style={{ margin: "8px 0 0", fontSize: 26, fontWeight: 800, color: e === "disponible" ? "#fff" : "#142033", letterSpacing: "-0.02em" }}>{dinero(datos.resumen[m][e], m)}</p>
                 <p style={{ margin: "4px 0 0", fontSize: 12, color: e === "disponible" ? "rgba(255,255,255,0.7)" : "#6B675C" }}>
-                  {e === "pendiente" ? `se libera ${datos.dias_liberacion} días después de entregar` : e === "disponible" ? "listo para transferirte" : "ya está en tu cuenta"}
+                  <T>{e === "pendiente" ? `se libera ${datos.dias_liberacion} días después de entregar` : e === "disponible" ? "listo para transferirte" : "ya está en tu cuenta"}</T>
                 </p>
               </div>
             ))}
@@ -84,17 +87,17 @@ export default function SaldoPage() {
 
       {datos.movimientos.length > 0 && (
         <div style={S.card}>
-          <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#142033" }}>Tus ventas</p>
+          <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#142033" }}><T>Tus ventas</T></p>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ textAlign: "left", color: "#6B675C" }}>
-                  <th style={{ padding: "6px 8px" }}>Pedido</th>
-                  <th style={{ padding: "6px 8px" }}>Venta</th>
-                  <th style={{ padding: "6px 8px" }}>Comisión</th>
-                  <th style={{ padding: "6px 8px" }}>Te toca</th>
-                  <th style={{ padding: "6px 8px" }}>Estado</th>
-                  <th style={{ padding: "6px 8px" }}>Fecha</th>
+                  <th style={{ padding: "6px 8px" }}><T>Pedido</T></th>
+                  <th style={{ padding: "6px 8px" }}><T>Venta</T></th>
+                  <th style={{ padding: "6px 8px" }}><T>Comisión</T></th>
+                  <th style={{ padding: "6px 8px" }}><T>Te toca</T></th>
+                  <th style={{ padding: "6px 8px" }}><T>Estado</T></th>
+                  <th style={{ padding: "6px 8px" }}><T>Fecha</T></th>
                 </tr>
               </thead>
               <tbody>
@@ -102,23 +105,23 @@ export default function SaldoPage() {
                   <tr key={f.order_id} style={{ borderTop: "1px solid #EFECE4" }}>
                     <td style={{ padding: "8px" }}>
                       {/* Descuento por sobrepeso de una guía de HETNA o por un reclamo: resta de tu siguiente pago */}
-                      {f.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}>{f.motivo || "Descuento"}</span> : <>#{f.display_id ?? "—"}{f.digital ? " · digital" : ""}</>}
+                      {f.ajuste ? <span style={{ color: "#B3261E", fontWeight: 600 }}><T>{f.motivo || "Descuento"}</T></span> : <>#<T>{f.display_id ?? "—"}</T><T>{f.digital ? " · digital" : ""}</T></>}
                     </td>
                     <td style={{ padding: "8px" }}>{dinero(f.productos, f.moneda)}</td>
                     <td style={{ padding: "8px" }}>−{dinero(f.comision, f.moneda)}</td>
                     <td style={{ padding: "8px", fontWeight: 700 }}>{dinero(f.neto, f.moneda)}</td>
                     <td style={{ padding: "8px" }}>
                       <span style={{ background: COLOR[f.estado]?.bg, color: COLOR[f.estado]?.c, borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>
-                        {f.estado_nombre}
+                        <T>{f.estado_nombre}</T>
                       </span>
-                      {f.aceptado_en && <span style={{ display: "block", ...S.meta }}>El cliente liberó el pago</span>}
+                      {f.aceptado_en && <span style={{ display: "block", ...S.meta }}><T>El cliente liberó el pago</T></span>}
                       {f.estado === "pendiente" && f.disponible_en && (
-                        <span style={{ display: "block", ...S.meta }}>Se libera el {fecha(f.disponible_en)}</span>
+                        <span style={{ display: "block", ...S.meta }}><T>Se libera el</T> {fecha(f.disponible_en)}</span>
                       )}
                       {f.estado === "pagado" && f.pago_referencia && (
-                        <span style={{ display: "block", ...S.meta }}>Ref. {f.pago_referencia}</span>
+                        <span style={{ display: "block", ...S.meta }}><T>Ref.</T> <T>{f.pago_referencia}</T></span>
                       )}
-                      {f.estado === "retenido" && f.motivo && <span style={{ display: "block", ...S.meta }}>{f.motivo}</span>}
+                      {f.estado === "retenido" && f.motivo && <span style={{ display: "block", ...S.meta }}><T>{f.motivo}</T></span>}
                     </td>
                     <td style={{ padding: "8px" }}>{fecha(f.pagado_en || f.creado)}</td>
                   </tr>

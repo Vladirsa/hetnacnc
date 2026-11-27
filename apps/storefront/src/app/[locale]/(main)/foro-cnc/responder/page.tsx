@@ -37,8 +37,8 @@ export default async function PreguntasParaTi() {
           {!p ? (
             <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-6 text-[15px] text-[#44433D]">
               <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/login"} className="font-semibold text-[#B34D07] underline">
-                {sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}
-              </LocalizedClientLink>{" "}
+                <TS>{sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}</TS>
+              </LocalizedClientLink><TS>{" "}</TS>
               <TS>para ver las preguntas que te tocan.</TS>
             </p>
           ) : (
@@ -48,7 +48,7 @@ export default async function PreguntasParaTi() {
                   <h2 className="m-0 text-[17px] font-bold text-[#1B1B18]"><TS>Te pidieron que respondas</TS></h2>
                   {datos.pedidas.map((t) => (
                     <div key={t.id} className="flex flex-col gap-1">
-                      <span className="text-[13px] font-semibold text-[#9A4A06]">🙋 {t.pidio} <TS>te lo pidió</TS></span>
+                      <span className="text-[13px] font-semibold text-[#9A4A06]">🙋 <TS>{t.pidio}</TS> <TS>te lo pidió</TS></span>
                       <Publicacion t={t} />
                     </div>
                   ))}

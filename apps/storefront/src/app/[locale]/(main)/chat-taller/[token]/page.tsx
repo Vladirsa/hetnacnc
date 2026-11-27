@@ -21,9 +21,9 @@ export default async function Page({ params }: { params: Promise<{ token: string
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-6">
-      <p className="text-sm text-gray-500">{conv.tallerNombre}</p>
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white"><TS>Cliente:</TS> {conv.clienteNombre}</h1>
-      {conv.productoTitulo && <p className="mb-3 text-sm text-gray-500"><TS>Sobre:</TS> {conv.productoTitulo}</p>}
+      <p className="text-sm text-gray-500"><TS>{conv.tallerNombre}</TS></p>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white"><TS>Cliente:</TS> <TS>{conv.clienteNombre}</TS></h1>
+      {conv.productoTitulo && <p className="mb-3 text-sm text-gray-500"><TS>Sobre:</TS> <TS>{conv.productoTitulo}</TS></p>}
       <ChatVentana yo="taller" token={token} inicial={mensajes} cerrada={conv.estado === "cerrada"} />
       <p className="mt-3 text-xs text-gray-500"><TS>Este enlace es privado de tu taller. No lo compartas.</TS></p>
     </main>

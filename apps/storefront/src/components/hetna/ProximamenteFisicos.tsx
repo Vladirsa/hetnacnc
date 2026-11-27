@@ -36,7 +36,7 @@ export function ProximamenteFisicos() {
         {BLOQUES.map((b) => (
           <article key={b.clave} className="flex flex-col gap-2 rounded-[14px] border border-[#E7E4DC] bg-white p-4">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="m-0 text-[16px] font-bold text-[#1B1B18]">{b.nombre}</h3>
+              <h3 className="m-0 text-[16px] font-bold text-[#1B1B18]"><TS>{b.nombre}</TS></h3>
               <span className="rounded bg-[#FFF4EC] px-2 py-0.5 text-[11px] font-bold uppercase text-[#A84303] ring-1 ring-[#F3C9A8]"><TS>Próximamente</TS></span>
             </div>
             <p className="m-0 text-[13.5px] leading-snug text-[#6B6A63]"><TS>{b.texto}</TS></p>

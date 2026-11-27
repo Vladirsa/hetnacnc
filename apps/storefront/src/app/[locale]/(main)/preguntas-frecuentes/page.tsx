@@ -79,16 +79,16 @@ export default function PreguntasFrecuentes() {
         {PREGUNTAS.map((x) => (
           <details key={x.p} className="group py-4 first:pt-0">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold text-[#142033]">
-              {x.p}
+              <TS>{x.p}</TS>
               <span className="text-[#C2560A] transition group-open:rotate-45">+</span>
             </summary>
-            <p className="mt-2 text-[#40403A]">{x.r}</p>
+            <p className="mt-2 text-[#40403A]"><TS>{x.r}</TS></p>
           </details>
         ))}
       </div>
       <p className="mt-6">
-        <TS>Más información en</TS> <LocalizedClientLink href="/devoluciones"><TS>Devoluciones</TS></LocalizedClientLink>,{" "}
-        <LocalizedClientLink href="/formas-de-pago"><TS>Formas de pago</TS></LocalizedClientLink> y{" "}
+        <TS>Más información en</TS> <LocalizedClientLink href="/devoluciones"><TS>Devoluciones</TS></LocalizedClientLink>,<TS>{" "}</TS>
+        <LocalizedClientLink href="/formas-de-pago"><TS>Formas de pago</TS></LocalizedClientLink> y<TS>{" "}</TS>
         <LocalizedClientLink href="/servicios/envios-hetna"><TS>Envíos HETNA</TS></LocalizedClientLink>.
       </p>
     </PaginaInfo>

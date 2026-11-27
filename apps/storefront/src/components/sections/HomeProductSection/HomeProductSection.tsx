@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { HomeProductsCarousel } from "@/components/organisms/HomeProductsCarousel/HomeProductsCarousel"
 import { Product } from "@/types/product"
 
@@ -15,7 +16,7 @@ export const HomeProductSection = async ({
   return (
     <section className="py-8 w-full">
       <h2 className="mb-6 heading-lg font-bold tracking-tight uppercase">
-        {heading}
+        <TS>{heading}</TS>
       </h2>
       <HomeProductsCarousel
         locale={locale}

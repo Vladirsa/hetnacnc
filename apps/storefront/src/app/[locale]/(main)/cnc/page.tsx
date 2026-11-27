@@ -50,7 +50,7 @@ export default function GuiasCnc() {
           {CIUDADES.map((c) => (
             <li key={c.slug}>
               <LocalizedClientLink href={`/cnc/corte-laser-mdf/${c.slug}`} className="inline-block rounded-full border border-[#E7E4DC] px-3 py-1 text-sm text-[#142033] hover:border-[#C2560A]">
-                {c.nombre}
+                <TS>{c.nombre}</TS>
               </LocalizedClientLink>
             </li>
           ))}

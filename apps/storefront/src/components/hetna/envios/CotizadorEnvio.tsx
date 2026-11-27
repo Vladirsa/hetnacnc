@@ -71,10 +71,10 @@ function CampoCP({ id, titulo, cp, setCp, colonia, setColonia, setInfo }: {
           placeholder="Ej. 64000"
         />
         {buscando && <p className="mt-1 text-xs text-[#6B675C]"><T>Buscando colonias…</T></p>}
-        {error && <p className="mt-1 text-xs text-[#B3261E]">{error}</p>}
+        {error && <p className="mt-1 text-xs text-[#B3261E]"><T>{error}</T></p>}
         {info && (
           <p className="mt-1 text-xs text-[#6B675C]">
-            {[info.municipio, info.estado].filter(Boolean).join(", ")}
+            <T>{[info.municipio, info.estado].filter(Boolean).join(", ")}</T>
           </p>
         )}
       </div>
@@ -166,7 +166,7 @@ export default function CotizadorEnvio() {
                 }}
                 className="rounded-full border border-[#E7E4DC] px-3 py-1.5 text-xs font-semibold text-[#142033] hover:border-[#C2560A] hover:text-[#C2560A]"
               >
-                {x.nombre} · {x.largo}×{x.ancho}×{x.alto}
+                <T>{x.nombre}</T> · <T>{x.largo}</T>×<T>{x.ancho}</T>×<T>{x.alto}</T>
               </button>
             ))}
           </div>
@@ -209,19 +209,19 @@ export default function CotizadorEnvio() {
           disabled={pendiente}
           className="h-12 w-full rounded-xl bg-[#C2560A] px-4 font-semibold text-white hover:brightness-110 disabled:opacity-60 sm:w-auto sm:justify-self-end sm:px-10"
         >
-          {pendiente ? "Cotizando…" : "Cotizar envío"}
+          <T>{pendiente ? "Cotizando…" : "Cotizar envío"}</T>
         </button>
       </form>
 
       {pendiente && <p className="mt-4 text-sm text-[#6B675C]"><T>Consultando paqueterías, tarda unos segundos…</T></p>}
-      {error && <p className="mt-4 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}
+      {error && <p className="mt-4 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]"><T>{error}</T></p>}
 
       {opciones && (
         <div className="mt-6">
-          {info && <p className="mb-3 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]">{info}</p>}
+          {info && <p className="mb-3 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]"><T>{info}</T></p>}
           {opciones.length === 0 ? (
             <p className="rounded-xl bg-[#F3F1EA] p-4 text-sm text-[#40403A]">
-              <T>No encontramos paqueterías para esa ruta.</T>{" "}
+              <T>No encontramos paqueterías para esa ruta.</T><T>{" "}</T>
               <a
                 href={ligaWhatsApp(`Hola, quiero cotizar un envío de ${cpO} a ${cpD}: ${tipo}, ${m.largo}×${m.ancho}×${m.alto} cm, ${m.peso} kg.`)}
                 target="_blank"
@@ -229,7 +229,7 @@ export default function CotizadorEnvio() {
                 className="font-semibold text-[#C2560A] underline"
               >
                 <T>Escríbenos por WhatsApp</T>
-              </a>{" "}
+              </a><T>{" "}</T>
               <T>y lo cotizamos contigo.</T>
             </p>
           ) : (
@@ -241,7 +241,7 @@ export default function CotizadorEnvio() {
                 >
                   <div>
                     <p className="text-lg font-extrabold text-[#142033]">
-                      {o.paqueteria} <span className="text-sm font-normal text-[#6B675C]">· {o.servicio}</span>
+                      <T>{o.paqueteria}</T> <span className="text-sm font-normal text-[#6B675C]">· <T>{o.servicio}</T></span>
                       {i === 0 && <span className="ml-2 rounded-full bg-[#1E7B3A] px-2 py-0.5 align-middle text-[11px] font-bold text-white"><T>Más barato</T></span>}
                     </p>
                     <div className="mt-2 grid gap-1 text-[13px] sm:grid-cols-2">
@@ -263,7 +263,7 @@ export default function CotizadorEnvio() {
                   </div>
                   <div className="text-sm text-[#40403A]">
                     <p className="font-semibold text-[#6B675C]"><T>Tiempo estimado</T></p>
-                    <p className="font-bold text-[#142033]">{o.dias ? `${o.dias} ${o.dias === 1 ? "día hábil" : "días hábiles"}` : "Según la paquetería"}</p>
+                    <p className="font-bold text-[#142033]"><T>{o.dias ? `${o.dias} ${o.dias === 1 ? "día hábil" : "días hábiles"}` : "Según la paquetería"}</T></p>
                   </div>
                   <div className="grid gap-2 sm:text-right">
                     <p className="text-2xl font-extrabold text-[#142033]">

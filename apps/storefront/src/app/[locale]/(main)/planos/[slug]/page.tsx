@@ -170,7 +170,7 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <span>/</span>
           <LocalizedClientLink href="/planos" className="hover:text-[#B34D07]"><TS>Planos</TS></LocalizedClientLink>
           <span>/</span>
-          <span className="font-medium text-[#1B1B18]">{pl.nombre}</span>
+          <span className="font-medium text-[#1B1B18]"><TS>{pl.nombre}</TS></span>
         </div>
 
         {borrador ? (
@@ -184,11 +184,11 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <a href={ligaUniones(false)} className={`rounded-full px-3 py-1.5 font-semibold ${!ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}><TS>A tope con tornillo</TS></a>
           <a href={ligaUniones(true)} className={`rounded-full px-3 py-1.5 font-semibold ${ranurado ? "bg-[#142033] text-white" : "border border-[#D9D5C9] text-[#40403A]"}`}><TS>Con ranuras (router CNC)</TS></a>
           <span className="text-[12.5px] text-[#6B6A63]">
-            {ranurado
+            <TS>{ranurado
               ? nRanuras
                 ? `${nRanuras} ranuras de 4 a 6 mm en costados y divisiones: las repisas, pisos y respaldos entran en ellas y quedan escuadrados. Ya vienen alargadas en la lista de corte y marcadas en el DXF.`
                 : "Este mueble no lleva costados donde poner ranuras: se arma a tope."
-              : "Cada unión con pegamento y tornillo, con sus barrenos guía."}
+              : "Cada unión con pegamento y tornillo, con sus barrenos guía."}</TS>
           </span>
         </div>
 
@@ -196,13 +196,13 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/15 pb-4">
             <div>
               <p className="m-0 text-[12px] font-bold uppercase tracking-wider text-[#FF9F57]"><TS>Plano HETNA CNC · hetnacnc.com/planos</TS></p>
-              <h1 className="font-display m-0 mt-1 text-[28px] font-bold leading-tight sm:text-[36px]">{pl.nombre}</h1>
+              <h1 className="font-display m-0 mt-1 text-[28px] font-bold leading-tight sm:text-[36px]"><TS>{pl.nombre}</TS></h1>
               <p className="m-0 mt-1 max-w-[680px] text-[14px] text-white/80"><TS>{pl.descripcion}</TS></p>
             </div>
             <p className="m-0 text-[13px] text-white/75">
-              {m.ancho} × {m.fondo} × {m.alto} <TS>mm ·</TS> {pl.nivel} · {pl.horas}
-              {pl.juego ? ` · se cortan ${pl.juego.cantidad} ${pl.juego.nombre}` : ""}
-              {cambiado ? <span className="block text-[#FF9F57]"><TS>Medidas modificadas (original:</TS> {original.ancho} × {original.fondo} × {original.alto} <TS>mm)</TS></span> : null}
+              <TS>{m.ancho}</TS> × <TS>{m.fondo}</TS> × <TS>{m.alto}</TS> <TS>mm ·</TS> <TS>{pl.nivel}</TS> · <TS>{pl.horas}</TS>
+              <TS>{pl.juego ? ` · se cortan ${pl.juego.cantidad} ${pl.juego.nombre}` : ""}</TS>
+              {cambiado ? <span className="block text-[#FF9F57]"><TS>Medidas modificadas (original:</TS> <TS>{original.ancho}</TS> × <TS>{original.fondo}</TS> × <TS>{original.alto}</TS> <TS>mm)</TS></span> : null}
             </p>
           </header>
 
@@ -228,27 +228,27 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
                   <tbody>
                     {filas.map((f) => (
                       <tr key={f.letra} className="border-t border-white/10">
-                        <td className="py-1 pr-2 font-extrabold">{f.letra}</td>
-                        <td className="pr-2 text-white/85">{f.nombre}</td>
+                        <td className="py-1 pr-2 font-extrabold"><TS>{f.letra}</TS></td>
+                        <td className="pr-2 text-white/85"><TS>{f.nombre}</TS></td>
                         <td className="pr-2">{f.cantidad}</td>
-                        <td className="pr-2">{f.largo}</td>
-                        <td className="pr-2">{f.ancho}</td>
-                        <td className="pr-2">{f.grosor}</td>
+                        <td className="pr-2"><TS>{f.largo}</TS></td>
+                        <td className="pr-2"><TS>{f.ancho}</TS></td>
+                        <td className="pr-2"><TS>{f.grosor}</TS></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="m-0 mt-2 text-[11.5px] text-white/60"><TS>Medidas en mm. Material:</TS> {[...new Set(filas.map((f) => MATERIALES_PLANO[f.material].nombre))].join(", ")}.</p>
+              <p className="m-0 mt-2 text-[11.5px] text-white/60"><TS>Medidas en mm. Material:</TS> <TS>{[...new Set(filas.map((f) => MATERIALES_PLANO[f.material].nombre))].join(", ")}</TS>.</p>
             </div>
             <div className={caja}>
               <Titulo n="4"><TS>Acomodo en la hoja</TS></Titulo>
-              <p className="m-0 mt-1 text-[12.5px] text-white/75">{hojas.map((h) => `${h.hojas} ${h.hojas === 1 ? "hoja" : "hojas"} de ${h.nombre}`).join(" · ")} <TS>(2440 × 1220 mm)</TS></p>
+              <p className="m-0 mt-1 text-[12.5px] text-white/75"><TS>{hojas.map((h) => `${h.hojas} ${h.hojas === 1 ? "hoja" : "hojas"} de ${h.nombre}`).join(" · ")}</TS> <TS>(2440 × 1220 mm)</TS></p>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {acs.flatMap((a) => a.acomodo.hojas.map((h, i) => (
                   <figure key={`${a.material}-${i}`} className="m-0 rounded-xl bg-[#FAF9F6] p-1.5">
                     <div dangerouslySetInnerHTML={{ __html: svgHoja(h, `${a.nombre} hoja ${i + 1}`, (c) => puntosBarrenos(c, filaDe.get(c.nombre)), (c) => rectsRanuras(c, filaDe.get(c.nombre))) }} />
-                    <figcaption className="text-center text-[11px] text-[#6B6A63]">{a.nombre} <TS>· hoja</TS> {i + 1}</figcaption>
+                    <figcaption className="text-center text-[11px] text-[#6B6A63]"><TS>{a.nombre}</TS> <TS>· hoja</TS> {i + 1}</figcaption>
                   </figure>
                 )))}
               </div>
@@ -274,10 +274,10 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
               <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-[1fr_260px]">
                 <div>
                   <p className="m-0 text-[13px] text-white/80">
-                    {torn.tornillos.map((t) => `${t.cantidad} tornillos de ${t.largo}`).join(" · ")}
-                    {torn.clavos ? ` · ${torn.clavos} clavos o grapas` : ""}
-                    {torn.barrenos ? ` · ${torn.barrenos} barrenos guía de 3 mm (en el DXF, capa «barrenos»; puntos naranjas en el acomodo)` : ""}
-                    {nRanuras ? ` · ${nRanuras} ranuras (en el DXF, capas «ranura_6mm» y «ranura_4mm»; rayadas en el acomodo)` : ""}
+                    <TS>{torn.tornillos.map((t) => `${t.cantidad} tornillos de ${t.largo}`).join(" · ")}</TS>
+                    <TS>{torn.clavos ? ` · ${torn.clavos} clavos o grapas` : ""}</TS>
+                    <TS>{torn.barrenos ? ` · ${torn.barrenos} barrenos guía de 3 mm (en el DXF, capa «barrenos»; puntos naranjas en el acomodo)` : ""}</TS>
+                    <TS>{nRanuras ? ` · ${nRanuras} ranuras (en el DXF, capas «ranura_6mm» y «ranura_4mm»; rayadas en el acomodo)` : ""}</TS>
                   </p>
                   <ul className="m-0 mt-2 grid list-disc grid-cols-1 gap-x-6 pl-5 text-[12.5px] text-white/85 sm:grid-cols-2">
                     {resumenUniones.map((u) => (
@@ -296,16 +296,16 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
           <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className={caja}>
               <Titulo n="7"><TS>Herrajes</TS></Titulo>
-              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{herrajes.map((h) => <li key={h}>{h}</li>)}</ul>
+              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{herrajes.map((h) => <li key={h}><TS>{h}</TS></li>)}</ul>
             </div>
             <div className={caja}>
               <Titulo n="8"><TS>Herramientas</TS></Titulo>
-              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{pl.herramientas.map((h) => <li key={h}>{h}</li>)}</ul>
+              <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">{pl.herramientas.map((h) => <li key={h}><TS>{h}</TS></li>)}</ul>
             </div>
             <div className={caja}>
               <Titulo n="9"><TS>Notas</TS></Titulo>
               <ul className="m-0 mt-2 list-disc pl-5 text-[13px] text-white/85">
-                {pl.notas.map((h) => <li key={h}>{h}</li>)}
+                {pl.notas.map((h) => <li key={h}><TS>{h}</TS></li>)}
                 <li><TS>Revisa el grosor real de tu triplay antes de cortar.</TS></li>
               </ul>
             </div>
@@ -331,10 +331,10 @@ export default async function PlanoPagina({ params, searchParams }: { params: Pr
             <p className="m-0 text-[14px] text-[#40403A]"><TS>Un taller de HETNA te corta las piezas o te entrega el mueble armado. Pide propuestas con el plano: es gratis.</TS></p>
             {cot.ok ? (
               <div className="rounded-xl bg-[#F6F1E7] p-3 text-[14px] text-[#142033]">
-                <p className="m-0 font-bold"><TS>Kit de piezas cortadas y lijadas</TS>{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</p>
+                <p className="m-0 font-bold"><TS>Kit de piezas cortadas y lijadas</TS><TS>{cambiado ? ` a ${m.ancho} × ${m.fondo} × ${m.alto} mm` : ""}</TS></p>
                 <p className="m-0 mt-1 text-[22px] font-extrabold">{pesos(cot.min)} – {pesos(cot.max)} <span className="text-[13px] font-semibold text-[#6B6A63]"><TS>aprox. con IVA, más envío</TS></span></p>
                 <p className="m-0 mt-1 text-[13px] text-[#40403A]">
-                  {cot.piezas} <TS>piezas ·</TS> {cot.hojas} {cot.hojas === 1 ? "hoja" : "hojas"} <TS>de triplay · peso con empaque ≈</TS> {cot.pesoKg} <TS>kg · fabricación ≈</TS> {cot.diasFabricacion} <TS>días hábiles más el envío</TS>
+                  <TS>{cot.piezas}</TS> <TS>piezas ·</TS> <TS>{cot.hojas}</TS> <TS>{cot.hojas === 1 ? "hoja" : "hojas"}</TS> <TS>de triplay · peso con empaque ≈</TS> <TS>{cot.pesoKg}</TS> <TS>kg · fabricación ≈</TS> <TS>{cot.diasFabricacion}</TS> <TS>días hábiles más el envío</TS>
                 </p>
                 <p className="m-0 mt-1 text-[12px] text-[#6B6A63]"><TS>Precio de referencia de router CNC en México; el taller confirma el precio final. No incluye herrajes ni armado.</TS></p>
               </div>

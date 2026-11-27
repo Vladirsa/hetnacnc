@@ -91,7 +91,7 @@ const ListaHojas = ({ grupo }: { grupo: Cat }) => (
       href={`/categories/${grupo.handle}`}
       className="rounded-[8px] px-3 py-2 text-[13px] font-bold text-[#B34D07] hover:underline"
     >
-      <TS>Ver todo en</TS> {grupo.name}
+      <TS>Ver todo en</TS> <TS>{grupo.name}</TS>
     </LocalizedClientLink>
     {hijosDe(grupo).map((h) => (
       <LocalizedClientLink
@@ -99,7 +99,7 @@ const ListaHojas = ({ grupo }: { grupo: Cat }) => (
         href={`/categories/${h.handle}`}
         className="rounded-[8px] px-3 py-2 text-[13.5px] text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
       >
-        {h.name}
+        <TS>{h.name}</TS>
       </LocalizedClientLink>
     ))}
   </div>
@@ -120,7 +120,7 @@ const PestanasCategoria = ({ raiz }: { raiz: Cat }) => {
             href={`/categories/${g.handle}`}
             className="rounded-[8px] px-3 py-2 text-[13.5px] font-semibold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
           >
-            {g.name}
+            <TS>{g.name}</TS>
           </LocalizedClientLink>
         ))}
       </div>
@@ -136,7 +136,7 @@ const PestanasCategoria = ({ raiz }: { raiz: Cat }) => {
               href={`/categories/${g.handle}`}
               className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-[13.5px] font-bold text-[#1B1B18] hover:bg-[#FAF6EF] hover:text-[#B34D07]"
             >
-              {g.name}
+              <TS>{g.name}</TS>
               {hijosDe(g).length > 0 && <FlechaDerecha />}
             </LocalizedClientLink>
             <div className="hidden [.grupo:hover_&]:block absolute left-[230px] top-0 bottom-0 right-0 z-10 bg-white pl-3 overflow-y-auto">
@@ -178,7 +178,7 @@ export const ServiciosNav = ({
               href={href}
               className="mt-1 block border-t border-[#E7E4DC] px-3 pt-2.5 pb-1.5 text-[13px] font-semibold text-[#B34D07] hover:underline"
             >
-              {fabricacion ? "Cotizar mi pieza" : `Ver todo en ${raiz.name}`}
+              <TS>{fabricacion ? "Cotizar mi pieza" : `Ver todo en ${raiz.name}`}</TS>
             </LocalizedClientLink>
           </Menu>
         )
@@ -189,7 +189,7 @@ export const ServiciosNav = ({
       if (!hijos.length) {
         return (
           <LocalizedClientLink key={s.slug} href={enlaceServicio(s.slug)} className={ENLACE}>
-            {s.nombre}
+            <TS>{s.nombre}</TS>
           </LocalizedClientLink>
         )
       }

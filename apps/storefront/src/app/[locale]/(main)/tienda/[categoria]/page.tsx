@@ -59,7 +59,7 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
             </li>
             <li aria-hidden="true">/</li>
             <li aria-current="page" className="font-semibold text-[#1E2329]">
-              {def.nombre}
+              <TS>{def.nombre}</TS>
             </li>
           </ol>
         </nav>
@@ -68,12 +68,12 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
           <div>
             <Etiqueta tipo={cat.estado} />
           </div>
-          <h1 className="fuente-condensada text-[40px] font-bold uppercase leading-[0.9] sm:text-[56px]">{def.nombre}</h1>
+          <h1 className="fuente-condensada text-[40px] font-bold uppercase leading-[0.9] sm:text-[56px]"><TS>{def.nombre}</TS></h1>
           <p className="max-w-2xl text-[16px] text-[#3A414B]"><TS>{def.descripcion}</TS></p>
           {!catalogo.fallo && cat.conteo > 0 && (
             <p className="fuente-mono text-[14px] text-[#1E2329]">
               <TS>{textoConteo(cat.conteo, cat.estado)}</TS> · <TS>{textoDesde(cat.desde)}</TS>
-              {digital ? " · Sin envío: es descarga" : ""}
+              <TS>{digital ? " · Sin envío: es descarga" : ""}</TS>
             </p>
           )}
         </header>
@@ -99,7 +99,7 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
                 <Avisame categoria={def.clave} nombre={def.nombre} />
               </div>
               <p className="text-[14px] text-[#5B6370]">
-                <TS>¿Lo necesitas ya?</TS>{" "}
+                <TS>¿Lo necesitas ya?</TS><TS>{" "}</TS>
                 <LocalizedClientLink href={ligaCotizar({ descripcion: def.nombre, origen: "tienda-categoria" })} className="font-semibold text-[#C24E03] underline">
                   <TS>Cotízalo con talleres</TS>
                 </LocalizedClientLink>
@@ -125,7 +125,7 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
                     </div>
                     <h2 className="line-clamp-2 text-[16px] font-semibold leading-snug text-[#1E2329]"><TS>{p.titulo}</TS></h2>
                     <div className="fuente-mono mt-auto flex items-baseline justify-between border-t border-dashed border-[#D4D9DF] pt-3 text-[14px]">
-                      <span className="font-semibold">{p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}</span>
+                      <span className="font-semibold"><TS>{p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}</TS></span>
                       <span className="text-[13px] font-semibold text-[#C24E03] group-hover:underline"><TS>Ver →</TS></span>
                     </div>
                   </div>

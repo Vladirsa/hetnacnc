@@ -19,13 +19,13 @@ export async function AvisoImportacion({ handle, compacto = false }: { handle?: 
   }
   return (
     <div className="mb-3 rounded-xl border border-[#C9D6EE] bg-[#EEF2FB] p-3 text-[14px] text-[#1a3a5c]" data-testid="aviso-importacion">
-      <p className="m-0 font-bold"><TS>🌏 Producto de importación · se envía desde</TS> {imp.pais}</p>
+      <p className="m-0 font-bold"><TS>🌏 Producto de importación · se envía desde</TS> <TS>{imp.pais}</TS></p>
       <ul className="m-0 mt-1 list-none p-0 leading-relaxed">
         <li><TS>📦 Puerta a puerta con paquetería internacional:</TS> {entregaImportacion(imp)}.</li>
         <li><TS>✅ Impuestos de importación incluidos en el precio: no pagas nada extra al recibir.</TS></li>
         <li>
           <TS>🛡️ Pagas dentro de HETNA: si no llega, llega dañado o es distinto, te devolvemos tu dinero. Por ser importación no hay
-          devolución por cambio de opinión.</TS>{" "}
+          devolución por cambio de opinión.</TS><TS>{" "}</TS>
           <a href="/mx/devoluciones" className="underline"><TS>Ver reglas</TS></a>
         </li>
       </ul>

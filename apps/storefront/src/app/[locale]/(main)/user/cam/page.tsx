@@ -72,15 +72,15 @@ export default async function MisTrabajosCam() {
             {jobs.map((job) => (
               <li key={job.id} className="rounded-[14px] border border-[#E7E4DC] bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[16px] font-bold text-[#1B1B18] break-all">{job.model_name}</span>
+                  <span className="text-[16px] font-bold text-[#1B1B18] break-all"><TS>{job.model_name}</TS></span>
                   <span className="rounded-full bg-[#F7F5EF] px-3 py-1 text-[13px] text-[#1B1B18]">
                     {ESTADO[job.status] ?? job.status}
                   </span>
                 </div>
                 <p className="mt-1 text-[13px] text-[#6B6A63]">
                   {SERVICIO[job.service] ?? job.service}
-                  {job.tier ? ` · ${job.tier}` : ""}
-                  {job.review_requested ? " · con revisión" : ""} ·{" "}
+                  <TS>{job.tier ? ` · ${job.tier}` : ""}</TS>
+                  <TS>{job.review_requested ? " · con revisión" : ""}</TS> ·<TS>{" "}</TS>
                   {new Date(job.created_at).toLocaleDateString("es-MX")}
                 </p>
                 {job.deliverables?.length ? (
@@ -88,7 +88,7 @@ export default async function MisTrabajosCam() {
                     {job.deliverables.map((d) => (
                       <li key={d.id}>
                         <a href={d.url} className="text-[14px] font-semibold text-[#B34D07] underline" download>
-                          <TS>Descargar</TS> {d.name}
+                          <TS>Descargar</TS> <TS>{d.name}</TS>
                         </a>
                       </li>
                     ))}

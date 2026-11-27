@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -15,7 +16,7 @@ export const ProductPostedDate = async ({
   return (
     <p className='label-md text-secondary'>
       {/* Un solo texto para que el traductor (REGLAS de i18n/en.ts) lo pase al inglés */}
-      {`Publicado ${postedDate}`}
+      <TS>{`Publicado ${postedDate}`}</TS>
     </p>
   );
 };

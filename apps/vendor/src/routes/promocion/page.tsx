@@ -4,6 +4,7 @@
 // listos y resultados de su liga medida) y videos de sus trabajos con
 // autorización para que HETNA los publique con crédito.
 // Backend: packages/api/src/lib/promocion.ts
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useRef, useState } from "react"
 import QRCode from "qrcode"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
@@ -17,6 +18,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Promociona tu taller",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -162,11 +165,11 @@ function Insignias({ kit }) {
   const [W, H] = FORMATOS[formato]
   return (
     <section style={S.card}>
-      <h2 style={S.h2}>Insignias para tus redes</h2>
-      <p style={S.hint}>Publícalas en Facebook, Instagram o tu estado de WhatsApp. El QR y la liga llevan a tu perfil y cuentan las visitas que traes. Se actualizan solas cuando subes en el ranking o te verificas.</p>
+      <h2 style={S.h2}><T>Insignias para tus redes</T></h2>
+      <p style={S.hint}><T>Publícalas en Facebook, Instagram o tu estado de WhatsApp. El QR y la liga llevan a tu perfil y cuentan las visitas que traes. Se actualizan solas cuando subes en el ranking o te verificas.</T></p>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
         {kit.insignias.map((i) => (
-          <button key={i.clave} type="button" style={S.chip(i.clave === sel)} onClick={() => setSel(i.clave)}>{i.titulo}</button>
+          <button key={i.clave} type="button" style={S.chip(i.clave === sel)} onClick={() => setSel(i.clave)}><T>{i.titulo}</T></button>
         ))}
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
@@ -177,13 +180,13 @@ function Insignias({ kit }) {
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
         <canvas ref={ref} style={{ width: formato === "vertical" ? 220 : 320, height: formato === "vertical" ? (220 * H) / W : 320, borderRadius: 10, border: "1px solid #E7E4DC" }} />
         <div style={{ display: "grid", gap: 8 }}>
-          <button type="button" style={S.btn} onClick={descargar}>⬇ Descargar imagen</button>
-          <button type="button" style={S.btn2} onClick={compartir}>📲 Compartir (celular)</button>
-          {nota && <span style={{ fontSize: 13, color: "#8A5A00", maxWidth: 260 }}>{nota}</span>}
+          <button type="button" style={S.btn} onClick={descargar}><T>⬇ Descargar imagen</T></button>
+          <button type="button" style={S.btn2} onClick={compartir}><T>📲 Compartir (celular)</T></button>
+          {nota && <span style={{ fontSize: 13, color: "#8A5A00", maxWidth: 260 }}><T>{nota}</T></span>}
         </div>
       </div>
       {kit.ranking.length === 0 && (
-        <p style={{ ...S.hint, marginTop: 12 }}>💡 Cuando tus clientes te evalúen en HETNA podrás ganar la insignia "Top" de tu especialidad en tu estado.</p>
+        <p style={{ ...S.hint, marginTop: 12 }}><T>💡 Cuando tus clientes te evalúen en HETNA podrás ganar la insignia "Top" de tu especialidad en tu estado.</T></p>
       )}
     </section>
   )
@@ -194,8 +197,8 @@ function Textos({ kit }) {
   const nombres = { whatsapp: "WhatsApp (estado o mensaje)", facebook: "Facebook", instagram: "Instagram", linkedin: "LinkedIn" }
   return (
     <section style={S.card}>
-      <h2 style={S.h2}>Textos listos para publicar</h2>
-      <p style={S.hint}>Cópialos junto con la insignia. Ya llevan tu liga medida.</p>
+      <h2 style={S.h2}><T>Textos listos para publicar</T></h2>
+      <p style={S.hint}><T>Cópialos junto con la insignia. Ya llevan tu liga medida.</T></p>
       {Object.entries(kit.textos).map(([red, texto]) => (
         <div key={red} style={{ marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
@@ -205,10 +208,10 @@ function Textos({ kit }) {
               style={{ ...S.btn2, padding: "3px 10px", fontSize: 12 }}
               onClick={() => navigator.clipboard?.writeText(texto).then(() => { setCopiado(red); setTimeout(() => setCopiado(""), 2000) })}
             >
-              {copiado === red ? "✓ Copiado" : "Copiar"}
+              <T>{copiado === red ? "✓ Copiado" : "Copiar"}</T>
             </button>
           </div>
-          <div style={{ whiteSpace: "pre-wrap", background: "#FAF9F6", borderRadius: 8, padding: 10, fontSize: 13 }}>{texto}</div>
+          <div style={{ whiteSpace: "pre-wrap", background: "#FAF9F6", borderRadius: 8, padding: 10, fontSize: 13 }}><T>{texto}</T></div>
         </div>
       ))}
     </section>
@@ -259,27 +262,27 @@ function Videos({ kit, alCambiar }) {
   }
   return (
     <section style={S.card}>
-      <h2 style={S.h2}>📹 Videos de tus trabajos</h2>
+      <h2 style={S.h2}><T>📹 Videos de tus trabajos</T></h2>
       <p style={S.hint}>
-        Sube 10 a 60 segundos de tu máquina trabajando o el antes y después de una pieza. HETNA los publica en sus redes con el nombre de tu taller y la liga a tu perfil: es publicidad gratis para ti.
-        Lo que más funciona: video vertical, que se vea la máquina cortando desde el primer segundo, sin música con derechos.
+        <T>Sube 10 a 60 segundos de tu máquina trabajando o el antes y después de una pieza. HETNA los publica en sus redes con el nombre de tu taller y la liga a tu perfil: es publicidad gratis para ti.
+        Lo que más funciona: video vertical, que se vea la máquina cortando desde el primer segundo, sin música con derechos.</T>
       </p>
-      {solicitud && <p style={{ ...S.hint, color: "#1E7B3A" }}>Este video quedará ligado al pedido que entregaste.</p>}
+      {solicitud && <p style={{ ...S.hint, color: "#1E7B3A" }}><T>Este video quedará ligado al pedido que entregaste.</T></p>}
       <div style={{ display: "grid", gap: 8 }}>
         <label style={S.btn2}>
-          {archivo ? `🎬 ${archivo.name} (${(archivo.size / 1048576).toFixed(1)} MB)` : "+ Elegir video (MP4, MOV o WebM)"}
+          <T>{archivo ? `🎬 ${archivo.name} (${(archivo.size / 1048576).toFixed(1)} MB)` : "+ Elegir video (MP4, MOV o WebM)"}</T>
           <input type="file" accept="video/mp4,video/quicktime,video/webm" style={{ display: "none" }} onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
         </label>
-        <input style={{ ...S.area, minHeight: 0, height: 40 }} maxLength={300} placeholder="¿Qué se ve? (ej. Corte láser de acero de 6 mm para una base de máquina)" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+        <input style={{ ...S.area, minHeight: 0, height: 40 }} maxLength={300} placeholder={traducir("¿Qué se ve? (ej. Corte láser de acero de 6 mm para una base de máquina)")} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
         <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13, color: "#40403A", background: "#FAF9F6", borderRadius: 8, padding: 10 }}>
           <input type="checkbox" checked={autorizo} onChange={(e) => setAutorizo(e.target.checked)} style={{ marginTop: 3 }} />
-          <span>{kit.autorizacion.texto}</span>
+          <span><T>{kit.autorizacion.texto}</T></span>
         </label>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <button type="button" style={S.btn} disabled={progreso !== null || !archivo || !autorizo} onClick={enviar}>
-            {progreso !== null ? `Subiendo… ${progreso}%` : "Subir video"}
+            <T>{progreso !== null ? `Subiendo… ${progreso}%` : "Subir video"}</T>
           </button>
-          {nota && <span style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}>{nota.t}</span>}
+          {nota && <span style={{ fontSize: 13, color: nota.ok ? "#1E7B3A" : "#B3261E" }}><T>{nota.t}</T></span>}
         </div>
       </div>
       {kit.videos.length > 0 && (
@@ -289,11 +292,11 @@ function Videos({ kit, alCambiar }) {
             return (
               <div key={v.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", fontSize: 13, borderTop: "1px solid #E7E4DC", paddingTop: 8 }}>
                 <video src={v.url} style={{ width: 90, height: 60, objectFit: "cover", borderRadius: 6, background: "#000" }} muted preload="metadata" />
-                <span style={{ flex: 1, minWidth: 160 }}>{v.descripcion || "Video sin descripción"}</span>
-                <span style={{ background: bg, color: col, borderRadius: 999, padding: "2px 8px", fontWeight: 700, fontSize: 12 }}>{txt}</span>
-                {v.motivo && <span style={{ color: "#B3261E" }}>{v.motivo}</span>}
+                <span style={{ flex: 1, minWidth: 160 }}><T>{v.descripcion || "Video sin descripción"}</T></span>
+                <span style={{ background: bg, color: col, borderRadius: 999, padding: "2px 8px", fontWeight: 700, fontSize: 12 }}><T>{txt}</T></span>
+                {v.motivo && <span style={{ color: "#B3261E" }}><T>{v.motivo}</T></span>}
                 {v.estado !== "retirado" && (
-                  <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => retirar(v.id)}>Retirar</button>
+                  <button type="button" style={{ ...S.btn2, padding: "2px 8px", fontSize: 12 }} onClick={() => retirar(v.id)}><T>Retirar</T></button>
                 )}
               </div>
             )
@@ -317,30 +320,30 @@ export default function PromocionPage() {
       })
       .catch((e) => setError(e.message))
   useEffect(() => { cargar() }, [])
-  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}>{error}</p></div>
-  if (!kit) return <div style={S.page}><p>Cargando…</p></div>
+  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}><T>{error}</T></p></div>
+  if (!kit) return <div style={S.page}><p><T>Cargando…</T></p></div>
   const r = kit.resultados || {}
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Promociona tu taller</h1>
-      <p style={S.sub}>Comparte tu taller en tus redes con insignias y textos listos. Cada visita, cliente y solicitud que llega por tu liga se cuenta aquí.</p>
+      <h1 style={S.h1}><T>Promociona tu taller</T></h1>
+      <p style={S.sub}><T>Comparte tu taller en tus redes con insignias y textos listos. Cada visita, cliente y solicitud que llega por tu liga se cuenta aquí.</T></p>
 
       <section style={{ ...S.card, display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
-          <h2 style={S.h2}>Tu liga</h2>
+          <h2 style={S.h2}><T>Tu liga</T></h2>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <code style={{ background: "#F3F1EA", borderRadius: 8, padding: "6px 10px", fontSize: 14 }}>{kit.liga}</code>
             <button type="button" style={{ ...S.btn2, padding: "4px 10px" }} onClick={() => navigator.clipboard?.writeText(kit.liga).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000) })}>
-              {copiado ? "✓ Copiada" : "Copiar"}
+              <T>{copiado ? "✓ Copiada" : "Copiar"}</T>
             </button>
           </div>
-          <p style={{ ...S.hint, marginTop: 8 }}>Lleva a tu perfil público: {kit.taller.perfil_url.replace(/^https?:\/\//, "")}</p>
+          <p style={{ ...S.hint, marginTop: 8 }}><T>Lleva a tu perfil público:</T> {kit.taller.perfil_url.replace(/^https?:\/\//, "")}</p>
         </div>
         <div style={{ display: "flex", gap: 18, textAlign: "center" }}>
           {[["Visitas", r.clics || 0], ["Clientes nuevos", r.registro_cliente || 0], ["Solicitudes", r.solicitud || 0]].map(([k, n]) => (
             <div key={k}>
               <div style={{ fontSize: 26, fontWeight: 800, color: "#142033" }}>{n}</div>
-              <div style={{ fontSize: 12, color: "#6B675C" }}>{k}</div>
+              <div style={{ fontSize: 12, color: "#6B675C" }}><T>{k}</T></div>
             </div>
           ))}
         </div>

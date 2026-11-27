@@ -1,3 +1,4 @@
+import { T, traducir } from "../../lib/idioma"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -10,6 +11,8 @@ import { client } from "../../lib/client"
 
 export const config: RouteConfig = {
   label: "Cursos",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: AcademicCap,
   rank: 20,
 }
@@ -62,7 +65,7 @@ const NuevoCursoForm = () => {
     return (
       <div className="px-6 py-4">
         <Button size="small" onClick={() => setAbierto(true)}>
-          Nuevo curso
+          <T>Nuevo curso</T>
         </Button>
       </div>
     )
@@ -72,7 +75,7 @@ const NuevoCursoForm = () => {
     <div className="px-6 py-4 flex flex-col gap-4 border-b">
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <Label size="small">Título</Label>
+          <Label size="small"><T>Título</T></Label>
           <Input
             value={title}
             onChange={(e) => {
@@ -88,34 +91,34 @@ const NuevoCursoForm = () => {
                 )
               }
             }}
-            placeholder="G-code desde cero"
+            placeholder={traducir("G-code desde cero")}
           />
         </div>
         <div className="flex flex-col gap-1">
-          <Label size="small">Slug</Label>
-          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="gcode-desde-cero" />
+          <Label size="small"><T>Slug</T></Label>
+          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={traducir("gcode-desde-cero")} />
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <Label size="small">Descripción</Label>
+        <Label size="small"><T>Descripción</T></Label>
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <Label size="small">Nivel</Label>
+          <Label size="small"><T>Nivel</T></Label>
           <Select value={level} onValueChange={(v) => setLevel(v as typeof level)}>
             <Select.Trigger>
               <Select.Value />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="principiante">Principiante</Select.Item>
-              <Select.Item value="intermedio">Intermedio</Select.Item>
-              <Select.Item value="avanzado">Avanzado</Select.Item>
+              <Select.Item value="principiante"><T>Principiante</T></Select.Item>
+              <Select.Item value="intermedio"><T>Intermedio</T></Select.Item>
+              <Select.Item value="avanzado"><T>Avanzado</T></Select.Item>
             </Select.Content>
           </Select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label size="small">Precio (MXN)</Label>
+          <Label size="small"><T>Precio (MXN)</T></Label>
           <Input
             type="number"
             min={0}
@@ -126,16 +129,16 @@ const NuevoCursoForm = () => {
           />
           <label className="flex items-center gap-1.5 text-sm text-ui-fg-subtle mt-1">
             <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} />
-            Curso gratis (ganas alumnos y clientes para tu taller)
+            <T>Curso gratis (ganas alumnos y clientes para tu taller)</T>
           </label>
           <Text size="xsmall" className="text-ui-fg-subtle">
-            Si lo cobras, cada venta llega a "Mi saldo" al momento, menos la comisión de HETNA (ver Términos para vendedores).
+            <T>Si lo cobras, cada venta llega a "Mi saldo" al momento, menos la comisión de HETNA (ver Términos para vendedores).</T>
           </Text>
         </div>
       </div>
       <div className="flex gap-2 justify-end">
         <Button variant="secondary" size="small" onClick={() => setAbierto(false)}>
-          Cancelar
+          <T>Cancelar</T>
         </Button>
         <Button
           size="small"
@@ -143,7 +146,7 @@ const NuevoCursoForm = () => {
           isLoading={crear.isPending}
           onClick={() => crear.mutate()}
         >
-          Crear curso
+          <T>Crear curso</T>
         </Button>
       </div>
     </div>
@@ -160,9 +163,9 @@ export default function CoursesPage() {
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <div>
-          <Heading>Cursos</Heading>
+          <Heading><T>Cursos</T></Heading>
           <Text size="small" className="text-ui-fg-subtle">
-            Sube tus cursos de video para la Academia HETNA CNC.
+            <T>Sube tus cursos de video para la Academia HETNA CNC.</T>
           </Text>
         </div>
       </div>
@@ -170,10 +173,10 @@ export default function CoursesPage() {
       <NuevoCursoForm />
 
       <div className="px-6 py-4">
-        {isLoading && <Text size="small">Cargando...</Text>}
+        {isLoading && <Text size="small"><T>Cargando...</T></Text>}
         {!isLoading && (data?.courses.length ?? 0) === 0 && (
           <Text size="small" className="text-ui-fg-subtle">
-            Todavía no tienes cursos. Crea el primero arriba.
+            <T>Todavía no tienes cursos. Crea el primero arriba.</T>
           </Text>
         )}
         <div className="flex flex-col gap-2">
@@ -184,13 +187,13 @@ export default function CoursesPage() {
               className="flex items-center justify-between rounded-md border px-4 py-3 hover:bg-ui-bg-subtle-hover"
             >
               <div>
-                <Text weight="plus">{course.title}</Text>
+                <Text weight="plus"><T>{course.title}</T></Text>
                 <Text size="small" className="text-ui-fg-subtle">
                   {NIVEL_ETIQUETA[course.level] || course.level}
                 </Text>
               </div>
               <Badge color={course.status === "published" ? "green" : "grey"}>
-                {course.status === "published" ? "Publicado" : "Borrador"}
+                <T>{course.status === "published" ? "Publicado" : "Borrador"}</T>
               </Badge>
             </Link>
           ))}

@@ -29,7 +29,7 @@ export const DistintivoEnvioGratis = ({
     return (
       <span className="flex items-center gap-1 text-[11px] font-semibold text-[#1F5B29]">
         <span aria-hidden>🚚</span>
-        <span className="truncate"><TS>Envío gratis desde</TS> {monto}</span>
+        <span className="truncate"><TS>Envío gratis desde</TS> <TS>{monto}</TS></span>
       </span>
     )
   }
@@ -37,7 +37,7 @@ export const DistintivoEnvioGratis = ({
   return (
     <span className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#A8D3AC] bg-[#EDF7EE] px-2.5 py-1 text-[12.5px] font-semibold text-[#1F5B29]">
       <span aria-hidden>🚚</span>
-      <TS>Envío gratis desde</TS> {monto}
+      <TS>Envío gratis desde</TS> <TS>{monto}</TS>
     </span>
   )
 }

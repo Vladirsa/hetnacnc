@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Chip } from "@/components/atoms/Chip/Chip"
 import useFilters from "@/hooks/useFilters"
 import { CloseIcon } from "@/icons"
@@ -50,11 +51,11 @@ export const ActiveFilterElement = ({
         const Element = () => {
           return (
             <span className="flex gap-2 items-center cursor-default whitespace-nowrap">
-              {filter[0] === "disponible"
+              <T>{filter[0] === "disponible"
                 ? "Sólo con existencia"
                 : filter[0] === "licencia"
                   ? ({ personal: "Personal", comercial: "Para vender piezas", comercial_ampliada: "Producción sin límite" } as Record<string, string>)[element] || element
-                  : element}{" "}
+                  : element}</T><T>{" "}</T>
               <span onClick={() => removeFilterHandler(element)}>
                 <CloseIcon size={16} className="cursor-pointer" />
               </span>

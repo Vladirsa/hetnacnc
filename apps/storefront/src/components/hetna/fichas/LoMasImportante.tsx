@@ -42,7 +42,7 @@ export const LoMasImportante = ({ descripcion }: { descripcion?: string | null }
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8F5EC] text-[12px] font-bold text-[#17803F]" aria-hidden="true">
               ✓
             </span>
-            <span>{t}</span>
+            <span><TS>{t}</TS></span>
           </li>
         ))}
       </ul>

@@ -2,6 +2,7 @@
 // "tu siguiente paso" y tres números (solicitudes nuevas, pedidos por enviar,
 // ventas del mes), más las solicitudes más urgentes. Todo con datos reales:
 // /vendor/tablero (lo pasa la página) y /vendor/hetna-solicitudes.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
@@ -90,30 +91,30 @@ export function ResumenInicio({ datos }: { datos: DatosInicio }) {
 
   const kpi = (etiqueta: string, valor: string, pie: string, a: string, resalta = false, color = "#6B675C") => (
     <Link to={a} style={{ ...C.vidrio, padding: 18, textDecoration: "none", color: "inherit", display: "block", outline: resalta ? "2px solid rgba(217,96,11,0.45)" : "none" }}>
-      <p style={{ margin: 0, fontSize: 13, color: "#55544D", fontWeight: 600 }}>{etiqueta}</p>
-      <p style={{ margin: "8px 0 4px", fontSize: 30, fontWeight: 800, color: "#142033", letterSpacing: "-0.02em" }}>{valor}</p>
-      <p style={{ margin: 0, fontSize: 12.5, color }}>{pie}</p>
+      <p style={{ margin: 0, fontSize: 13, color: "#55544D", fontWeight: 600 }}><T>{etiqueta}</T></p>
+      <p style={{ margin: "8px 0 4px", fontSize: 30, fontWeight: 800, color: "#142033", letterSpacing: "-0.02em" }}><T>{valor}</T></p>
+      <p style={{ margin: 0, fontSize: 12.5, color }}><T>{pie}</T></p>
     </Link>
   )
 
   return (
     <div style={{ marginBottom: 18 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" }}>{nombre ? `Hola, ${nombre}` : "Inicio"}</h1>
-      <p style={{ color: "#6B675C", fontSize: 14, margin: "4px 0 16px" }}>Lo que necesita tu atención hoy.</p>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" }}><T>{nombre ? `Hola, ${nombre}` : "Inicio"}</T></h1>
+      <p style={{ color: "#6B675C", fontSize: 14, margin: "4px 0 16px" }}><T>Lo que necesita tu atención hoy.</T></p>
 
       {paso ? (
         <div style={{ ...C.vidrio, padding: "14px 18px", marginBottom: 14, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", background: "linear-gradient(90deg, rgba(253,238,225,0.92), rgba(255,255,255,0.8))", boxShadow: "0 0 0 1px rgba(217,96,11,0.25), 0 8px 24px -12px rgba(217,96,11,0.35)" }}>
           <span style={{ fontSize: 22 }}>⏱️</span>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <p style={{ margin: 0, fontWeight: 800, color: "#142033", fontSize: 15 }}>Tu siguiente paso: {paso.titulo}</p>
-            <p style={{ margin: "2px 0 0", color: "#55544D", fontSize: 13 }}>{paso.detalle}</p>
+            <p style={{ margin: 0, fontWeight: 800, color: "#142033", fontSize: 15 }}><T>Tu siguiente paso:</T> <T>{paso.titulo}</T></p>
+            <p style={{ margin: "2px 0 0", color: "#55544D", fontSize: 13 }}><T>{paso.detalle}</T></p>
           </div>
           <Link to={paso.a} style={{ background: "linear-gradient(180deg,#D9600B,#C2560A)", color: "#fff", fontWeight: 700, fontSize: 14, padding: "9px 16px", borderRadius: 10, textDecoration: "none", boxShadow: "0 6px 16px -8px rgba(217,96,11,0.7)" }}>
-            {paso.boton}
+            <T>{paso.boton}</T>
           </Link>
         </div>
       ) : (
-        <div style={{ ...C.vidrio, padding: "14px 18px", marginBottom: 14, color: "#1E7B3A", fontWeight: 700, fontSize: 14 }}>✅ Todo al día: no tienes pedidos por enviar ni solicitudes por responder.</div>
+        <div style={{ ...C.vidrio, padding: "14px 18px", marginBottom: 14, color: "#1E7B3A", fontWeight: 700, fontSize: 14 }}><T>✅ Todo al día: no tienes pedidos por enviar ni solicitudes por responder.</T></div>
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 14 }}>
@@ -125,8 +126,8 @@ export function ResumenInicio({ datos }: { datos: DatosInicio }) {
       {nuevas.length > 0 && (
         <div style={{ ...C.vidrio, padding: 0, overflow: "hidden" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid rgba(20,32,51,0.07)" }}>
-            <p style={{ margin: 0, fontWeight: 800, color: "#142033" }}>Solicitudes de cotización por responder</p>
-            <Link to="/solicitudes" style={{ fontSize: 13, fontWeight: 700, color: "#142033", textDecoration: "none" }}>Ver todas ›</Link>
+            <p style={{ margin: 0, fontWeight: 800, color: "#142033" }}><T>Solicitudes de cotización por responder</T></p>
+            <Link to="/solicitudes" style={{ fontSize: 13, fontWeight: 700, color: "#142033", textDecoration: "none" }}><T>Ver todas ›</T></Link>
           </div>
           {nuevas.slice(0, 3).map((s) => (
             <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", borderBottom: "1px solid rgba(20,32,51,0.05)", flexWrap: "wrap" }}>
@@ -134,11 +135,11 @@ export function ResumenInicio({ datos }: { datos: DatosInicio }) {
               <div style={{ flex: 1, minWidth: 200 }}>
                 <p style={{ margin: 0, fontWeight: 700, color: "#142033", fontSize: 14 }}>{titulo(s)}</p>
                 <p style={{ margin: 0, fontSize: 12, color: "#6B675C" }}>
-                  {[s.trabajo?.ciudad, s.trabajo?.estado_mx].filter(Boolean).join(", ") || "México"} · {plazo(horasPara(s.cierra_en)) || "abierta"} · {s.propuestas_recibidas || 0} propuesta{s.propuestas_recibidas === 1 ? "" : "s"}
+                  <T>{[s.trabajo?.ciudad, s.trabajo?.estado_mx].filter(Boolean).join(", ") || "México"}</T> · <T>{plazo(horasPara(s.cierra_en)) || "abierta"}</T> · {s.propuestas_recibidas || 0} <T>propuesta</T><T>{s.propuestas_recibidas === 1 ? "" : "s"}</T>
                 </p>
               </div>
-              {s.para_mi && <span style={{ background: "#FFF1E6", color: "#C2560A", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 700 }}>Te eligieron</span>}
-              <Link to="/solicitudes" style={{ border: "1px solid rgba(217,96,11,0.5)", color: "#C2560A", fontWeight: 700, fontSize: 13, padding: "6px 14px", borderRadius: 10, textDecoration: "none" }}>Responder</Link>
+              {s.para_mi && <span style={{ background: "#FFF1E6", color: "#C2560A", borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 700 }}><T>Te eligieron</T></span>}
+              <Link to="/solicitudes" style={{ border: "1px solid rgba(217,96,11,0.5)", color: "#C2560A", fontWeight: 700, fontSize: 13, padding: "6px 14px", borderRadius: 10, textDecoration: "none" }}><T>Responder</T></Link>
             </div>
           ))}
         </div>

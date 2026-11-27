@@ -32,9 +32,9 @@ export const OrderReturnRequests = ({
           <TS>Sin devoluciones</TS>
         </Heading>
         <p className="text-center text-secondary w-96 mt-8 mx-auto" data-testid="no-returns-description">
-          {
+          <TS>{
             "You haven't requested any returns yet. Once you request a return, it will appear here."
-          }
+          }</TS>
         </p>
       </div>
     )

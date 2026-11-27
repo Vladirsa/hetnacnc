@@ -176,7 +176,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
       <Seccion titulo="Créditos y mis diseños">
         <PanelCreditos costo={costo} pagado={pagado} recarga={recarga} />
         <MisDisenos herramienta="moldura" tipos={["moldura"]} actual={() => ({ nombre: modo === "moldura" ? `Moldura ${perfilDe(perfil).nombre}` : `Panel ${PATRONES.find((p) => p.id === patron)?.nombre || ""}`, resumen: nombreArchivo, datos: datosDiseno() })} abrir={(dd) => abrirDatos(dd)} />
-        <span className="text-[11.5px] text-[#8A97AB]"><T>Diseñar y ver es gratis. Bajar los archivos o mandarlos al Laboratorio CAM: moldura</T> {textoCreditos(1)}<T>, panel tallado</T> {textoCreditos(2)}<T>. El mismo diseño no se vuelve a cobrar.</T>{patron === "imagen" ? " El tallado de tu foto no se guarda: vuelve a subir la foto al abrirlo." : ""}</span>
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Diseñar y ver es gratis. Bajar los archivos o mandarlos al Laboratorio CAM: moldura</T> {textoCreditos(1)}<T>, panel tallado</T> {textoCreditos(2)}<T>. El mismo diseño no se vuelve a cobrar.</T><T>{patron === "imagen" ? " El tallado de tu foto no se guarda: vuelve a subir la foto al abrirlo." : ""}</T></span>
       </Seccion>
       <Seccion titulo="Qué vas a hacer">
         <Opciones opciones={[{ id: "panel", nombre: "Panel tallado (puerta, frente)" }, { id: "moldura", nombre: "Moldura recta" }]} valor={modo} cambiar={(x) => setModo(x as "moldura" | "panel")} />
@@ -187,7 +187,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
           {PERFILES.map((p) => (
             <button key={p.id} type="button" aria-pressed={perfil === p.id} onClick={() => setPerfil(p.id)} title={p.nombre} className={`flex flex-col items-center gap-0.5 rounded-[8px] px-1 py-1.5 text-[10.5px] leading-tight ${perfil === p.id ? "bg-[#2A1C12] text-white ring-1 ring-[#C2560A]" : "bg-[#141B26] text-[#C9D2E0] ring-1 ring-[#2A3546] hover:ring-[#3A4A63]"}`}>
               <IconoPerfil id={p.id} />
-              {p.nombre}
+              <T>{p.nombre}</T>
             </button>
           ))}
         </div>
@@ -223,7 +223,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
             <div className="grid grid-cols-3 gap-1.5">
               {PATRONES.map((p) => (
                 <button key={p.id} type="button" aria-pressed={patron === p.id} onClick={() => setPatron(p.id)} className={`rounded-[8px] px-2 py-1.5 text-[12px] font-semibold ${patron === p.id ? "bg-[#243045] text-white ring-1 ring-[#C2560A]" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"}`}>
-                  {p.nombre}
+                  <T>{p.nombre}</T>
                 </button>
               ))}
             </div>
@@ -235,7 +235,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
             )}
             {patron === "imagen" && (
               <label className="flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-[#2A3546] p-3 text-center hover:border-[#C2560A]">
-                <span className="text-[13px] font-semibold text-white">{imagen ? "Cambiar la imagen" : "Sube una imagen o dibujo"}</span>
+                <span className="text-[13px] font-semibold text-white"><T>{imagen ? "Cambiar la imagen" : "Sube una imagen o dibujo"}</T></span>
                 <span className="text-[11.5px] text-[#8A97AB]"><T>Lo claro queda alto y lo oscuro hondo. Funciona mejor con dibujos de alto contraste.</T></span>
                 <input
                   type="file"
@@ -262,8 +262,8 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
         <SelectorFresa etiqueta="Desbaste" tipos={["recta", "upcut", "compresion", "desbaste", "bola"]} valor={desbaste} cambiar={(f) => setDesbaste(f.id)} todas={fresas} agregar={agregar} nota="Quita el material grueso." />
         <SelectorFresa etiqueta="Acabado" tipos={["bola", "conica_bola", "v", "recta"]} valor={acabado} cambiar={(f) => setAcabado(f.id)} todas={fresas} agregar={agregar} nota={pasoAcabado ? `Paso lateral sugerido: ${pasoAcabado} mm (12 % del diámetro).` : undefined} />
         {modo === "panel" && patron !== "liso" && <SelectorFresa etiqueta="Tallado en V (2D)" tipos={["v"]} valor={tallaV} cambiar={(f) => setTallaV(f.id)} todas={fresas} agregar={agregar} nota="Para las líneas de la capa GRABADO (vista 2D)." />}
-        {avisoFresa && <p className="m-0 text-[12px] text-[#F6D58E]">{avisoFresa}</p>}
-        <span className="text-[11.5px] text-[#8A97AB]"><T>Curva más cerrada del perfil: radio</T> {Number.isFinite(rMin) ? `${rMin.toFixed(1)} mm` : "sin curvas cóncavas"}<T>. En el Laboratorio CAM eliges estas fresas para el desbaste y el acabado.</T></span>
+        {avisoFresa && <p className="m-0 text-[12px] text-[#F6D58E]"><T>{avisoFresa}</T></p>}
+        <span className="text-[11.5px] text-[#8A97AB]"><T>Curva más cerrada del perfil: radio</T> <T>{Number.isFinite(rMin) ? `${rMin.toFixed(1)} mm` : "sin curvas cóncavas"}</T><T>. En el Laboratorio CAM eliges estas fresas para el desbaste y el acabado.</T></span>
       </Seccion>
     </div>
   )
@@ -282,8 +282,8 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
       }
       panel={
         <>
-          {cabecera}
-          {panel}
+          <T>{cabecera}</T>
+          <T>{panel}</T>
         </>
       }
       vista3D={
@@ -306,11 +306,11 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
       descargas={(exportar) => !pagado ? (
         <div className="flex flex-col gap-2">
           <button type="button" disabled={cobrando || !tris.length} onClick={cobrar} className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50">
-            {cobrando ? "Cobrando…" : `STL, DXF y Laboratorio CAM · ${textoCreditos(costo)}`}
+            <T>{cobrando ? "Cobrando…" : `STL, DXF y Laboratorio CAM · ${textoCreditos(costo)}`}</T>
           </button>
           {avisoCobro && (
             <span className="text-[12px] text-[#F6B8AE]">
-              <T>{avisoCobro.texto}</T>{" "}
+              <T>{avisoCobro.texto}</T><T>{" "}</T>
               {avisoCobro.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
               {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
             </span>
@@ -333,7 +333,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
             }}
             className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-60"
           >
-            {mandando ? "Abriendo el Laboratorio…" : "Mandar al Laboratorio CAM"}
+            <T>{mandando ? "Abriendo el Laboratorio…" : "Mandar al Laboratorio CAM"}</T>
           </button>
           <div className="flex gap-2">
             <button type="button" onClick={() => bajar(`${nombreArchivo}.stl`, stl())} className="flex-1 rounded-[8px] bg-[#1C2431] px-3 py-2 text-[13px] font-semibold text-[#C9D2E0] hover:bg-[#243045]">
@@ -345,7 +345,7 @@ export function GeneradorMolduras({ cabecera }: { cabecera?: React.ReactNode }) 
               </button>
             ))}
           </div>
-          <span className="text-[12px] text-[#8A97AB]"><T>STL: el sólido para desbaste y acabado en 3D. DXF:</T> {modo === "moldura" ? "el perfil de la sección" : "el contorno de corte y las líneas para tallar en V"}.</span>
+          <span className="text-[12px] text-[#8A97AB]"><T>STL: el sólido para desbaste y acabado en 3D. DXF:</T> <T>{modo === "moldura" ? "el perfil de la sección" : "el contorno de corte y las líneas para tallar en V"}</T>.</span>
         </div>
       )}
     />

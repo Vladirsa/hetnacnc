@@ -44,7 +44,7 @@ function Tabla({ cab, filas }: { cab: string[]; filas: string[][] }) {
         <thead className="bg-[#F3F1EA] text-[#142033]">
           <tr>
             {cab.map((c) => (
-              <th key={c} className="px-3 py-2 font-semibold">{c}</th>
+              <th key={c} className="px-3 py-2 font-semibold"><TS>{c}</TS></th>
             ))}
           </tr>
         </thead>
@@ -52,7 +52,7 @@ function Tabla({ cab, filas }: { cab: string[]; filas: string[][] }) {
           {filas.map((f) => (
             <tr key={f[0]} className="border-t border-[#E7E4DC] align-top">
               {f.map((c, i) => (
-                <td key={i} className={`px-3 py-2 ${i === 0 ? "font-medium text-[#142033]" : "text-[#40403A]"}`}>{c}</td>
+                <td key={i} className={`px-3 py-2 ${i === 0 ? "font-medium text-[#142033]" : "text-[#40403A]"}`}><TS>{c}</TS></td>
               ))}
             </tr>
           ))}
@@ -66,12 +66,12 @@ function Bloques({ bloques }: { bloques: Bloque[] }) {
   return (
     <>
       {bloques.map((b, i) => {
-        if ("p" in b) return <p key={i}>{b.p}</p>
+        if ("p" in b) return <p key={i}><TS>{b.p}</TS></p>
         if ("ul" in b)
           return (
             <ul key={i}>
               {b.ul.map((x) => (
-                <li key={x}>{x}</li>
+                <li key={x}><TS>{x}</TS></li>
               ))}
             </ul>
           )
@@ -102,13 +102,13 @@ export default async function AvisoDePrivacidad() {
       }
     >
       <p className="text-sm text-[#6B6A63]">
-        {en
+        <TS>{en
           ? `Version ${EMPRESA.privacidadVersion} · Effective ${EMPRESA.privacidadVigencia.en}`
-          : `Versión ${EMPRESA.privacidadVersion} · Vigente desde el ${EMPRESA.privacidadVigencia.es}`}
+          : `Versión ${EMPRESA.privacidadVersion} · Vigente desde el ${EMPRESA.privacidadVigencia.es}`}</TS>
       </p>
 
       <nav aria-label={en ? "Contents" : "Contenido"} className="not-prose my-6 rounded-xl border border-[#E7E4DC] bg-white p-4">
-        <p className="mb-2 text-sm font-bold text-[#142033]">{en ? "Contents" : "Contenido"}</p>
+        <p className="mb-2 text-sm font-bold text-[#142033]"><TS>{en ? "Contents" : "Contenido"}</TS></p>
         <ol className="grid gap-1 text-sm sm:grid-cols-2">
           {secciones.map((s) => (
             <li key={s.id}>
@@ -125,12 +125,12 @@ export default async function AvisoDePrivacidad() {
         </section>
       ))}
 
-      <h2>{en ? "Version history" : "Historial de versiones"}</h2>
+      <h2><TS>{en ? "Version history" : "Historial de versiones"}</TS></h2>
       <ul>
         {HISTORIAL.map((h) => (
           <li key={h.version}>
-            {h.version} · {h.fecha}
-            {" · "}
+            <TS>{h.version}</TS> · <TS>{h.fecha}</TS>
+            <TS>{" · "}</TS>
             {en ? h.cambioEn : h.cambio}
           </li>
         ))}

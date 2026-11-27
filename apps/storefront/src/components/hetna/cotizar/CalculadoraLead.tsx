@@ -275,7 +275,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
       action={enviar}
       className="bg-white border border-[#E7E4DC] rounded-[14px] p-6 flex flex-col gap-4"
     >
-      <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><T>Calcula tu precio de</T> {tituloServicio}</p>
+      <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><T>Calcula tu precio de</T> <T>{tituloServicio}</T></p>
 
       <div className="flex flex-col gap-2 rounded-[10px] border border-dashed border-[#C9C4B8] bg-[#FAF9F6] p-3">
         <label className="flex cursor-pointer flex-col gap-1 text-[13.5px] font-medium text-[#1B1B18]">
@@ -292,15 +292,15 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
           <>
             <VisorCad geo={pieza.geo} alto={260} />
             <span className="text-[12px] text-[#6B6A63]">
-              {pieza.nombre}<T>: llené las medidas con las de tu pieza. Revísalas y cámbialas si hace falta.</T>
+              <T>{pieza.nombre}</T><T>: llené las medidas con las de tu pieza. Revísalas y cámbialas si hace falta.</T>
             </span>
           </>
         )}
         {pieza?.geo.avisos.slice(0, 2).map((a) => (
-          <span key={a} className="text-[12px] text-[#B34D07]">{a}</span>
+          <span key={a} className="text-[12px] text-[#B34D07]"><T>{a}</T></span>
         ))}
         {pieza && <RevisionArchivo geo={pieza.geo} proceso={procesoDe(`${servicio} ${tituloServicio}`)} />}
-        {avisoArchivo && <span className="text-[12.5px] text-[#B34D07]">{avisoArchivo}</span>}
+        {avisoArchivo && <span className="text-[12.5px] text-[#B34D07]"><T>{avisoArchivo}</T></span>}
       </div>
 
       <label className="flex flex-col gap-1.5 text-[13.5px] font-medium text-[#1B1B18]">
@@ -348,7 +348,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
             <label key={a.clave} className="flex items-center gap-2 text-[13.5px] text-[#40403A]">
               <input type="checkbox" name="acabados" value={a.clave} className="accent-[#C2560A]" />
               <span>
-                {a.nombre} <span className="text-[#6B6A63]">· +${a.tarifa.toLocaleString("es-MX")} <T>por pieza</T></span>
+                <T>{a.nombre}</T> <span className="text-[#6B6A63]">· +${a.tarifa.toLocaleString("es-MX")} <T>por pieza</T></span>
               </span>
             </label>
           ))}
@@ -387,7 +387,7 @@ export const CalculadoraLead = ({ servicio, tituloServicio, materiales, pideAlto
         disabled={estado.paso === "cargando"}
         className="inline-flex items-center justify-center bg-[#142033] hover:bg-[#1E2E4A] disabled:opacity-60 text-white font-semibold px-5 py-3 rounded-[10px] text-[15px]"
       >
-        {estado.paso === "cargando" ? "Calculando…" : vivo ? "Recibir mi estimado y pedir precio formal" : "Ver mi precio"}
+        <T>{estado.paso === "cargando" ? "Calculando…" : vivo ? "Recibir mi estimado y pedir precio formal" : "Ver mi precio"}</T>
       </button>
     </form>
   )
@@ -413,14 +413,14 @@ function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; cal
           <p className="m-0 text-[12.5px] font-bold text-[#1B1B18]"><T>Cómo se calcula</T></p>
           <ul className="m-0 mt-1 pl-4 text-[12.5px] text-[#40403A] list-disc flex flex-col gap-0.5">
             {p.calculo.map((l) => (
-              <li key={l}>{l}</li>
+              <li key={l}><T>{l}</T></li>
             ))}
           </ul>
         </div>
       )}
       {hojas && (
         <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-          <b className="text-[#1B1B18]"><T>Material:</T></b> {hojas}.
+          <b className="text-[#1B1B18]"><T>Material:</T></b> <T>{hojas}</T>.
         </p>
       )}
       {p.por_volumen.length > 1 && (
@@ -430,7 +430,7 @@ function PanelPrecioVivo({ p, calculando, hojas }: { p: PrecioEnVivo | null; cal
             <tbody>
               {p.por_volumen.map((v) => (
                 <tr key={v.cantidad} className="border-t border-[#F2E2D2] first:border-t-0">
-                  <td className="py-1">{v.cantidad} {v.cantidad === 1 ? "pieza" : "piezas"}</td>
+                  <td className="py-1">{v.cantidad} <T>{v.cantidad === 1 ? "pieza" : "piezas"}</T></td>
                   <td className="py-1 text-right font-semibold text-[#1B1B18]">{pesos(v.unitario)} c/u</td>
                   <td className="py-1 text-right text-[#6B6A63]">{pesos(v.total)}</td>
                 </tr>

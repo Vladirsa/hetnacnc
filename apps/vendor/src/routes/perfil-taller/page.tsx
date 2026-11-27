@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -11,6 +12,8 @@ const Building = (props) => (
 
 export const config: RouteConfig = {
   label: "Perfil público",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Building,
 }
 
@@ -132,13 +135,13 @@ function CampoImagen({ titulo, ayuda, valor, alCambiar, ancho = 160, alto = 160 
   const [error, setError] = useState("")
   return (
     <div>
-      <label style={S.label}>{titulo}</label>
+      <label style={S.label}><T>{titulo}</T></label>
       <div style={{ width: ancho, height: alto, maxWidth: "100%", borderRadius: 10, border: "1px dashed #D9D5C9", background: valor ? `center/cover no-repeat url(${valor})` : "#F3F1EA", display: "grid", placeItems: "center", color: "#6B675C", fontSize: 12 }}>
         {!valor && "Sin imagen"}
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
         <label style={{ ...S.btn2, display: "inline-block" }}>
-          {subiendo ? "Subiendo..." : valor ? "Cambiar" : "Subir imagen"}
+          <T>{subiendo ? "Subiendo..." : valor ? "Cambiar" : "Subir imagen"}</T>
           <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={subiendo}
             onChange={async (e) => {
               const a = e.target.files?.[0]
@@ -148,10 +151,10 @@ function CampoImagen({ titulo, ayuda, valor, alCambiar, ancho = 160, alto = 160 
               try { alCambiar(await subir(a)) } catch (err) { setError(err.message) } finally { setSubiendo(false) }
             }} />
         </label>
-        {valor && <button type="button" style={S.btn2} onClick={() => alCambiar("")}>Quitar</button>}
+        {valor && <button type="button" style={S.btn2} onClick={() => alCambiar("")}><T>Quitar</T></button>}
       </div>
-      <p style={S.hint}>{ayuda}</p>
-      {error && <p style={{ ...S.hint, color: "#B3261E" }}>{error}</p>}
+      <p style={S.hint}><T>{ayuda}</T></p>
+      {error && <p style={{ ...S.hint, color: "#B3261E" }}><T>{error}</T></p>}
     </div>
   )
 }
@@ -335,34 +338,34 @@ export default function PerfilTallerPage() {
     }
   }
 
-  if (cargando) return <div style={S.page}>Cargando...</div>
+  if (cargando) return <div style={S.page}><T>Cargando...</T></div>
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Perfil público del taller</h1>
+      <h1 style={S.h1}><T>Perfil público del taller</T></h1>
       <p style={S.sub}>
-        Esto es lo que ven los clientes en tu página de taller{nombre ? ` (${nombre})` : ""} y en el mapa de HETNA.
+        <T>Esto es lo que ven los clientes en tu página de taller</T><T>{nombre ? ` (${nombre})` : ""}</T> <T>y en el mapa de HETNA.</T>
       </p>
 
       <VistaPrevia nombre={nombre} handle={handle} logo={logo} banner={banner} f={f} galeria={galeria} />
 
       <section style={S.card}>
-        <h2 style={S.h2}>Imagen de tu taller</h2>
+        <h2 style={S.h2}><T>Imagen de tu taller</T></h2>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           <CampoImagen titulo="Logo" ayuda="Cuadrado, mínimo 400 x 400 px." valor={logo} alCambiar={setLogo} />
           <CampoImagen titulo="Portada (banner)" ayuda="Horizontal, ideal 1600 x 400 px. Muestra tu taller o tus trabajos." valor={banner} alCambiar={setBanner} ancho={420} alto={110} />
         </div>
-        <label style={{ ...S.label, marginTop: 16 }}>Galería de trabajos ({galeria.length}/12)</label>
+        <label style={{ ...S.label, marginTop: 16 }}><T>Galería de trabajos (</T><T>{galeria.length}</T>/12)</label>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {galeria.map((u) => (
             <div key={u} style={{ position: "relative", width: 96, height: 96, borderRadius: 8, background: `center/cover no-repeat url(${u})` }}>
-              <button type="button" aria-label="Quitar foto" onClick={() => setGaleria(galeria.filter((x) => x !== u))}
+              <button type="button" aria-label={traducir("Quitar foto")} onClick={() => setGaleria(galeria.filter((x) => x !== u))}
                 style={{ position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: 0, background: "rgba(0,0,0,.65)", color: "#fff", cursor: "pointer" }}>×</button>
             </div>
           ))}
           {galeria.length < 12 && (
             <label style={{ width: 96, height: 96, borderRadius: 8, border: "1px dashed #D9D5C9", display: "grid", placeItems: "center", cursor: "pointer", fontSize: 12, color: "#6B675C", textAlign: "center" }}>
-              {subiendoGal ? "Subiendo..." : "+ Agregar fotos"}
+              <T>{subiendoGal ? "Subiendo..." : "+ Agregar fotos"}</T>
               <input type="file" multiple accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} disabled={subiendoGal}
                 onChange={async (e) => {
                   const archivos = Array.from(e.target.files || []).slice(0, 12 - galeria.length)
@@ -379,141 +382,141 @@ export default function PerfilTallerPage() {
             </label>
           )}
         </div>
-        <p style={S.hint}>Fotos de piezas terminadas, tu taller y tus máquinas. No pongas teléfonos ni datos de contacto en las imágenes. Recuerda guardar.</p>
+        <p style={S.hint}><T>Fotos de piezas terminadas, tu taller y tus máquinas. No pongas teléfonos ni datos de contacto en las imágenes. Recuerda guardar.</T></p>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Ubicación</h2>
+        <h2 style={S.h2}><T>Ubicación</T></h2>
         <div style={S.grid}>
           <div>
-            <label style={S.label}>Municipio o ciudad</label>
-            <input style={S.input} value={f.ciudad} onChange={(e) => set("ciudad", e.target.value)} placeholder="Ej. Apizaco" />
+            <label style={S.label}><T>Municipio o ciudad</T></label>
+            <input style={S.input} value={f.ciudad} onChange={(e) => set("ciudad", e.target.value)} placeholder={traducir("Ej. Apizaco")} />
           </div>
           <div>
-            <label style={S.label}>Estado</label>
+            <label style={S.label}><T>Estado</T></label>
             <select style={S.input} value={f.estado} onChange={(e) => set("estado", e.target.value)}>
               <option value="">Selecciona</option>
               {ESTADOS.map((x) => <option key={x}>{x}</option>)}
             </select>
           </div>
           <div>
-            <label style={S.label}>Código postal del taller</label>
-            <input style={S.input} value={f.cp} onChange={(e) => set("cp", e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="5 dígitos" inputMode="numeric" />
-            <p style={{ ...S.hint, marginTop: 6 }}>No se publica. Sirve para que los clientes de tu zona te vean primero como "taller cerca de ti".</p>
+            <label style={S.label}><T>Código postal del taller</T></label>
+            <input style={S.input} value={f.cp} onChange={(e) => set("cp", e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder={traducir("5 dígitos")} inputMode="numeric" />
+            <p style={{ ...S.hint, marginTop: 6 }}><T>No se publica. Sirve para que los clientes de tu zona te vean primero como "taller cerca de ti".</T></p>
           </div>
         </div>
         <div style={{ marginTop: 14 }}>
-          <label style={S.label}>¿Qué más ofreces? (sale como "todo incluido" al cliente)</label>
+          <label style={S.label}><T>¿Qué más ofreces? (sale como "todo incluido" al cliente)</T></label>
           {OFRECE.map(([v, t]) => (
             <label key={v} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, marginTop: 6 }}>
               <input type="checkbox" checked={f.ofrece.includes(v)} onChange={() => alternar("ofrece", v)} />
-              {t}
+              <T>{t}</T>
             </label>
           ))}
         </div>
         <p style={{ ...S.hint, marginTop: 12 }}>
-          En el mapa público solo se muestra cuántos talleres hay por estado y municipio. Tu dirección y teléfono no se publican:
-          los clientes te contactan por HETNA.
+          <T>En el mapa público solo se muestra cuántos talleres hay por estado y municipio. Tu dirección y teléfono no se publican:
+          los clientes te contactan por HETNA.</T>
         </p>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Presentación</h2>
-        <label style={S.label}>Frase corta</label>
-        <input style={S.input} value={f.lema} onChange={(e) => set("lema", e.target.value)} placeholder="Ej. Corte y grabado CNC con entrega rápida" maxLength={120} />
+        <h2 style={S.h2}><T>Presentación</T></h2>
+        <label style={S.label}><T>Frase corta</T></label>
+        <input style={S.input} value={f.lema} onChange={(e) => set("lema", e.target.value)} placeholder={traducir("Ej. Corte y grabado CNC con entrega rápida")} maxLength={120} />
         <div style={{ ...S.grid, marginTop: 12 }}>
           <div>
-            <label style={S.label}>Tiempo de entrega típico</label>
-            <input style={S.input} value={f.entrega} onChange={(e) => set("entrega", e.target.value)} placeholder="Ej. 3 a 7 días" />
+            <label style={S.label}><T>Tiempo de entrega típico</T></label>
+            <input style={S.input} value={f.entrega} onChange={(e) => set("entrega", e.target.value)} placeholder={traducir("Ej. 3 a 7 días")} />
           </div>
           <div>
-            <label style={S.label}>Años de experiencia</label>
+            <label style={S.label}><T>Años de experiencia</T></label>
             <input style={S.input} type="number" min="0" value={f.anos} onChange={(e) => set("anos", e.target.value)} />
           </div>
         </div>
-        <label style={{ ...S.label, marginTop: 12 }}>¿Emites factura (CFDI)?</label>
+        <label style={{ ...S.label, marginTop: 12 }}><T>¿Emites factura (CFDI)?</T></label>
         <select style={S.input} value={f.factura || ""} onChange={(e) => set("factura", e.target.value)}>
           <option value="">Prefiero no decirlo</option>
           <option value="si">Sí: mis precios ya incluyen IVA y doy factura</option>
           <option value="no">No emito factura</option>
         </select>
         <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>
-          Por ley el precio que publicas es el precio final que paga el cliente. Esto sólo agrega la nota en tus productos.
+          <T>Por ley el precio que publicas es el precio final que paga el cliente. Esto sólo agrega la nota en tus productos.</T>
         </p>
-        <label style={{ ...S.label, marginTop: 12 }}>Horario de atención</label>
-        <input style={S.input} value={f.horario || ""} onChange={(e) => set("horario", e.target.value)} placeholder="Ej. Lunes a viernes 9:00 a 18:00, sábado 9:00 a 14:00" maxLength={120} />
+        <label style={{ ...S.label, marginTop: 12 }}><T>Horario de atención</T></label>
+        <input style={S.input} value={f.horario || ""} onChange={(e) => set("horario", e.target.value)} placeholder={traducir("Ej. Lunes a viernes 9:00 a 18:00, sábado 9:00 a 14:00")} maxLength={120} />
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Vendo desde otro país (importación) · I sell from abroad</h2>
+        <h2 style={S.h2}><T>Vendo desde otro país (importación) · I sell from abroad</T></h2>
         <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14 }}>
           <input type="checkbox" checked={!!f.imp_activo} onChange={(e) => set("imp_activo", e.target.checked)} />
-          Mis productos se envían desde otro país / My products ship from outside Mexico
+          <T>Mis productos se envían desde otro país / My products ship from outside Mexico</T>
         </label>
         {f.imp_activo && (
           <>
             <p style={{ fontSize: 13, color: "#40403A", margin: "8px 0" }}>
-              Envías <b>puerta a puerta con impuestos de importación pagados (DDP)</b> por DHL, FedEx, UPS o similar: el cliente no paga nada al recibir.
-              Tus productos se marcan «De importación» con el país y el tiempo de entrega. HETNA te paga por <b>PayPal</b>.
+              <T>Envías</T> <b><T>puerta a puerta con impuestos de importación pagados (DDP)</T></b> <T>por DHL, FedEx, UPS o similar: el cliente no paga nada al recibir.
+              Tus productos se marcan «De importación» con el país y el tiempo de entrega. HETNA te paga por</T> <b><T>PayPal</T></b>.
               <br />
-              <i>Ship door to door with import duties paid (DDP). Your products show an «Imported» label with the country and delivery time. HETNA pays you via PayPal.</i>
+              <i><T>Ship door to door with import duties paid (DDP). Your products show an «Imported» label with the country and delivery time. HETNA pays you via PayPal.</T></i>
             </p>
             <div style={S.grid}>
               <div>
-                <label style={S.label}>País desde donde envías / Ship-from country</label>
-                <input style={S.input} value={f.imp_pais} onChange={(e) => set("imp_pais", e.target.value)} placeholder="China, Taiwán, Estados Unidos…" maxLength={40} />
+                <label style={S.label}><T>País desde donde envías / Ship-from country</T></label>
+                <input style={S.input} value={f.imp_pais} onChange={(e) => set("imp_pais", e.target.value)} placeholder={traducir("China, Taiwán, Estados Unidos…")} maxLength={40} />
               </div>
               <div>
-                <label style={S.label}>Entrega en días hábiles / Delivery (business days)</label>
+                <label style={S.label}><T>Entrega en días hábiles / Delivery (business days)</T></label>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <input style={{ ...S.input, width: 80 }} type="number" min="1" value={f.imp_min} onChange={(e) => set("imp_min", e.target.value)} placeholder="10" />
-                  a / to
+                  <T>a / to</T>
                   <input style={{ ...S.input, width: 80 }} type="number" min="1" value={f.imp_max} onChange={(e) => set("imp_max", e.target.value)} placeholder="20" />
                 </div>
               </div>
             </div>
-            <label style={{ ...S.label, marginTop: 12 }}>Correo de tu cuenta PayPal (para pagarte) / PayPal email (for payouts)</label>
-            <input style={S.input} type="email" value={f.paypal || ""} onChange={(e) => set("paypal", e.target.value)} placeholder="sales@yourcompany.com" maxLength={120} />
-            <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}>Privado: sólo lo ve HETNA para pagarte. / Private: only HETNA sees it.</p>
+            <label style={{ ...S.label, marginTop: 12 }}><T>Correo de tu cuenta PayPal (para pagarte) / PayPal email (for payouts)</T></label>
+            <input style={S.input} type="email" value={f.paypal || ""} onChange={(e) => set("paypal", e.target.value)} placeholder={traducir("sales@yourcompany.com")} maxLength={120} />
+            <p style={{ fontSize: 12, color: "#6B675C", margin: "4px 0 0" }}><T>Privado: sólo lo ve HETNA para pagarte. / Private: only HETNA sees it.</T></p>
           </>
         )}
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Tipo de cuenta</h2>
+        <h2 style={S.h2}><T>Tipo de cuenta</T></h2>
         <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6B675C" }}>
-          Taller: fabricas piezas y recibes licitaciones. Proveedor: vendes productos e insumos (materiales, herramientas, máquinas) y recibirás licitaciones de suministro. Ambos: las dos cosas.
+          <T>Taller: fabricas piezas y recibes licitaciones. Proveedor: vendes productos e insumos (materiales, herramientas, máquinas) y recibirás licitaciones de suministro. Ambos: las dos cosas.</T>
         </p>
         <div style={S.chips}>
           {[["taller", "🏭 Taller"], ["proveedor", "📦 Proveedor"], ["ambos", "🏭📦 Ambos"]].map(([v, l]) => (
-            <button type="button" key={v} style={chip(f.tipo_cuenta === v)} onClick={() => set("tipo_cuenta", v)}>{l}</button>
+            <button type="button" key={v} style={chip(f.tipo_cuenta === v)} onClick={() => set("tipo_cuenta", v)}><T>{l}</T></button>
           ))}
         </div>
         {f.tipo_cuenta !== "taller" && (
           <>
-            <label style={{ ...S.label, marginTop: 12 }}>Marcas que distribuyes (separadas por coma)</label>
-            <input style={S.input} value={f.marcas} onChange={(e) => set("marcas", e.target.value)} placeholder="Ej. Onsrud, Amana Tool, Ruida" />
+            <label style={{ ...S.label, marginTop: 12 }}><T>Marcas que distribuyes (separadas por coma)</T></label>
+            <input style={S.input} value={f.marcas} onChange={(e) => set("marcas", e.target.value)} placeholder={traducir("Ej. Onsrud, Amana Tool, Ruida")} />
             <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6B675C" }}>
-              Para mostrar "Distribuidor autorizado" pide la verificación con la carta de la marca en Verificación.
+              <T>Para mostrar "Distribuidor autorizado" pide la verificación con la carta de la marca en Verificación.</T>
             </p>
           </>
         )}
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Servicios que ofreces</h2>
+        <h2 style={S.h2}><T>Servicios que ofreces</T></h2>
         <div style={S.chips}>
           {SERVICIOS.map((x) => (
-            <button type="button" key={x} style={chip(f.servicios.includes(x))} onClick={() => alternar("servicios", x)}>{x}</button>
+            <button type="button" key={x} style={chip(f.servicios.includes(x))} onClick={() => alternar("servicios", x)}><T>{x}</T></button>
           ))}
         </div>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Acabados que haces</h2>
+        <h2 style={S.h2}><T>Acabados que haces</T></h2>
         <p style={S.hint}>
-          Las solicitudes que piden estos acabados te llegan primero, y los clientes los ven en tu perfil. El precio es opcional
-          (ej. "desde $150 por pieza", "$15 por doblez").
+          <T>Las solicitudes que piden estos acabados te llegan primero, y los clientes los ven en tu perfil. El precio es opcional
+          (ej. "desde $150 por pieza", "$15 por doblez").</T>
         </p>
         {ACABADOS.map(([clave, nombre]) => {
           const activo = Object.prototype.hasOwnProperty.call(f.acabados, clave)
@@ -530,14 +533,14 @@ export default function PerfilTallerPage() {
                     set("acabados", a)
                   }}
                 />
-                {nombre}
+                <T>{nombre}</T>
               </label>
               {activo && (
                 <input
                   style={{ ...S.input, maxWidth: 260 }}
                   value={f.acabados[clave]}
                   onChange={(e) => set("acabados", { ...f.acabados, [clave]: e.target.value })}
-                  placeholder="Precio desde (opcional)"
+                  placeholder={traducir("Precio desde (opcional)")}
                   maxLength={40}
                 />
               )}
@@ -547,15 +550,15 @@ export default function PerfilTallerPage() {
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Capacidades</h2>
+        <h2 style={S.h2}><T>Capacidades</T></h2>
         <textarea style={S.area} value={f.capacidades} onChange={(e) => set("capacidades", e.target.value)} placeholder={"Una por línea. Ej.\nCorte de MDF hasta 30 mm\nProducción por lotes"} />
-        <p style={S.hint}>Escribe una capacidad por línea.</p>
+        <p style={S.hint}><T>Escribe una capacidad por línea.</T></p>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Máquinas</h2>
+        <h2 style={S.h2}><T>Máquinas</T></h2>
         <p style={S.hint}>
-          Con el tipo y el área de trabajo, los clientes te encuentran en el directorio y te llegan las solicitudes que sí puedes hacer.
+          <T>Con el tipo y el área de trabajo, los clientes te encuentran en el directorio y te llegan las solicitudes que sí puedes hacer.</T>
         </p>
         {f.maquinas.map((m, i) => {
           const cambiar = (k, v) => set("maquinas", f.maquinas.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
@@ -563,7 +566,7 @@ export default function PerfilTallerPage() {
             <div key={i} style={{ border: "1px solid #E7E4DC", borderRadius: 10, padding: 12, marginBottom: 10 }}>
               <div style={{ ...S.grid, alignItems: "end" }}>
                 <div>
-                  <label style={S.label}>Tipo</label>
+                  <label style={S.label}><T>Tipo</T></label>
                   <select style={S.input} value={m.tipo || ""} onChange={(e) => cambiar("tipo", e.target.value)}>
                     <option value="">Elige el tipo</option>
                     {TIPOS_MAQUINA.map(([v, l]) => (
@@ -572,42 +575,42 @@ export default function PerfilTallerPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={S.label}>Nombre o modelo</label>
-                  <input style={S.input} value={m.nombre || ""} onChange={(e) => cambiar("nombre", e.target.value)} placeholder="Router CNC 1530" />
+                  <label style={S.label}><T>Nombre o modelo</T></label>
+                  <input style={S.input} value={m.nombre || ""} onChange={(e) => cambiar("nombre", e.target.value)} placeholder={traducir("Router CNC 1530")} />
                 </div>
                 <div>
-                  <label style={S.label}>Marca</label>
-                  <input style={S.input} value={m.marca || ""} onChange={(e) => cambiar("marca", e.target.value)} placeholder="Opcional" />
+                  <label style={S.label}><T>Marca</T></label>
+                  <input style={S.input} value={m.marca || ""} onChange={(e) => cambiar("marca", e.target.value)} placeholder={traducir("Opcional")} />
                 </div>
               </div>
               <div style={{ ...S.grid, alignItems: "end", marginTop: 8 }}>
                 <div>
-                  <label style={S.label}>Área X (mm)</label>
+                  <label style={S.label}><T>Área X (mm)</T></label>
                   <input style={S.input} inputMode="numeric" value={m.x ?? ""} onChange={(e) => cambiar("x", e.target.value.replace(/[^\d]/g, ""))} placeholder="1500" />
                 </div>
                 <div>
-                  <label style={S.label}>Área Y (mm)</label>
+                  <label style={S.label}><T>Área Y (mm)</T></label>
                   <input style={S.input} inputMode="numeric" value={m.y ?? ""} onChange={(e) => cambiar("y", e.target.value.replace(/[^\d]/g, ""))} placeholder="3000" />
                 </div>
                 <div>
-                  <label style={S.label}>Altura Z (mm)</label>
-                  <input style={S.input} inputMode="numeric" value={m.z ?? ""} onChange={(e) => cambiar("z", e.target.value.replace(/[^\d]/g, ""))} placeholder="Opcional" />
+                  <label style={S.label}><T>Altura Z (mm)</T></label>
+                  <input style={S.input} inputMode="numeric" value={m.z ?? ""} onChange={(e) => cambiar("z", e.target.value.replace(/[^\d]/g, ""))} placeholder={traducir("Opcional")} />
                 </div>
                 <div>
-                  <label style={S.label}>Potencia</label>
-                  <input style={S.input} value={m.potencia || ""} onChange={(e) => cambiar("potencia", e.target.value)} placeholder="Spindle 3 kW, tubo 100 W…" />
+                  <label style={S.label}><T>Potencia</T></label>
+                  <input style={S.input} value={m.potencia || ""} onChange={(e) => cambiar("potencia", e.target.value)} placeholder={traducir("Spindle 3 kW, tubo 100 W…")} />
                 </div>
                 <div>
-                  <label style={S.label}>Controlador</label>
-                  <input style={S.input} list="controladores-cnc" value={m.controlador || ""} onChange={(e) => cambiar("controlador", e.target.value)} placeholder="Mach3, DSP, Ruida…" />
+                  <label style={S.label}><T>Controlador</T></label>
+                  <input style={S.input} list="controladores-cnc" value={m.controlador || ""} onChange={(e) => cambiar("controlador", e.target.value)} placeholder={traducir("Mach3, DSP, Ruida…")} />
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10, alignItems: "end", marginTop: 8 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={S.label}>Detalle</label>
-                  <input style={S.input} value={m.detalle || ""} onChange={(e) => cambiar("detalle", e.target.value)} placeholder="4° eje, cambiador de herramienta, mesa de vacío…" />
+                  <label style={S.label}><T>Detalle</T></label>
+                  <input style={S.input} value={m.detalle || ""} onChange={(e) => cambiar("detalle", e.target.value)} placeholder={traducir("4° eje, cambiador de herramienta, mesa de vacío…")} />
                 </div>
-                <button type="button" style={S.btn2} onClick={() => set("maquinas", f.maquinas.filter((_, j) => j !== i))}>Quitar</button>
+                <button type="button" style={S.btn2} onClick={() => set("maquinas", f.maquinas.filter((_, j) => j !== i))}><T>Quitar</T></button>
               </div>
             </div>
           )
@@ -617,23 +620,23 @@ export default function PerfilTallerPage() {
             <option key={c} value={c} />
           ))}
         </datalist>
-        <button type="button" style={S.btn2} onClick={() => set("maquinas", [...f.maquinas, { tipo: "", nombre: "", marca: "", x: "", y: "", z: "", potencia: "", controlador: "", detalle: "" }])}>+ Agregar máquina</button>
+        <button type="button" style={S.btn2} onClick={() => set("maquinas", [...f.maquinas, { tipo: "", nombre: "", marca: "", x: "", y: "", z: "", potencia: "", controlador: "", detalle: "" }])}><T>+ Agregar máquina</T></button>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Tarifas para estimado rápido</h2>
+        <h2 style={S.h2}><T>Tarifas para estimado rápido</T></h2>
         <p style={{ ...S.hint, marginTop: 0, marginBottom: 12 }}>
-          Cuando un cliente diseña una pieza en HETNA y pide "Fabrícamelo", ve junto a tu taller un precio estimado calculado con estas
-          tarifas y las medidas de su archivo. Es orientativo: el precio formal lo pones tú en la propuesta. Deja en blanco los procesos que no haces.
+          <T>Cuando un cliente diseña una pieza en HETNA y pide "Fabrícamelo", ve junto a tu taller un precio estimado calculado con estas
+          tarifas y las medidas de su archivo. Es orientativo: el precio formal lo pones tú en la propuesta. Deja en blanco los procesos que no haces.</T>
         </p>
         <div style={{ overflowX: "auto" }}>
           <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13 }}>
             <thead>
               <tr style={{ color: "#6B675C", textAlign: "left" }}>
-                <th style={{ padding: "4px 8px 4px 0", fontWeight: 600 }}>Proceso</th>
-                <th style={{ padding: "4px 8px", fontWeight: 600 }}>$ por m² de material</th>
-                <th style={{ padding: "4px 8px", fontWeight: 600 }}>$ por metro de corte (opcional)</th>
-                <th style={{ padding: "4px 8px", fontWeight: 600 }}>Pedido mínimo $</th>
+                <th style={{ padding: "4px 8px 4px 0", fontWeight: 600 }}><T>Proceso</T></th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}><T>$ por m² de material</T></th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}><T>$ por metro de corte (opcional)</T></th>
+                <th style={{ padding: "4px 8px", fontWeight: 600 }}><T>Pedido mínimo $</T></th>
               </tr>
             </thead>
             <tbody>
@@ -642,10 +645,10 @@ export default function PerfilTallerPage() {
                 const pon = (campo) => (e) => setF((x) => ({ ...x, tarifas: { ...x.tarifas, [k]: { ...(x.tarifas[k] || TARIFA_VACIA), [campo]: e.target.value } } }))
                 return (
                   <tr key={k}>
-                    <td style={{ padding: "4px 8px 4px 0", fontWeight: 600, whiteSpace: "nowrap" }}>{k}</td>
-                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 650" value={t.m2} onChange={pon("m2")} /></td>
-                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 12" value={t.metro} onChange={pon("metro")} /></td>
-                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder="Ej. 150" value={t.minimo} onChange={pon("minimo")} /></td>
+                    <td style={{ padding: "4px 8px 4px 0", fontWeight: 600, whiteSpace: "nowrap" }}><T>{k}</T></td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder={traducir("Ej. 650")} value={t.m2} onChange={pon("m2")} /></td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder={traducir("Ej. 12")} value={t.metro} onChange={pon("metro")} /></td>
+                    <td style={{ padding: 4 }}><input style={S.input} inputMode="decimal" placeholder={traducir("Ej. 150")} value={t.minimo} onChange={pon("minimo")} /></td>
                   </tr>
                 )
               })}
@@ -653,26 +656,26 @@ export default function PerfilTallerPage() {
           </table>
         </div>
         <p style={S.hint}>
-          Estimado = (área de la pieza × $/m²) + (metros de corte × $/m), por la cantidad; nunca menor al pedido mínimo. Incluye material si lo pones tú.
+          <T>Estimado = (área de la pieza × $/m²) + (metros de corte × $/m), por la cantidad; nunca menor al pedido mínimo. Incluye material si lo pones tú.</T>
         </p>
       </section>
 
       <section style={S.card}>
-        <h2 style={S.h2}>Materiales que trabajas</h2>
+        <h2 style={S.h2}><T>Materiales que trabajas</T></h2>
         <div style={S.chips}>
           {MATERIALES.map((x) => (
-            <button type="button" key={x} style={chip(f.materiales.includes(x))} onClick={() => alternar("materiales", x)}>{x}</button>
+            <button type="button" key={x} style={chip(f.materiales.includes(x))} onClick={() => alternar("materiales", x)}><T>{x}</T></button>
           ))}
         </div>
-        <label style={{ ...S.label, marginTop: 12 }}>Otros materiales (separados por coma)</label>
-        <input style={S.input} value={f.otrosMateriales} onChange={(e) => set("otrosMateriales", e.target.value)} placeholder="Corcho, hule" />
+        <label style={{ ...S.label, marginTop: 12 }}><T>Otros materiales (separados por coma)</T></label>
+        <input style={S.input} value={f.otrosMateriales} onChange={(e) => set("otrosMateriales", e.target.value)} placeholder={traducir("Corcho, hule")} />
       </section>
 
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button type="button" style={{ ...S.btn, opacity: guardando ? 0.6 : 1 }} disabled={guardando} onClick={guardar}>
-          {guardando ? "Guardando..." : "Guardar perfil"}
+          <T>{guardando ? "Guardando..." : "Guardar perfil"}</T>
         </button>
-        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}>{msg.t}</span>}
+        {msg && <span style={{ fontSize: 14, color: msg.ok ? "#1E7B3A" : "#B3261E" }}><T>{msg.t}</T></span>}
       </div>
     </div>
   )
@@ -703,34 +706,34 @@ function VistaPrevia({ nombre, handle, logo, banner, f, galeria }) {
           {!logo && (nombre || "T").charAt(0).toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 200, paddingTop: 40, paddingBottom: 4 }}>
-          <p style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "#142033" }}>{nombre || "Tu taller"}</p>
+          <p style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "#142033" }}><T>{nombre || "Tu taller"}</T></p>
           <p style={{ margin: "2px 0 0", fontSize: 13, color: "#55544D" }}>
-            {f.lema || "Escribe un lema corto que diga qué haces mejor"}
-            {f.ciudad ? ` · 📍 ${[f.ciudad, f.estado].filter(Boolean).join(", ")}` : ""}
+            <T>{f.lema || "Escribe un lema corto que diga qué haces mejor"}</T>
+            <T>{f.ciudad ? ` · 📍 ${[f.ciudad, f.estado].filter(Boolean).join(", ")}` : ""}</T>
           </p>
         </div>
         {handle && (
           <a href={`https://hetnacnc.com/mx/talleres/${handle}`} target="_blank" rel="noreferrer" style={{ ...S.btn2, textDecoration: "none", marginBottom: 4 }}>
-            Ver mi página ↗
+            <T>Ver mi página ↗</T>
           </a>
         )}
       </div>
       {(f.servicios || []).length > 0 && (
         <div style={{ padding: "0 20px 14px", display: "flex", flexWrap: "wrap", gap: 6 }}>
           {f.servicios.slice(0, 8).map((x) => (
-            <span key={x} style={{ background: "#F3F1EA", color: "#40403A", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>{x}</span>
+            <span key={x} style={{ background: "#F3F1EA", color: "#40403A", borderRadius: 999, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}><T>{x}</T></span>
           ))}
         </div>
       )}
       <div style={{ borderTop: "1px solid rgba(20,32,51,0.06)", padding: "12px 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, color: "#142033" }}>
-          <span>Tu perfil está {pct}% completo</span>
-          <span style={{ color: pct === 100 ? "#1E7B3A" : "#C2560A" }}>{hechos} de {pasos.length}</span>
+          <span><T>Tu perfil está</T> <T>{pct}</T><T>% completo</T></span>
+          <span style={{ color: pct === 100 ? "#1E7B3A" : "#C2560A" }}><T>{hechos}</T> <T>de</T> <T>{pasos.length}</T></span>
         </div>
         <div style={{ height: 8, background: "#EFECE4", borderRadius: 99, marginTop: 6, overflow: "hidden" }}>
           <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? "#1E7B3A" : "linear-gradient(90deg,#D9600B,#C2560A)" }} />
         </div>
-        {faltan.length > 0 && <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6B675C" }}>Te falta: {faltan.join(", ")}. Los perfiles completos reciben más solicitudes.</p>}
+        {faltan.length > 0 && <p style={{ margin: "6px 0 0", fontSize: 12, color: "#6B675C" }}><T>Te falta:</T> <T>{faltan.join(", ")}</T><T>. Los perfiles completos reciben más solicitudes.</T></p>}
       </div>
     </section>
   )

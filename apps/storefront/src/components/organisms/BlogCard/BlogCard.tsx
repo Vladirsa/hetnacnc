@@ -32,10 +32,10 @@ export function BlogCard({ post, index }: BlogCardProps) {
         />
       </div>
       <div className="p-4 bg-tertiary text-tertiary absolute bottom-0 left-1 lg:opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-b-xs w-[calc(100%-8px)]">
-        <h3 className="heading-sm">{post.title}</h3>
-        <p className="text-md line-clamp-2">{post.excerpt}</p>
+        <h3 className="heading-sm"><TS>{post.title}</TS></h3>
+        <p className="text-md line-clamp-2"><TS>{post.excerpt}</TS></p>
         <div className="flex items-center gap-4 uppercase label-md mt-[26px]">
-          <TS>Read more</TS>{" "}
+          <TS>Read more</TS><TS>{" "}</TS>
           <ArrowRightIcon
             size={20}
             color={tailwindConfig.theme.extend.colors.tertiary}
