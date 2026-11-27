@@ -3,6 +3,7 @@
 // Patrón Voronoi (2D Studio › Patrones de corte): celdas irregulares para
 // celosías, lámparas, separadores, mesas y mosaicos. El motor está en
 // lib/generador/voronoi.ts; aquí sólo van los controles.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useDeferredValue, useMemo, useState } from "react"
 
 import { CampoNum, Opciones, Seccion, numero } from "@/components/hetna/estudio3d/Controles"
@@ -114,7 +115,7 @@ export function GeneradorVoronoi({ cabecera }: { cabecera?: React.ReactNode }) {
         </div>
         <label className="mt-2 flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
           <span>
-            Orden: {orden < 25 ? "al azar" : orden < 70 ? "natural" : "muy parejas"}
+            <T>Orden:</T> {orden < 25 ? "al azar" : orden < 70 ? "natural" : "muy parejas"}
           </span>
           <input type="range" min={0} max={100} value={orden} onChange={(e) => setOrden(Number(e.target.value))} className="accent-[#C2560A]" />
         </label>
@@ -137,7 +138,7 @@ export function GeneradorVoronoi({ cabecera }: { cabecera?: React.ReactNode }) {
         onClick={() => setSemilla((s) => (s * 48271 + 11) % 2147483647)}
         className="rounded-[10px] bg-[#C2560A] px-3 py-2.5 text-[14px] font-bold text-white hover:bg-[#A9480A]"
       >
-        Otro diseño
+        <T>Otro diseño</T>
       </button>
     </div>
   )
