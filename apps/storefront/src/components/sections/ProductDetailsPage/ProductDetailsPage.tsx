@@ -199,12 +199,12 @@ export const ProductDetailsPage = async ({
   const medidasProd =
     textoMeta(metaProd.medidas) ||
     textoMeta(metaProd.medida_principal) ||
-    campoDeDescripcion(prod.description, /^medidas?$/i) ||
+    campoDeDescripcion(textoMeta(metaProd.descripcion_es) || prod.description, /^medidas?$/i) ||
     // muchas fichas sólo traen la medida en el nombre ("Celosía 600x600 mm")
     medidasEnTexto(prod.title) ||
     undefined
   // Material para "Fabrícalo": el de la ficha o, si no, lo que diga el nombre ("Tabla de pino…")
-  const materialProd = [textoMeta(metaProd.material), campoDeDescripcion(prod.description, /^material(es)?$/i), prod.title].filter(Boolean).join(" ")
+  const materialProd = [textoMeta(metaProd.material), campoDeDescripcion(textoMeta(metaProd.descripcion_es) || prod.description, /^material(es)?$/i), prod.title].filter(Boolean).join(" ")
   const procesoSugerido =
     tipoProd === "tallado" ? "router" : tipoProd === "corte" ? "laser_co2" : undefined
   // Impresión 3D bajo pedido: en vez de "Fabrícalo", los talleres que ya lo
