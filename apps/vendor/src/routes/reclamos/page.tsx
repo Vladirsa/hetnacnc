@@ -4,6 +4,7 @@
 // responde con su versión y su evidencia dentro del plazo (3 días hábiles).
 // Si no responde, el caso se resuelve a favor del cliente. HETNA decide.
 // Ver packages/api/src/lib/reclamos-pedido.ts.
+import { T, traducir } from "../../lib/idioma"
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -17,6 +18,8 @@ const Escudo = (props) => (
 
 export const config: RouteConfig = {
   label: "Reclamos",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Escudo,
 }
 
@@ -53,7 +56,7 @@ function Archivo({ reclamoId, e }) {
     <video src={url} controls style={{ width: 180, height: 112, borderRadius: 8, background: "#000" }} />
   ) : (
     <a href={url} target="_blank" rel="noreferrer">
-      <img src={url} alt="Evidencia" style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 8, border: "1px solid #E7E4DC" }} />
+      <img src={url} alt={traducir("Evidencia")} style={{ width: 112, height: 112, objectFit: "cover", borderRadius: 8, border: "1px solid #E7E4DC" }} />
     </a>
   )
 }
@@ -125,10 +128,10 @@ function Responder({ r, maxMb, maxArchivos, alResponder }) {
 
   return (
     <div style={{ ...S.caja, background: "#fff", border: "1px solid #E7E4DC" }}>
-      <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#142033" }}>Tu respuesta</p>
+      <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#142033" }}><T>Tu respuesta</T></p>
       <p style={S.meta}>
-        Cuenta tu versión y sube tu evidencia: fotos del producto antes de enviarlo, del empaque, la guía, el comprobante de entrega. Sin correos, teléfonos ni
-        redes: todo se resuelve dentro de HETNA.
+        <T>Cuenta tu versión y sube tu evidencia: fotos del producto antes de enviarlo, del empaque, la guía, el comprobante de entrega. Sin correos, teléfonos ni
+        redes: todo se resuelve dentro de HETNA.</T>
       </p>
       <textarea
         value={texto}
@@ -146,13 +149,13 @@ function Responder({ r, maxMb, maxArchivos, alResponder }) {
           onChange={(e) => subir(e.target.files)}
           disabled={!!subiendo || enviando}
         />
-        <p style={S.meta}>Fotos o videos · hasta {maxArchivos}, máx. {maxMb} MB cada uno.</p>
-        {subiendo && <p style={S.meta}>Subiendo «{subiendo}»…</p>}
-        {archivos.length > 0 && <p style={S.meta}>Listos: {archivos.map((a) => a.nombre).join(", ")}</p>}
+        <p style={S.meta}><T>Fotos o videos · hasta</T> <T>{maxArchivos}</T><T>, máx.</T> <T>{maxMb}</T> <T>MB cada uno.</T></p>
+        {subiendo && <p style={S.meta}><T>Subiendo «</T><T>{subiendo}</T>»…</p>}
+        {archivos.length > 0 && <p style={S.meta}><T>Listos:</T> <T>{archivos.map((a) => a.nombre).join(", ")}</T></p>}
       </div>
-      {msg && <p style={{ color: "#B3261E", fontSize: 13, margin: "8px 0 0" }}>{msg}</p>}
+      {msg && <p style={{ color: "#B3261E", fontSize: 13, margin: "8px 0 0" }}><T>{msg}</T></p>}
       <button type="button" onClick={enviar} disabled={enviando || !!subiendo} style={{ ...S.btn, marginTop: 10, opacity: enviando ? 0.6 : 1 }}>
-        {enviando ? "Enviando…" : "Enviar mi respuesta"}
+        <T>{enviando ? "Enviando…" : "Enviar mi respuesta"}</T>
       </button>
     </div>
   )
@@ -169,22 +172,22 @@ export default function ReclamosPage() {
   }, [])
   useEffect(cargar, [cargar])
 
-  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}>{error}</p></div>
-  if (!datos) return <div style={S.page}><p style={S.meta}>Cargando…</p></div>
+  if (error) return <div style={S.page}><p style={{ color: "#B3261E" }}><T>{error}</T></p></div>
+  if (!datos) return <div style={S.page}><p style={S.meta}><T>Cargando…</T></p></div>
 
   return (
     <div style={S.page}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}>Reclamos</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: "#142033", letterSpacing: "-0.02em" }}><T>Reclamos</T></h1>
       <p style={S.meta}>
-        Cuando un cliente reporta un problema, el pago de ese pedido se congela. Tienes {datos.dias_respuesta} días hábiles para responder con tu evidencia; si
+        <T>Cuando un cliente reporta un problema, el pago de ese pedido se congela. Tienes</T> <T>{datos.dias_respuesta}</T> <T>días hábiles para responder con tu evidencia; si
         no respondes, el caso se resuelve a favor del cliente. HETNA revisa a los dos y decide: liberarte el pago, reembolso parcial o total. Si el reembolso
-        procede por tu causa, se descuenta de tu saldo, igual que la guía de regreso.
+        procede por tu causa, se descuenta de tu saldo, igual que la guía de regreso.</T>
       </p>
 
       {datos.reclamos.length === 0 ? (
         <div style={{ ...S.card, marginTop: 16 }}>
-          <p style={{ margin: 0, fontWeight: 600 }}>No tienes reclamos. ¡Bien hecho!</p>
-          <p style={S.meta}>Empaca bien y toma fotos de cada pedido antes de enviarlo: son tu mejor evidencia si algún día hay un reclamo.</p>
+          <p style={{ margin: 0, fontWeight: 600 }}><T>No tienes reclamos. ¡Bien hecho!</T></p>
+          <p style={S.meta}><T>Empaca bien y toma fotos de cada pedido antes de enviarlo: son tu mejor evidencia si algún día hay un reclamo.</T></p>
         </div>
       ) : (
         <div style={{ marginTop: 16 }}>
@@ -195,33 +198,33 @@ export default function ReclamosPage() {
               <div key={r.id} style={S.card}>
                 <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
                   <p style={{ margin: 0, fontWeight: 800, color: "#142033" }}>
-                    {r.folio} · Pedido #{r.display_id ?? "—"} · {r.motivo_nombre}
+                    <T>{r.folio}</T> <T>· Pedido #</T><T>{r.display_id ?? "—"}</T> · <T>{r.motivo_nombre}</T>
                   </p>
                   <span style={{ background: COLOR[r.estado]?.bg, color: COLOR[r.estado]?.c, borderRadius: 999, padding: "3px 10px", fontWeight: 700, fontSize: 12 }}>
-                    {r.estado === "abierto" ? "Esperando tu respuesta" : r.estado_nombre}
+                    <T>{r.estado === "abierto" ? "Esperando tu respuesta" : r.estado_nombre}</T>
                   </span>
                 </div>
-                {r.productos?.length > 0 && <p style={S.meta}>{r.productos.join(" · ")}</p>}
-                <p style={S.meta}>Reportado el {fecha(r.creado)}{r.horas_desde_entrega != null ? ` (${r.horas_desde_entrega} h después de la entrega)` : ""}</p>
+                {r.productos?.length > 0 && <p style={S.meta}><T>{r.productos.join(" · ")}</T></p>}
+                <p style={S.meta}><T>Reportado el</T> {fecha(r.creado)}<T>{r.horas_desde_entrega != null ? ` (${r.horas_desde_entrega} h después de la entrega)` : ""}</T></p>
 
                 <div style={S.caja}>
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: "#142033" }}>Lo que dice el cliente</p>
-                  <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}>{r.detalle}</p>
+                  <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: "#142033" }}><T>Lo que dice el cliente</T></p>
+                  <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}><T>{r.detalle}</T></p>
                   <Galeria reclamoId={r.id} lista={delCliente} />
                 </div>
 
                 {r.respuesta_taller ? (
                   <div style={S.caja}>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: "#142033" }}>Tu respuesta</p>
-                    <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}>{r.respuesta_taller}</p>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: "#142033" }}><T>Tu respuesta</T></p>
+                    <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}><T>{r.respuesta_taller}</T></p>
                     <Galeria reclamoId={r.id} lista={tuyas} />
                   </div>
                 ) : r.estado !== "resuelto" ? (
                   <>
                     <p style={{ ...S.meta, marginTop: 10, color: r.taller_no_respondio ? "#B3261E" : "#8A5A00", fontWeight: 600 }}>
-                      {r.taller_no_respondio
+                      <T>{r.taller_no_respondio
                         ? "Se acabó tu plazo para responder. Todavía puedes mandar tu versión, pero el caso puede resolverse a favor del cliente."
-                        : `Responde antes del ${fecha(r.responder_antes)}.`}
+                        : `Responde antes del ${fecha(r.responder_antes)}.`}</T>
                     </p>
                     <Responder r={r} maxMb={datos.max_mb} maxArchivos={datos.max_evidencias} alResponder={cargar} />
                   </>
@@ -229,9 +232,9 @@ export default function ReclamosPage() {
 
                 {r.estado === "resuelto" && (
                   <div style={{ ...S.caja, background: "#F3FAF5", border: "1px solid #CFE8D7" }}>
-                    <p style={{ margin: 0, fontWeight: 800, color: "#1E7B3A" }}>Decisión de HETNA: {r.decision_nombre}</p>
-                    {r.decision_nota && <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}>{r.decision_nota}</p>}
-                    <p style={S.meta}>Los descuentos, si los hay, aparecen en Mi saldo.</p>
+                    <p style={{ margin: 0, fontWeight: 800, color: "#1E7B3A" }}><T>Decisión de HETNA:</T> <T>{r.decision_nombre}</T></p>
+                    {r.decision_nota && <p style={{ margin: "4px 0 0", whiteSpace: "pre-line", fontSize: 14, color: "#40403A" }}><T>{r.decision_nota}</T></p>}
+                    <p style={S.meta}><T>Los descuentos, si los hay, aparecen en Mi saldo.</T></p>
                   </div>
                 )}
               </div>
