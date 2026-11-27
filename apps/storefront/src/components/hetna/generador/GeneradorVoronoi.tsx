@@ -115,7 +115,7 @@ export function GeneradorVoronoi({ cabecera }: { cabecera?: React.ReactNode }) {
         </div>
         <label className="mt-2 flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
           <span>
-            <T>Orden:</T> {orden < 25 ? "al azar" : orden < 70 ? "natural" : "muy parejas"}
+            <T>Orden:</T> <T>{orden < 25 ? "al azar" : orden < 70 ? "natural" : "muy parejas"}</T>
           </span>
           <input type="range" min={0} max={100} value={orden} onChange={(e) => setOrden(Number(e.target.value))} className="accent-[#C2560A]" />
         </label>
