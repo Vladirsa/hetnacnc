@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { cn } from "@/lib/utils"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
@@ -31,7 +32,7 @@ export function Breadcrumbs({ items, className, "data-testid": dataTestId }: Bre
                 )}
                 data-testid={dataTestId ? `${dataTestId}-link-${index}` : `breadcrumbs-link-${index}`}
               >
-                {label}
+                <T>{label}</T>
               </LocalizedClientLink>
             </li>
           )
