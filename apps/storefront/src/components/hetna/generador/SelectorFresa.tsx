@@ -151,10 +151,10 @@ export function SelectorFresa({
           >
             <T>Guardar</T>
           </button>
-          {nueva.aviso && <span className="w-full text-[#F6D58E]">{nueva.aviso}</span>}
+          {nueva.aviso && <span className="w-full text-[#F6D58E]"><T>{nueva.aviso}</T></span>}
         </div>
       )}
-      {!nueva.abierta && nueva.aviso && <span className="text-[11.5px] text-[#9FE0B5]">{nueva.aviso}</span>}
+      {!nueva.abierta && nueva.aviso && <span className="text-[11.5px] text-[#9FE0B5]"><T>{nueva.aviso}</T></span>}
     </div>
   )
 }
