@@ -413,6 +413,105 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Esferas navideñas personalizadas con nombre: elige el diseño, escribe uno o varios nombres y descarga gratis el DXF o SVG para láser.",
   },
   {
+    slug: "organizador-herramientas",
+    nombre: "Organizador de herramientas desde foto",
+    texto: "Toma una foto de tus herramientas sobre una hoja y te damos el inserto con la silueta de cada una.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Organizador de herramientas desde una foto: inserto de espuma o MDF gratis (DXF y STL)",
+    descripcion:
+      "Pon tus herramientas sobre una hoja carta o A4, toma una foto desde arriba y te damos el inserto con la silueta exacta de cada una, con holgura y hueco para los dedos: DXF para cortar espuma o MDF en láser o router, y STL para imprimirlo. La foto no sale de tu equipo.",
+    meta: "Inserto para tu caja de herramientas desde una foto: silueta exacta con holgura, en DXF para espuma o MDF y STL para imprimir. Gratis.",
+  },
+  {
+    slug: "reloj-palabras",
+    nombre: "Reloj de palabras",
+    texto: "Reloj que escribe la hora con letras que se iluminan: frente calado, rejilla y fondo para LEDs.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Reloj de palabras en español para láser gratis (DXF)",
+    descripcion:
+      "Haz un reloj de palabras que dice la hora en español (\"SON LAS TRES Y CUARTO\"): te damos el frente con las letras caladas en letra esténcil, la rejilla que separa la luz de cada letra y el fondo para los LEDs, más la tabla de qué LED prender con cada palabra. Descarga gratis el DXF, SVG o PDF.",
+    meta: "Reloj de palabras en español para corte láser: frente con letras caladas, rejilla y fondo para LEDs, y la tabla de LEDs. Gratis.",
+  },
+  {
+    slug: "mapa-topografico",
+    nombre: "Mapa topográfico por capas",
+    texto: "Montañas, volcanes y barrancas reales en capas de MDF o acrílico para apilar.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Mapa topográfico por capas para láser gratis (DXF)",
+    descripcion:
+      "Escoge un lugar (Pico de Orizaba, Popocatépetl, Barranca del Cobre…) o pon sus coordenadas y te damos las capas del relieve real para cortar en láser y apilar, cada una con la silueta de la siguiente rayada para pegarlas en su lugar. Acomodadas en tus hojas. Descarga gratis el DXF, SVG o PDF.",
+    meta: "Mapas topográficos 3D por capas de lugares reales de México para corte láser: escoge el lugar y baja las capas en DXF. Gratis.",
+  },
+  {
+    slug: "pruebas-maquina",
+    nombre: "Pruebas de kerf y material",
+    texto: "Mide el kerf de tu láser, encuentra el ajuste de tus ranuras y la mejor potencia × velocidad para cada material.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Prueba de kerf y matriz de potencia y velocidad para láser gratis",
+    descripcion:
+      "Tres pruebas para calibrar tu máquina: medir el kerf (ancho de corte) con un marco de 10 tiras, encontrar la ranura que ajusta justo con tu material y una matriz de potencia × velocidad con una capa de color por cuadro para LightBurn. Descarga gratis el SVG, DXF o PDF.",
+    meta: "Calibra tu láser gratis: prueba de kerf, prueba de ajuste de ranuras y matriz de potencia × velocidad con capas para LightBurn.",
+  },
+  {
+    slug: "desarrollo-lamina",
+    nombre: "Desarrollo de lámina",
+    texto: "Plantillas planas para pailería y plasma: conos y reducciones, transición cuadrado a redondo y boca de pescado.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Desarrollo de lámina gratis: cono, cuadrado a redondo y boca de pescado (DXF)",
+    descripcion:
+      "Pon las medidas y descarga gratis la plantilla plana en DXF para cortar en plasma o láser: cono y cono truncado (reducción) en una o varias partes, transición de cuadrado o rectángulo a redondo por triangulación con líneas de doblez, y boca de pescado para unir tubos a cualquier ángulo. Con el espesor de la lámina.",
+    meta: "Plantillas de lámina en DXF gratis: cono y reducción, transición cuadrado a redondo y boca de pescado para tubos. Para plasma.",
+  },
+  {
+    slug: "placa-redonda",
+    nombre: "Placa redonda con texto en arco",
+    texto: "Letrero redondo: texto en arco arriba y abajo, monograma al centro y aro. DXF para láser o router.",
+    icono: "letrero",
+    acceso: "gratis",
+    titulo: "Letrero redondo con texto en arco y monograma gratis (DXF)",
+    descripcion:
+      "Haz un letrero redondo para tu negocio, casa o evento: texto en arco arriba y abajo (los dos se leen al derecho), iniciales o monograma al centro, aro en la orilla y adornos a los lados. Descarga gratis el DXF, SVG o PDF para láser o router CNC.",
+    meta: "Letrero redondo con texto en arco arriba y abajo y monograma al centro. Descarga gratis el DXF o SVG para láser o router.",
+  },
+  {
+    slug: "incrustaciones",
+    nombre: "Incrustaciones (inlay)",
+    texto: "Bolsillo y pieza que encajan, compensados por tu fresa. De un texto o tu dibujo SVG/DXF.",
+    icono: "letrero",
+    acceso: "gratis",
+    titulo: "Incrustaciones (inlay) para router CNC y láser gratis",
+    descripcion:
+      "De un texto o tu dibujo (SVG o DXF) te damos el bolsillo para vaciar en la madera base y la pieza que entra, ya compensados por el radio de tu fresa (1/16, 1/8 o 1/4 de pulgada) y con la holgura para el pegamento. Para letreros y tablas con incrustaciones de madera de contraste o acrílico.",
+    meta: "Incrustaciones (inlay) que sí encajan: bolsillo y pieza compensados por tu fresa, de un texto o tu SVG/DXF. Gratis.",
+  },
+  {
+    slug: "etiquetas-braille",
+    nombre: "Etiquetas en braille",
+    texto: "Placas con el texto en braille español en relieve (y en letras para quien ve). STL para imprimir.",
+    icono: "llavero",
+    acceso: "gratis",
+    titulo: "Etiquetas en braille para imprimir en 3D gratis (STL)",
+    descripcion:
+      "Escribe el texto y descarga gratis la placa en braille español con los puntos a la medida estándar: signo de mayúscula, de número, acentos y ñ, con el texto en letras arriba si quieres. Para baños, puertas, elevadores, medicinas y frascos. STL o 3MF a dos colores.",
+    meta: "Placas en braille español para imprimir en 3D: puntos a la medida estándar, acentos y ñ, con texto visible. Descarga el STL gratis.",
+  },
+  {
+    slug: "etiquetas-cajas",
+    nombre: "Etiquetas para cajas",
+    texto: "Etiquetas de la medida que quieras (36 × 11 para Gridfinity) con texto ajustado e ícono. Muchas de una vez.",
+    icono: "llavero",
+    acceso: "gratis",
+    titulo: "Etiquetas para cajas organizadoras y Gridfinity gratis (STL y DXF)",
+    descripcion:
+      "Escribe una etiqueta por línea y descárgalas todas: placas de la medida que quieras (36 × 11 mm para Gridfinity, cajones o tornillería) con el texto ajustado y un ícono opcional. STL para imprimir a uno o dos colores, o DXF para láser.",
+    meta: "Etiquetas para cajas organizadoras y Gridfinity: escribe una por línea y baja los STL o el DXF para láser. Gratis.",
+  },
+  {
     slug: ESCANEAR,
     nombre: "Imagen a 3D con IA",
     texto: "Sube una foto y la IA crea el modelo 3D con textura en minutos. Descarga GLB o STL. 1 gratis al mes.",
@@ -475,5 +574,49 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
   },
 }
 
+// Herramientas que son un modo de otra: su pestaña es la de la herramienta que las junta
+// (el catálogo de cajas, /disenar/cajas, también cuenta como "Cajas")
+export const PESTANA_DE_MODO: Record<string, string> = {
+  "organizador-cajon": "caja-con-juntas",
+  // Patrones de corte
+  "patrones-radiales": "celosias",
+  "bisagra-viva": "celosias",
+  "patron-voronoi": "celosias",
+  "celosia-desde-imagen": "celosias",
+  // Letreros y placas
+  "estencil-letras": "letreros",
+  "codigo-qr": "letreros",
+  "placa-redonda": "letreros",
+  incrustaciones: "letreros",
+  // Imagen
+  "grabado-foto": "vectorizador",
+  "litofania-relieve": "vectorizador",
+  "organizador-herramientas": "vectorizador",
+  // Archivos
+  "anidado-piezas": "convertidor",
+  "rebanado-capas": "convertidor",
+  "svg-a-stl": "convertidor",
+  "pruebas-maquina": "convertidor",
+  "desarrollo-lamina": "convertidor",
+  // Decoración
+  "marcos-portarretratos": "relojes",
+  "lamparas-capas": "relojes",
+  "esferas-navidad": "relojes",
+  "reloj-palabras": "relojes",
+  "mapa-topografico": "relojes",
+  // Muebles
+  "muebles-ensamble": "despiece-muebles",
+  "muebles-desde-imagen": "despiece-muebles",
+  "molduras-tallados": "despiece-muebles",
+  "costillas-desde-imagen": "despiece-muebles",
+  // Juegos y mecanismos
+  engranes: "rompecabezas",
+  // Llaveros y placas (3D)
+  "etiquetas-braille": "llaveros",
+  "etiquetas-cajas": "llaveros",
+}
+
+export const pestanaDe = (slug: string) => PESTANA_DE_MODO[slug] || slug
+
 export const estudioDe = (slug: string): Estudio =>
-  ESTUDIOS["3d"].herramientas.some((h) => h.slug === slug) ? "3d" : "2d"
+  ESTUDIOS["3d"].herramientas.some((h) => h.slug === pestanaDe(slug)) ? "3d" : "2d"

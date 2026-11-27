@@ -9,6 +9,7 @@
 // que arma la pieza con el «kit» (bloque, cil, barreno, unir, restar…).
 // Todo en milímetros; las piezas quedan apoyadas en Z = 0, listas para la cama.
 
+import { MODELOS_CASA_ORGANIZAR } from "./modelos3dCasa"
 import { cargarManifold } from "./partir3d"
 
 type Wasm = any
@@ -35,6 +36,8 @@ export type Kit = {
   envolver: (...s: S[]) => S
   mover: (s: S, x: number, y: number, z: number) => S
   girar: (s: S, rx: number, ry: number, rz: number) => S
+  /** Perfil (puntos en XY, sentido contrario a las manecillas) extruido en Z, con giro (grados) y escala arriba. */
+  extruir: (puntos: [number, number][], h: number, giro?: number, escalaArriba?: number, z0?: number) => S
 }
 
 export type Modelo3D = {
@@ -1003,6 +1006,8 @@ export const MODELOS: Modelo3D[] = [
       return k.restar(g, k.bloque(p.ancho + 10, 400, 100, -5, -200, -100), k.bloque(p.ancho + 10, 200, 300, -5, fondo, -50))
     },
   },
+  // (Gridfinity, cadena portacables, florero y pantalla: en modelos3dCasa.ts)
+  ...MODELOS_CASA_ORGANIZAR,
 ]
 
 export const modeloPorId = (id: string) => MODELOS.find((m) => m.id === id)
@@ -1037,7 +1042,10 @@ function hacerKit(w: Wasm, vivos: S[]): Kit {
   const mover = (s: S, x: number, y: number, z: number) => v(s.translate([x, y, z]))
   const girar = (s: S, rx: number, ry: number, rz: number) => v(s.rotate([rx, ry, rz]))
   const envolver = (...s: S[]) => v(M.hull(s))
-  return { bloque, cil, cono, barreno, avellanado, unir, restar, mover, girar, envolver }
+  const extruir = (puntos: [number, number][], h: number, giro = 0, escalaArriba = 1, z0 = 0) =>
+    // con giro, copias intermedias cada ~2 mm para que la torsión salga suave
+    v(v(M.extrude([puntos], h, giro ? Math.max(8, Math.min(120, Math.round(h / 2))) : 0, giro, [escalaArriba, escalaArriba], false)).translate([0, 0, z0]))
+  return { bloque, cil, cono, barreno, avellanado, unir, restar, mover, girar, envolver, extruir }
 }
 
 export type MallaModelo = { tris: number[]; medidas: [number, number, number]; cerrado: boolean }

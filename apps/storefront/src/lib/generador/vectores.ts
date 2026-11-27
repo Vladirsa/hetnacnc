@@ -661,7 +661,11 @@ export function dibujoSVG(d: Dibujo, modo: "corte" | "vista" = "corte") {
     : `fill="none" stroke="#FF0000" stroke-width="0.1"`
   const abierto = modo === "vista" ? `fill="none" stroke="#1F5FBF" stroke-width="1.3" vector-effect="non-scaling-stroke"` : estilo
   const cuerpo = d.trazos
-    .map((t) => `<path d="${t.pts.map(([x, y], i) => `${i ? "L" : "M"}${X(x)} ${Y(y)}`).join(" ")}${t.cerrado ? " Z" : ""}" ${t.cerrado ? estilo : abierto}/>`)
+    // un trazo con color propio (p. ej. capas de LightBurn en la matriz de material) lo conserva al cortar
+    .map((t) => {
+      const conColor = modo === "corte" && t.color && /^#[0-9a-f]{6}$/i.test(t.color) ? `fill="none" stroke="${t.color}" stroke-width="0.1"` : null
+      return `<path d="${t.pts.map(([x, y], i) => `${i ? "L" : "M"}${X(x)} ${Y(y)}`).join(" ")}${t.cerrado ? " Z" : ""}" ${conColor || (t.cerrado ? estilo : abierto)}/>`
+    })
     .join("\n")
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${f(W)}mm" height="${f(H)}mm" viewBox="0 0 ${f(W)} ${f(H)}">\n${cuerpo}\n</svg>\n`
 }

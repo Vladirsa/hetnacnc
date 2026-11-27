@@ -12,9 +12,11 @@ import { SelectorModos, type Modo } from "./SelectorModos"
 const GeneradorEstencil = dynamic(() => import("./GeneradorEstencil").then((x) => x.GeneradorEstencil))
 const GeneradorLetrero = dynamic(() => import("./GeneradorLetrero").then((x) => x.GeneradorLetrero))
 const GeneradorQR = dynamic(() => import("./GeneradorQR").then((x) => x.GeneradorQR))
+const GeneradorPlacaRedonda = dynamic(() => import("./GeneradorPlacaRedonda").then((x) => x.GeneradorPlacaRedonda))
+const GeneradorIncrustacion = dynamic(() => import("./GeneradorIncrustacion").then((x) => x.GeneradorIncrustacion))
 
 
-export type ModoLetrero = "letrero" | "estencil" | "qr"
+export type ModoLetrero = "letrero" | "estencil" | "qr" | "redonda" | "incrustacion"
 
 const MODOS: Modo<ModoLetrero>[] = [
   {
@@ -55,6 +57,30 @@ const MODOS: Modo<ModoLetrero>[] = [
       </>
     ),
   },
+  {
+    id: "redonda",
+    slug: "placa-redonda",
+    nombre: "Redonda",
+    nota: "Texto en arco y monograma",
+    icono: (
+      <>
+        <circle cx="20" cy="20" r="15" />
+        <path d="M10 15a12 12 0 0120 0M16 24h8" />
+      </>
+    ),
+  },
+  {
+    id: "incrustacion",
+    slug: "incrustaciones",
+    nombre: "Incrustación",
+    nota: "Bolsillo y pieza que encajan",
+    icono: (
+      <>
+        <rect x="4" y="9" width="15" height="22" rx="2" />
+        <path d="M9 15h5v10H9zM24 15h12v10H24z" />
+      </>
+    ),
+  },
 ]
 
 export function GeneradorLetrerosPlacas({ modoInicial = "letrero" }: { modoInicial?: ModoLetrero }) {
@@ -63,6 +89,8 @@ export function GeneradorLetrerosPlacas({ modoInicial = "letrero" }: { modoInici
 
   if (modo === "estencil") return <GeneradorEstencil cabecera={cabecera} />
   if (modo === "qr") return <GeneradorQR cabecera={cabecera} />
+  if (modo === "redonda") return <GeneradorPlacaRedonda cabecera={cabecera} />
+  if (modo === "incrustacion") return <GeneradorIncrustacion cabecera={cabecera} />
   // el letrero tiene su propia pantalla (vista de lo que la fresa no alcanza);
   // se pinta con el tema oscuro común del estudio
   return (

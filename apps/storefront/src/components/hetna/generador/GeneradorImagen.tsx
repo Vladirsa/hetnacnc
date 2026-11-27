@@ -13,9 +13,10 @@ import { SelectorModos, type Modo } from "./SelectorModos"
 const GeneradorGrabado = dynamic(() => import("./GeneradorGrabado").then((x) => x.GeneradorGrabado))
 const GeneradorRelieve = dynamic(() => import("./GeneradorRelieve").then((x) => x.GeneradorRelieve))
 const GeneradorVectorizador = dynamic(() => import("./GeneradorVectorizador").then((x) => x.GeneradorVectorizador))
+const GeneradorOrganizadorFoto = dynamic(() => import("./GeneradorOrganizadorFoto").then((x) => x.GeneradorOrganizadorFoto))
 
 
-export type ModoImagen = "vectorizar" | "grabado" | "relieve"
+export type ModoImagen = "vectorizar" | "grabado" | "relieve" | "organizador"
 
 const MODOS: Modo<ModoImagen>[] = [
   {
@@ -56,12 +57,25 @@ const MODOS: Modo<ModoImagen>[] = [
       </>
     ),
   },
+  {
+    id: "organizador",
+    slug: "organizador-herramientas",
+    nombre: "Organizador",
+    nota: "Inserto desde la foto de tus herramientas",
+    icono: (
+      <>
+        <rect x="5" y="7" width="30" height="26" rx="2" />
+        <path d="M11 13v14M17 13l3 14M27 13a3 3 0 110 6 3 3 0 010-6z" />
+      </>
+    ),
+  },
 ]
 
 export function GeneradorImagen({ modoInicial = "vectorizar" }: { modoInicial?: ModoImagen }) {
   const [modo, setModo] = useState<ModoImagen>(modoInicial)
   const cabecera = <SelectorModos titulo="Imagen" modos={MODOS} modo={modo} cambiar={setModo} />
   if (modo === "vectorizar") return <GeneradorVectorizador cabecera={cabecera} />
+  if (modo === "organizador") return <GeneradorOrganizadorFoto cabecera={cabecera} />
   // grabado y relieve tienen su propia pantalla: se pintan con el tema oscuro del estudio
   return <div className="tema-estudio flex-1">{modo === "grabado" ? <GeneradorGrabado cabecera={cabecera} /> : <GeneradorRelieve cabecera={cabecera} />}</div>
 }

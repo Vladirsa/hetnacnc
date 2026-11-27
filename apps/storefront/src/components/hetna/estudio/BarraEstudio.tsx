@@ -6,31 +6,15 @@ import { useEffect } from "react"
 import { useParams, usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { ESTUDIOS, estudioDe, type Estudio } from "@/lib/hetna/disenar"
+import { ESTUDIOS, estudioDe, pestanaDe, type Estudio } from "@/lib/hetna/disenar"
 
 export function BarraEstudio() {
   const params = useParams()
   const ruta = usePathname() || ""
   // el catálogo de cajas (/disenar/cajas y /disenar/cajas/<Id>) cuenta como "Cajas"
   // y el organizador de cajón, que ahora es un tipo de caja
-  const actual =
-    /\/disenar\/cajas(\/|$)/.test(ruta) || params?.herramienta === "organizador-cajon"
-      ? "caja-con-juntas"
-      : params?.herramienta === "patrones-radiales" || params?.herramienta === "bisagra-viva" || params?.herramienta === "patron-voronoi" || params?.herramienta === "celosia-desde-imagen"
-        ? "celosias" // los modos de Patrones de corte
-        : params?.herramienta === "estencil-letras" || params?.herramienta === "codigo-qr"
-          ? "letreros" // los tres modos de Letreros y placas
-          : params?.herramienta === "grabado-foto" || params?.herramienta === "litofania-relieve"
-            ? "vectorizador" // Imagen
-            : ["anidado-piezas", "rebanado-capas", "svg-a-stl"].includes(String(params?.herramienta))
-              ? "convertidor" // Archivos
-              : params?.herramienta === "marcos-portarretratos" || params?.herramienta === "lamparas-capas" || params?.herramienta === "esferas-navidad"
-                ? "relojes" // Decoración
-                : params?.herramienta === "muebles-ensamble" || params?.herramienta === "muebles-desde-imagen" || params?.herramienta === "molduras-tallados" || params?.herramienta === "costillas-desde-imagen"
-                  ? "despiece-muebles" // Muebles
-                  : params?.herramienta === "engranes"
-                  ? "rompecabezas" // Juegos y mecanismos
-        : String(params?.herramienta || "")
+  const herramienta = String(params?.herramienta || "")
+  const actual = /\/disenar\/cajas(\/|$)/.test(ruta) ? "caja-con-juntas" : pestanaDe(herramienta)
   const estudio: Estudio = estudioDe(actual)
   // En el celular las pestañas se desplazan de lado: deja a la vista la activa.
   useEffect(() => {

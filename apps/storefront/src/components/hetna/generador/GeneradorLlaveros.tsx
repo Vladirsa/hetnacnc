@@ -78,7 +78,7 @@ function vistaLlavero(d: Dibujo): string {
   )
 }
 
-export function GeneradorLlaveros() {
+export function GeneradorLlaveros({ cabecera }: { cabecera?: React.ReactNode } = {}) {
   const { locale } = useParams<{ locale: string }>()
   const [texto, setTexto] = useState("Sofía")
   const [fuenteId, setFuenteId] = useState("pacifico")
@@ -205,6 +205,7 @@ export function GeneradorLlaveros() {
 
   const panel = (
     <div className="flex flex-col gap-4">
+      {cabecera}
       <Seccion titulo="Empieza con un modelo">
         <div className="grid grid-cols-3 gap-1.5">
           {MODELOS.map((m) => (

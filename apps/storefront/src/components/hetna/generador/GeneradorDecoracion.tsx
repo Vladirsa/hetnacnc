@@ -13,9 +13,11 @@ const GeneradorEsferas = dynamic(() => import("./GeneradorEsferas").then((x) => 
 const GeneradorLamparas = dynamic(() => import("./GeneradorLamparas").then((x) => x.GeneradorLamparas))
 const GeneradorMarcos = dynamic(() => import("./GeneradorMarcos").then((x) => x.GeneradorMarcos))
 const GeneradorRelojes = dynamic(() => import("./GeneradorRelojes").then((x) => x.GeneradorRelojes))
+const GeneradorRelojPalabras = dynamic(() => import("./GeneradorRelojPalabras").then((x) => x.GeneradorRelojPalabras))
+const GeneradorMapaTopo = dynamic(() => import("./GeneradorMapaTopo").then((x) => x.GeneradorMapaTopo))
 
 
-export type ModoDecoracion = "reloj" | "marco" | "lampara" | "esfera"
+export type ModoDecoracion = "reloj" | "marco" | "lampara" | "esfera" | "palabras" | "mapa"
 
 const MODOS: Modo<ModoDecoracion>[] = [
   {
@@ -66,6 +68,30 @@ const MODOS: Modo<ModoDecoracion>[] = [
       </>
     ),
   },
+  {
+    id: "palabras",
+    slug: "reloj-palabras",
+    nombre: "Reloj de palabras",
+    nota: "La hora escrita con letras",
+    icono: (
+      <>
+        <rect x="6" y="6" width="28" height="28" rx="2" />
+        <path d="M11 13h7M22 13h7M11 20h18M11 27h10" />
+      </>
+    ),
+  },
+  {
+    id: "mapa",
+    slug: "mapa-topografico",
+    nombre: "Mapa topográfico",
+    nota: "Montañas reales por capas",
+    icono: (
+      <>
+        <path d="M4 32l10-16 7 10 5-7 10 13z" />
+        <path d="M10 25c4 2 8 2 12 0" />
+      </>
+    ),
+  },
 ]
 
 export function GeneradorDecoracion({ modoInicial = "reloj" }: { modoInicial?: ModoDecoracion }) {
@@ -74,5 +100,7 @@ export function GeneradorDecoracion({ modoInicial = "reloj" }: { modoInicial?: M
   if (modo === "marco") return <GeneradorMarcos cabecera={cabecera} />
   if (modo === "lampara") return <GeneradorLamparas cabecera={cabecera} />
   if (modo === "esfera") return <GeneradorEsferas cabecera={cabecera} />
+  if (modo === "palabras") return <GeneradorRelojPalabras cabecera={cabecera} />
+  if (modo === "mapa") return <GeneradorMapaTopo cabecera={cabecera} />
   return <GeneradorRelojes cabecera={cabecera} />
 }

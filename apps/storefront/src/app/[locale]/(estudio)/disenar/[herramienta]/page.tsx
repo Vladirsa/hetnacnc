@@ -8,7 +8,7 @@ import { JsonLd } from "@/components/hetna/JsonLd"
 import { ContarUsoHerramienta } from "@/components/hetna/estudio/ContarUsoHerramienta"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
-import { ESCANEAR, ESTUDIOS, buscarHerramientaDiseno, estudioDe, type HerramientaDiseno } from "@/lib/hetna/disenar"
+import { ESCANEAR, ESTUDIOS, SLUGS_GENERADORES, buscarHerramientaDiseno, estudioDe, type HerramientaDiseno } from "@/lib/hetna/disenar"
 import { migas } from "@/lib/hetna/schema"
 import { CATEGORIAS, MODELOS } from "@/lib/generador/modelos3d"
 
@@ -19,11 +19,13 @@ const SITIO = "https://hetnacnc.com"
 
 type Props = { params: Promise<{ locale: string; herramienta: string }> }
 
-const SLUGS = new Set(["caja-con-juntas", "letreros", "letras-3d", "llaveros", "texturizador", "cortadores-galletas", "rompecabezas", "vectorizador", "despiece-muebles", "plantillas-empaque", "grabado-foto", "litofania-relieve", "patrones-radiales", "convertidor", "svg-a-stl", "anidado-piezas", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen", "partir-3d", "moldes-3d", "modelos-3d"])
+// las herramientas que se abren aquí: todas las del registro menos el escaneo (que tiene su propia página)
+const SLUGS = new Set(SLUGS_GENERADORES)
 
 // "letreros" se pinta oscuro dentro de Letreros y placas (los tres modos)
 // las herramientas que juntan varias (Imagen, Archivos) ponen su propio tema
-const OSCURAS = new Set(["rompecabezas", "letras-3d", "caja-con-juntas", "patrones-radiales", "letreros", "grabado-foto", "litofania-relieve", "convertidor", "anidado-piezas", "svg-a-stl", "llaveros", "texturizador", "cortadores-galletas", "vectorizador", "celosias", "patron-voronoi", "celosia-desde-imagen", "bisagra-viva", "codigo-qr", "rebanado-capas", "engranes", "relojes", "organizador-cajon", "lamparas-capas", "estencil-letras", "marcos-portarretratos", "esferas-navidad", "despiece-muebles", "muebles-ensamble", "muebles-desde-imagen", "molduras-tallados", "costillas-desde-imagen"])
+// las pocas que tienen su propia pantalla clara; todas las demás van con el tema oscuro del estudio
+const CLARAS = new Set(["plantillas-empaque", "partir-3d", "moldes-3d", "modelos-3d"])
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { herramienta } = await params
@@ -152,7 +154,7 @@ export default async function HerramientaDiseno({ params }: Props) {
     <>
       {h && <JsonLd datos={datosHerramienta(h)} />}
       <ContarUsoHerramienta herramienta={herramienta} />
-      {OSCURAS.has(herramienta) ? (
+      {!CLARAS.has(herramienta) ? (
         <Herramienta slug={herramienta} />
       ) : (
         <div className="tema-estudio flex-1">
