@@ -159,3 +159,14 @@ describe("fotos de productos de la tienda", () => {
     expect(p.endsWith("…")).toBe(true)
   })
 })
+
+describe("temas programados y cierre del 3D Studio", () => {
+  const { TEMAS_PROGRAMADOS, CIERRES: C } = require("../fabrica/explicativo")
+  it("cada tema programado apunta a un cierre que existe y no se repiten", () => {
+    expect(new Set(TEMAS_PROGRAMADOS.map((t: any) => t.id)).size).toBe(TEMAS_PROGRAMADOS.length)
+    for (const t of TEMAS_PROGRAMADOS) expect(C[t.cierre]).toBeTruthy()
+  })
+  it("el cierre 4 lleva al 3D Studio", () => {
+    expect(validarGuion({ cierre: 4, escenas: [escena()] }).escenas.at(-1).puntos[0]).toBe("Diséñala gratis a tu medida")
+  })
+})

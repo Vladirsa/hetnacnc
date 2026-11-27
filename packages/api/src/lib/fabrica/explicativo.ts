@@ -44,6 +44,18 @@ export const CIERRES = [
   { titulo: "¿Tienes taller CNC?", sub: "Regístrate gratis y recibe trabajos", voz: "¿Tienes taller? Regístrate gratis en hetnacnc.com y recibe solicitudes de trabajo de tu zona." },
   { titulo: "Cotiza con tus costos", sub: "HETNA Cotizador · empieza gratis", voz: "Con el Cotizador de HETNA subes tu DXF y sale el precio con tus costos. Empieza gratis." },
   { titulo: "Calculadora CNC gratis", sub: "RPM, avance y potencia", voz: "Calcula RPM, avance y potencia gratis con la calculadora de hetnacnc.com." },
+  { titulo: "Diséñala gratis a tu medida", sub: "3D Studio · o un taller te la imprime", voz: "En hetnacnc.com la diseñas gratis a tu medida en el 3D Studio, o un taller te la imprime y te la manda." },
+]
+
+// Temas programados (27 nov 2026): el explicativo diario los toma en orden, uno por día,
+// antes de elegir tema por su cuenta. Cada uno lleva a su herramienta o a la tienda.
+export const TEMAS_PROGRAMADOS: { id: string; tema: string; cierre: number }[] = [
+  { id: "gridfinity", tema: "Organiza tu taller con Gridfinity: qué es la rejilla de 42 mm, cómo encajan las cajas y cómo hacerlas a la medida de tu cajón", cierre: 4 },
+  { id: "carcasa-electronica", tema: "Cómo hacer la carcasa de tu Raspberry Pi o tu proyecto electrónico a la medida con impresión 3D: postes, ventana del conector y ventilación", cierre: 4 },
+  { id: "polea-gt2", tema: "Poleas GT2 y acopladores de ejes: cómo elegir dientes, barreno y ancho de banda para tu impresora 3D o tu CNC", cierre: 4 },
+  { id: "plantillas-carpinteria", tema: "Tres plantillas que ahorran tiempo en carpintería: bisagra de cazoleta de 35 mm, guía de jaladeras y escuadra de armado", cierre: 4 },
+  { id: "trofeos", tema: "Trofeos y medallas para tu evento o empresa: base impresa en 3D y placa de acrílico cortada en láser con tu logo", cierre: 0 },
+  { id: "ferulas", tema: "Férulas termoformables impresas en 3D: cómo se imprimen planas y se moldean con calor, y por qué las debe indicar y colocar un profesional", cierre: 4 },
 ]
 export const FRASE_FINAL = "*Guarda este video* y síguenos para el siguiente."
 export const FRASE_FINAL_LARGO = "Si te sirvió, *suscríbete* y déjanos en los comentarios qué tema quieres para el siguiente video."
@@ -63,7 +75,7 @@ const ESQUEMA = {
     titulo_seo: S("título para YouTube con la palabra clave al inicio, sin clickbait falso", 70),
     descripcion: S("2 a 4 líneas con palabras clave; termina con {{liga}}"),
     hashtags: { type: "array", items: S() },
-    cierre: { type: "integer", description: "oferta del cierre que mejor conecta con el tema: 0 = publicar pieza y recibir cotizaciones (clientes); 1 = registro de talleres; 2 = Cotizador para talleres; 3 = calculadora CNC gratis" },
+    cierre: { type: "integer", description: "oferta del cierre que mejor conecta con el tema: 0 = publicar pieza y recibir cotizaciones (clientes); 1 = registro de talleres; 2 = Cotizador para talleres; 3 = calculadora CNC gratis; 4 = diseñarla gratis en el 3D Studio" },
     escenas: {
       type: "array",
       description: "de 7 a 9 escenas; la primera es tipo portada (el gancho)",
@@ -122,7 +134,7 @@ const SISTEMA_LARGO =
   "FOTOS: incluye 4 a 6 escenas tipo foto repartidas en el video (del taller o la máquina haciendo lo que explicas y, si el tema lo permite, de productos: pon la palabra en producto). En la escena foto, etiqueta = pie de foto corto."
 
 let ia: Anthropic | null = null
-export async function guionExplicativo(knex: any, tema?: string, largo = false) {
+export async function guionExplicativo(knex: any, tema?: string, largo = false, cierre?: number) {
   ia ??= new Anthropic()
   const recientes = await knex("hetna_estudio").whereIn("tipo", ["explicativo", "explicativo_largo"]).orderBy("created_at", "desc").limit(30).select("guion").catch(() => [])
   const temas = recientes.map((r: any) => r.guion?.tema).filter(Boolean)
@@ -150,6 +162,7 @@ export async function guionExplicativo(knex: any, tema?: string, largo = false) 
     } catch {
       continue
     }
+    if (cierre !== undefined && CIERRES[cierre]) g.cierre = cierre // el tema programado manda a su herramienta
     const v = validarGuion(g, { largo })
     ultimo = v
     if (v.palabras >= (largo ? 600 : 165)) return v
@@ -752,7 +765,15 @@ export async function hacerExplicativo(scope: any, logger?: any, o: { forzar?: b
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "hetna-explicativo-"))
   let costo = 0
   try {
-    const g = await guionExplicativo(knex, o.tema, !!o.largo)
+    // Sin tema pedido, el diario toma el siguiente tema programado que no se haya hecho
+    let programado: (typeof TEMAS_PROGRAMADOS)[number] | undefined
+    if (!o.tema && !o.largo) {
+      const filas = await knex("hetna_estudio").whereIn("estado", ["listo", "haciendo"]).whereRaw("guion->>'tema_programado' is not null").select(knex.raw("guion->>'tema_programado' as t")).catch(() => [])
+      const hechos = new Set(filas.map((f: any) => f.t))
+      programado = TEMAS_PROGRAMADOS.find((t) => !hechos.has(t.id))
+    }
+    const g: any = await guionExplicativo(knex, o.tema || programado?.tema, !!o.largo, programado?.cierre)
+    if (programado) g.tema_programado = programado.id
     await knex("hetna_estudio").where({ id }).update({ guion: JSON.stringify(g), updated_at: new Date() })
     logger?.info?.(`[explicativo] guion: ${g.tema} (${g.palabras} palabras, ${g.escenas.length} escenas)`)
     // Fotos antes de la voz: si una escena foto se queda sin foto, se quita y no se paga su voz
