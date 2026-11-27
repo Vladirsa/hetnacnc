@@ -1,6 +1,8 @@
 // /mx/tienda/<categoria> — los productos de una categoría de la tienda.
 // Una categoría sin productos muestra "Próximamente" con Avísame (nunca 404);
 // una que no existe manda a /mx/tienda.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import Image from "@/lib/imagenes/Imagen"
 import { redirect } from "next/navigation"
@@ -15,7 +17,7 @@ export const revalidate = 60
 
 const definicion = (clave: string) => CATEGORIAS.find((c) => c.clave === clave)
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string; categoria: string }> }): Promise<Metadata> {
+async function generateMetadataEs({ params }: { params: Promise<{ locale: string; categoria: string }> }): Promise<Metadata> {
   const { categoria } = await params
   const c = definicion(categoria)
   if (!c) return {}
@@ -46,13 +48,13 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
           <ol className="flex flex-wrap items-center gap-2">
             <li>
               <LocalizedClientLink href="/" className="hover:text-[#1E2329] hover:underline">
-                Inicio
+                <TS>Inicio</TS>
               </LocalizedClientLink>
             </li>
             <li aria-hidden="true">/</li>
             <li>
               <LocalizedClientLink href="/tienda" className="hover:text-[#1E2329] hover:underline">
-                Tienda
+                <TS>Tienda</TS>
               </LocalizedClientLink>
             </li>
             <li aria-hidden="true">/</li>
@@ -67,10 +69,10 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
             <Etiqueta tipo={cat.estado} />
           </div>
           <h1 className="fuente-condensada text-[40px] font-bold uppercase leading-[0.9] sm:text-[56px]">{def.nombre}</h1>
-          <p className="max-w-2xl text-[16px] text-[#3A414B]">{def.descripcion}</p>
+          <p className="max-w-2xl text-[16px] text-[#3A414B]"><TS>{def.descripcion}</TS></p>
           {!catalogo.fallo && cat.conteo > 0 && (
             <p className="fuente-mono text-[14px] text-[#1E2329]">
-              {textoConteo(cat.conteo, cat.estado)} · {textoDesde(cat.desde)}
+              <TS>{textoConteo(cat.conteo, cat.estado)}</TS> · <TS>{textoDesde(cat.desde)}</TS>
               {digital ? " · Sin envío: es descarga" : ""}
             </p>
           )}
@@ -78,7 +80,7 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
 
         {catalogo.fallo ? (
           <p className="mt-6 rounded-md border border-[#F3C9A8] bg-[#FFF4EC] px-4 py-3 text-[14px] text-[#A84303]">
-            No pudimos leer el catálogo en este momento. Recarga la página en un minuto.
+            <TS>No pudimos leer el catálogo en este momento. Recarga la página en un minuto.</TS>
           </p>
         ) : productos.length === 0 ? (
           <section className="mt-6 grid gap-6 rounded-md border border-[#D4D9DF] bg-white p-6 sm:grid-cols-[1fr_1.2fr] sm:p-8">
@@ -89,17 +91,17 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
               <div>
                 <Etiqueta tipo="proximamente" />
               </div>
-              <h2 className="fuente-condensada text-[30px] font-bold uppercase leading-none">Aún sin productos</h2>
+              <h2 className="fuente-condensada text-[30px] font-bold uppercase leading-none"><TS>Aún sin productos</TS></h2>
               <p className="text-[15px] text-[#5B6370]">
-                Estamos sumando proveedores para esta categoría. Déjanos tu correo o celular y te avisamos en cuanto se publique el primero.
+                <TS>Estamos sumando proveedores para esta categoría. Déjanos tu correo o celular y te avisamos en cuanto se publique el primero.</TS>
               </p>
               <div className="max-w-sm">
                 <Avisame categoria={def.clave} nombre={def.nombre} />
               </div>
               <p className="text-[14px] text-[#5B6370]">
-                ¿Lo necesitas ya?{" "}
+                <TS>¿Lo necesitas ya?</TS>{" "}
                 <LocalizedClientLink href={ligaCotizar({ descripcion: def.nombre, origen: "tienda-categoria" })} className="font-semibold text-[#C24E03] underline">
-                  Cotízalo con talleres
+                  <TS>Cotízalo con talleres</TS>
                 </LocalizedClientLink>
                 .
               </p>
@@ -121,10 +123,10 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
                     <div>
                       <Etiqueta tipo={cat.estado} />
                     </div>
-                    <h2 className="line-clamp-2 text-[16px] font-semibold leading-snug text-[#1E2329]">{p.titulo}</h2>
+                    <h2 className="line-clamp-2 text-[16px] font-semibold leading-snug text-[#1E2329]"><TS>{p.titulo}</TS></h2>
                     <div className="fuente-mono mt-auto flex items-baseline justify-between border-t border-dashed border-[#D4D9DF] pt-3 text-[14px]">
                       <span className="font-semibold">{p.precio == null ? "Precio por cotización" : p.precio === 0 ? "Gratis" : mxn(p.precio)}</span>
-                      <span className="text-[13px] font-semibold text-[#C24E03] group-hover:underline">Ver →</span>
+                      <span className="text-[13px] font-semibold text-[#C24E03] group-hover:underline"><TS>Ver →</TS></span>
                     </div>
                   </div>
                 </LocalizedClientLink>
@@ -135,13 +137,18 @@ export default async function CategoriaTiendaPage({ params }: { params: Promise<
 
         <div className="mt-10 flex flex-col gap-2 sm:flex-row">
           <LocalizedClientLink href="/tienda" className={BTN2}>
-            ← Todas las categorías
+            <TS>← Todas las categorías</TS>
           </LocalizedClientLink>
           <LocalizedClientLink href="/cotizar" className={BTN}>
-            ¿No está? Cotízalo
+            <TS>¿No está? Cotízalo</TS>
           </LocalizedClientLink>
         </div>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
