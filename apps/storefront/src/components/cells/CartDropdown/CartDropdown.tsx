@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState } from "react"
 
 import { usePathname } from "next/navigation"
@@ -81,7 +82,7 @@ export const CartDropdown = () => {
       <Dropdown show={abierto}>
         <div className="shadow-lg lg:w-[400px]">
           <div className="flex items-baseline justify-between border-b border-[#EDEAE2] px-4 py-3">
-            <h3 className="text-[15px] font-bold text-[#1B1B18]">Tu carrito</h3>
+            <h3 className="text-[15px] font-bold text-[#1B1B18]"><T>Tu carrito</T></h3>
             {Boolean(piezas) && (
               <span className="text-[13px] text-[#6B6A63]">
                 {piezas === 1 ? "1 pieza" : `${piezas} piezas`}
@@ -109,39 +110,39 @@ export const CartDropdown = () => {
 
               <div className="mt-3 border-t border-[#EDEAE2] pt-3">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-[13px] text-[#6B6A63]">Productos</span>
+                  <span className="text-[13px] text-[#6B6A63]"><T>Productos</T></span>
                   <span className="text-[15px] font-bold text-[#1B1B18]">
                     {precio(cart?.item_subtotal || 0)}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[12px] text-[#6B6A63]">
-                  El envío se calcula con tu dirección.
+                  <T>El envío se calcula con tu dirección.</T>
                 </p>
 
                 <LocalizedClientLink href="/checkout" className="mt-3 block">
                   <Button className="flex w-full items-center justify-center py-2.5">
-                    Ir a pagar
+                    <T>Ir a pagar</T>
                   </Button>
                 </LocalizedClientLink>
                 <LocalizedClientLink
                   href="/cart"
                   className="mt-2 block text-center text-[13px] font-semibold text-[#B34D07] underline"
                 >
-                  Ver y editar el carrito
+                  <T>Ver y editar el carrito</T>
                 </LocalizedClientLink>
               </div>
             </div>
           ) : (
             <div className="px-6 py-6 text-center">
               <p className="text-[15px] font-semibold text-[#1B1B18]">
-                Tu carrito está vacío
+                <T>Tu carrito está vacío</T>
               </p>
               <p className="mt-1 text-[13px] text-[#6B6A63]">
-                Mira lo que se está cortando esta semana.
+                <T>Mira lo que se está cortando esta semana.</T>
               </p>
               <LocalizedClientLink href="/categories" className="mt-4 block">
                 <Button className="flex w-full items-center justify-center py-2.5">
-                  Ver productos
+                  <T>Ver productos</T>
                 </Button>
               </LocalizedClientLink>
             </div>
