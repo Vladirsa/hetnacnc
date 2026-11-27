@@ -45,10 +45,10 @@ export default async function DetalleCompra({ params }: { params: Promise<{ id: 
             <TS>← Todas mis compras</TS>
           </LocalizedClientLink>
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]"><TS>Compra #</TS>{orderGroup.display_id}</h1>
+            <h1 className="m-0 text-[26px] font-extrabold text-[#142033]"><TS>Compra #</TS><TS>{orderGroup.display_id}</TS></h1>
             <p className="m-0 text-[14px] text-[#6B6A63]">
               {new Date(orderGroup.created_at || Date.now()).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
-              {pedidos.length > 1 ? ` · ${pedidos.length} talleres` : ""}
+              <TS>{pedidos.length > 1 ? ` · ${pedidos.length} talleres` : ""}</TS>
             </p>
           </div>
 
