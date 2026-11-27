@@ -38,13 +38,13 @@ export function MandarDisenoCorreo({
   if (estado === "listo")
     return (
       <p className={`m-0 mt-2 rounded-[8px] px-3 py-2 text-[12.5px] ${oscuro ? "bg-[#12301F] text-[#9BE3B8]" : "bg-[#EEF7F0] text-[#17633A]"}`}>
-        <T>✓ Listo, revisa tu correo</T>{sinArchivo ? " (el archivo es grande: descárgalo desde aquí)" : ""}.
+        <T>✓ Listo, revisa tu correo</T><T>{sinArchivo ? " (el archivo es grande: descárgalo desde aquí)" : ""}</T>.
       </p>
     )
   if (!abierto)
     return (
       <button type="button" onClick={() => setAbierto(true)} className={`mt-2 text-[12.5px] font-semibold underline decoration-dotted hover:text-[#C2560A] ${texto}`}>
-        <T>✉️ Mándamelo por correo</T>{dxf ? " (archivo y precio)" : ""}
+        <T>✉️ Mándamelo por correo</T><T>{dxf ? " (archivo y precio)" : ""}</T>
       </button>
     )
 
@@ -92,7 +92,7 @@ export function MandarDisenoCorreo({
       </label>
       {estado === "error" && <p className="m-0 text-[12px] text-[#F28B82]"><T>{mensaje}</T></p>}
       <button type="submit" disabled={estado === "enviando"} className="justify-self-start rounded-[8px] bg-[#C2560A] px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-60">
-        {estado === "enviando" ? "Enviando…" : "Mandar a mi correo"}
+        <T>{estado === "enviando" ? "Enviando…" : "Mandar a mi correo"}</T>
       </button>
     </form>
   )

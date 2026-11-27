@@ -20,20 +20,20 @@ export function TarjetaTrabajo({ trabajo: t }: { trabajo: TrabajoPublico }) {
         </span>
         {t.estado === "abierta" ? (
           <span className="rounded-full bg-[#EEF6EE] px-2 py-0.5 font-bold text-[#1F5A2B]">
-            {dias === 0 ? "Cierra hoy" : dias === 1 ? "Cierra mañana" : `${dias} días para cotizar`}
+            <T>{dias === 0 ? "Cierra hoy" : dias === 1 ? "Cierra mañana" : `${dias} días para cotizar`}</T>
           </span>
         ) : (
           <span className="rounded-full bg-[#F3F1EA] px-2 py-0.5 font-bold text-[#6B675C]">
-            {t.estado === "asignada" ? "Ya tiene taller" : "Cerrado"}
+            <T>{t.estado === "asignada" ? "Ya tiene taller" : "Cerrado"}</T>
           </span>
         )}
       </div>
       <h3 className="font-extrabold leading-snug text-[#142033]">{tituloTrabajo(t)}</h3>
-      <p className="line-clamp-3 text-sm text-[#44433D]">{t.descripcion || "🔒 Descripción reservada para talleres autorizados."}</p>
+      <p className="line-clamp-3 text-sm text-[#44433D]"><T>{t.descripcion || "🔒 Descripción reservada para talleres autorizados."}</T></p>
       <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-2 text-xs text-[#6B675C]">
-        {t.cantidad && <span>📦 {/^\d+$/.test(t.cantidad) ? `${t.cantidad} pzas` : t.cantidad}</span>}
+        {t.cantidad && <span>📦 <T>{/^\d+$/.test(t.cantidad) ? `${t.cantidad} pzas` : t.cantidad}</T></span>}
         {lugar && <span>📍 {lugar}</span>}
-        <span>💬 {t.propuestas === 1 ? "1 propuesta" : `${t.propuestas} propuestas`}</span>
+        <span>💬 <T>{t.propuestas === 1 ? "1 propuesta" : `${t.propuestas} propuestas`}</T></span>
       </div>
     </LocalizedClientLink>
   )

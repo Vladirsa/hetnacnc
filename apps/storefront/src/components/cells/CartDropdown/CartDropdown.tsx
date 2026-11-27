@@ -85,7 +85,7 @@ export const CartDropdown = () => {
             <h3 className="text-[15px] font-bold text-[#1B1B18]"><T>Tu carrito</T></h3>
             {Boolean(piezas) && (
               <span className="text-[13px] text-[#6B6A63]">
-                {piezas === 1 ? "1 pieza" : `${piezas} piezas`}
+                <T>{piezas === 1 ? "1 pieza" : `${piezas} piezas`}</T>
               </span>
             )}
           </div>
@@ -104,7 +104,7 @@ export const CartDropdown = () => {
 
               {sobrantes > 0 && (
                 <p className="pt-2 text-[13px] text-[#6B6A63]">
-                  y {sobrantes} {sobrantes === 1 ? "producto más" : "productos más"}
+                  y {sobrantes} <T>{sobrantes === 1 ? "producto más" : "productos más"}</T>
                 </p>
               )}
 

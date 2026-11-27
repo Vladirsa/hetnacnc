@@ -2,6 +2,7 @@
 
 // Organizador de herramientas desde una foto (2D Studio · Imagen). La foto no
 // sale de tu equipo: todo se calcula en el navegador. Motor: lib/generador/organizadorFoto.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Interruptor, Seccion, TarjetaExport, descargar, numero } from "@/components/hetna/estudio3d/Controles"
@@ -61,7 +62,7 @@ export function GeneradorOrganizadorFoto({ cabecera }: { cabecera?: React.ReactN
       </div>
       <Interruptor etiqueta="Hueco para los dedos" activo={dedos} cambiar={setDedos} />
       {(error || herramientas?.error) && <Aviso tipo="error">{error || herramientas!.error}</Aviso>}
-      {r && !r.errores.length && <span className="text-[12px] text-[#F2D29B]">{r.piezas} {r.piezas === 1 ? "herramienta" : "herramientas"} · inserto de {Math.round(r.ancho)} × {Math.round(r.alto)} mm</span>}
+      {r && !r.errores.length && <span className="text-[12px] text-[#F2D29B]">{r.piezas} <T>{r.piezas === 1 ? "herramienta" : "herramientas"}</T> · inserto de {Math.round(r.ancho)} × {Math.round(r.alto)} mm</span>}
       {r && !r.errores.length && (
         <TarjetaExport titulo="Para impresora 3D (STL)" nota="Placa con los huecos a la profundidad que pusiste.">
           <Boton onClick={() => descargar("organizador-herramientas-hetna.stl", mallaSTL(r.malla), "model/stl")}>STL</Boton>

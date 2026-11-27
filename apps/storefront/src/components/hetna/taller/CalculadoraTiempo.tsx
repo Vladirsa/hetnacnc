@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { useState } from "react"
 
@@ -70,7 +71,7 @@ export function CalculadoraTiempo() {
           <div className="border-t border-[#2A3A55] pt-3 text-[14px] text-[#D5DCE7]">
             {dineroMes > precioTaller ? (
               <>
-                <T>El plan</T> <b className="text-white"><T>Taller</T></b> <T>cuesta</T> <b className="text-white">{pesos(precioTaller)} <T>al mes</T></b><T>: tu tiempo ahorrado vale</T>{" "}
+                <T>El plan</T> <b className="text-white"><T>Taller</T></b> <T>cuesta</T> <b className="text-white">{pesos(precioTaller)} <T>al mes</T></b><T>: tu tiempo ahorrado vale</T><Tr>{" "}</Tr>
                 <b className="text-white">{veces.toLocaleString("es-MX", { maximumFractionDigits: 1 })} <T>veces</T></b> <T>eso.</T>
               </>
             ) : (

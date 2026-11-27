@@ -77,14 +77,14 @@ export function BarraForo() {
                   activa(href) ? "border-[#C2560A] text-[#1B1B18]" : "border-transparent text-[#6B6A63] hover:text-[#1B1B18]"
                 }`}
               >
-                {href === "/foro-cnc" && !activa(href) ? (
+                <T>{href === "/foro-cnc" && !activa(href) ? (
                   "← Foro"
                 ) : (
                   <>
                     <span className="sm:hidden">{corto}</span>
                     <span className="hidden sm:inline">{nombre}</span>
                   </>
-                )}
+                )}</T>
               </LocalizedClientLink>
             </li>
           ))}
@@ -120,7 +120,7 @@ function Icono({ href, etiqueta, n, activa, children }: { href: string; etiqueta
       </svg>
       {n > 0 && (
         <span className="absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full bg-[#C2560A] px-1 text-center text-[11px] font-bold leading-[18px] text-white">
-          {n > 99 ? "99+" : n}
+          <T>{n > 99 ? "99+" : n}</T>
         </span>
       )}
     </LocalizedClientLink>

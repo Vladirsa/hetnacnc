@@ -78,11 +78,11 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
                 {pesos(precio.minimo)} – {pesos(precio.maximo)}
               </b>
               <span className="text-[12px] text-[#9AA6B8]">
-                <T>+ IVA</T>{cantidad > 1 ? ` · ≈ ${pesos(precio.recomendado / cantidad)} c/u` : ""}
+                <T>+ IVA</T><T>{cantidad > 1 ? ` · ≈ ${pesos(precio.recomendado / cantidad)} c/u` : ""}</T>
               </span>
             </>
           ) : (
-            <span className="text-[13px] text-[#9AA6B8]">{cargando ? "Calculando…" : "Sin estimado"}</span>
+            <span className="text-[13px] text-[#9AA6B8]"><T>{cargando ? "Calculando…" : "Sin estimado"}</T></span>
           )}
         </div>
         <label className="flex items-center gap-2 text-[12.5px] text-[#C9D2E0]">
@@ -103,12 +103,12 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
               problemas ? "border-[#7A2A22] text-[#F6B8AE]" : revisar ? "border-[#6B5A2A] text-[#F2D29B]" : "border-[#245236] text-[#9FE0B5]"
             }`}
           >
-            {problemas ? `⚠ ${problemas === 1 ? "1 cosa por corregir" : `${problemas} cosas por corregir`}` : revisar ? `• ${revisar} por revisar` : "✓ Archivo revisado"}
+            <T>{problemas ? `⚠ ${problemas === 1 ? "1 cosa por corregir" : `${problemas} cosas por corregir`}` : revisar ? `• ${revisar} por revisar` : "✓ Archivo revisado"}</T>
           </summary>
           <div className="absolute bottom-full left-0 z-20 mb-2 flex w-[340px] flex-col gap-2 rounded-[12px] border border-[#F2C9A5] bg-[#FFF8F1] p-3 text-[#1B1B18] shadow-xl">
             {geo.largo > 0 && (
               <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-                <b className="text-[#1B1B18]"><T>Material:</T></b>{" "}
+                <b className="text-[#1B1B18]"><T>Material:</T></b><T>{" "}</T>
                 {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
               </p>
             )}
@@ -140,7 +140,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
               {pesos(precio.minimo)} – {pesos(precio.maximo)} <span className="text-[13px] font-semibold text-[#6B6A63]"><T>+ IVA</T></span>
             </p>
           ) : (
-            <p className="m-0 text-[14px] text-[#6B6A63]">{cargando ? "Calculando…" : "Sin estimado para este diseño"}</p>
+            <p className="m-0 text-[14px] text-[#6B6A63]"><T>{cargando ? "Calculando…" : "Sin estimado para este diseño"}</T></p>
           )}
           {precio && cantidad > 1 && (
             <p className="m-0 text-[12px] text-[#6B6A63]">≈ {pesos(precio.recomendado / cantidad)} <T>cada uno + IVA</T></p>
@@ -160,7 +160,7 @@ export function PrecioFabricar({ dxf, nombreArchivo, pieza, medidas, maquina, es
       </div>
       {geo.largo > 0 && (
         <p className="m-0 rounded-[8px] bg-white px-3 py-2 text-[12.5px] text-[#40403A]">
-          <b className="text-[#1B1B18]"><T>Material:</T></b>{" "}
+          <b className="text-[#1B1B18]"><T>Material:</T></b><T>{" "}</T>
           {textoHojas(calcularHojas({ pzL: geo.largo, pzA: geo.ancho, piezas: cantidad, ...SEPARACION[servicio] }))}.
         </p>
       )}

@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { LIMITE_COTIZACIONES_GRATIS } from "@/lib/hetna/app-taller"
 import { useState, type FormEvent } from "react"
@@ -50,7 +51,7 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
             }}
             className="rounded-[10px] border border-[#E7E4DC] px-5 py-3 text-[15px] font-semibold text-[#1B1B18] hover:border-[#C2560A] disabled:opacity-70"
           >
-            {reenviado ? "Listo, te la volvimos a mandar" : "Volver a mandar la liga"}
+            <Tr>{reenviado ? "Listo, te la volvimos a mandar" : "Volver a mandar la liga"}</Tr>
           </button>
         </div>
       </section>
@@ -125,14 +126,14 @@ export function ActivarCotizador({ modo, correo, taller: tallerInicial, telefono
         </label>
         {error && <p className="m-0 text-[14px] font-semibold text-[#9B3225]">{error}</p>}
         <button type="submit" disabled={trabajando} className={`${boton} w-full`}>
-          {trabajando ? "Activando…" : "Activar y entrar al Cotizador"}
+          <Tr>{trabajando ? "Activando…" : "Activar y entrar al Cotizador"}</Tr>
         </button>
       </form>
       <p className="m-0 mt-4 text-[13px] leading-relaxed text-[#6B6A63]">
-        <T>¿Ya tienes un taller en el Cotizador con</T> <b><T>otro correo</T></b><T>? Vincúlalo desde</T>{" "}
+        <T>¿Ya tienes un taller en el Cotizador con</T> <b><T>otro correo</T></b><T>? Vincúlalo desde</T><Tr>{" "}</Tr>
         <a href="/mx/user" className="font-semibold text-[#C2560A] underline">
           <T>Mi cuenta</T>
-        </a>{" "}
+        </a><Tr>{" "}</Tr>
         <T>con un código y entras igual, sin otra contraseña.</T>
       </p>
     </section>

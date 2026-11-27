@@ -3,6 +3,7 @@
 // Mapa topográfico por capas (2D Studio · Decoración). El navegador baja los
 // mosaicos de alturas (imágenes públicas) y el motor (lib/generador/mapaTopo.ts)
 // saca una pieza por capa.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Aviso, Boton, CampoNum, Interruptor, Seccion, descargar, numero } from "@/components/hetna/estudio3d/Controles"
@@ -118,7 +119,7 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
         <CampoNum etiqueta="Ancho" valor={km} cambiar={setKm} sufijo="km" />
       </div>
       <Boton tipo="primario" onClick={() => void cargar()} disabled={cargando}>
-        {cargando ? "Bajando alturas…" : alturas ? "Volver a cargar" : "Cargar el terreno"}
+        <T>{cargando ? "Bajando alturas…" : alturas ? "Volver a cargar" : "Cargar el terreno"}</T>
       </Boton>
       <div className="grid grid-cols-2 gap-2">
         <CampoNum etiqueta="Capas" valor={capas} cambiar={setCapas} sufijo="" />
@@ -135,13 +136,13 @@ export function GeneradorMapaTopo({ cabecera }: { cabecera?: React.ReactNode }) 
       </Seccion>
       <Interruptor etiqueta="Profundidad (lagos y mar) en vez de altura" activo={invertir} cambiar={setInvertir} />
       {error && <Aviso tipo="error">{error}</Aviso>}
-      {r && <span className="text-[12px] text-[#F2D29B]">{r.niveles.length} capas de {Math.round(r.niveles[0] || 0)} a {Math.round(r.niveles[r.niveles.length - 1] || 0)} m · {r.hojas} {r.hojas === 1 ? "hoja" : "hojas"}</span>}
+      {r && <span className="text-[12px] text-[#F2D29B]">{r.niveles.length} capas de {Math.round(r.niveles[0] || 0)} a {Math.round(r.niveles[r.niveles.length - 1] || 0)} m · {r.hojas} <T>{r.hojas === 1 ? "hoja" : "hojas"}</T></span>}
       {r && !r.errores.length && !invertir && (
         <>
           <Boton onClick={bajarSTL}>Bajar STL para impresora 3D</Boton>
           <span className="text-[11.5px] leading-snug text-[#8A97AB]">
             Para impresora sale en una sola pieza: base de {OPCIONES_MAPA_3D.base} mm y capas de {OPCIONES_MAPA_3D.grosorCapa} mm (la cumbre puede ir de otro color).
-            {mm > 250 ? ` Sale de ${mm} mm: para la mayoría de las impresoras pon 250 mm o menos en «Tamaño del mapa».` : ""}
+            <T>{mm > 250 ? ` Sale de ${mm} mm: para la mayoría de las impresoras pon 250 mm o menos en «Tamaño del mapa».` : ""}</T>
           </span>
         </>
       )}

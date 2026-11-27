@@ -110,7 +110,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="flex flex-col gap-2">
-          <span className={etiqueta}>{["taller", "proveedor", "marca"].includes(d.tipo) ? "Nombre del negocio" : "Tu nombre"}</span>
+          <span className={etiqueta}><T>{["taller", "proveedor", "marca"].includes(d.tipo) ? "Nombre del negocio" : "Tu nombre"}</T></span>
           <input value={d.nombre} onChange={(e) => cambia("nombre", e.target.value)} maxLength={80} required className={campo} />
         </label>
         <label className="flex flex-col gap-2">
@@ -246,7 +246,7 @@ export function FormPerfil({ inicial, nuevo, siguiente }: { inicial: DatosPerfil
       {error && <p role="alert" className="m-0 text-[14px] text-[#A42A2A]">{MENSAJES[error] || error}</p>}
       <div className="flex items-center gap-3">
         <button type="submit" disabled={pendiente || disponible === false} className="min-h-[48px] w-full sm:w-auto bg-[#C2560A] hover:bg-[#A84A08] text-white font-semibold px-6 py-3 rounded-[10px] text-[15.5px] disabled:opacity-50">
-          {pendiente ? "Guardando…" : nuevo ? "Crear mi perfil" : "Guardar cambios"}
+          <T>{pendiente ? "Guardando…" : nuevo ? "Crear mi perfil" : "Guardar cambios"}</T>
         </button>
         {guardado && !nuevo && <span className="text-[14px] text-[#16794F]"><T>Guardado</T></span>}
       </div>

@@ -17,7 +17,7 @@ export function FormLatam({ paisInicial = "" }: { paisInicial?: string }) {
     const p = PAISES_LATAM.find((x) => x.clave === f.pais)
     return (
       <div className="rounded-2xl border border-[#BFE3CC] bg-[#E6F4EA] p-6 text-center">
-        <p className="text-3xl">{p?.bandera || "✅"}</p>
+        <p className="text-3xl"><T>{p?.bandera || "✅"}</T></p>
         <p className="mt-2 text-lg font-bold text-[#0F7A4A]"><T>¡Listo, ya estás en la lista de</T> {p?.nombre}!</p>
         <p className="mt-1 text-sm text-[#40403A]"><T>Te avisamos a</T> <b>{f.correo}</b> <T>en cuanto abramos tu país, antes que a nadie.</T></p>
       </div>
@@ -62,7 +62,7 @@ export function FormLatam({ paisInicial = "" }: { paisInicial?: string }) {
       <input type="text" tabIndex={-1} autoComplete="off" value={f.sitio_web} onChange={set("sitio_web")} className="hidden" aria-hidden="true" />
       {error && <p className="text-sm font-semibold text-[#B3261E]">{error}</p>}
       <button disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110 disabled:opacity-60">
-        {estado === "enviando" ? "Enviando…" : f.tipo === "taller" ? "Apuntarme como taller fundador" : "Avísenme cuando abran"}
+        <T>{estado === "enviando" ? "Enviando…" : f.tipo === "taller" ? "Apuntarme como taller fundador" : "Avísenme cuando abran"}</T>
       </button>
       <p className="text-center text-[12px] text-[#7A776E]"><T>Usamos tus datos sólo para avisarte cuando HETNA abra en tu país.</T></p>
     </form>

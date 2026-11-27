@@ -22,7 +22,7 @@ export function PideCuenta({ error, onCerrar }: { error: string; onCerrar?: () =
       <span>{mensaje(error)}</span>
       {liga && (
         <LocalizedClientLink href={liga} className="font-semibold text-[#B34D07] underline">
-          {error === "sin_sesion" ? "Entrar" : "Crear perfil"}
+          <T>{error === "sin_sesion" ? "Entrar" : "Crear perfil"}</T>
         </LocalizedClientLink>
       )}
       {onCerrar && (
@@ -144,7 +144,7 @@ export function EncuestaVotar({ temaId, pregunta, opciones, resultados, elegida,
               <span className="relative flex justify-between gap-3">
                 <span className={mia === i ? "font-bold text-[#B34D07]" : ""}>
                   {o}
-                  {mia === i ? " ✓" : ""}
+                  <T>{mia === i ? " ✓" : ""}</T>
                 </span>
                 <span className="text-[#6B6A63] font-semibold">{pct}%</span>
               </span>
@@ -163,7 +163,7 @@ export function EncuestaVotar({ temaId, pregunta, opciones, resultados, elegida,
         })}
       </div>
       <span className="text-[12.5px] text-[#6B6A63]">
-        {total} {total === 1 ? "voto" : "votos"}
+        {total} <T>{total === 1 ? "voto" : "votos"}</T>
         {!sesion && " · Entra para votar"}
         {mia !== null && " · Puedes cambiar tu voto"}
       </span>
@@ -192,7 +192,7 @@ export function BotonMejor({ temaId, respuestaId, esMejor }: { temaId: number; r
           esMejor ? "bg-[#16794F] border-[#16794F] text-white" : "bg-white border-[#CFE3D7] text-[#16794F] hover:border-[#16794F]"
         } disabled:opacity-60`}
       >
-        ✓ {esMejor ? "Mejor respuesta" : "Marcar como la mejor"}
+        ✓ <T>{esMejor ? "Mejor respuesta" : "Marcar como la mejor"}</T>
       </button>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </>
@@ -218,7 +218,7 @@ export function Compartir({ url, titulo }: { url: string; titulo: string }) {
   return (
     <button type="button" onClick={copiar} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E0DCD2] bg-white text-[13.5px] font-semibold text-[#44433D] hover:border-[#C2560A]">
       <IconoCompartir size={18} />
-      {copiado ? "Liga copiada" : "Compartir"}
+      <T>{copiado ? "Liga copiada" : "Compartir"}</T>
     </button>
   )
 }
@@ -277,7 +277,7 @@ export function MenuMas({ tipo, id, puedeOcultar, esModerador, estado }: { tipo:
               </button>
               {puedeOcultar && estado !== "oculto" && (
                 <button type="button" disabled={pendiente} onClick={() => estadoNuevo("oculto")} className="text-left px-3 py-2 rounded-[8px] hover:bg-[#F6F4EF]">
-                  {esModerador ? "Ocultar (moderación)" : "Borrar mi publicación"}
+                  <T>{esModerador ? "Ocultar (moderación)" : "Borrar mi publicación"}</T>
                 </button>
               )}
               {esModerador && estado !== "publicado" && (

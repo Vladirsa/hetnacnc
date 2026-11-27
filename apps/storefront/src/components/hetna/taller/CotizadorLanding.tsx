@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { useCallback, useEffect, useState } from "react"
 
@@ -209,7 +210,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                 <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[13.5px] text-[#1B1B18]">
                   {p.puntos.map((x) => (
                     <li key={x.texto} className="flex gap-2">
-                      <span className={x.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-hidden="true">{x.estado === "proximamente" ? "○" : "✓"}</span>
+                      <span className={x.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-hidden="true"><Tr>{x.estado === "proximamente" ? "○" : "✓"}</Tr></span>
                       <span className={x.estado === "proximamente" ? "text-[#6B6A63]" : undefined}>
                         <T>{x.texto}</T> <Estado estado={x.estado} />
                       </span>
@@ -217,7 +218,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
                   ))}
                 </ul>
                 <a href={APP_TALLER.registro} className={`mt-auto text-center font-semibold px-4 py-2.5 rounded-[10px] text-[14px] ${p.destacado ? "bg-[#FF6A1A] hover:bg-[#E65C12] text-white" : "border border-[#E7E4DC] hover:border-[#C2560A] text-[#1B1B18]"}`}>
-                  {p.nombre === "Gratis" ? "Empezar gratis" : "Probar 14 días gratis"}
+                  <Tr>{p.nombre === "Gratis" ? "Empezar gratis" : "Probar 14 días gratis"}</Tr>
                 </a>
               </div>
             ))}
@@ -226,7 +227,7 @@ export const CotizadorLanding = ({ locale }: { locale: string }) => {
           <TablaPlanes />
           <div className="bg-[#E6F4EC] border border-[#B7E0C8] rounded-[14px] px-5 py-4">
             <p className="m-0 text-[13.5px] font-bold text-[#16794F]"><T>Siempre gratis, en todos los planes</T></p>
-            <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]">{SIEMPRE_GRATIS.join(" · ")}</p>
+            <p className="m-0 mt-1 text-[13.5px] text-[#1B1B18]"><Tr>{SIEMPRE_GRATIS.join(" · ")}</Tr></p>
           </div>
         </section>
 
@@ -292,7 +293,7 @@ function TablaPlanes() {
                     {c === false ? (
                       <span className="text-[#B5B2A8]" title="No incluido en este plan" aria-label="No incluido en este plan">—</span>
                     ) : c === true ? (
-                      <span className={f.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-label={f.estado === "proximamente" ? "Próximamente" : "Incluido"}>{f.estado === "proximamente" ? "○" : "✓"}</span>
+                      <span className={f.estado === "proximamente" ? "text-[#9A978C]" : "text-[#16794F]"} aria-label={f.estado === "proximamente" ? "Próximamente" : "Incluido"}><Tr>{f.estado === "proximamente" ? "○" : "✓"}</Tr></span>
                     ) : (
                       <span className={f.estado === "proximamente" ? "text-[#6B6A63]" : "text-[#1B1B18]"}>{c}</span>
                     )}
@@ -303,7 +304,7 @@ function TablaPlanes() {
           </tbody>
         </table>
         <p className="m-0 mt-3 text-[12.5px] text-[#6B6A63]">
-          <T>✓ Disponible ·</T> <span className="rounded-full bg-[#E6EEFB] px-1.5 text-[#1D4E9E]"><T>Beta</T></span> <T>funciona, todavía en pruebas ·</T>{" "}
+          <T>✓ Disponible ·</T> <span className="rounded-full bg-[#E6EEFB] px-1.5 text-[#1D4E9E]"><T>Beta</T></span> <T>funciona, todavía en pruebas ·</T><Tr>{" "}</Tr>
           <span className="rounded-full bg-[#F1F0EC] px-1.5"><T>Próximamente</T></span> <T>anunciada, todavía no incluida · — No incluido en este plan</T>
         </p>
       </div>

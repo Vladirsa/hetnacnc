@@ -69,11 +69,11 @@ export function DescargarGratis({ productId }: { productId: string }) {
       <div className="mt-4 rounded-[12px] bg-[#EEF6EE] px-4 py-3">
         <span className="text-[30px] font-bold leading-none text-[#1F5A2B]"><T>Gratis</T></span>
         <p className="mt-1 text-[13px] text-[#44433D]">
-          {estado?.ilimitado
+          <T>{estado?.ilimitado
             ? "Con tu plan del Cotizador bajas todos los archivos gratis que quieras."
             : estado
               ? `Te ${estado.restantes === 1 ? "queda 1 descarga" : `quedan ${estado.restantes} descargas`} gratis de ${estado.limite} esta semana.`
-              : "Con tu cuenta gratis bajas hasta 20 archivos gratis por semana."}
+              : "Con tu cuenta gratis bajas hasta 20 archivos gratis por semana."}</T>
         </p>
       </div>
 
@@ -98,16 +98,16 @@ export function DescargarGratis({ productId }: { productId: string }) {
             className="w-full rounded-sm bg-[#C2560A] py-3.5 text-[16px] font-bold text-white hover:bg-[#A84A08] disabled:bg-[#D9D5CC]"
             data-testid="descarga-gratis-boton"
           >
-            {bajando ? "Preparando tu archivo…" : sinCupo ? "Ya usaste tus descargas de la semana" : "Descargar gratis"}
+            <T>{bajando ? "Preparando tu archivo…" : sinCupo ? "Ya usaste tus descargas de la semana" : "Descargar gratis"}</T>
           </button>
         )}
 
         {sinCupo && estado?.proxima_liberacion && (
           <p className="text-[13px] text-[#44433D]">
-            <T>La siguiente se libera el</T> {fecha(estado.proxima_liberacion)}<T>. Con un</T>{" "}
+            <T>La siguiente se libera el</T> {fecha(estado.proxima_liberacion)}<T>. Con un</T><T>{" "}</T>
             <LocalizedClientLink href="/servicios/cotizador-cnc" className="font-semibold text-[#B34D07] hover:underline">
               <T>plan del Cotizador</T>
-            </LocalizedClientLink>{" "}
+            </LocalizedClientLink><T>{" "}</T>
             <T>no hay límite.</T>
           </p>
         )}

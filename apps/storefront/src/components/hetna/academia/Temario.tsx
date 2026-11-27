@@ -66,7 +66,7 @@ export function Temario({
         <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="m-0 text-[14px] font-bold text-[#1B1B18]">
-              <T>Tu avance:</T> {hechas} <T>de</T> {total} {total === 1 ? "lección" : "lecciones"}
+              <T>Tu avance:</T> {hechas} <T>de</T> {total} <T>{total === 1 ? "lección" : "lecciones"}</T>
             </p>
             <span className="text-[13px] font-semibold text-[#C2560A]">{pct}%</span>
           </div>
@@ -115,7 +115,7 @@ export function Temario({
                     : "bg-[#C2560A] text-white hover:bg-[#A84A08]"
                 }`}
               >
-                {vistas.has(actual) ? "✓ Vista (desmarcar)" : "Marcar como vista y seguir →"}
+                <T>{vistas.has(actual) ? "✓ Vista (desmarcar)" : "Marcar como vista y seguir →"}</T>
               </button>
             )}
           </div>
@@ -153,7 +153,7 @@ export function Temario({
                     >
                       <span className="flex items-center gap-2.5">
                         <span aria-hidden="true" className={vista ? "text-[#16794F]" : puede ? "text-[#C2560A]" : "text-[#B8B4A8]"}>
-                          {vista ? "✓" : puede ? "▶" : "🔒"}
+                          <T>{vista ? "✓" : puede ? "▶" : "🔒"}</T>
                         </span>
                         <span className={vista ? "text-[#6B6A63]" : ""}>{l.title}</span>
                       </span>

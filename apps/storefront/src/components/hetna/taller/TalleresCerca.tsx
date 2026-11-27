@@ -110,7 +110,7 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
         <>
           <p className="text-[11px] font-bold uppercase tracking-wide text-[#B34D07]"><T>Talleres cerca de ti</T></p>
           <p className="mt-1 text-[13px] text-[#6B675C]">
-            {u ? `Para ${textoUbicacion(u)}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}
+            <T>{u ? `Para ${textoUbicacion(u)}. Elige uno y le llega tu solicitud primero.` : "Escribe tu código postal en el formulario y los ordenamos por cercanía."}</T>
             {u?.fuente === "ip" && <CreditoIp />}
           </p>
         </>
@@ -144,8 +144,8 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
                     </div>
                     <p className="text-[12px] text-[#6B675C]">
                       {textoUbicacion(t.perfil)}
-                      {t.perfil.calificacion ? ` · ★ ${t.perfil.calificacion.toFixed(1)}` : ""}
-                      {t.perfil.entrega ? ` · ${t.perfil.entrega}` : ""}
+                      <T>{t.perfil.calificacion ? ` · ★ ${t.perfil.calificacion.toFixed(1)}` : ""}</T>
+                      <T>{t.perfil.entrega ? ` · ${t.perfil.entrega}` : ""}</T>
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {e && <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${e[1]}`}>{e[0]}</span>}
@@ -172,19 +172,19 @@ export const TalleresCerca = ({ talleres, proceso, query, procesos, limite = 5 }
       )}
       {enFicha && u && (!cerca || (!!u.municipio && !enMunicipio)) && (
         <div className="mt-3 rounded-xl bg-[#FFF4EA] px-3 py-2.5 text-[13px] text-[#5A3A12]" data-testid="sin-talleres-cerca">
-          {cerca
+          <T>{cerca
             ? "No hay uno en tu municipio, pero los de tu estado te lo mandan o lo recoges cerca."
-            : `Todavía no hay talleres de ${nombreProcesos(procesos)} en ${u.estado}. Los de arriba te lo mandan por paquetería.`}{" "}
-          <T>También puedes</T>{" "}
+            : `Todavía no hay talleres de ${nombreProcesos(procesos)} en ${u.estado}. Los de arriba te lo mandan por paquetería.`}</T><T>{" "}</T>
+          <T>También puedes</T><T>{" "}</T>
           <LocalizedClientLink href={`/cotizar${query ? `?${query}` : ""}`} className="font-bold text-[#B34D07] underline">
             <T>pedir cotización a toda la red</T>
-          </LocalizedClientLink>{" "}
+          </LocalizedClientLink><T>{" "}</T>
           <T>y te contesta quien pueda hacerlo.</T>
         </div>
       )}
       {hayEstimados && (
         <p className="mt-2 text-[11.5px] text-[#9A978C]">
-          <T>Los estimados salen de las tarifas que publicó cada taller y de las medidas de tu archivo (</T>{pieza?.cantidad} <T>pza</T>{pieza && pieza.cantidad > 1 ? "s" : ""}<T>). El precio formal te llega en su propuesta.</T>
+          <T>Los estimados salen de las tarifas que publicó cada taller y de las medidas de tu archivo (</T>{pieza?.cantidad} <T>pza</T><T>{pieza && pieza.cantidad > 1 ? "s" : ""}</T><T>). El precio formal te llega en su propuesta.</T>
         </p>
       )}
     </div>

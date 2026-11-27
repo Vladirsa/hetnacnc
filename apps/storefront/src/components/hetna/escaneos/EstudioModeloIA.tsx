@@ -232,8 +232,8 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
               <path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
             </svg>
             <span className={`mt-2 font-semibold ${grande ? "text-[15px]" : "text-[12.5px]"}`}>
-              {grande ? "Arrastra o toca para subir la foto" : vista.nombre}
-              {!grande && vista.id === "front" ? " *" : ""}
+              <T>{grande ? "Arrastra o toca para subir la foto" : vista.nombre}</T>
+              <T>{!grande && vista.id === "front" ? " *" : ""}</T>
             </span>
             {grande && <span className="mt-1 text-[12.5px] text-white/50"><T>JPG, PNG o WebP · una pieza, fondo liso</T></span>}
           </>
@@ -273,7 +273,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                 className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[12.5px] font-semibold hover:border-[#F07A1A]"
               >
                 <span className="text-[#F07A1A]">◆</span>
-                {saldo ? (saldo.ilimitado ? "Ilimitados" : `${saldo.saldo} ${saldo.saldo === 1 ? "crédito" : "créditos"}`) : "Créditos"}
+                <T>{saldo ? (saldo.ilimitado ? "Ilimitados" : `${saldo.saldo} ${saldo.saldo === 1 ? "crédito" : "créditos"}`) : "Créditos"}</T>
               </LocalizedClientLink>
             </div>
             <div className="flex rounded-[10px] bg-white/[0.05] p-1">
@@ -286,7 +286,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                     varias === v ? "bg-[#F07A1A] text-white" : "text-white/70 hover:text-white"
                   }`}
                 >
-                  {v ? "Varias vistas" : "Imagen única"}
+                  <T>{v ? "Varias vistas" : "Imagen única"}</T>
                 </button>
               ))}
             </div>
@@ -321,7 +321,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                 {opcion("g", tipo === "Geometry", () => setTipo("Geometry"), "Sólo forma")}
               </div>
               <p className="mt-1.5 text-[12px] text-white/50">
-                {tipo === "Normal" ? "Color y textura de la foto: para mostrar y vender." : "Modelo blanco: ideal para imprimir o maquinar."}
+                <T>{tipo === "Normal" ? "Color y textura de la foto: para mostrar y vender." : "Modelo blanco: ideal para imprimir o maquinar."}</T>
               </p>
             </div>
 
@@ -349,18 +349,18 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                 <span className="text-emerald-300"><T>Cuenta HETNA: sin costo.</T></span>
               ) : costo === 0 ? (
                 <span>
-                  <strong className="text-emerald-300"><T>Gratis.</T></strong>{" "}
+                  <strong className="text-emerald-300"><T>Gratis.</T></strong><T>{" "}</T>
                   <span className="text-white/65">
-                    <T>Te</T> {gratisRestantes === 1 ? "queda" : "quedan"} {gratisRestantes} <T>de</T> {modeloIa.gratis_por_mes} <T>este mes.</T>
+                    <T>Te</T> <T>{gratisRestantes === 1 ? "queda" : "quedan"}</T> {gratisRestantes} <T>de</T> {modeloIa.gratis_por_mes} <T>este mes.</T>
                   </span>
                 </span>
               ) : (
                 <span>
                   <strong>
-                    <T>Cuesta</T> {costo} {costo === 1 ? "crédito" : "créditos"}.
-                  </strong>{" "}
+                    <T>Cuesta</T> {costo} <T>{costo === 1 ? "crédito" : "créditos"}</T>.
+                  </strong><T>{" "}</T>
                   <span className="text-white/65">
-                    <T>Ya usaste tu</T>{modeloIa.gratis_por_mes === 1 ? "" : "s"} <T>gratis del mes. Tienes</T> {saldo?.saldo ?? 0}.
+                    <T>Ya usaste tu</T><T>{modeloIa.gratis_por_mes === 1 ? "" : "s"}</T> <T>gratis del mes. Tienes</T> {saldo?.saldo ?? 0}.
                   </span>
                   {!alcanza && (
                     <LocalizedClientLink href="/user/creditos" className="mt-1 block font-semibold text-[#F59A4A] hover:underline">
@@ -422,7 +422,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                     )}
                   </div>
                   <p className="mt-4 text-[14px] text-white/70">
-                    {principal.estado === "lista" ? "Foto lista. Ajusta las opciones y genera tu modelo." : principal.estado === "subiendo" ? "Subiendo foto…" : principal.mensaje}
+                    <T>{principal.estado === "lista" ? "Foto lista. Ajusta las opciones y genera tu modelo." : principal.estado === "subiendo" ? "Subiendo foto…" : principal.mensaje}</T>
                   </p>
                 </div>
               ) : (
@@ -469,7 +469,7 @@ export function EstudioModeloIA({ modeloIa, saldo, recientes }: Props) {
                         </span>
                       </div>
                       <p className="truncate px-2.5 py-2 text-[12.5px] font-semibold text-white/85">
-                        {e.titulo || (e.modo === "preview" ? "Modelo con IA" : "Escaneo")}
+                        <T>{e.titulo || (e.modo === "preview" ? "Modelo con IA" : "Escaneo")}</T>
                       </p>
                     </LocalizedClientLink>
                   ))}

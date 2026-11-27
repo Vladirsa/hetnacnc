@@ -209,13 +209,13 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
     <div className="flex flex-col gap-4">
       <Seccion titulo="Diseñar desde una foto o plano">
         <label className={`flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-[#2A3546] p-3 text-center hover:border-[#C2560A] ${leyendo ? "pointer-events-none opacity-60" : ""}`}>
-          <span className="text-[13.5px] font-semibold text-white">{leyendo ? "Leyendo la imagen…" : "Sube una foto, boceto o plano"}</span>
+          <span className="text-[13.5px] font-semibold text-white"><T>{leyendo ? "Leyendo la imagen…" : "Sube una foto, boceto o plano"}</T></span>
           <span className="text-[12px] text-[#8A97AB]"><T>La IA lee el mueble y llena las medidas · 2 créditos</T></span>
           <input type="file" accept="image/*" className="hidden" onChange={(e) => { subirImagen(e.target.files?.[0]); e.target.value = "" }} />
         </label>
         {lectura && (
           <p className={`m-0 text-[12.5px] ${lectura.tipo === "ok" ? "text-[#9FE0B5]" : lectura.tipo === "aviso" ? "text-[#F6D58E]" : "text-[#F6B8AE]"}`}>
-            <T>{lectura.texto}</T>{" "}
+            <T>{lectura.texto}</T><T>{" "}</T>
             {lectura.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
             {lectura.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
             {lectura.otroMueble && <Link href={`/${locale}/disenar/muebles-desde-imagen`} className="underline"><T>Abrir Desde una imagen</T></Link>}
@@ -380,11 +380,11 @@ export function GeneradorEnsamble({ cabecera }: { cabecera?: React.ReactNode }) 
                 }}
                 className="rounded-[8px] bg-[#C2560A] px-3 py-2.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] disabled:opacity-50"
               >
-                {cobrando ? "Cobrando…" : "Descargar DXF, SVG y PDF · 1 crédito"}
+                <T>{cobrando ? "Cobrando…" : "Descargar DXF, SVG y PDF · 1 crédito"}</T>
               </button>
               {avisoCobro && (
                 <span className="text-[12px] text-[#F6B8AE]">
-                  <T>{avisoCobro.texto}</T>{" "}
+                  <T>{avisoCobro.texto}</T><T>{" "}</T>
                   {avisoCobro.login && <Link href={`/${locale}/login`} className="underline"><T>Iniciar sesión</T></Link>}
                   {avisoCobro.creditos && <Link href={`/${locale}/user/creditos`} className="underline"><T>Comprar créditos</T></Link>}
                 </span>

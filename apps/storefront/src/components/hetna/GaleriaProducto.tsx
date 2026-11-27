@@ -74,7 +74,7 @@ export default function GaleriaProducto({ imagenes, titulo }: { imagenes: Img[];
             className="mx-auto h-auto max-h-[300px] w-full object-contain sm:max-h-[420px] lg:max-h-[480px]"
           />
           <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-            <T>Toca para ampliar</T>{total > 1 ? ` · ${i + 1}/${total}` : ""}
+            <T>Toca para ampliar</T><T>{total > 1 ? ` · ${i + 1}/${total}` : ""}</T>
           </span>
         </button>
 

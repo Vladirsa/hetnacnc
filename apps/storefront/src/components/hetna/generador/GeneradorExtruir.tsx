@@ -165,7 +165,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
             className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-[#E7E4DC] rounded-[12px] cursor-pointer hover:border-[#C2560A] hover:bg-[#FFF8F1] text-center"
           >
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C2560A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" /></svg>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">{archivo ? `${archivo.nombre} (cambiar)` : "Sube tu SVG o DXF"}</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>{archivo ? `${archivo.nombre} (cambiar)` : "Sube tu SVG o DXF"}</T></span>
             <span className="text-[12px] text-[#6B6A63]"><T>Logotipos, letras ya vectorizadas o archivos de corte láser con varios colores</T></span>
             <input type="file" accept=".svg,.dxf" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
@@ -174,7 +174,7 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
           {archivo && grupos.length > 0 && (
             <div className="flex flex-col gap-2">
               <span className="text-[13px] font-semibold text-[#1B1B18]">
-                {grupos.some((g) => g.clave.startsWith("capa:")) ? "Capas del archivo" : "Colores del archivo"} <T>y qué hacer con cada uno</T>
+                <T>{grupos.some((g) => g.clave.startsWith("capa:")) ? "Capas del archivo" : "Colores del archivo"}</T> <T>y qué hacer con cada uno</T>
               </span>
               {grupos.map((g) => (
                 <div key={g.clave} className="flex items-center gap-2">
@@ -184,8 +184,8 @@ export function GeneradorExtruir({ cabecera }: { cabecera?: React.ReactNode }) {
                     <span className="w-4 h-4 rounded-[4px] border border-[#E7E4DC] shrink-0" style={{ background: g.clave.startsWith("#") ? g.clave : "#999" }} aria-hidden="true" />
                   )}
                   <span className="min-w-0 flex-1 truncate text-[13px] text-[#1B1B18]" title={g.clave}>
-                    {g.clave.startsWith("capa:") ? `Capa ${g.clave.slice(5)}` : g.clave}
-                    <span className="text-[#9A978C]"> · {g.cerrados ? `${g.cerrados} cerrada${g.cerrados === 1 ? "" : "s"}` : ""}{g.cerrados && g.abiertos ? ", " : ""}{g.abiertos ? `${g.abiertos} abierta${g.abiertos === 1 ? "" : "s"}` : ""}</span>
+                    <T>{g.clave.startsWith("capa:") ? `Capa ${g.clave.slice(5)}` : g.clave}</T>
+                    <span className="text-[#9A978C]"> · <T>{g.cerrados ? `${g.cerrados} cerrada${g.cerrados === 1 ? "" : "s"}` : ""}</T><T>{g.cerrados && g.abiertos ? ", " : ""}</T><T>{g.abiertos ? `${g.abiertos} abierta${g.abiertos === 1 ? "" : "s"}` : ""}</T></span>
                   </span>
                   <select
                     value={modoDe(g.clave)}
