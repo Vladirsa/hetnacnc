@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -45,7 +46,7 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
   return (
     <label className="flex flex-col gap-1 min-w-0">
       <span className="text-[12.5px] font-semibold text-[#40403A]">
-        {f.etiqueta}
+        <T>{f.etiqueta}</T>
         {f.req && <span className="text-[#C2560A]"> *</span>}
       </span>
       {f.tipo === "opcion" ? (
@@ -77,7 +78,7 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
           {f.unidad && <span className="pr-3 text-[13px] text-[#9A978C] whitespace-nowrap">{f.unidad}</span>}
         </span>
       )}
-      {f.ayuda && <span className="text-[12px] text-[#6B6A63]">{f.ayuda}</span>}
+      {f.ayuda && <span className="text-[12px] text-[#6B6A63]"><T>{f.ayuda}</T></span>}
     </label>
   )
 }
@@ -90,7 +91,7 @@ const Confianza = ({ v }: { v: number }) => {
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/15" role="img" aria-label={`Confianza ${v} de 100`}>
         <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, background: color }} />
       </div>
-      <span className="whitespace-nowrap text-[12px] font-semibold" style={{ color }}>{texto}</span>
+      <span className="whitespace-nowrap text-[12px] font-semibold" style={{ color }}><T>{texto}</T></span>
     </div>
   )
 }
@@ -437,7 +438,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
         <section className="flex flex-col gap-4 rounded-[16px] border border-[#E7E4DC] bg-white p-4 shadow-[0_1px_2px_rgba(20,32,51,0.04)] lg:p-5">
           <div>
             <h2 className="m-0 font-display text-[18px] font-bold text-[#142033]">{proceso.nombre}</h2>
-            <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#6B6A63]">{proceso.texto}</p>
+            <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#6B6A63]"><T>{proceso.texto}</T></p>
           </div>
           {proceso.modos.length > 1 && (
             <div className="grid grid-cols-2 gap-1 rounded-[12px] bg-[#F1EFE8] p-1">
@@ -451,7 +452,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
 
           {tieneMaquina && proceso.presets.length > 0 && (
             <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{proceso.presetEtiqueta}: empieza con una típica</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{proceso.presetEtiqueta}<T>: empieza con una típica</T></span>
               <div className="flex flex-wrap gap-1.5">
                 {proceso.presets.map((p) => {
                   const puesto = Object.entries(p.valores).every(([k, v]) => String(e[k] ?? "") === String(v))
@@ -476,13 +477,13 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#142033]">
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-[#142033] text-[10px] text-white">{n + 1}</span>
-                  {titulo}
+                  <T>{titulo}</T>
                 </span>
                 {titulo === "Máquina" && tieneMaquina && (
                   <span className="flex items-center gap-2">
                     {perfilGuardado && (
                       <button type="button" onClick={olvidarMaquina} className="text-[12px] text-[#6B6A63] underline">
-                        olvidar
+                        <T>olvidar</T>
                       </button>
                     )}
                     <button type="button" onClick={guardarMaquina} className="rounded-full border px-2.5 py-1 text-[12px] font-semibold" style={{ borderColor: NARANJA, color: NARANJA }}>
@@ -505,26 +506,26 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
         {/* resultados */}
         <section className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-4">
           {!R ? (
-            <div className="rounded-[12px] border border-[#F2B8B5] bg-[#FDECEC] px-4 py-3 text-[14px] text-[#8A1C1C]">Revisa los datos: hay un valor que no se puede calcular.</div>
+            <div className="rounded-[12px] border border-[#F2B8B5] bg-[#FDECEC] px-4 py-3 text-[14px] text-[#8A1C1C]"><T>Revisa los datos: hay un valor que no se puede calcular.</T></div>
           ) : (
             <>
               {compartido && (
                 <div className="flex items-center justify-between gap-3 rounded-[12px] border border-[#BFE5CF] bg-[#EEF8F2] px-4 py-2.5 text-[13.5px] text-[#14532D]">
-                  <span>Te compartieron este cálculo. Cambia los datos de la máquina por los tuyos y guárdala para la próxima.</span>
+                  <span><T>Te compartieron este cálculo. Cambia los datos de la máquina por los tuyos y guárdala para la próxima.</T></span>
                   <button type="button" onClick={() => setCompartido(false)} className="text-[#14532D]/70 hover:text-[#14532D]" aria-label="Cerrar aviso">✕</button>
                 </div>
               )}
               {R.faltan.length > 0 && (
                 <div className="rounded-[12px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3 text-[14px] text-[#5A3A12]">
-                  <strong>Falta:</strong> {R.faltan.join(", ")}.
+                  <strong><T>Falta:</T></strong> {R.faltan.join(", ")}.
                 </div>
               )}
               {principal && (
                 <div className="overflow-hidden rounded-[18px] bg-[#142033] text-white shadow-[0_18px_40px_rgba(20,32,51,0.22)]">
                   <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
                     <div className="min-w-0">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#FFB27A]">{principal.titulo}</span>
-                      <h2 className="m-0 font-display text-[19px] font-bold leading-tight">{R.titulo}</h2>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#FFB27A]"><T>{principal.titulo}</T></span>
+                      <h2 className="m-0 font-display text-[19px] font-bold leading-tight"><T>{R.titulo}</T></h2>
                     </div>
                     <div className="flex gap-2">
                       <button type="button" onClick={copiar} className="rounded-[10px] border border-white/20 bg-white/10 px-3 py-2 text-[13px] font-semibold text-white hover:bg-white/20">
@@ -532,7 +533,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       </button>
                       <a href={whatsapp} target="_blank" rel="noopener noreferrer" title="Manda estos parámetros a tu operador, a un compañero o a un cliente" className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#15A067]">
                         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 3L8.5 11.5M17 3l-5 14-3.5-5.5L3 8l14-5z" /></svg>
-                        Enviar por WhatsApp
+                        <T>Enviar por WhatsApp</T>
                       </a>
                     </div>
                   </div>
@@ -540,9 +541,9 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                     <dl className={`m-0 grid gap-px bg-white/10 mt-4 ${grandes.length >= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
                       {grandes.map((f) => (
                         <div key={f.etiqueta} className="min-w-0 bg-[#142033] px-5 py-4">
-                          <dt className="text-[12px] font-semibold text-white/60">{f.etiqueta}</dt>
+                          <dt className="text-[12px] font-semibold text-white/60"><T>{f.etiqueta}</T></dt>
                           <dd className={`m-0 mt-1 break-words font-bold leading-none tracking-tight text-white ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono text-[26px] sm:text-[30px]" : "text-[19px] leading-tight sm:text-[21px]"}`}>{f.valor}</dd>
-                          {f.nota && <dd className="m-0 mt-1.5 text-[11.5px] leading-snug text-white/55">{f.nota}</dd>}
+                          {f.nota && <dd className="m-0 mt-1.5 text-[11.5px] leading-snug text-white/55"><T>{f.nota}</T></dd>}
                         </div>
                       ))}
                     </dl>
@@ -562,11 +563,11 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       {filas.map((f) => (
                         <div key={f.etiqueta} className={`flex flex-col gap-1 border-t border-[#F0EEE7] py-2.5 ${f.destacado ? "sm:col-span-2" : ""}`}>
                           <div className="flex items-baseline justify-between gap-3">
-                            <dt className="text-[13px] text-[#6B6A63]">{f.etiqueta}</dt>
+                            <dt className="text-[13px] text-[#6B6A63]"><T>{f.etiqueta}</T></dt>
                             <dd className={`m-0 text-right font-bold text-[#142033] ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono" : ""} ${f.destacado ? "text-[20px]" : "text-[15px]"}`}>{f.valor}</dd>
                           </div>
                           {f.medidor && <MedidorBarra m={f.medidor} />}
-                          {f.nota && <dd className="m-0 text-[11.5px] leading-snug text-[#9A978C]">{f.nota}</dd>}
+                          {f.nota && <dd className="m-0 text-[11.5px] leading-snug text-[#9A978C]"><T>{f.nota}</T></dd>}
                         </div>
                       ))}
                     </dl>
@@ -577,7 +578,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                 <div className="rounded-[16px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3">
                   <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#8A5A12]">
                     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M10 3l8 14H2L10 3z" strokeLinejoin="round" /><path d="M10 8.5v4M10 14.8v.2" strokeLinecap="round" /></svg>
-                    Revisa antes de cortar
+                    <T>Revisa antes de cortar</T>
                   </span>
                   <ul className="m-0 mt-1.5 flex flex-col gap-1.5 pl-5 text-[13.5px] leading-snug text-[#5A3A12]">
                     {R.avisos.map((a) => (
@@ -588,7 +589,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               )}
               {recomendados.length > 0 && busqueda && (
                 <div className="rounded-[16px] border border-[#E7E4DC] bg-white p-4">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">Para este trabajo, en la tienda HETNA</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]"><T>Para este trabajo, en la tienda HETNA</T></span>
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     {recomendados.map((x) => (
                       <ProductCard key={x.id} product={x} className="w-full min-w-0 lg:w-full" />
@@ -598,8 +599,8 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               )}
               {R.bloques.length > 0 && (
                 <form onSubmit={mandarCorreo} className="flex flex-col gap-2 rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3.5">
-                  <label htmlFor="calc-correo" className="text-[14px] font-bold text-[#142033]">Mándame estos parámetros por correo</label>
-                  <span className="text-[12.5px] text-[#6B6A63]">Te llega la liga para abrir este mismo cálculo cuando estés en la máquina.</span>
+                  <label htmlFor="calc-correo" className="text-[14px] font-bold text-[#142033]"><T>Mándame estos parámetros por correo</T></label>
+                  <span className="text-[12.5px] text-[#6B6A63]"><T>Te llega la liga para abrir este mismo cálculo cuando estés en la máquina.</T></span>
                   <div className="flex flex-wrap gap-2">
                     <input
                       id="calc-correo"
@@ -618,18 +619,18 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                   </div>
                   <label className="flex items-start gap-2 text-[12.5px] text-[#6B6A63]">
                     <input type="checkbox" checked={aceptaNovedades} onChange={(x) => setAceptaNovedades(x.target.checked)} className="mt-0.5 h-4 w-4 accent-[#C2560A]" />
-                    Quiero recibir consejos y ofertas de HETNA CNC (puedes darte de baja cuando quieras).
+                    <T>Quiero recibir consejos y ofertas de HETNA CNC (puedes darte de baja cuando quieras).</T>
                   </label>
                   {envio.texto && (
                     <span role="status" className={`text-[12.5px] ${envio.estado === "ok" ? "text-[#16794F]" : "text-[#B3261E]"}`}>
-                      {envio.texto}
+                      <T>{envio.texto}</T>
                     </span>
                   )}
                 </form>
               )}
               {R.consejos.length > 0 && (
                 <div className="rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">Consejos para este caso</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]"><T>Consejos para este caso</T></span>
                   <ul className="m-0 mt-1.5 flex list-none flex-col gap-1.5 p-0 text-[13.5px] leading-snug text-[#1B1B18]">
                     {R.consejos.map((c) => (
                       <li key={c} className="flex gap-2">
@@ -642,39 +643,39 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               )}
               {R.supuestos.length > 0 && (
                 <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">
-                  <strong>Cómo se calculó:</strong> {R.supuestos.join(" ")}
+                  <strong><T>Cómo se calculó:</T></strong> {R.supuestos.join(" ")}
                 </p>
               )}
-              <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">Son puntos de partida calculados con rangos de fabricantes y los límites de tu máquina. Prueba siempre primero en un retazo del mismo material.</p>
+              <p className="m-0 text-[12px] leading-snug text-[#6B6A63]"><T>Son puntos de partida calculados con rangos de fabricantes y los límites de tu máquina. Prueba siempre primero en un retazo del mismo material.</T></p>
             </>
           )}
           {/* ¿No tienes la máquina? Un taller de la red lo fabrica (herramientas → marketplace) */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#F2A65A] bg-[#FFF6EE] px-4 py-3.5">
             <div className="min-w-0">
-              <p className="m-0 text-[14.5px] font-bold text-[#142033]">¿No tienes la máquina?</p>
-              <p className="m-0 text-[13px] text-[#6B6A63]">Un taller de la red lo fabrica: ve el precio al instante o pide propuestas.</p>
+              <p className="m-0 text-[14.5px] font-bold text-[#142033]"><T>¿No tienes la máquina?</T></p>
+              <p className="m-0 text-[13px] text-[#6B6A63]"><T>Un taller de la red lo fabrica: ve el precio al instante o pide propuestas.</T></p>
             </div>
             <div className="flex flex-wrap gap-2">
               {PRECIO_INSTANTE[procesoId] && (
                 <LocalizedClientLink href={PRECIO_INSTANTE[procesoId]} className="rounded-[10px] border border-[#C2560A] px-4 py-2 text-[14px] font-bold text-[#B34D07] no-underline hover:bg-white">
-                  Precio al instante
+                  <T>Precio al instante</T>
                 </LocalizedClientLink>
               )}
               <LocalizedClientLink
                 href={`/cotizar?servicio=${encodeURIComponent(SERVICIO_DE[procesoId] || "Otro")}`}
                 className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-bold text-white no-underline hover:bg-[#A84A08]"
               >
-                Pedir a un taller
+                <T>Pedir a un taller</T>
               </LocalizedClientLink>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#E7E4DC] bg-white px-4 py-3.5">
             <div className="min-w-0">
-              <p className="m-0 text-[14.5px] font-bold text-[#142033]">¿Quieres cotizar con estos tiempos?</p>
-              <p className="m-0 text-[13px] text-[#6B6A63]">La app HETNA CNC convierte el tiempo de máquina en precio con tus costos.</p>
+              <p className="m-0 text-[14.5px] font-bold text-[#142033]"><T>¿Quieres cotizar con estos tiempos?</T></p>
+              <p className="m-0 text-[13px] text-[#6B6A63]"><T>La app HETNA CNC convierte el tiempo de máquina en precio con tus costos.</T></p>
             </div>
             <LocalizedClientLink href="/servicios/cotizador-cnc" className="rounded-[10px] bg-[#C2560A] px-4 py-2 text-[14px] font-bold text-white no-underline hover:bg-[#A84A08]">
-              Conocer la app
+              <T>Conocer la app</T>
             </LocalizedClientLink>
           </div>
         </section>
