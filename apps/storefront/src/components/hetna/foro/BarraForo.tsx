@@ -7,6 +7,7 @@
 // El encabezado del sitio también es fijo y su alto cambia (celular, menú),
 // así que se mide y se publica en --foro-top para que las columnas laterales
 // del foro empiecen justo debajo de esta barra.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
@@ -99,7 +100,7 @@ export function BarraForo() {
           className="shrink-0 rounded-full bg-[#C2560A] px-3 py-1.5 text-[13.5px] font-semibold text-white hover:bg-[#A84A08] sm:px-3.5"
         >
           <span className="sm:hidden">+</span>
-          <span className="hidden sm:inline">+ Publicar</span>
+          <span className="hidden sm:inline"><T>+ Publicar</T></span>
         </LocalizedClientLink>
       </nav>
     </div>
