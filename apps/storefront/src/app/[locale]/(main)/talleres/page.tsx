@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
@@ -18,7 +19,7 @@ const rutaDePais = (pais: string) => {
 import { listarTalleres } from "@/lib/hetna/talleres"
 import { redPorEstado } from "@/lib/foro/red"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/talleres" },
   title: "Talleres CNC en México",
   description:
@@ -117,4 +118,9 @@ export default async function TalleresPage({
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
