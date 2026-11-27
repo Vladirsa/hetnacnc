@@ -17,6 +17,7 @@ import { EN_FASE4_B } from "./en-fase4-b"
 import { EN_FASE4_C } from "./en-fase4-c"
 import { EN_FASE4_D } from "./en-fase4-d"
 import { EN_FASE4_E } from "./en-fase4-e"
+import { EN_FASE4_F } from "./en-fase4-f"
 
 export const EN: Record<string, string> = {
   ...EN_FASE1,
@@ -32,6 +33,7 @@ export const EN: Record<string, string> = {
   ...EN_FASE4_C,
   ...EN_FASE4_D,
   ...EN_FASE4_E,
+  ...EN_FASE4_F,
   // Lo de en.ts manda si una frase está en los dos
   ...EN_BASE,
 }
