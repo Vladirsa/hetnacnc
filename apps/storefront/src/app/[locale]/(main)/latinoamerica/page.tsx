@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { FormLatam } from "@/components/hetna/latam/FormLatam"
@@ -10,7 +12,7 @@ import { conteoLatam } from "@/lib/hetna/latam"
 // hay en cada uno para decidir qué país abrir primero.
 export const revalidate = 300
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/latinoamerica" },
   title: { absolute: "HETNA CNC llega a Latinoamérica: talleres fundadores por país" },
   description:
@@ -33,15 +35,15 @@ export default async function LatinoamericaPage() {
     <main className="w-full bg-[#FAF9F6]">
       <section className="bg-[#142033] text-white">
         <div className="mx-auto max-w-[1100px] px-4 py-14 lg:px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]">Muy pronto</p>
-          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl">HETNA CNC llega a Latinoamérica</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#F2A25F]"><TS>Muy pronto</TS></p>
+          <h1 className="mt-2 max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl"><TS>HETNA CNC llega a Latinoamérica</TS></h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">
-            La red de talleres CNC de México se abre a más países. Apunta tu taller como fundador o pide que abramos en tu país: abrimos primero donde más talleres y clientes se registren.
+            <TS>La red de talleres CNC de México se abre a más países. Apunta tu taller como fundador o pide que abramos en tu país: abrimos primero donde más talleres y clientes se registren.</TS>
           </p>
           {totalMundo > 0 && (
             <p className="mt-4 text-sm text-white/80">
-              Ya ubicamos {totalMundo.toLocaleString("es-MX")} empresas CNC en {grupos.length} países.{" "}
-              <a href="/mx/talleres#directorio" className="font-semibold text-[#F2A25F] underline">Verlas en el mapa</a>
+              <TS>Ya ubicamos</TS> {totalMundo.toLocaleString("es-MX")} <TS>empresas CNC en</TS> {grupos.length} <TS>países.</TS>{" "}
+              <a href="/mx/talleres#directorio" className="font-semibold text-[#F2A25F] underline"><TS>Verlas en el mapa</TS></a>
             </p>
           )}
           <div className="mt-6 flex flex-wrap gap-2">
@@ -74,11 +76,16 @@ export default async function LatinoamericaPage() {
         </div>
 
         <div className="mx-auto mt-12 max-w-2xl rounded-3xl border border-[#E7E4DC] bg-white p-6 sm:p-8">
-          <h2 className="text-2xl font-extrabold text-[#142033]">Apúntate</h2>
-          <p className="mb-4 mt-1 text-sm text-[#6B675C]">Sin costo. Te avisamos antes que a nadie cuando abramos tu país.</p>
+          <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Apúntate</TS></h2>
+          <p className="mb-4 mt-1 text-sm text-[#6B675C]"><TS>Sin costo. Te avisamos antes que a nadie cuando abramos tu país.</TS></p>
           <FormLatam />
         </div>
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
