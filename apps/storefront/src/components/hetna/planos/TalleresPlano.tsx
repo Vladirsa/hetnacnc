@@ -10,6 +10,7 @@
 // A la medida (página del plano con ?ancho=…): el precio de cada taller se
 // ajusta en la misma proporción que cambia el costo de fabricarlo; es una
 // referencia y el pedido va como solicitud al taller.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useMemo, useState } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -93,10 +94,10 @@ export default function TalleresPlano({
   return (
     <section className="rounded-2xl border border-[#E7E4DC] bg-white p-4 sm:p-5" aria-labelledby="talleres-plano">
       <h2 id="talleres-plano" className="m-0 text-[17px] font-bold text-[#142033]">
-        Cómpralo hecho: talleres que te lo fabrican
+        <T>Cómpralo hecho: talleres que te lo fabrican</T>
       </h2>
       <p className="m-0 mt-1 text-[13px] text-[#6B6A63]">
-        Kit de piezas cortadas en CNC, listo para armar.{aMedida && medidaTexto ? ` Precios aproximados a tu medida (${medidaTexto}).` : ""}
+        <T>Kit de piezas cortadas en CNC, listo para armar.</T>{aMedida && medidaTexto ? ` Precios aproximados a tu medida (${medidaTexto}).` : ""}
       </p>
 
       {conOferta.length > 0 ? (
@@ -111,13 +112,13 @@ export default function TalleresPlano({
                 onClick={() => setElegida(v.id)}
                 className={`min-h-[40px] rounded-full border px-3 text-[13px] font-semibold ${v.id === elegida ? "border-[#142033] bg-[#142033] text-white" : "border-[#D9D5C9] bg-white text-[#40403A]"}`}
               >
-                {v.titulo}
+                <T>{v.titulo}</T>
               </button>
             ))}
           </div>
           {variante?.recomendado ? (
             <p className="m-0 mt-2 text-[12.5px] text-[#6B6A63]">
-              Precio recomendado por HETNA: {pesos(red(variante.recomendado * factorMedida))}
+              <T>Precio recomendado por HETNA:</T> {pesos(red(variante.recomendado * factorMedida))}
             </p>
           ) : null}
           {hayUbicaciones && (
@@ -138,25 +139,25 @@ export default function TalleresPlano({
                 <li key={o.id} className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${destacado || i === 0 ? "border-[#FF9F57] bg-[#FFF8F1]" : "border-[#EEECE6]"}`}>
                   <div className="min-w-[180px] flex-1">
                     <p className="m-0 text-[14.5px] text-[#142033]">
-                      <b>{o.seller?.name || "Taller HETNA"}</b> te lo fabrica en <b>{pesos(precio)}</b>
-                      {aMedida ? <span className="text-[12px] text-[#6B6A63]"> aprox.</span> : null}
+                      <b>{o.seller?.name || "Taller HETNA"}</b> <T>te lo fabrica en</T> <b>{pesos(precio)}</b>
+                      {aMedida ? <span className="text-[12px] text-[#6B6A63]"> <T>aprox.</T></span> : null}
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5 text-[12px]">
-                      {destacado ? <span className="rounded-full bg-[#FF6A1A] px-2 py-0.5 font-semibold text-white">★ Destacado</span> : null}
+                      {destacado ? <span className="rounded-full bg-[#FF6A1A] px-2 py-0.5 font-semibold text-white"><T>★ Destacado</T></span> : null}
                       {lugar.estado ? (
                         <span className="rounded-full bg-[#F3F1EA] px-2 py-0.5 font-semibold text-[#40403A]">
                           📍 {textoUbicacion(lugar)}
                           {cerca ? ` · ${cerca}` : ""}
                         </span>
                       ) : null}
-                      {gratis ? <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 font-semibold text-[#1E7B3A]">Envío gratis</span> : null}
-                      {dias ? <span className="rounded-full bg-[#EEF1F6] px-2 py-0.5 font-semibold text-[#142033]">Lo tiene en {dias} {dias === 1 ? "día hábil" : "días hábiles"} + envío</span> : null}
-                      {masBarato && lista.length > 1 ? <span className="rounded-full bg-[#FFE9D6] px-2 py-0.5 font-semibold text-[#B34D07]">Mejor precio</span> : null}
+                      {gratis ? <span className="rounded-full bg-[#E6F4EA] px-2 py-0.5 font-semibold text-[#1E7B3A]"><T>Envío gratis</T></span> : null}
+                      {dias ? <span className="rounded-full bg-[#EEF1F6] px-2 py-0.5 font-semibold text-[#142033]"><T>Lo tiene en</T> {dias} {dias === 1 ? "día hábil" : "días hábiles"} <T>+ envío</T></span> : null}
+                      {masBarato && lista.length > 1 ? <span className="rounded-full bg-[#FFE9D6] px-2 py-0.5 font-semibold text-[#B34D07]"><T>Mejor precio</T></span> : null}
                     </div>
                   </div>
                   {aMedida ? (
                     <LocalizedClientLink href="/cotizar" className="inline-flex min-h-[44px] items-center rounded-[12px] border border-[#142033] px-4 text-[14px] font-bold text-[#142033]">
-                      Pedir a tu medida
+                      <T>Pedir a tu medida</T>
                     </LocalizedClientLink>
                   ) : (
                     <button
@@ -175,16 +176,16 @@ export default function TalleresPlano({
         </>
       ) : (
         <p className="m-0 mt-3 text-[14px] text-[#40403A]">
-          Todavía ningún taller lo ofrece. Pide que te lo fabriquen y los talleres te mandan propuestas.{" "}
-          <LocalizedClientLink href="/cotizar" className="font-semibold text-[#B34D07]">Pedir propuestas →</LocalizedClientLink>
+          <T>Todavía ningún taller lo ofrece. Pide que te lo fabriquen y los talleres te mandan propuestas.</T>{" "}
+          <LocalizedClientLink href="/cotizar" className="font-semibold text-[#B34D07]"><T>Pedir propuestas →</T></LocalizedClientLink>
         </p>
       )}
       <p className="m-0 mt-3 text-[12px] text-[#6B6A63]">
-        ¿Tienes taller con router CNC? Ofrece este mueble desde tu panel en «Ofertar en planos».
+        <T>¿Tienes taller con router CNC? Ofrece este mueble desde tu panel en «Ofertar en planos».</T>
         {slug ? (
           <>
             {" "}
-            <LocalizedClientLink href={`/planos/${slug}`} className="text-[#B34D07]">Ver el plano gratis</LocalizedClientLink>
+            <LocalizedClientLink href={`/planos/${slug}`} className="text-[#B34D07]"><T>Ver el plano gratis</T></LocalizedClientLink>
           </>
         ) : null}
       </p>
