@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useState, useTransition } from "react"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
@@ -57,9 +58,9 @@ function CampoCP({ id, titulo, cp, setCp, colonia, setColonia, setInfo }: {
 
   return (
     <fieldset className="grid gap-3 rounded-2xl border border-[#E7E4DC] p-4">
-      <legend className="px-1 text-sm font-extrabold text-[#142033]">{titulo}</legend>
+      <legend className="px-1 text-sm font-extrabold text-[#142033]"><T>{titulo}</T></legend>
       <div>
-        <label className={ETIQUETA} htmlFor={`cp_${id}`}>Código postal</label>
+        <label className={ETIQUETA} htmlFor={`cp_${id}`}><T>Código postal</T></label>
         <input
           id={`cp_${id}`}
           value={cp}
@@ -69,7 +70,7 @@ function CampoCP({ id, titulo, cp, setCp, colonia, setColonia, setInfo }: {
           className={CAMPO}
           placeholder="Ej. 64000"
         />
-        {buscando && <p className="mt-1 text-xs text-[#6B675C]">Buscando colonias…</p>}
+        {buscando && <p className="mt-1 text-xs text-[#6B675C]"><T>Buscando colonias…</T></p>}
         {error && <p className="mt-1 text-xs text-[#B3261E]">{error}</p>}
         {info && (
           <p className="mt-1 text-xs text-[#6B675C]">
@@ -79,7 +80,7 @@ function CampoCP({ id, titulo, cp, setCp, colonia, setColonia, setInfo }: {
       </div>
       {info && info.colonias.length > 0 && (
         <div>
-          <label className={ETIQUETA} htmlFor={`col_${id}`}>Colonia</label>
+          <label className={ETIQUETA} htmlFor={`col_${id}`}><T>Colonia</T></label>
           <select id={`col_${id}`} value={colonia} onChange={(e) => setColonia(e.target.value)} required className={CAMPO}>
             <option value="">Elige la colonia…</option>
             {info.colonias.map((c) => (
@@ -98,7 +99,7 @@ function CampoCP({ id, titulo, cp, setCp, colonia, setColonia, setInfo }: {
 const Dato = ({ ok, texto }: { ok: boolean; texto: string }) => (
   <span className={`inline-flex items-center gap-1.5 ${ok ? "text-[#142033]" : "text-[#9A968B] line-through"}`}>
     <span className={`h-2 w-2 rounded-full ${ok ? "bg-[#1E7B3A]" : "bg-[#C9C5BA]"}`} />
-    {texto}
+    <T>{texto}</T>
   </span>
 )
 
@@ -142,9 +143,9 @@ export default function CotizadorEnvio() {
 
   return (
     <section id="cotizar-envio" className="mt-8 scroll-mt-28 rounded-3xl border border-[#E7E4DC] bg-white p-5 sm:p-8">
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]">Cotiza al momento</p>
-      <h2 className="mt-1 text-2xl font-extrabold text-[#142033]">¿Cuánto cuesta tu envío?</h2>
-      <p className="mt-1 text-sm text-[#6B675C]">Compara paqueterías con precio final, días de entrega y forma de recolección.</p>
+      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#C2560A]"><T>Cotiza al momento</T></p>
+      <h2 className="mt-1 text-2xl font-extrabold text-[#142033]"><T>¿Cuánto cuesta tu envío?</T></h2>
+      <p className="mt-1 text-sm text-[#6B675C]"><T>Compara paqueterías con precio final, días de entrega y forma de recolección.</T></p>
 
       <form onSubmit={enviar} className="mt-5 grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -153,7 +154,7 @@ export default function CotizadorEnvio() {
         </div>
 
         <fieldset className="grid gap-3 rounded-2xl border border-[#E7E4DC] p-4">
-          <legend className="px-1 text-sm font-extrabold text-[#142033]">Paquete</legend>
+          <legend className="px-1 text-sm font-extrabold text-[#142033]"><T>Paquete</T></legend>
           <div className="flex flex-wrap gap-2">
             {MEDIDAS.map((x) => (
               <button
@@ -171,7 +172,7 @@ export default function CotizadorEnvio() {
           </div>
           <div className="grid gap-3 sm:grid-cols-5">
             <div className="sm:col-span-5 md:col-span-1">
-              <label className={ETIQUETA} htmlFor="tipo">Tipo</label>
+              <label className={ETIQUETA} htmlFor="tipo"><T>Tipo</T></label>
               <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} className={CAMPO}>
                 {EMPAQUES.map((x) => (
                   <option key={x}>{x}</option>
@@ -187,7 +188,7 @@ export default function CotizadorEnvio() {
               ] as const
             ).map(([k, label, ph]) => (
               <div key={k}>
-                <label className={ETIQUETA} htmlFor={k}>{label}</label>
+                <label className={ETIQUETA} htmlFor={k}><T>{label}</T></label>
                 <input
                   id={k}
                   value={m[k]}
@@ -200,7 +201,7 @@ export default function CotizadorEnvio() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-[#6B675C]">Mide y pesa el paquete ya embalado para evitar cargos extra por sobrepeso.</p>
+          <p className="text-xs text-[#6B675C]"><T>Mide y pesa el paquete ya embalado para evitar cargos extra por sobrepeso.</T></p>
         </fieldset>
 
         <button
@@ -212,7 +213,7 @@ export default function CotizadorEnvio() {
         </button>
       </form>
 
-      {pendiente && <p className="mt-4 text-sm text-[#6B675C]">Consultando paqueterías, tarda unos segundos…</p>}
+      {pendiente && <p className="mt-4 text-sm text-[#6B675C]"><T>Consultando paqueterías, tarda unos segundos…</T></p>}
       {error && <p className="mt-4 rounded-xl bg-[#FDECEA] p-3 text-sm text-[#B3261E]">{error}</p>}
 
       {opciones && (
@@ -220,16 +221,16 @@ export default function CotizadorEnvio() {
           {info && <p className="mb-3 rounded-xl bg-[#F3F1EA] p-3 text-sm text-[#40403A]">{info}</p>}
           {opciones.length === 0 ? (
             <p className="rounded-xl bg-[#F3F1EA] p-4 text-sm text-[#40403A]">
-              No encontramos paqueterías para esa ruta.{" "}
+              <T>No encontramos paqueterías para esa ruta.</T>{" "}
               <a
                 href={ligaWhatsApp(`Hola, quiero cotizar un envío de ${cpO} a ${cpD}: ${tipo}, ${m.largo}×${m.ancho}×${m.alto} cm, ${m.peso} kg.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[#C2560A] underline"
               >
-                Escríbenos por WhatsApp
+                <T>Escríbenos por WhatsApp</T>
               </a>{" "}
-              y lo cotizamos contigo.
+              <T>y lo cotizamos contigo.</T>
             </p>
           ) : (
             <ul className="grid gap-3">
@@ -241,18 +242,18 @@ export default function CotizadorEnvio() {
                   <div>
                     <p className="text-lg font-extrabold text-[#142033]">
                       {o.paqueteria} <span className="text-sm font-normal text-[#6B675C]">· {o.servicio}</span>
-                      {i === 0 && <span className="ml-2 rounded-full bg-[#1E7B3A] px-2 py-0.5 align-middle text-[11px] font-bold text-white">Más barato</span>}
+                      {i === 0 && <span className="ml-2 rounded-full bg-[#1E7B3A] px-2 py-0.5 align-middle text-[11px] font-bold text-white"><T>Más barato</T></span>}
                     </p>
                     <div className="mt-2 grid gap-1 text-[13px] sm:grid-cols-2">
                       <div>
-                        <p className="font-semibold text-[#6B675C]">Recepción</p>
+                        <p className="font-semibold text-[#6B675C]"><T>Recepción</T></p>
                         <div className="flex flex-wrap gap-x-3">
                           <Dato ok={o.recoleccion} texto="Con recolección" />
                           {o.llevar_sucursal && <Dato ok texto="Llevar a sucursal" />}
                         </div>
                       </div>
                       <div>
-                        <p className="font-semibold text-[#6B675C]">Entrega</p>
+                        <p className="font-semibold text-[#6B675C]"><T>Entrega</T></p>
                         <div className="flex flex-wrap gap-x-3">
                           <Dato ok={o.entrega_domicilio} texto="Domicilio" />
                           {o.entrega_sucursal && <Dato ok texto="Sucursal (Ocurre)" />}
@@ -261,20 +262,20 @@ export default function CotizadorEnvio() {
                     </div>
                   </div>
                   <div className="text-sm text-[#40403A]">
-                    <p className="font-semibold text-[#6B675C]">Tiempo estimado</p>
+                    <p className="font-semibold text-[#6B675C]"><T>Tiempo estimado</T></p>
                     <p className="font-bold text-[#142033]">{o.dias ? `${o.dias} ${o.dias === 1 ? "día hábil" : "días hábiles"}` : "Según la paquetería"}</p>
                   </div>
                   <div className="grid gap-2 sm:text-right">
                     <p className="text-2xl font-extrabold text-[#142033]">
-                      {pesos(o.precio)} <span className="text-xs font-semibold text-[#6B675C]">MXN</span>
+                      {pesos(o.precio)} <span className="text-xs font-semibold text-[#6B675C]"><T>MXN</T></span>
                     </p>
-                    <p className="-mt-2 text-[11px] text-[#6B675C]">IVA incluido</p>
+                    <p className="-mt-2 text-[11px] text-[#6B675C]"><T>IVA incluido</T></p>
                     {cotizacion && (
                       <LocalizedClientLink
                         href={`/servicios/envios-hetna/solicitar?c=${encodeURIComponent(cotizacion)}&t=${encodeURIComponent(o.tarifa_id)}`}
                         className="rounded-xl bg-[#142033] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-125"
                       >
-                        Solicitar este servicio
+                        <T>Solicitar este servicio</T>
                       </LocalizedClientLink>
                     )}
                   </div>
@@ -283,7 +284,7 @@ export default function CotizadorEnvio() {
             </ul>
           )}
           <p className="mt-3 text-xs text-[#6B675C]">
-            Precios con IVA incluido. Si el paquete real pesa o mide distinto, la paquetería puede cobrar la diferencia. Para solicitar necesitas iniciar sesión.
+            <T>Precios con IVA incluido. Si el paquete real pesa o mide distinto, la paquetería puede cobrar la diferencia. Para solicitar necesitas iniciar sesión.</T>
           </p>
         </div>
       )}
