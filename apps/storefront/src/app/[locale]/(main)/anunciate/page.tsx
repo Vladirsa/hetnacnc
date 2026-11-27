@@ -87,8 +87,8 @@ export default async function Anunciate({ searchParams }: Props) {
               ["Sin contratos", "Pagas con Mercado Pago: tarjeta, OXXO o transferencia"],
             ].map(([t, d]) => (
               <li key={t} className="list-none rounded-[12px] border border-[#E7E4DC] bg-white p-4">
-                <p className="m-0 text-[15px] font-bold text-[#1B1B18]">{t}</p>
-                <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]">{d}</p>
+                <p className="m-0 text-[15px] font-bold text-[#1B1B18]"><TS>{t}</TS></p>
+                <p className="m-0 mt-1 text-[13.5px] text-[#6B6A63]"><TS>{d}</TS></p>
               </li>
             ))}
           </ul>
@@ -100,7 +100,7 @@ export default async function Anunciate({ searchParams }: Props) {
           </h2>
           <p className="m-0 text-[14px] text-[#6B6A63]">
             <TS>Vistas y clics reales de los anuncios que ya corrieron en HETNA; se actualizan cada hora.</TS>
-            {ctrPromedio != null && <> <TS>Hoy, en promedio,</TS> {ctrPromedio}<TS>% de quienes ven un anuncio le dan clic.</TS></>}
+            {ctrPromedio != null && <> <TS>Hoy, en promedio,</TS> <TS>{ctrPromedio}</TS><TS>% de quienes ven un anuncio le dan clic.</TS></>}
           </p>
           <div className="overflow-x-auto rounded-[14px] border border-[#E7E4DC] bg-white">
             <table className="w-full min-w-[860px] border-collapse text-left text-[13.5px]">
@@ -122,12 +122,12 @@ export default async function Anunciate({ searchParams }: Props) {
                   <tr key={e.id} className="border-t border-[#F0EDE6] align-top">
                     <td className="px-3 py-3">
                       <p className="m-0 font-bold text-[#1B1B18]">{nombreCorto(e.nombre)}</p>
-                      <p className="m-0 mt-0.5 max-w-[320px] text-[12.5px] leading-snug text-[#6B6A63]">{e.donde}</p>
-                      <p className="m-0 mt-0.5 text-[12px] text-[#9A978F]">{e.medidas}</p>
+                      <p className="m-0 mt-0.5 max-w-[320px] text-[12.5px] leading-snug text-[#6B6A63]"><TS>{e.donde}</TS></p>
+                      <p className="m-0 mt-0.5 text-[12px] text-[#9A978F]"><TS>{e.medidas}</TS></p>
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">{e.vistasMes ? miles(e.vistasMes) : <span className="text-[#9A978F]"><TS>nuevo</TS></span>}</td>
                     <td className="px-3 py-3 text-right tabular-nums">
-                      {metricas[e.id]?.ctr != null ? `${metricas[e.id].ctr}%` : <span className="text-[#9A978F]">—</span>}
+                      <TS>{metricas[e.id]?.ctr != null ? `${metricas[e.id].ctr}%` : <span className="text-[#9A978F]">—</span>}</TS>
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">{pesos(calcularMonto(e.id, 7))}</td>
                     <td className="px-3 py-3 text-right font-bold tabular-nums">{pesos(calcularMonto(e.id, 30))}</td>
@@ -145,7 +145,7 @@ export default async function Anunciate({ searchParams }: Props) {
             </table>
           </div>
           <p className="m-0 text-[12.5px] text-[#6B6A63]">
-            <TS>Semana: para probar (sale más cara por día). 3 meses: 10% menos. Año: 25% menos. Paquetes de vistas:</TS> {PAQUETES_VISTAS.map((v) => miles(v)).join(", ")}.
+            <TS>Semana: para probar (sale más cara por día). 3 meses: 10% menos. Año: 25% menos. Paquetes de vistas:</TS> <TS>{PAQUETES_VISTAS.map((v) => miles(v)).join(", ")}</TS>.
           </p>
         </section>
 
@@ -180,10 +180,10 @@ export default async function Anunciate({ searchParams }: Props) {
           )}
           <FormAnunciate espacios={espacios} inicial={espacio} />
           <p className="m-0 text-[13.5px] text-[#6B6A63]">
-            <TS>¿Una campaña en varios espacios o por más tiempo?</TS>{" "}
+            <TS>¿Una campaña en varios espacios o por más tiempo?</TS><TS>{" "}</TS>
             <LocalizedClientLink href="/contacto" className="font-semibold text-[#B34D07] underline">
               <TS>Escríbenos desde Contacto</TS>
-            </LocalizedClientLink>{" "}
+            </LocalizedClientLink><TS>{" "}</TS>
             <TS>y te armamos un paquete.</TS>
           </p>
         </section>
@@ -196,12 +196,12 @@ export default async function Anunciate({ searchParams }: Props) {
             {PREGUNTAS.map((p) => (
               <details key={p.q} className="group py-1">
                 <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold text-[#1B1B18]">
-                  {p.q}
+                  <TS>{p.q}</TS>
                   <span className="text-[20px] text-[#C2560A] transition-transform group-open:rotate-45" aria-hidden="true">
                     +
                   </span>
                 </summary>
-                <p className="m-0 pb-3 text-[14.5px] leading-relaxed text-[#44433D]">{p.a}</p>
+                <p className="m-0 pb-3 text-[14.5px] leading-relaxed text-[#44433D]"><TS>{p.a}</TS></p>
               </details>
             ))}
           </div>
