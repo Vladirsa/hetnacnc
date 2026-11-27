@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { IMAGEN_OG } from "@/lib/helpers/seo"
@@ -7,7 +9,7 @@ import { leerDirectorio } from "@/lib/cotizador/taller-publico"
 // Cada uno tiene su página /t/<slug> para subir archivo y pedir cotización.
 type Props = { params: Promise<{ locale: string }> }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const titulo = "Talleres CNC que cotizan en línea"
   const descripcion = "Sube tu archivo DXF, SVG o STL y pide tu cotización de corte láser, router, plasma o impresión 3D directo a un taller."
@@ -24,9 +26,9 @@ export default async function DirectorioTalleresPage() {
   return (
     <main className="container py-8 md:py-12">
       <div className="mx-auto max-w-5xl">
-        <h1 className="m-0 text-[28px] font-bold leading-tight text-[#142033] md:text-[34px]">Talleres que cotizan en línea</h1>
+        <h1 className="m-0 text-[28px] font-bold leading-tight text-[#142033] md:text-[34px]"><TS>Talleres que cotizan en línea</TS></h1>
         <p className="m-0 mt-2 max-w-2xl text-[16px] text-[#40403A]">
-          Elige un taller, sube tu archivo y recibe tu cotización. Muchos te muestran un precio estimado al momento.
+          <TS>Elige un taller, sube tu archivo y recibe tu cotización. Muchos te muestran un precio estimado al momento.</TS>
         </p>
 
         {talleres.length ? (
@@ -48,7 +50,7 @@ export default async function DirectorioTalleresPage() {
                   <span className="min-w-0">
                     <span className="block text-[16px] font-semibold text-[#1B1B18]">{t.nombre}</span>
                     {t.ciudad ? <span className="block text-[13px] text-[#7A776E]">{t.ciudad}</span> : null}
-                    {t.descripcion ? <span className="mt-1 line-clamp-2 block text-[13px] text-[#40403A]">{t.descripcion}</span> : null}
+                    {t.descripcion ? <span className="mt-1 line-clamp-2 block text-[13px] text-[#40403A]"><TS>{t.descripcion}</TS></span> : null}
                   </span>
                 </a>
               </li>
@@ -56,27 +58,32 @@ export default async function DirectorioTalleresPage() {
           </ul>
         ) : (
           <p className="m-0 mt-6 rounded-[16px] border border-[#E7E4DC] bg-white p-5 text-[15px] text-[#40403A]">
-            Pronto verás aquí los talleres. Mientras tanto puedes{" "}
+            <TS>Pronto verás aquí los talleres. Mientras tanto puedes</TS>{" "}
             <a href="/cotizar" className="underline">
-              publicar tu proyecto
+              <TS>publicar tu proyecto</TS>
             </a>{" "}
-            y recibir cotizaciones de varios talleres.
+            <TS>y recibir cotizaciones de varios talleres.</TS>
           </p>
         )}
 
         <section className="mt-10 rounded-[18px] bg-[#142033] p-6 text-white">
-          <h2 className="m-0 text-[20px] font-bold">¿Tienes un taller CNC?</h2>
+          <h2 className="m-0 text-[20px] font-bold"><TS>¿Tienes un taller CNC?</TS></h2>
           <p className="m-0 mt-2 max-w-2xl text-[15px] text-white/85">
-            Con el Cotizador HETNA tienes tu propia página para que tus clientes suban su archivo y vean un precio al momento. Las solicitudes te llegan a la app.
+            <TS>Con el Cotizador HETNA tienes tu propia página para que tus clientes suban su archivo y vean un precio al momento. Las solicitudes te llegan a la app.</TS>
           </p>
           <a
             href="/servicios/cotizador-cnc"
             className="mt-4 inline-flex rounded-[10px] bg-[#C2560A] px-5 py-3 text-[15px] font-semibold text-white hover:bg-[#A84A08]"
           >
-            Quiero mi cotizador en línea
+            <TS>Quiero mi cotizador en línea</TS>
           </a>
         </section>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
