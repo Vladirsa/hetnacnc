@@ -1,3 +1,5 @@
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -6,7 +8,7 @@ import { diasRestantes, lugarTrabajo, tituloTrabajo, trabajoPorFolio, type Traba
 
 export const revalidate = 120
 
-export async function generateMetadata({
+async function generateMetadataEs({
   params,
 }: {
   params: Promise<{ folio: string }>
@@ -46,7 +48,7 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
   return (
     <main className="mx-auto w-full max-w-[900px] px-4 py-8">
       <LocalizedClientLink href="/trabajos" className="text-sm font-semibold text-[#C2560A]">
-        ← Todos los trabajos abiertos
+        <TS>← Todos los trabajos abiertos</TS>
       </LocalizedClientLink>
 
       <article className="mt-3 rounded-3xl border border-[#E7E4DC] bg-white p-6 sm:p-8">
@@ -65,39 +67,39 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
         </div>
 
         <h1 className="mt-2 text-2xl font-extrabold leading-snug text-[#142033] sm:text-3xl">{tituloTrabajo(t)}</h1>
-        {lugar && <p className="mt-1 text-[#6B675C]">📍 Entrega en {lugar}</p>}
+        {lugar && <p className="mt-1 text-[#6B675C]"><TS>📍 Entrega en</TS> {lugar}</p>}
 
         {t.descripcion ? (
-          <p className="mt-5 whitespace-pre-line text-[#2B2A26]">{t.descripcion}</p>
+          <p className="mt-5 whitespace-pre-line text-[#2B2A26]"><TS>{t.descripcion}</TS></p>
         ) : (
           <p className="mt-5 rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
-            🔒 El cliente reservó la descripción completa para los talleres que autorice. Regístrate como taller y pide acceso desde tu panel.
+            <TS>🔒 El cliente reservó la descripción completa para los talleres que autorice. Regístrate como taller y pide acceso desde tu panel.</TS>
           </p>
         )}
-        {t.presupuesto && <p className="mt-3 text-sm text-[#40403A]"><b>Presupuesto del cliente:</b> {t.presupuesto}</p>}
+        {t.presupuesto && <p className="mt-3 text-sm text-[#40403A]"><b><TS>Presupuesto del cliente:</TS></b> {t.presupuesto}</p>}
         {t.modalidad === "restringida" && (
-          <p className="mt-3 text-sm text-[#40403A]">🔐 Licitación restringida: los planos se comparten sólo con los talleres que el cliente autoriza.</p>
+          <p className="mt-3 text-sm text-[#40403A]"><TS>🔐 Licitación restringida: los planos se comparten sólo con los talleres que el cliente autoriza.</TS></p>
         )}
 
         <dl className="mt-6 grid gap-x-6 gap-y-3 border-t border-[#E7E4DC] pt-5 sm:grid-cols-2">
           {DETALLES.filter(([k]) => t[k]).map(([k, etiqueta]) => (
             <div key={k}>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[#6B675C]">{etiqueta}</dt>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-[#6B675C]"><TS>{etiqueta}</TS></dt>
               <dd className="font-semibold text-[#142033]">{String(t[k])}</dd>
             </div>
           ))}
         </dl>
         {(t.preguntas || []).length > 0 && (
           <section className="mt-6 border-t border-[#E7E4DC] pt-5">
-            <h2 className="text-base font-extrabold text-[#142033]">Preguntas de talleres y respuestas del cliente</h2>
+            <h2 className="text-base font-extrabold text-[#142033]"><TS>Preguntas de talleres y respuestas del cliente</TS></h2>
             <ul className="mt-3 grid gap-3">
               {(t.preguntas || []).map((q, i) => (
                 <li key={i} className="rounded-xl bg-[#FAF9F5] p-3 text-sm">
                   <p className="text-[#142033]">
-                    <span className="font-bold">Pregunta:</span> {q.pregunta}
+                    <span className="font-bold"><TS>Pregunta:</TS></span> <TS>{q.pregunta}</TS>
                   </p>
                   <p className="mt-1 text-[#40403A]">
-                    <span className="font-bold text-[#1E7B3A]">Cliente:</span> {q.respuesta}
+                    <span className="font-bold text-[#1E7B3A]"><TS>Cliente:</TS></span> <TS>{q.respuesta}</TS>
                   </p>
                 </li>
               ))}
@@ -105,13 +107,13 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
           </section>
         )}
         <p className="mt-5 text-xs text-[#6B675C]">
-          Los datos del cliente y sus archivos sólo los ven los talleres registrados, desde su panel.
+          <TS>Los datos del cliente y sus archivos sólo los ven los talleres registrados, desde su panel.</TS>
         </p>
       </article>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <section className="rounded-2xl bg-[#142033] p-6 text-white">
-          <h2 className="text-lg font-extrabold">¿Eres taller?</h2>
+          <h2 className="text-lg font-extrabold"><TS>¿Eres taller?</TS></h2>
           <p className="mt-1 text-sm text-white/75">
             {abierta
               ? "Manda tu precio y tiempo de entrega. Si el cliente te elige, te paga directo a tu Mercado Pago o PayPal (o por HETNA si no los conectas)."
@@ -125,18 +127,23 @@ export default async function TrabajoPage({ params }: { params: Promise<{ folio:
           </a>
         </section>
         <section className="rounded-2xl border border-[#E7E4DC] bg-[#FBFAF6] p-6">
-          <h2 className="text-lg font-extrabold text-[#142033]">¿Necesitas algo parecido?</h2>
+          <h2 className="text-lg font-extrabold text-[#142033]"><TS>¿Necesitas algo parecido?</TS></h2>
           <p className="mt-1 text-sm text-[#44433D]">
-            Publica tu trabajo gratis. Los talleres te mandan propuestas, comparas y pagas protegido en HETNA.
+            <TS>Publica tu trabajo gratis. Los talleres te mandan propuestas, comparas y pagas protegido en HETNA.</TS>
           </p>
           <LocalizedClientLink
             href={`/cotizar${t.servicio ? `?servicio=${encodeURIComponent(t.servicio)}` : ""}`}
             className="mt-4 inline-block rounded-xl border-2 border-[#C2560A] px-5 py-2.5 font-semibold text-[#C2560A] hover:bg-[#FFF3EC]"
           >
-            Publicar mi trabajo
+            <TS>Publicar mi trabajo</TS>
           </LocalizedClientLink>
         </section>
       </div>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
