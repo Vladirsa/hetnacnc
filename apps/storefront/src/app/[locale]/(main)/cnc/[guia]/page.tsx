@@ -1,4 +1,5 @@
 // /mx/cnc/<guía> — ver lib/seo/guias.ts
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ locale: string; guia: string }> }
 export const revalidate = 3600
 
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+async function generateMetadataEs({ params }: Props): Promise<Metadata> {
   const g = guiaPorSlug((await params).guia)
   if (!g) return {}
   const url = `https://hetnacnc.com/mx/cnc/${g.slug}`
@@ -23,4 +24,9 @@ export default async function PaginaGuia({ params }: Props) {
   const g = guiaPorSlug((await params).guia)
   if (!g) notFound()
   return <GuiaCnc guia={g} />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata(...args: Parameters<typeof generateMetadataEs>) {
+  return metaEnIdioma(await generateMetadataEs(...args))
 }
