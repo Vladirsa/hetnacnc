@@ -34,8 +34,8 @@ export function PasosTaller() {
               {i + 1}
             </span>
             <span>
-              <span className="block font-bold text-[#142033]">{t}</span>
-              <span className="text-sm text-[#6B675C]">{d}</span>
+              <span className="block font-bold text-[#142033]"><TS>{t}</TS></span>
+              <span className="text-sm text-[#6B675C]"><TS>{d}</TS></span>
             </span>
           </li>
         ))}
@@ -54,8 +54,8 @@ export function BeneficiosTaller() {
             key={t}
             className="rounded-2xl border border-[#E7E4DC] bg-white p-4"
           >
-            <p className="font-bold text-[#142033]">✓ {t}</p>
-            <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+            <p className="font-bold text-[#142033]">✓ <TS>{t}</TS></p>
+            <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
           </div>
         ))}
       </div>
@@ -74,7 +74,7 @@ export function PerfilesTaller() {
             key={p}
             className="rounded-full border border-[#E7E4DC] bg-[#FAF9F6] px-4 py-2 text-[15px] font-semibold text-[#142033]"
           >
-            {p}
+            <TS>{p}</TS>
           </span>
         ))}
       </div>
@@ -93,8 +93,8 @@ export function PreguntasTaller({ todas = false }: { todas?: boolean }) {
             key={q.p}
             className="border-t border-[#E7E4DC] py-3 first:border-t-0"
           >
-            <summary className="cursor-pointer font-semibold text-[#142033]">{q.p}</summary>
-            <p className="mt-2 text-sm text-[#44433D]">{q.r}</p>
+            <summary className="cursor-pointer font-semibold text-[#142033]"><TS>{q.p}</TS></summary>
+            <p className="mt-2 text-sm text-[#44433D]"><TS>{q.r}</TS></p>
           </details>
         ))}
       </div>
@@ -138,7 +138,7 @@ export function RegistroTaller() {
       </div>
       <FormRegistroTaller />
       <p className="mt-4 text-center text-sm text-white/70">
-        <TS>¿Ya tienes cuenta?</TS>{' '}
+        <TS>¿Ya tienes cuenta?</TS><TS>{' '}</TS>
         <a
           href="/seller"
           className="font-semibold text-[#F2A25F] underline"
