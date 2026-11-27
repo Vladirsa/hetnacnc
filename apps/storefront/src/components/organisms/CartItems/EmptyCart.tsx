@@ -1,12 +1,20 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import type { HttpTypes } from "@medusajs/types"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from '@/components/atoms/Button/Button'
 import { CustomCarousel as Carousel } from '@/components/cells/Carousel/Carousel'
 import LocalizedClientLink from '@/components/molecules/LocalizedLink/LocalizedLink';
 import { CategoryCard } from '@/components/organisms/CategoryCard/CategoryCard'
-import { listCategories } from '@/lib/data/categories';
+import { listarCategoriasAccion } from '@/lib/data/categories-accion';
 
-export const EmptyCart = async () => {
-  const { categories } = await listCategories();
+export const EmptyCart = () => {
+  // Se piden en el servidor (acción): el carrito es un componente de cliente.
+  const [categories, setCategories] = useState<HttpTypes.StoreProductCategory[]>([])
+  useEffect(() => {
+    listarCategoriasAccion().then(setCategories).catch(() => {})
+  }, [])
 
   return (
     <div>
