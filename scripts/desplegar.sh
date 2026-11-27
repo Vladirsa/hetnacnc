@@ -99,7 +99,8 @@ done
 
 paso "Trayendo $RAMA_ESPERADA"
 
-antes="$(git rev-parse HEAD)"
+# Al rearrancar con la versión nueva (abajo) se conserva el commit de antes
+antes="${HETNA_ANTES:-$(git rev-parse HEAD)}"
 git fetch origin "$RAMA_ESPERADA"
 
 if ! git merge-base --is-ancestor HEAD "origin/$RAMA_ESPERADA"; then
@@ -118,6 +119,17 @@ else
   # git log moría por SIGPIPE y el guion se salía en silencio sin construir
   # (pasó el 21 nov 2026 con 17 commits nuevos).
   git log --oneline -10 "$antes..$despues" | sed 's/^/     /'
+fi
+
+# Si lo nuevo trae cambios a este mismo guion, se vuelve a arrancar con la
+# versión nueva: bash ya tenía leída la vieja y seguiría corriéndola (pasó el
+# 27 nov 2026: el paso 8 nuevo no corrió en el despliegue que lo trajo). Se
+# suelta el candado para que la versión nueva lo pueda tomar.
+if [ "$antes" != "$despues" ] && [ -z "${HETNA_REARRANQUE:-}" ] \
+  && ! git diff --quiet "$antes" "$despues" -- scripts/desplegar.sh; then
+  echo "   desplegar.sh cambió: sigo con la versión nueva"
+  flock -u 9; exec 9>&-
+  HETNA_REARRANQUE=1 HETNA_ANTES="$antes" exec bash "$RAIZ/scripts/desplegar.sh" "$@"
 fi
 
 # --- 3. Construir. Si truena, aquí se acaba. ---
