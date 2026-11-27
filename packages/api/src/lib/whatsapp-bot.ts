@@ -78,11 +78,39 @@ export async function guardarMsg(knex: any, numero: string, rol: string, texto: 
   await knex(T_MSG).insert({ numero, rol, texto: String(texto).slice(0, 2000) })
 }
 
+/**
+ * ¿Es un mensaje automático del celular (saludo o ausencia de WhatsApp Business)
+ * y no una persona contestando? Lo que diga WHATSAPP_SALUDO_AUTO (texto con que
+ * empieza, o varios separados por |), o el mismo texto exacto que el equipo ya
+ * mandó en otros 2 chats o más en los últimos 30 días.
+ */
+export async function esMensajeAutomatico(knex: any, numero: string, texto?: string) {
+  const t = String(texto || "").trim()
+  if (!t) return false
+  const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim()
+  const inicios = String(process.env.WHATSAPP_SALUDO_AUTO || "gracias por comunicarte con hetna cnc").split("|").map(norm).filter(Boolean)
+  if (inicios.some((i) => norm(t).startsWith(i))) return true
+  if (t.length < 25) return false // «Dígame», «Hola buenas tardes»: eso lo escribe una persona
+  const otros = await knex(T_MSG)
+    .where({ rol: "equipo", texto: t.slice(0, 2000) })
+    .whereNot({ numero })
+    .where("created_at", ">=", knex.raw("now() - interval '30 days'"))
+    .countDistinct({ n: "numero" })
+    .first()
+    .catch(() => null)
+  return Number(otros?.n || 0) >= 2
+}
+
 /** Alguien del equipo escribió en ese chat desde el celular: el agente se calla y guarda lo que dijo. */
 export async function pausarChat(knex: any, numeroCrudo: string, texto?: string) {
   const numero = normalizarNumero(numeroCrudo)
   if (!numero) return
   await asegurar(knex)
+  // El saludo automático de WhatsApp Business no es una persona: no calla al agente
+  if (await esMensajeAutomatico(knex, numero, texto)) {
+    if (texto) await guardarMsg(knex, numero, "equipo", texto).catch(() => null)
+    return
+  }
   const hasta = new Date(Date.now() + PAUSA_HUMANO_H * 3_600_000)
   await knex.raw(`insert into ?? (numero, pausa_hasta, created_at, updated_at) values (?, ?, now(), now()) on conflict (numero) do update set pausa_hasta = excluded.pausa_hasta, updated_at = now()`, [T_CHAT, numero, hasta])
   if (texto) await guardarMsg(knex, numero, "equipo", texto).catch(() => null)
