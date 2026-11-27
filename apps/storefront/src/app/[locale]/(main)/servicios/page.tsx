@@ -1,3 +1,4 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import type { Metadata } from "next"
 
 import { ServiciosIndice } from "@/components/hetna/ServicioPagina"
@@ -6,7 +7,7 @@ import { SERVICIOS } from "@/components/hetna/servicios-datos"
 import { HERRAMIENTAS_DISENO } from "@/lib/hetna/disenar"
 import { migas } from "@/lib/hetna/schema"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   alternates: { canonical: "https://hetnacnc.com/mx/servicios" },
   title: "Servicios CNC: fabricación, CAM y diseño",
   description:
@@ -37,4 +38,9 @@ export default function ServiciosPage() {
       <ServiciosIndice />
     </>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
