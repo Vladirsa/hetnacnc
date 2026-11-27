@@ -4,6 +4,7 @@ import { useEffect } from "react"
 
 import type * as Diccionario from "@/i18n/en"
 import { COOKIE_IDIOMA } from "@/i18n/idioma"
+import { traducirTexto } from "@/i18n/traducir"
 
 // Traduce la tienda al ingles cuando el cliente elige EN.
 // Cambia solo el texto visible (sin tocar la estructura), asi React sigue
@@ -31,24 +32,8 @@ let REGLAS = [] as unknown as typeof Diccionario.REGLAS
 const ATRIBUTOS = ["placeholder", "aria-label", "title", "alt"]
 const IGNORAR = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"])
 
-const traducir = (texto: string): string | null => {
-  const limpio = texto.trim()
-  if (!limpio) return null
-  const directo = (EN as Record<string, string>)[limpio]
-  if (directo !== undefined) {
-    return directo === limpio ? null : texto.replace(limpio, directo)
-  }
-  for (const [re, reemplazo] of REGLAS) {
-    if (re.test(limpio)) return texto.replace(limpio, limpio.replace(re, reemplazo))
-  }
-  // Títulos tipo "Corte láser | HETNA CNC": se traduce cada parte por separado
-  if (limpio.includes(" | ")) {
-    const partes = limpio.split(" | ")
-    const nuevas = partes.map((p) => (EN as Record<string, string>)[p] ?? p)
-    if (nuevas.some((p, i) => p !== partes[i])) return texto.replace(limpio, nuevas.join(" | "))
-  }
-  return null
-}
+// Misma traducción que el servidor y <T> (src/i18n/traducir.ts)
+const traducir = (texto: string): string | null => traducirTexto(texto, EN, REGLAS)
 
 const traducirAtributo = (el: Element, nombre: string) => {
   const v = el.getAttribute(nombre)
