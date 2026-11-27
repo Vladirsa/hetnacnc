@@ -4,6 +4,12 @@
 // del servidor, Next las metería todas en el paquete del navegador (506 kB).
 import dynamic from "next/dynamic"
 
+import type { ModoArchivos } from "@/components/hetna/generador/GeneradorArchivos"
+import type { ModoDecoracion } from "@/components/hetna/generador/GeneradorDecoracion"
+import type { ModoImagen } from "@/components/hetna/generador/GeneradorImagen"
+import type { ModoLetrero } from "@/components/hetna/generador/GeneradorLetrerosPlacas"
+import type { ModoLlaveroPlaca } from "@/components/hetna/generador/GeneradorLlaverosPlacas"
+
 const GeneradorCaja = dynamic(() => import("@/components/hetna/generador/GeneradorCaja").then((m) => m.GeneradorCaja))
 const GeneradorEmpaques = dynamic(() => import("@/components/hetna/generador/GeneradorEmpaques").then((m) => m.GeneradorEmpaques))
 // letreros, esténcil y código QR: una sola herramienta con modos
@@ -11,21 +17,21 @@ const GeneradorLetrerosPlacas = dynamic(() => import("@/components/hetna/generad
 // Imagen (vectorizador + grabado + relieve) y Archivos (convertidor + anidado + rebanado + SVG a STL)
 const GeneradorImagen = dynamic(() => import("@/components/hetna/generador/GeneradorImagen").then((m) => m.GeneradorImagen))
 const GeneradorArchivos = dynamic(() => import("@/components/hetna/generador/GeneradorArchivos").then((m) => m.GeneradorArchivos))
-const MODO_IMAGEN: Record<string, "vectorizar" | "grabado" | "relieve" | "organizador"> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve", "organizador-herramientas": "organizador" }
-const MODO_ARCHIVOS: Record<string, "convertir" | "anidar" | "rebanar" | "extruir" | "pruebas" | "lamina"> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir", "pruebas-maquina": "pruebas", "desarrollo-lamina": "lamina" }
+const MODO_IMAGEN: Record<string, ModoImagen> = { vectorizador: "vectorizar", "grabado-foto": "grabado", "litofania-relieve": "relieve", "organizador-herramientas": "organizador" }
+const MODO_ARCHIVOS: Record<string, ModoArchivos> = { convertidor: "convertir", "anidado-piezas": "anidar", "rebanado-capas": "rebanar", "svg-a-stl": "extruir", "pruebas-maquina": "pruebas", "desarrollo-lamina": "lamina" }
 // relojes, marcos y lámparas: Decoración
 const GeneradorDecoracion = dynamic(() => import("@/components/hetna/generador/GeneradorDecoracion").then((m) => m.GeneradorDecoracion))
-const MODO_DECORACION: Record<string, "reloj" | "marco" | "lampara" | "esfera" | "palabras" | "mapa"> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara", "esferas-navidad": "esfera", "reloj-palabras": "palabras", "mapa-topografico": "mapa" }
+const MODO_DECORACION: Record<string, ModoDecoracion> = { relojes: "reloj", "marcos-portarretratos": "marco", "lamparas-capas": "lampara", "esferas-navidad": "esfera", "reloj-palabras": "palabras", "mapa-topografico": "mapa" }
 // rompecabezas y engranes: Juegos y mecanismos
 const GeneradorJuegos = dynamic(() => import("@/components/hetna/generador/GeneradorJuegos").then((m) => m.GeneradorJuegos))
 const MODO_JUEGOS: Record<string, "rompecabezas" | "engranes"> = { rompecabezas: "rompecabezas", engranes: "engranes" }
-const MODO_LETRERO: Record<string, "letrero" | "estencil" | "qr" | "redonda" | "incrustacion"> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr", "placa-redonda": "redonda", incrustaciones: "incrustacion" }
+const MODO_LETRERO: Record<string, ModoLetrero> = { letreros: "letrero", "estencil-letras": "estencil", "codigo-qr": "qr", "placa-redonda": "redonda", incrustaciones: "incrustacion" }
 const GeneradorLetras3D = dynamic(() => import("@/components/hetna/generador/GeneradorLetras3D").then((m) => m.GeneradorLetras3D))
 const GeneradorCortadores = dynamic(() => import("@/components/hetna/generador/GeneradorCortadores").then((m) => m.GeneradorCortadores))
 const GeneradorTexturizador = dynamic(() => import("@/components/hetna/generador/GeneradorTexturizador").then((m) => m.GeneradorTexturizador))
 // llaveros, etiquetas en braille y etiquetas para cajas: Llaveros y placas
 const GeneradorLlaverosPlacas = dynamic(() => import("@/components/hetna/generador/GeneradorLlaverosPlacas").then((m) => m.GeneradorLlaverosPlacas))
-const MODO_LLAVERO: Record<string, "llavero" | "braille" | "etiqueta"> = { llaveros: "llavero", "etiquetas-braille": "braille", "etiquetas-cajas": "etiqueta" }
+const MODO_LLAVERO: Record<string, ModoLlaveroPlaca> = { llaveros: "llavero", "etiquetas-braille": "braille", "etiquetas-cajas": "etiqueta" }
 const GeneradorModelos3D = dynamic(() => import("@/components/hetna/generador/GeneradorModelos3D").then((m) => m.GeneradorModelos3D))
 const GeneradorPartir3D = dynamic(() => import("@/components/hetna/generador/GeneradorPartir3D").then((m) => m.GeneradorPartir3D))
 const GeneradorMoldes = dynamic(() => import("@/components/hetna/generador/GeneradorMoldes").then((m) => m.GeneradorMoldes))

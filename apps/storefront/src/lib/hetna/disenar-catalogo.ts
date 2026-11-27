@@ -95,7 +95,7 @@ export const SECCIONES: SeccionDiseno[] = [
     id: "modelos-3d",
     titulo: "Modelos 3D a tu medida",
     subtitulo: "Para impresión 3D · mueve las medidas y descarga el STL, sin saber CAD",
-    ver: { texto: "Ver los 48", href: "/disenar/modelos-3d" },
+    ver: { texto: "Ver todos", href: "/disenar/modelos-3d" },
     tarjetas: [
       { nombre: "Cajas Gridfinity", texto: "Cajitas y base del sistema modular de 42 mm.", href: "/disenar/modelos-3d?modelo=gridfinity-caja", icono: "anidado", color: AZUL, acceso: "gratis", para: ["3d"], claves: "gridfinity bin baseplate organizador modular cajon stl" },
       { nombre: "Florero para modo espiral", texto: "Con ondas y giro, en una sola pasada.", href: "/disenar/modelos-3d?modelo=florero-espiral", icono: "caja", color: AZUL2, acceso: "gratis", para: ["3d"], claves: "florero jarron vase mode espiral decoracion stl" },

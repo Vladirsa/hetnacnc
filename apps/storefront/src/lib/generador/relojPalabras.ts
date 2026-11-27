@@ -4,6 +4,7 @@
 // Salen tres capas para láser: el frente con las letras caladas (letra
 // esténcil para que no se caigan los centros), la rejilla que separa la luz de
 // cada letra y el fondo para los LEDs; más la lista de qué letras prender.
+import { rectPts as rect } from "@/lib/generador/contornos"
 import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
 
 /** La cuadrícula: cada renglón de 12 letras. Las mayúsculas sueltas son relleno. */
@@ -57,7 +58,6 @@ export const celdasDe = (palabras: string[]) => palabras.flatMap((p) => Array.fr
 export type OpcionesReloj = { lado: number; margen: number; letra: number } // letra: % de la celda
 export type ResultadoReloj = { dibujo: Dibujo; ancho: number; alto: number; avisos: string[]; tabla: string[] }
 
-const rect = (x0: number, y0: number, x1: number, y1: number): P[] => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
 
 /** `letra(c, alto)`: la letra c en trazos centrados en (0, 0) (la pantalla la da con la tipografía esténcil). */
 export function hacerRelojPalabras(o: OpcionesReloj, letra: ((c: string, alto: number) => Trazo[]) | null): ResultadoReloj {

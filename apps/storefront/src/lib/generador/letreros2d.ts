@@ -6,19 +6,16 @@
 //    la holgura del pegamento, para router o láser.
 import { type Fuente, textoACurvas } from "@/lib/generador/letreros"
 import { aplanar } from "@/lib/generador/llaveros"
+import { LIMPIEZA_MM, areaPts, cajaDe, circuloPts, moverC } from "@/lib/generador/contornos"
 import { desplazar } from "@/lib/generador/cortadores"
 import { figura, type IconoTextura } from "@/lib/generador/texturizador"
 import { unirContornos } from "@/lib/generador/unirContornos"
 import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
 
-const MM = 10 // limpieza de clipper en milímetros (0.01 mm)
-const caja = (a: P[][]) => {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
-  for (const p of a) for (const [x, y] of p) (x0 = Math.min(x0, x)), (y0 = Math.min(y0, y)), (x1 = Math.max(x1, x)), (y1 = Math.max(y1, y))
-  return { x0, y0, x1, y1 }
-}
-const circ = (cx: number, cy: number, r: number, n = 144): P[] => Array.from({ length: n }, (_, i) => [cx + r * Math.cos((i / n) * 2 * Math.PI), cy + r * Math.sin((i / n) * 2 * Math.PI)] as P)
-const mover = (c: P[][], dx: number, dy: number, k = 1): P[][] => c.map((p) => p.map(([x, y]) => [x * k + dx, y * k + dy] as P))
+const MM = LIMPIEZA_MM
+const caja = cajaDe
+const circ = (cx: number, cy: number, r: number, n = 144): P[] => circuloPts(cx, cy, r, n)
+const mover = moverC
 const trazos = (c: P[][], capa: string): Trazo[] => c.map((pts) => ({ pts, cerrado: true, capa }))
 
 /** Alto de la H en unidades de la fuente (para pasar de mm a tamaño). */
@@ -178,15 +175,7 @@ export function hacerIncrustacion(forma: P[][], o: OpcionesIncrustacion): Result
 }
 
 /** Área total con huecos (los huecos restan por ir al revés). */
-function area(a: P[][]) {
-  let s = 0
-  for (const p of a)
-    for (let i = 0; i < p.length; i++) {
-      const [x1, y1] = p[i], [x2, y2] = p[(i + 1) % p.length]
-      s += x1 * y2 - x2 * y1
-    }
-  return Math.abs(s / 2)
-}
+const area = (a: P[][]) => Math.abs(a.reduce((s, p) => s + areaPts(p), 0))
 
 /** Texto → contornos (para la incrustación). */
 export function textoAForma(fuente: Fuente, texto: string, alto: number): P[][] {

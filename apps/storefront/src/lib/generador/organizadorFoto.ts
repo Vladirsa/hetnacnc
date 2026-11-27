@@ -7,15 +7,15 @@
 //  4. sale el inserto: DXF/SVG (espuma o MDF calado, o bolsillo para router) y
 //     STL (placa con los huecos a la profundidad que pongas).
 // Todo es puro (recibe píxeles) para probarlo sin navegador.
+import { LIMPIEZA_MM, areaPts as areaSigno, extruirEn } from "@/lib/generador/contornos"
 import { desplazar } from "@/lib/generador/cortadores"
-import { extruir } from "@/lib/generador/extruir"
 import { aplanar } from "@/lib/generador/llaveros"
 import { contornos, curvasDeMascara, umbralAutomatico } from "@/lib/generador/trazado"
 import { type Dibujo, type Malla, type P, type Trazo, conPartes } from "@/lib/generador/vectores"
 
 export const HOJAS = { carta: { nombre: "Carta", ancho: 215.9, alto: 279.4 }, a4: { nombre: "A4", ancho: 210, alto: 297 } }
 export type TipoHoja = keyof typeof HOJAS
-const MM = 10 // limpieza de clipper en milímetros
+const MM = LIMPIEZA_MM
 
 // ── 1. la hoja ─────────────────────────────────────────────────────────────
 /** Esquinas de la hoja (sup-izq, sup-der, inf-der, inf-izq) en píxeles, o null. */
@@ -142,16 +142,10 @@ export function hacerOrganizador(herramientas: P[][], o: OpcionesOrganizador): R
   const trazos: Trazo[] = [{ pts: placa, cerrado: true, capa: "corte" }, ...huecosEn.map((pts) => ({ pts, cerrado: true, capa: "corte" }))]
   // STL: base llena + capa de arriba con los huecos
   const prof = Math.min(o.profundidad, o.grosor), base = o.grosor - prof
-  const ext = (pts: P[][], alto: number, z0: number) => {
-    if (!(alto > 0)) return []
-    const t = extruir({ trazos: pts.map((q) => ({ pts: q, cerrado: true, capa: "X" })), avisos: [], unidades: "mm" }, { alto, base: 0, margenBase: 0, redondearBase: 0, espejo: false }).malla.tris
-    if (z0) for (let i = 2; i < t.length; i += 3) t[i] += z0
-    return t
-  }
+  const ext = extruirEn
   const malla = conPartes(["Base", ext([placa], base, 0)], ["Con huecos", ext([placa, ...huecosEn], prof, base > 0 ? base - 0.001 : 0)])
   if (prof >= o.grosor) avisos.push("Los huecos pasan de lado a lado (para espuma o MDF calado sobre una base).")
   if (W > 600 || H > 600) avisos.push("El inserto mide más de 60 cm: revisa que quepa en tu máquina o en tu caja.")
   return { dibujo: { trazos, avisos: [], unidades: "mm" }, malla, ancho: W, alto: H, piezas: exteriores.length, avisos, errores: [] }
 }
 
-const areaSigno = (p: P[]) => p.reduce((s, [x, y], i) => s + x * p[(i + 1) % p.length][1] - p[(i + 1) % p.length][0] * y, 0) / 2

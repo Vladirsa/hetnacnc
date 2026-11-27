@@ -4,18 +4,14 @@
 //    espesor del material: la ranura donde entra justa te dice el ajuste.
 //  · Matriz de material: cuadros de potencia × velocidad, cada uno de un color
 //    distinto (capas de LightBurn) para grabar y escoger el mejor.
+import { rectPts as rect } from "@/lib/generador/contornos"
+import { cajaDibujo as cajaT, mover } from "@/lib/generador/geo2d"
 import type { Dibujo, P, Trazo } from "@/lib/generador/vectores"
 
 /** Texto chico ya pasado a trazos (lo da la pantalla con la tipografía cargada). */
 export type Rotulador = (texto: string, alto: number, capa: string) => Trazo[]
 
-const rect = (x0: number, y0: number, x1: number, y1: number): P[] => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
-const moverT = (t: Trazo[], dx: number, dy: number): Trazo[] => t.map((x) => ({ ...x, pts: x.pts.map(([a, b]) => [a + dx, b + dy] as P) }))
-const cajaT = (t: Trazo[]) => {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
-  for (const x of t) for (const [a, b] of x.pts) (x0 = Math.min(x0, a)), (y0 = Math.min(y0, b)), (x1 = Math.max(x1, a)), (y1 = Math.max(y1, b))
-  return { x0, y0, x1, y1 }
-}
+const moverT = (t: Trazo[], dx: number, dy: number): Trazo[] => t.map((x) => ({ ...x, pts: mover(x.pts, dx, dy) }))
 /** Rótulo centrado en (cx, cy). */
 function rotulo(r: Rotulador | null, texto: string, alto: number, cx: number, cy: number, capa = "grabado"): Trazo[] {
   if (!r) return []
