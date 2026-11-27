@@ -1,4 +1,5 @@
 // HETNA Panel → Talleres: verificaciones (expedientes) por estado.
+import { TS } from "@/i18n/TS"
 import { Etiqueta, Pestanas, Tarjeta, Titulo, Vacio } from "@/components/hetna/panel/ui"
 import { adminFetch, exigirPagina, hace } from "@/lib/panel/sesion"
 import { puedeActuar } from "@/lib/panel/roles"
@@ -20,9 +21,9 @@ export default async function PanelTalleres({ params, searchParams }: { params: 
     <div>
       <Pestanas base={`/${locale}/panel/talleres`} actual={estado} opciones={ESTADOS.map(([k, n]) => ({ clave: k, nombre: n }))} />
       <Tarjeta>
-        <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer">Dashboard →</a>}>Verificación de talleres</Titulo>
-        {error && <Vacio>No pude leer las verificaciones: {error}</Vacio>}
-        {!error && lista.length === 0 && <Vacio>Nada en este estado.</Vacio>}
+        <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer"><TS>Dashboard →</TS></a>}><TS>Verificación de talleres</TS></Titulo>
+        {error && <Vacio><TS>No pude leer las verificaciones:</TS> {error}</Vacio>}
+        {!error && lista.length === 0 && <Vacio><TS>Nada en este estado.</TS></Vacio>}
         <ul className="divide-y divide-[#EFEDE6]">
           {lista.map((t) => (
             <li key={t.seller_id} className="py-3">
@@ -30,7 +31,7 @@ export default async function PanelTalleres({ params, searchParams }: { params: 
                 <p className="text-[14px] font-extrabold text-[#142033]">{t.nombre}</p>
                 <Etiqueta color={COLOR[t.estado] || "gris"}>{t.estado.replace("_", " ")}</Etiqueta>
               </div>
-              <p className="mt-0.5 text-[12px] text-[#6B675C]">{t.email}{t.telefono ? ` · ${t.telefono}` : ""} · {t.archivos.length} documento(s){t.faltan?.length ? ` · faltan: ${t.faltan.join(", ")}` : ""}</p>
+              <p className="mt-0.5 text-[12px] text-[#6B675C]">{t.email}{t.telefono ? ` · ${t.telefono}` : ""} · {t.archivos.length} <TS>documento(s)</TS>{t.faltan?.length ? ` · faltan: ${t.faltan.join(", ")}` : ""}</p>
               <p className="text-[11px] text-[#9A968B]">{t.enviado_en ? `enviado ${hace(t.enviado_en)}` : ""}{t.motivo ? ` · ${t.motivo}` : ""}</p>
               {t.archivos.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -40,9 +41,9 @@ export default async function PanelTalleres({ params, searchParams }: { params: 
                 </div>
               )}
               <div className="mt-1.5 flex gap-3 text-[12px] font-semibold">
-                {t.handle && <a className="text-[#1D4F8C]" href={`${SITIO}/${locale}/talleres/${t.handle}`} target="_blank" rel="noreferrer">Ver perfil</a>}
-                {t.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(t.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer">WhatsApp</a>}
-                <a className="text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer">Dashboard</a>
+                {t.handle && <a className="text-[#1D4F8C]" href={`${SITIO}/${locale}/talleres/${t.handle}`} target="_blank" rel="noreferrer"><TS>Ver perfil</TS></a>}
+                {t.telefono && <a className="text-[#0F7A4A]" href={`https://wa.me/${String(t.telefono).replace(/\D/g, "").replace(/^(\d{10})$/, "52$1")}`} target="_blank" rel="noreferrer"><TS>WhatsApp</TS></a>}
+                <a className="text-[#C2560A]" href={`${SITIO}/dashboard/verificacion`} target="_blank" rel="noreferrer"><TS>Dashboard</TS></a>
               </div>
               {puedeActuar(yo.rol, "talleres") && <AccionesVerificacion sellerId={t.seller_id} estado={t.estado} />}
             </li>
