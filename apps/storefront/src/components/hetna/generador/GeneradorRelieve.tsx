@@ -302,7 +302,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
             </svg>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</T></span>
             <span className="text-[12px] text-[#6B6A63]"><T>JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</T></span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
@@ -323,17 +323,17 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
                 <Opcion activa={altura === "brillo"} onClick={() => setAltura("brillo")}><T>Por brillo</T></Opcion>
               </div>
               <span className="text-[12.5px] text-[#6B6A63]">
-                {altura === "ia"
+                <T>{altura === "ia"
                   ? "La IA entiende qué está cerca y qué lejos: caras, mascotas y objetos salen con volumen real, aunque tengan ropa oscura."
-                  : "Lo claro sale alto y lo oscuro bajo. Va bien con logotipos, dibujos y fotos en blanco y negro."}
+                  : "Lo claro sale alto y lo oscuro bajo. Va bien con logotipos, dibujos y fotos en blanco y negro."}</T>
               </span>
               {altura === "ia" && estadoIA === "cargando" && (
                 <span className="text-[13px] text-[#C2560A] font-semibold" aria-live="polite"><T>La IA está calculando la profundidad… (unos segundos)</T></span>
               )}
               {altura === "ia" && estadoIA === "error" && (
                 <span className="text-[13px] text-[#8A1C1C]">
-                  {errorIA}{" "}
-                  <button type="button" onClick={() => setIntentoIA((n) => n + 1)} className="underline font-semibold"><T>Reintentar</T></button>{" "}
+                  {errorIA}<T>{" "}</T>
+                  <button type="button" onClick={() => setIntentoIA((n) => n + 1)} className="underline font-semibold"><T>Reintentar</T></button><T>{" "}</T>
                   <T>o usa</T> <button type="button" onClick={() => setAltura("brillo")} className="underline font-semibold"><T>por brillo</T></button>.
                 </span>
               )}
@@ -374,7 +374,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
           <Deslizador etiqueta="Suavizado" valor={suavizado} min={0} max={4} cambiar={setSuavizado} />
           <label className="flex items-center gap-2 text-[14px] text-[#1B1B18]">
             <input type="checkbox" checked={invertir} onChange={(e) => setInvertir(e.target.checked)} className="w-4 h-4 accent-[#C2560A]" />
-            {modo === "litofania" ? "Invertir (lo claro sale grueso)" : "Invertir (lo oscuro sale alto)"}
+            <T>{modo === "litofania" ? "Invertir (lo claro sale grueso)" : "Invertir (lo oscuro sale alto)"}</T>
           </label>
         </section>
 
@@ -396,7 +396,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
                 <Opcion activa={vista === "luz"} onClick={() => setVista("luz")}><T>Con luz atrás</T></Opcion>
                 <Opcion activa={vista === "sombra"} onClick={() => setVista("sombra")}><T>Relieve</T></Opcion>
               </div>
-              <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{procesando || (usarIA && estadoIA === "cargando") ? "Calculando..." : ""}</span>
+              <span className="text-[13px] text-[#6B6A63]" aria-live="polite"><T>{procesando || (usarIA && estadoIA === "cargando") ? "Calculando..." : ""}</T></span>
             </div>
             <div className="bg-[#2A2622] border border-[#E7E4DC] rounded-[14px] p-3 flex items-center justify-center">
               <canvas ref={lienzo} className="max-w-full max-h-[520px] h-auto" />
@@ -418,7 +418,7 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
             )}
             <div className={`grid grid-cols-1 gap-2 ${modo === "relieve" ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
               <button type="button" disabled={preparando || !valido || !info} onClick={bajarSTL} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                {preparando ? "Preparando..." : "Descargar STL"}
+                <T>{preparando ? "Preparando..." : "Descargar STL"}</T>
               </button>
               {modo === "relieve" && (
                 <button type="button" disabled={!valido || !info} onClick={bajarMapa} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
@@ -432,9 +432,9 @@ export function GeneradorRelieve({ cabecera }: { cabecera?: React.ReactNode }) {
             {modo === "relieve" && valido && info && <BotonesCam nombre={archivo} stl={() => (ultima.current ? mallaSTL(ultima.current.a, ultima.current.o) : null)} />}
             {avisoFabricar && <p className="m-0 text-[12.5px] text-[#B3261E]">{avisoFabricar}</p>}
             <p className="m-0 text-[12.5px] text-[#6B6A63]">
-              {modo === "litofania"
+              <T>{modo === "litofania"
                 ? "El STL es una pieza cerrada en mm, lista para tu programa de impresión (Cura, PrusaSlicer, Bambu Studio)."
-                : "El STL es una pieza cerrada en mm. El mapa de alturas lleva guardada su escala: blanco es lo más alto."}
+                : "El STL es una pieza cerrada en mm. El mapa de alturas lleva guardada su escala: blanco es lo más alto."}</T>
             </p>
           </div>
         </section>
