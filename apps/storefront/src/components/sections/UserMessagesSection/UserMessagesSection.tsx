@@ -1,5 +1,6 @@
 "use client"
 
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Inbox } from "@talkjs/react"
 import { useCallback } from "react"
 import Talk from "talkjs"
@@ -18,7 +19,7 @@ export const UserMessagesSection = () => {
       <Inbox
         loadingComponent={
           <div className="h-96 w-full flex items-center justify-center" data-testid="user-messages-loading">
-            Cargando...
+            <T>Cargando...</T>
           </div>
         }
         syncConversation={syncConversation}
