@@ -1,4 +1,5 @@
 "use client"
+import { T } from "@/components/hetna/i18n/Idioma"
 import { Button } from "@/components/atoms/Button/Button"
 import { Card } from "@/components/atoms/Card/Card"
 import { HttpTypes } from "@medusajs/types"
@@ -15,7 +16,7 @@ export const ProfileDetails = ({ user }: { user: HttpTypes.StoreCustomer }) => {
     <>
       <Card className="bg-secondary p-4 flex justify-between items-center" data-testid="profile-details-header">
         <Heading level="h2" className="heading-sm uppercase" data-testid="profile-details-heading">
-          Datos del perfil
+          <T>Datos del perfil</T>
         </Heading>
         <Button
           variant="tonal"
@@ -24,24 +25,24 @@ export const ProfileDetails = ({ user }: { user: HttpTypes.StoreCustomer }) => {
           data-testid="profile-edit-button"
         >
           <PencilSquare />
-          Editar datos
+          <T>Editar datos</T>
         </Button>
       </Card>
       <Card className="p-0" data-testid="profile-details-info">
         <div className="p-4" data-testid="profile-name">
-          <p className="label-md text-secondary" data-testid="profile-name-label">Nombre</p>
+          <p className="label-md text-secondary" data-testid="profile-name-label"><T>Nombre</T></p>
           <p className="label-lg text-primary" data-testid="profile-name-value">
             {`${user.first_name} ${user.last_name}`}
           </p>
         </div>
         <Divider />
         <div className="p-4" data-testid="profile-email">
-          <p className="label-md text-secondary" data-testid="profile-email-label">Correo electrónico</p>
+          <p className="label-md text-secondary" data-testid="profile-email-label"><T>Correo electrónico</T></p>
           <p className="label-lg text-primary" data-testid="profile-email-value">{user.email}</p>
         </div>
         <Divider />
         <div className="p-4" data-testid="profile-phone">
-          <p className="label-md text-secondary" data-testid="profile-phone-label">Teléfono</p>
+          <p className="label-md text-secondary" data-testid="profile-phone-label"><T>Teléfono</T></p>
           <p className="label-lg text-primary" data-testid="profile-phone-value">{user.phone}</p>
         </div>
       </Card>
