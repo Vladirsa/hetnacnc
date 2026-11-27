@@ -1,10 +1,11 @@
+import { metaEnIdioma } from "@/i18n/servidor"
 import { RegisterForm } from "@/components/molecules/RegisterForm/RegisterForm"
 import { destinoSeguro } from "@/lib/seguridad/destino-seguro"
 import { retrieveCustomer } from "@/lib/data/customer"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Crear cuenta",
   robots: { index: false, follow: false },
 }
@@ -21,4 +22,9 @@ export default async function Pagina({ searchParams }: Props) {
   }
 
   return <RegisterForm />
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
