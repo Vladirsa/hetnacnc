@@ -1,5 +1,7 @@
 // /mx/cnc — índice de las guías CNC (lib/seo/guias.ts). Une las guías entre sí
 // y con los cotizadores, herramientas y categorías.
+import { metaEnIdioma } from "@/i18n/servidor"
+import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
 
 import { JsonLd } from "@/components/hetna/JsonLd"
@@ -9,7 +11,7 @@ import { CIUDADES, GUIAS } from "@/lib/seo/guias"
 
 const SITIO = "https://hetnacnc.com"
 
-export const metadata: Metadata = {
+const metadataEs: Metadata = {
   title: "Guías CNC: router, láser, maquinado, CAM y DXF",
   description: "Guías prácticas para fabricar con CNC en México: router, corte láser de MDF, maquinado de aluminio, CAM de 5 ejes y archivos DXF. Con talleres y cotizador.",
   alternates: { canonical: `${SITIO}/mx/cnc` },
@@ -29,21 +31,21 @@ export default function GuiasCnc() {
           migas([{ nombre: "Inicio", ruta: `${SITIO}/mx` }, { nombre: "Guías CNC" }]),
         ]}
       />
-      <h1 className="text-3xl font-extrabold text-[#142033] sm:text-4xl">Guías CNC</h1>
+      <h1 className="text-3xl font-extrabold text-[#142033] sm:text-4xl"><TS>Guías CNC</TS></h1>
       <p className="mt-2 max-w-2xl text-[#40403A]">
-        Lo que necesitas saber para fabricar con CNC en México: qué pedir, qué archivo mandar y con quién. Cada guía te lleva al
-        cotizador y a los talleres de la red.
+        <TS>Lo que necesitas saber para fabricar con CNC en México: qué pedir, qué archivo mandar y con quién. Cada guía te lleva al
+        cotizador y a los talleres de la red.</TS>
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {GUIAS.map((g) => (
           <LocalizedClientLink key={g.slug} href={`/cnc/${g.slug}`} className="rounded-2xl border border-[#E7E4DC] bg-white p-5 transition hover:shadow-md">
-            <h2 className="text-lg font-extrabold text-[#142033]">{g.h1}</h2>
-            <p className="mt-1 text-sm text-[#6B675C]">{g.descripcion}</p>
+            <h2 className="text-lg font-extrabold text-[#142033]"><TS>{g.h1}</TS></h2>
+            <p className="mt-1 text-sm text-[#6B675C]"><TS>{g.descripcion}</TS></p>
           </LocalizedClientLink>
         ))}
       </div>
       <section className="mt-8">
-        <h2 className="text-xl font-extrabold text-[#142033]">Corte láser de MDF por ciudad</h2>
+        <h2 className="text-xl font-extrabold text-[#142033]"><TS>Corte láser de MDF por ciudad</TS></h2>
         <ul className="mt-3 flex flex-wrap gap-2">
           {CIUDADES.map((c) => (
             <li key={c.slug}>
@@ -56,4 +58,9 @@ export default function GuiasCnc() {
       </section>
     </main>
   )
+}
+
+// Título y descripción en el idioma de la página (src/i18n/servidor.ts)
+export async function generateMetadata() {
+  return metaEnIdioma(metadataEs)
 }
