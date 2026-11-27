@@ -60,7 +60,7 @@ export function FormDistribuidor() {
       <input type="text" tabIndex={-1} autoComplete="off" value={f.sitio_web} onChange={set("sitio_web")} className="hidden" aria-hidden="true" />
       {error && <p className="text-sm font-semibold text-[#B3261E]">{error}</p>}
       <button disabled={estado === "enviando"} className="rounded-xl bg-[#C2560A] px-7 py-3.5 text-lg font-semibold text-white hover:brightness-110 disabled:opacity-60">
-        {estado === "enviando" ? "Enviando…" : "Quiero mi código de distribuidor"}
+        <T>{estado === "enviando" ? "Enviando…" : "Quiero mi código de distribuidor"}</T>
       </button>
       <p className="text-center text-[12px] text-[#7A776E]"><T>Usamos tus datos sólo para darte de alta como distribuidor HETNA.</T></p>
     </form>
