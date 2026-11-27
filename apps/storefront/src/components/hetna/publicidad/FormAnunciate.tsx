@@ -139,7 +139,7 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Tipo de anunciante">
         {(Object.keys(TIPOS_ANUNCIANTE) as TipoAnunciante[]).map((t) => (
           <button type="button" role="radio" aria-checked={tipo === t} key={t} onClick={() => setTipo(t)} className={opcion(tipo === t)}>
-            <span className="font-bold text-[15px] text-[#1B1B18]">{TIPOS_ANUNCIANTE[t].nombre}</span>
+            <span className="font-bold text-[15px] text-[#1B1B18]"><T>{TIPOS_ANUNCIANTE[t].nombre}</T></span>
             <span className="text-[13px] text-[#6B6A63]"><T>{TIPOS_ANUNCIANTE[t].ayuda}</T></span>
           </button>
         ))}
@@ -162,9 +162,9 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
             }}
           >
             <span className="font-bold text-[15px] text-[#1B1B18]">{nombreCorto(e.nombre)}</span>
-            <span className="text-[13px] leading-snug text-[#44433D]">{e.donde}</span>
+            <span className="text-[13px] leading-snug text-[#44433D]"><T>{e.donde}</T></span>
             <span className="text-[12.5px] text-[#6B6A63]">
-              <T>Medidas:</T> {e.medidas} · {e.vistasMes ? `≈ ${miles(e.vistasMes)} vistas al mes` : "espacio nuevo"}
+              <T>Medidas:</T> <T>{e.medidas}</T> · <T>{e.vistasMes ? `≈ ${miles(e.vistasMes)} vistas al mes` : "espacio nuevo"}</T>
             </span>
             <span className="text-[15px] font-bold text-[#B34D07]"><T>desde</T> {pesos(calcularMonto(e.id, 7))} <T>/ semana</T></span>
           </button>
@@ -237,9 +237,9 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
             aria-invalid={enlaceMal}
           />
           <span className={`text-[12.5px] ${enlaceMal ? "text-[#A42A2A]" : "text-[#6B6A63]"}`}>
-            {tipo === "cnc"
+            <T>{tipo === "cnc"
               ? "Los talleres y proveedores CNC llevan el clic a su perfil, sus productos o su taller dentro de HETNA: así los pedidos y pagos quedan protegidos."
-              : "Puede ser tu propia página (https://…)."}
+              : "Puede ser tu propia página (https://…)."}</T>
           </span>
         </div>
         <input name="titulo" maxLength={140} placeholder="Título del anuncio (opcional)" className={campo} />
@@ -248,10 +248,10 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
 
       <div className="flex flex-col gap-2">
         <label className="text-[14px] font-semibold text-[#1B1B18]" htmlFor="archivo-anuncio">
-          <T>Imagen (</T>{espacio.medidas})
+          <T>Imagen (</T><T>{espacio.medidas}</T>)
         </label>
         <input id="archivo-anuncio" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => elegirArchivo(e.target.files?.[0])} className="text-[14px]" />
-        {errorImg && <p className="m-0 text-[13.5px] text-[#A42A2A]">{errorImg}</p>}
+        {errorImg && <p className="m-0 text-[13.5px] text-[#A42A2A]"><T>{errorImg}</T></p>}
         {vista && <Imagen src={vista} alt="Vista previa de tu anuncio" className="w-full max-w-[520px] rounded-[10px] border border-[#E7E4DC]" width={300} height={300} />}
       </div>
 
@@ -268,16 +268,16 @@ export default function FormAnunciate({ espacios, inicial }: { espacios: Espacio
           <span className="text-[13px] text-[#6B6A63]"><T>Total a pagar</T></span>
           <span className="text-[26px] font-bold text-[#1B1B18]">{pesos(total)}</span>
           <span className="text-[12.5px] text-[#6B6A63]">
-            {modalidad === "vistas" ? `${miles(vistas)} vistas en ${nombreCorto(espacio.nombre)}` : `${dias} días en ${nombreCorto(espacio.nombre)}`}
+            <T>{modalidad === "vistas" ? `${miles(vistas)} vistas en ${nombreCorto(espacio.nombre)}` : `${dias} días en ${nombreCorto(espacio.nombre)}`}</T>
           </span>
         </div>
         <button type="submit" disabled={enviando} className="min-h-[48px] bg-[#C2560A] hover:bg-[#A84A08] text-white font-bold px-7 py-3.5 rounded-[12px] text-[16px] disabled:opacity-60">
-          {enviando ? "Abriendo el pago…" : "Pagar con Mercado Pago"}
+          <T>{enviando ? "Abriendo el pago…" : "Pagar con Mercado Pago"}</T>
         </button>
       </div>
       {error && (
         <p role="alert" className="m-0 text-[14px] text-[#A42A2A]">
-          {error}
+          <T>{error}</T>
         </p>
       )}
     </form>

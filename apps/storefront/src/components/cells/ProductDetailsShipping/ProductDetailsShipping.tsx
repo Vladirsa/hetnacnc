@@ -19,12 +19,12 @@ export const ProductDetailsShipping = () => {
           </li>
           <li>
             {/* Mismo tiempo que en Google Merchant Center (Envíos y devoluciones) */}
-            {`Entrega estimada: ${EMPRESA.entregaTotal} días hábiles (${EMPRESA.entregaPreparacion} días para que el taller prepare tu pedido y ${EMPRESA.entregaTransporte} días de paquetería).`}
+            <TS>{`Entrega estimada: ${EMPRESA.entregaTotal} días hábiles (${EMPRESA.entregaPreparacion} días para que el taller prepare tu pedido y ${EMPRESA.entregaTransporte} días de paquetería).`}</TS>
           </li>
           <li>
-            {EMPRESA.diasDevolucion} <TS>días naturales para devolver un producto físico sin
+            <TS>{EMPRESA.diasDevolucion}</TS> <TS>días naturales para devolver un producto físico sin
             uso. Si llegó dañado, incompleto o distinto, el envío de regreso no te
-            cuesta.</TS>{' '}
+            cuesta.</TS><TS>{' '}</TS>
             <LocalizedClientLink href="/devoluciones">
               <TS>Ver la política completa</TS>
             </LocalizedClientLink>
@@ -40,7 +40,7 @@ export const ProductDetailsShipping = () => {
                 la plataforma: es donde queda registro de lo acordado si después hay
                 una aclaración o una devolución. */}
             <TS>¿Algo no salió bien? Escríbele al taller con el botón de arriba, o a
-            nosotros desde</TS>{' '}
+            nosotros desde</TS><TS>{' '}</TS>
             <LocalizedClientLink href="/contacto"><TS>Contacto</TS></LocalizedClientLink>.
           </li>
         </ul>

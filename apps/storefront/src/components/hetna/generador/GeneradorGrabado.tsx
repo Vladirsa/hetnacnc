@@ -243,7 +243,7 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <path d="M3 16l5-5 4 4 3-3 6 6M15.5 9h.01" />
             </svg>
-            <span className="text-[14px] font-semibold text-[#1B1B18]">{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</span>
+            <span className="text-[14px] font-semibold text-[#1B1B18]"><T>{nombre ? `${nombre} (cambiar)` : "Sube tu foto"}</T></span>
             <span className="text-[12px] text-[#6B6A63]"><T>JPG, PNG o WebP · hasta 20 MB · también con Ctrl+V</T></span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
           </label>
@@ -329,9 +329,9 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
           )}
           <div className={nombre ? "flex flex-col gap-4" : "hidden"}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Opcion activa={acercar} onClick={() => setAcercar(!acercar)}>{acercar ? "Ver completa" : "Acercar"}</Opcion>
+              <Opcion activa={acercar} onClick={() => setAcercar(!acercar)}><T>{acercar ? "Ver completa" : "Acercar"}</T></Opcion>
               <span className="text-[13px] text-[#6B6A63]" aria-live="polite">
-                {procesando ? "Procesando..." : info?.reducida ? "Vista previa reducida; el archivo sale completo" : ""}
+                <T>{procesando ? "Procesando..." : info?.reducida ? "Vista previa reducida; el archivo sale completo" : ""}</T>
               </span>
             </div>
             <div className={`bg-white border border-[#E7E4DC] rounded-[14px] p-3 ${acercar ? "overflow-auto max-h-[560px]" : "flex items-center justify-center"}`}>
@@ -358,7 +358,7 @@ export function GeneradorGrabado({ cabecera }: { cabecera?: React.ReactNode }) {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={bajarPNG} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
-                {preparando ? "Preparando..." : "Descargar PNG"}
+                <T>{preparando ? "Preparando..." : "Descargar PNG"}</T>
               </button>
               <button type="button" disabled={preparando || !tamOk || muyGrande} onClick={bajarSVG} className="bg-[#142033] hover:bg-[#0F1826] disabled:opacity-50 text-white font-semibold py-3 rounded-[10px] text-[14px]">
                 <T>Descargar SVG</T>

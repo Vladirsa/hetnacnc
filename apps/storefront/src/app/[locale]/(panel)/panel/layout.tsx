@@ -31,8 +31,8 @@ export default async function PanelLayout({ children, params }: { children: Reac
     return (
       <div className="min-h-screen bg-[#142033] p-6 text-white">
         <h1 className="text-xl font-bold"><TS>HETNA Panel</TS></h1>
-        <p className="mt-3 text-sm text-white/80"><TS>Tu cuenta (</TS>{u.email}<TS>) todavía no tiene acceso al panel. Pide al dueño que te asigne un rol en Equipo.</TS></p>
-        {u.diagnostico && <p className="mt-2 text-xs text-white/50">{u.diagnostico}</p>}
+        <p className="mt-3 text-sm text-white/80"><TS>Tu cuenta (</TS><TS>{u.email}</TS><TS>) todavía no tiene acceso al panel. Pide al dueño que te asigne un rol en Equipo.</TS></p>
+        {u.diagnostico && <p className="mt-2 text-xs text-white/50"><TS>{u.diagnostico}</TS></p>}
         <p className="mt-2 text-xs text-white/40"><TS>Versión del panel: 3</TS></p>
         <form action="/api/app/panel/salir" method="post" className="mt-6"><button className="rounded-lg bg-white/10 px-4 py-2 text-sm"><TS>Salir</TS></button></form>
       </div>
@@ -47,7 +47,7 @@ export default async function PanelLayout({ children, params }: { children: Reac
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#C2560A] text-sm font-black">H</span>
             <div>
               <p className="text-[15px] font-extrabold leading-none"><TS>HETNA Panel</TS></p>
-              <p className="text-[11px] text-white/70">{u.nombre} · {u.rol === "dueno" ? "Dueño" : u.rol}</p>
+              <p className="text-[11px] text-white/70"><TS>{u.nombre}</TS> · <TS>{u.rol === "dueno" ? "Dueño" : u.rol}</TS></p>
             </div>
           </div>
           <form action="/api/app/panel/salir" method="post"><button className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold"><TS>Salir</TS></button></form>
@@ -58,7 +58,7 @@ export default async function PanelLayout({ children, params }: { children: Reac
         <div className="mx-auto flex max-w-[860px] justify-around">
           {visibles.map((p) => (
             <a key={p.clave} href={`/${locale}${p.ruta}`} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-[#40403A] hover:text-[#C2560A]">
-              <span className="text-lg leading-none">{p.icono}</span>{p.nombre}
+              <span className="text-lg leading-none">{p.icono}</span><TS>{p.nombre}</TS>
             </a>
           ))}
         </div>

@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { cn } from "@/lib/utils"
 
 type OrderStatus = "received" | "preparing" | "shipped" | "delivered"
@@ -47,7 +48,7 @@ export const OrderTimeline = ({ currentStatus }: OrderTimelineProps) => {
                   isActive ? "text-[#1B1B1B]" : "text-[#EEEEEE]"
                 )}
               >
-                {status}
+                <TS>{status}</TS>
               </span>
               <div
                 className={cn(

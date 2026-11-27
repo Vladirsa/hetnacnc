@@ -36,7 +36,7 @@ const Tarjeta = ({ product }: { product: HttpTypes.StoreProduct }) => {
       </div>
       <div className="p-3 flex flex-col gap-1">
         <span className="text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-2 min-h-[34px]">
-          {product.title}
+          <TS>{product.title}</TS>
         </span>
         <span className="text-[15px] font-bold text-[#142033]">{precio}</span>
       </div>

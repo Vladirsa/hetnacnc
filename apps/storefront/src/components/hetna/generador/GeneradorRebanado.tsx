@@ -76,7 +76,7 @@ export function GeneradorRebanado({ cabecera }: { cabecera?: React.ReactNode }) 
         }}
         className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[12px] border-2 border-dashed border-[#2B3648] p-4 text-center hover:border-[#C2560A] hover:bg-[#C2560A]/5"
       >
-        <span className="text-[14px] font-semibold">{nombre ? `${nombre} (cambiar)` : "Sube tu modelo 3D"}</span>
+        <span className="text-[14px] font-semibold"><T>{nombre ? `${nombre} (cambiar)` : "Sube tu modelo 3D"}</T></span>
         <span className="text-[11.5px] text-[#8A97AB]"><T>STL u OBJ · hasta 40 MB</T></span>
         <input type="file" accept=".stl,.obj" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
       </label>
@@ -101,9 +101,9 @@ export function GeneradorRebanado({ cabecera }: { cabecera?: React.ReactNode }) 
           }}
         />
         <p className="m-0 text-[11.5px] text-[#8A97AB]">
-          {costillas
+          <T>{costillas
             ? "Muebles paramétricos de tablas (bancas, sillones, paneles): tablas paralelas con aire entre ellas y varillas roscadas que pasan por todas."
-            : "Esculturas y maquetas: las capas se pegan una sobre otra."}
+            : "Esculturas y maquetas: las capas se pegan una sobre otra."}</T>
         </p>
       </Seccion>
       <Seccion

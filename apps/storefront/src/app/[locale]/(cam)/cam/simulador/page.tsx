@@ -106,7 +106,7 @@ export default function PaginaSimulador() {
       />
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="m-0 text-[16px] font-bold">
-          <TS>Simulador</TS> <span className="text-[#F28A3C]"><TS>CNC</TS></span>{" "}
+          <TS>Simulador</TS> <span className="text-[#F28A3C]"><TS>CNC</TS></span><TS>{" "}</TS>
           <span className="text-[12.5px] font-normal text-[#8A97AB]"><TS>fresadora, router y torno: escribe tu G-code y míralo cortar</TS></span>
         </h1>
         <LocalizedClientLink href="/servicios/aprendizaje-cnc" className="text-[12.5px] font-semibold text-[#F28A3C] hover:underline">
@@ -131,8 +131,8 @@ export default function PaginaSimulador() {
             <tbody>
               {CODIGOS.map(([c, d]) => (
                 <tr key={c} className="border-t border-[#2B3648]">
-                  <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]">{c}</td>
-                  <td className="py-1.5">{d}</td>
+                  <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]"><TS>{c}</TS></td>
+                  <td className="py-1.5"><TS>{d}</TS></td>
                 </tr>
               ))}
             </tbody>
@@ -145,8 +145,8 @@ export default function PaginaSimulador() {
             <tbody>
               {CODIGOS_TORNO.map(([c, d]) => (
                 <tr key={c} className="border-t border-[#2B3648]">
-                  <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]">{c}</td>
-                  <td className="py-1.5">{d}</td>
+                  <td className="whitespace-nowrap py-1.5 pr-4 font-mono font-bold text-[#F28A3C]"><TS>{c}</TS></td>
+                  <td className="py-1.5"><TS>{d}</TS></td>
                 </tr>
               ))}
             </tbody>
@@ -156,8 +156,8 @@ export default function PaginaSimulador() {
         <h2 className="mt-6 text-[17px] font-bold text-white"><TS>Preguntas frecuentes</TS></h2>
         {PREGUNTAS.map((f) => (
           <details key={f.p} className="border-t border-[#2B3648] py-2">
-            <summary className="cursor-pointer font-semibold text-white">{f.p}</summary>
-            <p className="m-0 mt-1 text-[14px]">{f.r}</p>
+            <summary className="cursor-pointer font-semibold text-white"><TS>{f.p}</TS></summary>
+            <p className="m-0 mt-1 text-[14px]"><TS>{f.r}</TS></p>
           </details>
         ))}
 

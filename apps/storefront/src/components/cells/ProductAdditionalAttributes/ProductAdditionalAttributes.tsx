@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { ProductPageAccordion } from "@/components/molecules/ProductPageAccordion/ProductPageAccordion"
 import { AdditionalAttributeProps } from "@/types/product"
 
@@ -38,9 +39,9 @@ export const ProductAdditionalAttributes = ({
               .replace(/\s+/g, "-")}`}
           >
             <dt className="px-3 py-2.5 font-semibold leading-snug text-[#142033]">
-              {a.attribute?.name}
+              <TS>{a.attribute?.name}</TS>
             </dt>
-            <dd className="px-3 py-2.5 leading-snug text-[#40403A]">{a.value}</dd>
+            <dd className="px-3 py-2.5 leading-snug text-[#40403A]"><TS>{a.value}</TS></dd>
           </div>
         ))}
       </dl>

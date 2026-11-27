@@ -4,6 +4,7 @@
 // se puede entrar. La aceptación se registra en el servidor (versión, fecha e
 // IP) en cuanto entra al panel (lib/requisitos.tsx), y se vuelve a pedir sólo
 // cuando cambia la versión de los términos.
+import { T } from "../lib/idioma"
 import { useEffect, useRef, useState } from "react"
 import { defineWidgetConfig } from "@mercurjs/dashboard-sdk"
 
@@ -119,16 +120,16 @@ function EntradaPlanes() {
       >
         <input type="checkbox" checked={acepto} onChange={(e) => cambiar(e.target.checked)} style={{ marginTop: 3, width: 16, height: 16, flex: "none" }} />
         <span>
-          He leído y acepto los{" "}
+          <T>He leído y acepto los</T><T>{" "}</T>
           <a href={`${TIENDA}/terminos-vendedores`} target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
-            Términos para vendedores
+            <T>Términos para vendedores</T>
           </a>
-          {datos?.terminos_version ? ` (versión ${datos.terminos_version})` : ""}, la lista de precios y comisiones y el{" "}
+          <T>{datos?.terminos_version ? ` (versión ${datos.terminos_version})` : ""}</T><T>, la lista de precios y comisiones y el</T><T>{" "}</T>
           <a href={`${TIENDA}/aviso-de-privacidad`} target="_blank" rel="noreferrer" style={{ color: "#C2560A", fontWeight: 600 }}>
-            Aviso de privacidad
+            <T>Aviso de privacidad</T>
           </a>
           .
-          {aviso && <strong style={{ display: "block", color: "#B91C1C", marginTop: 4 }}>Marca la casilla para entrar.</strong>}
+          {aviso && <strong style={{ display: "block", color: "#B91C1C", marginTop: 4 }}><T>Marca la casilla para entrar.</T></strong>}
         </span>
       </label>
 
@@ -192,23 +193,23 @@ function EntradaPlanes() {
             color: "#142033",
           }}
         >
-          <span>Planes y comisiones de HETNA</span>
-          <span aria-hidden="true">{abierto ? "▲" : "▼"}</span>
+          <span><T>Planes y comisiones de HETNA</T></span>
+          <span aria-hidden="true"><T>{abierto ? "▲" : "▼"}</T></span>
         </button>
         {abierto && (
           <div style={{ padding: 12, fontSize: 12.5, display: "flex", flexDirection: "column", gap: 12 }}>
-            {!datos && <span>Cargando precios…</span>}
+            {!datos && <span><T>Cargando precios…</T></span>}
             {[planes, ventas, academia].filter(Boolean).map((g) => (
               <div key={g.id}>
-                <strong style={{ display: "block", color: "#142033", marginBottom: 4 }}>{g.titulo}</strong>
-                {g.texto && <span style={{ display: "block", color: "#6B675C", marginBottom: 4 }}>{g.texto}</span>}
+                <strong style={{ display: "block", color: "#142033", marginBottom: 4 }}><T>{g.titulo}</T></strong>
+                {g.texto && <span style={{ display: "block", color: "#6B675C", marginBottom: 4 }}><T>{g.texto}</T></span>}
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
                     {g.filas.map((f) => (
                       <tr key={f.concepto} style={{ borderTop: "1px solid #F0EEE7" }}>
                         <td style={{ padding: "4px 0", verticalAlign: "top" }}>
-                          {f.concepto}
-                          {f.nota && <span style={{ display: "block", color: "#9A978C", fontSize: 11.5 }}>{f.nota}</span>}
+                          <T>{f.concepto}</T>
+                          {f.nota && <span style={{ display: "block", color: "#9A978C", fontSize: 11.5 }}><T>{f.nota}</T></span>}
                         </td>
                         <td style={{ padding: "4px 0 4px 8px", textAlign: "right", fontWeight: 600, whiteSpace: "nowrap", verticalAlign: "top" }}>{f.precio}</td>
                       </tr>
@@ -218,10 +219,10 @@ function EntradaPlanes() {
               </div>
             ))}
             <span style={{ color: "#6B675C" }}>
-              Para publicar o cotizar se verifica una tarjeta de débito o crédito con un cargo de ${datos?.monto_verificacion || 10} que se devuelve al
-              momento (Mercado Pago o PayPal).{" "}
+              <T>Para publicar o cotizar se verifica una tarjeta de débito o crédito con un cargo de $</T>{datos?.monto_verificacion || 10} <T>que se devuelve al
+              momento (Mercado Pago o PayPal).</T><T>{" "}</T>
               <a href={`${TIENDA}/terminos-vendedores#tarifas`} target="_blank" rel="noreferrer" style={{ color: "#C2560A" }}>
-                Ver lista completa
+                <T>Ver lista completa</T>
               </a>
             </span>
           </div>

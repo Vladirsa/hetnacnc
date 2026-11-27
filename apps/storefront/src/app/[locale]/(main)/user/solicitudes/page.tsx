@@ -68,14 +68,14 @@ export default async function MisSolicitudesPage() {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Folio</TS> {s.folio}</p>
-                      <p className="mt-1 truncate font-bold text-[#142033]">{s.resumen || "Solicitud de fabricación"}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[#C2560A]"><TS>Folio</TS> <TS>{s.folio}</TS></p>
+                      <p className="mt-1 truncate font-bold text-[#142033]"><TS>{s.resumen || "Solicitud de fabricación"}</TS></p>
                       <p className="mt-1 text-sm text-[#6B675C]">
-                        {s.taller
+                        <TS>{s.taller
                           ? `${s.taller.nombre} · ${pesos(s.taller.precio)} MXN`
                           : s.propuestas
                             ? `${s.propuestas} ${s.propuestas === 1 ? "propuesta" : "propuestas"} para comparar`
-                            : "Esperando propuestas"}
+                            : "Esperando propuestas"}</TS>
                       </p>
                     </div>
                     <span
@@ -83,7 +83,7 @@ export default async function MisSolicitudesPage() {
                         s.falta_pago ? "bg-[#FFF1E6] text-[#C2560A]" : s.etapa === "cancelada" ? "bg-[#FDECEA] text-[#B3261E]" : "bg-[#F3F1EA] text-[#40403A]"
                       }`}
                     >
-                      {s.falta_pago ? "Falta tu pago" : s.etapa_nombre}
+                      <TS>{s.falta_pago ? "Falta tu pago" : s.etapa_nombre}</TS>
                     </span>
                   </div>
                 </a>

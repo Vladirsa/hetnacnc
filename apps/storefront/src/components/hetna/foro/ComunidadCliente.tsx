@@ -56,7 +56,7 @@ export function BotonSeguirTema({ temaId, siguiendo }: { temaId: number; siguien
           si ? "border-[#142033] bg-[#142033] text-white" : "border-[#E0DCD2] bg-white text-[#44433D] hover:border-[#C2560A]"
         }`}
       >
-        {si ? "✓ Siguiendo el tema" : "🔔 Seguir el tema"}
+        <T>{si ? "✓ Siguiendo el tema" : "🔔 Seguir el tema"}</T>
       </button>
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
     </div>
@@ -93,7 +93,7 @@ export function PedirRespuesta({ temaId, candidatos }: { temaId: number; candida
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] font-semibold text-[#1B1B18]">{c.nombre}</span>
               <span className="block truncate text-[12px] text-[#6B6A63]">
-                {c.titular || (c.respuestas ? `${c.respuestas} respuestas en esta sección` : `${c.reputacion} pts`)}
+                <T>{c.titular || (c.respuestas ? `${c.respuestas} respuestas en esta sección` : `${c.reputacion} pts`)}</T>
               </span>
             </span>
             <button
@@ -104,7 +104,7 @@ export function PedirRespuesta({ temaId, candidatos }: { temaId: number; candida
                 pedidos.has(c.id) ? "bg-[#EAF6EF] text-[#14683F]" : "border border-[#C2560A] text-[#B34D07] hover:bg-[#FDEEE1]"
               }`}
             >
-              {pedidos.has(c.id) ? "✓ Pedido" : "Pedir"}
+              <T>{pedidos.has(c.id) ? "✓ Pedido" : "Pedir"}</T>
             </button>
           </li>
         ))}
@@ -149,11 +149,11 @@ export function BotonAsistir({ temaId, n, yo, pasado }: { temaId: number; n: num
               estado.yo ? "border border-[#16794F] bg-[#EAF6EF] text-[#14683F]" : "bg-[#16794F] text-white hover:brightness-110"
             }`}
           >
-            {estado.yo ? "✓ Asistiré" : "Asistiré"}
+            <T>{estado.yo ? "✓ Asistiré" : "Asistiré"}</T>
           </button>
         )}
         <span className="text-[14px] text-[#44433D]">
-          {estado.n === 0 ? (pasado ? "" : "Sé el primero en confirmar") : estado.n === 1 ? "1 persona va" : `${estado.n} personas van`}
+          <T>{estado.n === 0 ? (pasado ? "" : "Sé el primero en confirmar") : estado.n === 1 ? "1 persona va" : `${estado.n} personas van`}</T>
         </span>
       </div>
       {!pasado && estado.yo && <span className="text-[12.5px] text-[#6B6A63]"><T>Te recordamos un día antes.</T></span>}
@@ -213,7 +213,7 @@ export function FormMensaje({ usuario, deshabilitado }: { usuario: string; desha
           className="min-h-[48px] flex-1 resize-y rounded-[12px] border border-[#E0DCD2] bg-white px-3 py-2.5 text-[15px] focus:border-[#C2560A] focus:outline-none"
         />
         <button type="submit" disabled={pendiente || !texto.trim()} className={`${BTN} h-[48px] bg-[#C2560A] px-5 text-[14.5px] text-white hover:bg-[#A84A08]`}>
-          {pendiente ? "…" : "Enviar"}
+          <T>{pendiente ? "…" : "Enviar"}</T>
         </button>
       </div>
       <span className="text-[12px] text-[#9A978C]"><T>Enter para enviar · Shift+Enter para otro renglón · Los teléfonos y correos se ocultan: cierra tus tratos dentro de HETNA.</T></span>
@@ -234,7 +234,7 @@ export function BotonBloquear({ perfilId, bloqueado }: { perfilId: string; bloqu
   }
   return (
     <button type="button" onClick={clic} disabled={pendiente} className="text-[13px] font-semibold text-[#A42A2A] hover:underline disabled:opacity-60">
-      {bloqueado ? "Desbloquear" : "Bloquear"}
+      <T>{bloqueado ? "Desbloquear" : "Bloquear"}</T>
     </button>
   )
 }
@@ -309,7 +309,7 @@ export function FormPreferencias({ inicial }: { inicial: { correoAvisos: CorreoA
           <span className="block text-[13px] text-[#6B6A63]"><T>Lo mejor de lo que sigues, preguntas que puedes responder, vacantes y eventos.</T></span>
         </span>
       </label>
-      {(pendiente || estado) && <span className="text-[13.5px] font-semibold text-[#16794F]">{pendiente ? "Guardando…" : estado}</span>}
+      {(pendiente || estado) && <span className="text-[13.5px] font-semibold text-[#16794F]"><T>{pendiente ? "Guardando…" : estado}</T></span>}
     </div>
   )
 }

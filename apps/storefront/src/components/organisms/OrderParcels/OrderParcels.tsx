@@ -14,7 +14,7 @@ export const OrderParcels = async ({ orders }: { orders: any[] }) => {
       {orders.map((order) => (
         <div key={order.id} className="w-full mb-8">
           <div className="border rounded-sm p-4 bg-component-secondary font-semibold text-secondary uppercase">
-            <TS>Order #</TS>{order.display_id}
+            <TS>Order #</TS><TS>{order.display_id}</TS>
           </div>
           <div className="border rounded-sm">
             <div className="p-4 border-b">
@@ -23,7 +23,7 @@ export const OrderParcels = async ({ orders }: { orders: any[] }) => {
             <div className="p-4 border-b md:flex items-center justify-between">
               <div className="flex items-center gap-4 mb-4 md:mb-0">
                 <Avatar src={order.seller?.logo || undefined} />
-                <p className="text-primary">{order.seller?.name}</p>
+                <p className="text-primary"><TS>{order.seller?.name}</TS></p>
               </div>
               <Chat
                 user={user}

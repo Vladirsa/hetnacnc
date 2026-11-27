@@ -45,20 +45,20 @@ export const Item = ({
         <div className="flex justify-between lg:mb-4">
           <div className="w-[150px] md:w-[200px] lg:w-[300px] xl:w-[calc(100%-120px)] mb-6">
             <h3 className="heading-xs uppercase truncate">
-              {item.subtitle} {item.title}
+              <TS>{item.subtitle}</TS> <TS>{item.title}</TS>
             </h3>
           </div>
         </div>
         <div className="lg:flex justify-between -mt-4 lg:mt-0">
           <div className="label-md text-secondary">
             <p>
-              <TS>Quantity:</TS> <span className="text-primary">{item.quantity}</span>
+              <TS>Quantity:</TS> <span className="text-primary"><TS>{item.quantity}</TS></span>
             </p>
           </div>
           <div className="lg:text-right flex lg:block items-center gap-2 mt-4 lg:mt-0">
             {total !== original_total && (
               <p className="line-through text-secondary label-md">
-                {original_total}
+                <TS>{original_total}</TS>
               </p>
             )}
             <p className="label-lg">{total}</p>

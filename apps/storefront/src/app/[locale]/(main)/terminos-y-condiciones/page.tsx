@@ -18,7 +18,7 @@ export default function Terminos() {
     <PaginaInfo etiqueta="Legal" titulo="Términos y condiciones" resumen="Las reglas para usar HETNA CNC." actualizado="20 de noviembre de 2026">
       <h2><TS>1. Quiénes somos</TS></h2>
       <p>
-        {EMPRESA.nombreComercial} ({EMPRESA.sitio}<TS>) es una plataforma operada por</TS> {responsableLegal("es")}<TS>, con domicilio en</TS> {EMPRESA.domicilioCompleto}<TS>, donde clientes, vendedores y
+        <TS>{EMPRESA.nombreComercial}</TS> (<TS>{EMPRESA.sitio}</TS><TS>) es una plataforma operada por</TS> {responsableLegal("es")}<TS>, con domicilio en</TS> <TS>{EMPRESA.domicilioCompleto}</TS><TS>, donde clientes, vendedores y
         talleres compran, venden y contratan productos y servicios relacionados con CNC. Al usar el sitio aceptas estos
         términos.</TS>
       </p>
@@ -51,7 +51,7 @@ export default function Terminos() {
           <ul>
             <li>
               <strong><TS>Venta de productos en la tienda</TS></strong> <TS>(máquinas, herramientas, materiales, piezas, diseños y archivos) y de la Academia (cursos y
-              libros): se cobran dentro de la plataforma y HETNA descuenta al vendedor la comisión de la</TS>{" "}
+              libros): se cobran dentro de la plataforma y HETNA descuenta al vendedor la comisión de la</TS><TS>{" "}</TS>
               <LocalizedClientLink href="/terminos-vendedores#tarifas"><TS>lista de precios para vendedores</TS></LocalizedClientLink><TS>. No está permitido
               compartir datos de contacto para cerrar estas ventas fuera de la plataforma; hacerlo puede causar la suspensión de la cuenta.</TS>
             </li>
@@ -78,7 +78,7 @@ export default function Terminos() {
         </li>
         <li><TS>Deben cumplir sus propias obligaciones fiscales.</TS></li>
         <li>
-          <TS>Además de estos términos, a los vendedores les aplican los</TS>{" "}
+          <TS>Además de estos términos, a los vendedores les aplican los</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/terminos-vendedores"><TS>Términos para vendedores</TS></LocalizedClientLink>.
         </li>
       </ul>
@@ -131,7 +131,7 @@ export default function Terminos() {
       <h2><TS>8. Propiedad intelectual</TS></h2>
       <p>
         <TS>Cada diseño digital se vende con una licencia (personal, comercial limitada o comercial ampliada) que se indica en
-        su ficha antes de pagar y se explica en</TS>{" "}
+        su ficha antes de pagar y se explica en</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/licencias-disenos"><TS>Licencias de diseños digitales</TS></LocalizedClientLink><TS>. Con ninguna
         se permite revender ni compartir los archivos. Quien publica un diseño declara tener derecho a venderlo con la
         licencia que elige.</TS>

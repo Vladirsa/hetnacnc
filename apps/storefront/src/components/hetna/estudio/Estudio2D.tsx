@@ -307,9 +307,9 @@ export function Estudio2D({
               </label>
               {anidado && (
                 <p className="m-0 rounded-[8px] bg-[#C2560A]/10 px-2.5 py-2 text-[12px] leading-snug text-[#F2D29B]">
-                  {anidado.totalPiezas} <T>piezas en</T> <b className="text-white">{anidado.hojas.length} {anidado.hojas.length === 1 ? "hoja" : "hojas"}</b> <T>de</T> {HOJAS[hojaSel].nombre.replace(/^\S+ /, "")} <T>mm · aprovechamiento</T>{" "}
+                  {anidado.totalPiezas} <T>piezas en</T> <b className="text-white">{anidado.hojas.length} <T>{anidado.hojas.length === 1 ? "hoja" : "hojas"}</T></b> <T>de</T> {HOJAS[hojaSel].nombre.replace(/^\S+ /, "")} <T>mm · aprovechamiento</T><T>{" "}</T>
                   <b className="text-white">{Math.round(anidado.aprovechamiento * 100)}%</b>
-                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en esta hoja:</T> {anidado.noCaben.slice(0, 3).join(", ")}<T>. Elige una hoja más grande.</T></span>}
+                  {anidado.noCaben.length > 0 && <span className="mt-1 block text-[#F6B8AE]"><T>No caben en esta hoja:</T> <T>{anidado.noCaben.slice(0, 3).join(", ")}</T><T>. Elige una hoja más grande.</T></span>}
                 </p>
               )}
             </>
@@ -458,7 +458,7 @@ export function Estudio2D({
               {svg.paths}
             </svg>
           ) : (
-            <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]">{vacio || "Ajusta los valores del panel."}</div>
+            <div className="absolute inset-0 grid place-items-center p-6 text-center text-[14px] text-[#8A97AB]"><T>{vacio || "Ajusta los valores del panel."}</T></div>
           )}
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[#1F2937] bg-[#0F141C] px-4 py-2 text-[12.5px] text-[#8A97AB]">
@@ -474,7 +474,7 @@ export function Estudio2D({
           )}
           {largo > 0 && (
             <span>
-              <T>Corte:</T> <b className="text-white">{largo >= 1000 ? `${(largo / 1000).toFixed(2)} m` : `${Math.round(largo)} mm`}</b>
+              <T>Corte:</T> <b className="text-white"><T>{largo >= 1000 ? `${(largo / 1000).toFixed(2)} m` : `${Math.round(largo)} mm`}</T></b>
             </span>
           )}
           {datos.map(([t, v]) => (

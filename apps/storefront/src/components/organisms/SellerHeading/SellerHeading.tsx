@@ -40,11 +40,11 @@ export const SellerHeading = ({
             )}
           </span>
           <div className="flex-1 min-w-0 md:pb-1">
-            <h1 className="m-0 text-[24px] md:text-[28px] font-bold text-[#1B1B18] leading-tight">{seller.name}</h1>
+            <h1 className="m-0 text-[24px] md:text-[28px] font-bold text-[#1B1B18] leading-tight"><TS>{seller.name}</TS></h1>
             <p className="m-0 mt-1 text-[14px] text-[#6B6A63] flex flex-wrap gap-x-3 gap-y-1">
-              {s.handle && <span>@{s.handle}</span>}
-              {ubicacion && <span>📍 {ubicacion}</span>}
-              {desde && <span><TS>En HETNA desde</TS> {desde}</span>}
+              {s.handle && <span>@<TS>{s.handle}</TS></span>}
+              {ubicacion && <span>📍 <TS>{ubicacion}</TS></span>}
+              {desde && <span><TS>En HETNA desde</TS> <TS>{desde}</TS></span>}
             </p>
           </div>
           <div className="md:pb-1">

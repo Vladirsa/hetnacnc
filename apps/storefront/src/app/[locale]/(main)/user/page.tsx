@@ -181,15 +181,15 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
         <div className="flex min-w-0 flex-col gap-6 md:col-span-3">
           {bienvenida && (
             <section className="rounded-[18px] border-2 border-[#C2560A] bg-[#FDEEE1] p-5 text-[#142033]">
-              <p className="m-0 text-[20px] font-extrabold"><TS>¡Tu cuenta está activa</TS>{afiliacion ? `, afiliado ${afiliacion}` : ""}!</p>
+              <p className="m-0 text-[20px] font-extrabold"><TS>¡Tu cuenta está activa</TS><TS>{afiliacion ? `, afiliado ${afiliacion}` : ""}</TS>!</p>
               <ul className="m-0 mt-2 space-y-1 p-0 text-[14px] text-[#40403A] [list-style:none]">
                 <li><TS>🎁 Usa el cupón</TS> <b><TS>BIENVENIDA</TS></b><TS>: $100 de descuento en tu primera compra de $800 o más.</TS></li>
                 <li>
-                  <TS>📋 Tus solicitudes de cotización ya están en</TS>{" "}
+                  <TS>📋 Tus solicitudes de cotización ya están en</TS><TS>{" "}</TS>
                   <LocalizedClientLink href="/user/solicitudes" className="font-semibold text-[#C2560A] underline"><TS>Mis solicitudes</TS></LocalizedClientLink>.
                 </li>
                 <li>
-                  <TS>🛠️ ¿Tienes taller?</TS>{" "}
+                  <TS>🛠️ ¿Tienes taller?</TS><TS>{" "}</TS>
                   <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#C2560A] underline">
                     <TS>Regístralo gratis y prueba 14 días el Cotizador CNC</TS>
                   </LocalizedClientLink>
@@ -206,19 +206,19 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
             <div className="min-w-0 flex-1">
               <h1 className="m-0 text-[24px] font-extrabold text-[#142033] sm:text-[28px]"><TS>Hola,</TS> {user.first_name || nombre}</h1>
               <p className="m-0 truncate text-[14px] text-[#6B6A63]">
-                {user.email}
-                {user.created_at ? ` · Cliente desde ${new Date(user.created_at).toLocaleDateString("es-MX", { month: "long", year: "numeric" })}` : ""}
+                <TS>{user.email}</TS>
+                <TS>{user.created_at ? ` · Cliente desde ${new Date(user.created_at).toLocaleDateString("es-MX", { month: "long", year: "numeric" })}` : ""}</TS>
               </p>
               {afiliacion && (
                 <p className="m-0 mt-1 text-[13px] text-[#142033]">
-                  <TS>Afiliado</TS> <b className="tracking-wide">{afiliacion}</b>
+                  <TS>Afiliado</TS> <b className="tracking-wide"><TS>{afiliacion}</TS></b>
                 </p>
               )}
             </div>
             {creditos != null && (
               <LocalizedClientLink href="/user/creditos" className="rounded-[12px] bg-[#F4F1EA] px-4 py-2 text-center hover:bg-[#EDE8DC]">
-                <span className="block text-[20px] font-extrabold text-[#142033]">{ilimitado ? "∞" : creditos}</span>
-                <span className="text-[12px] text-[#6B6A63]">{ilimitado ? "ilimitados" : "créditos"}</span>
+                <span className="block text-[20px] font-extrabold text-[#142033]"><TS>{ilimitado ? "∞" : creditos}</TS></span>
+                <span className="text-[12px] text-[#6B6A63]"><TS>{ilimitado ? "ilimitados" : "créditos"}</TS></span>
               </LocalizedClientLink>
             )}
           </section>
@@ -231,9 +231,9 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               { t: "Mensajes sin leer", n: sinLeerChat, pie: sinLeerChat ? "te respondieron" : "todo leído", href: "/mensajes" },
             ].map((k) => (
               <LocalizedClientLink key={k.t} href={k.href} className="bg-white/80 shadow-[0_8px_24px_-12px_rgba(20,32,51,0.18)] ring-1 ring-[#142033]/5 backdrop-blur-md rounded-[16px] p-3 transition hover:ring-[#C2560A]/40 sm:p-5">
-                <span className="block text-[12px] font-semibold text-[#55544D] sm:text-[13px]">{k.t}</span>
+                <span className="block text-[12px] font-semibold text-[#55544D] sm:text-[13px]"><TS>{k.t}</TS></span>
                 <span className="mt-1 block text-[26px] font-extrabold leading-none text-[#142033] sm:text-[30px]">{k.n}</span>
-                <span className="mt-1 block truncate text-[11.5px] text-[#6B6A63] sm:text-[12.5px]">{k.pie}</span>
+                <span className="mt-1 block truncate text-[11.5px] text-[#6B6A63] sm:text-[12.5px]"><TS>{k.pie}</TS></span>
               </LocalizedClientLink>
             ))}
           </section>
@@ -248,11 +248,11 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
                     <span><TS>{a.texto}</TS></span>
                     {a.externo ? (
                       <a href={a.href} className={boton}>
-                        {a.accion}
+                        <TS>{a.accion}</TS>
                       </a>
                     ) : (
                       <LocalizedClientLink href={a.href} className={boton}>
-                        {a.accion}
+                        <TS>{a.accion}</TS>
                       </LocalizedClientLink>
                     )}
                   </div>
@@ -292,15 +292,15 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[14.5px] font-semibold text-[#1B1B18]">
-                            {primero?.product_title || primero?.title || `Pedido #${o.display_id}`}
-                            {(o.items?.length || 0) > 1 ? ` y ${(o.items?.length || 1) - 1} más` : ""}
+                            <TS>{primero?.product_title || primero?.title || `Pedido #${o.display_id}`}</TS>
+                            <TS>{(o.items?.length || 0) > 1 ? ` y ${(o.items?.length || 1) - 1} más` : ""}</TS>
                           </span>
                           <span className="text-[12.5px] text-[#6B6A63]">
-                            #{o.display_id} · {o.seller?.name ? `${o.seller.name} · ` : ""}
+                            #<TS>{o.display_id}</TS> · <TS>{o.seller?.name ? `${o.seller.name} · ` : ""}</TS>
                             {fecha(o.created_at as string)} · {pesos(Number(o.total) || 0)}
                           </span>
                         </span>
-                        <span className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-bold ${color}`}>{estado}</span>
+                        <span className={`shrink-0 rounded-full px-3 py-1 text-[12px] font-bold ${color}`}><TS>{estado}</TS></span>
                       </LocalizedClientLink>
                     </li>
                   )
@@ -308,11 +308,11 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               </ul>
             ) : (
               <p className="m-0 mt-2 text-[14px] text-[#6B6A63]">
-                <TS>Todavía no tienes compras.</TS>{" "}
+                <TS>Todavía no tienes compras.</TS><TS>{" "}</TS>
                 <LocalizedClientLink href="/categories" className="font-semibold text-[#C2560A] underline">
                   <TS>Explora la tienda</TS>
-                </LocalizedClientLink>{" "}
-                o{" "}
+                </LocalizedClientLink><TS>{" "}</TS>
+                o<TS>{" "}</TS>
                 <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#C2560A] underline">
                   <TS>pide que te fabriquen una pieza</TS>
                 </LocalizedClientLink>
@@ -337,7 +337,7 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
                   <span className="flex items-center justify-between gap-2 text-[#44433D] group-hover:text-[#C2560A]">
                     <IconoCuenta n={t.icono} size={26} />
                     {t.dato && (
-                      <span className="truncate rounded-full bg-[#F4F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#44433D] sm:px-2.5 sm:text-[12px]">{t.dato}</span>
+                      <span className="truncate rounded-full bg-[#F4F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#44433D] sm:px-2.5 sm:text-[12px]"><TS>{t.dato}</TS></span>
                     )}
                   </span>
                   <span className="text-[14px] font-bold leading-tight text-[#142033] sm:text-[15.5px]"><TS>{t.titulo}</TS></span>
@@ -347,11 +347,11 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
               // /cotizador/ y /seller no son rutas de Next con idioma
               return t.externo ? (
                 <a key={t.titulo} href={t.href} className={clase}>
-                  {contenido}
+                  <TS>{contenido}</TS>
                 </a>
               ) : (
                 <LocalizedClientLink key={t.titulo} href={t.href} className={clase}>
-                  {contenido}
+                  <TS>{contenido}</TS>
                 </LocalizedClientLink>
               )
             })}

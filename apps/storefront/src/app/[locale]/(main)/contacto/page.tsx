@@ -37,32 +37,32 @@ export default function Contacto() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={TARJETA}>
           <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>WhatsApp</TS></p>
-          <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.whatsappVisible}</p>
+          <p className="mt-1 text-lg font-bold text-[#142033]"><TS>{EMPRESA.whatsappVisible}</TS></p>
           <a href={ligaWhatsApp("Hola HETNA CNC")} target="_blank" rel="noopener noreferrer">
             <TS>Abrir WhatsApp →</TS>
           </a>
         </div>
         <div className={TARJETA}>
           <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Teléfono</TS></p>
-          <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.telefonoVisible}</p>
+          <p className="mt-1 text-lg font-bold text-[#142033]"><TS>{EMPRESA.telefonoVisible}</TS></p>
           <a href={`tel:+${EMPRESA.telefono}`}><TS>Llamar →</TS></a>
         </div>
         {EMPRESA.correo && (
           <div className={TARJETA}>
             <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Correo</TS></p>
-            <p className="mt-1 text-lg font-bold text-[#142033]">{EMPRESA.correo}</p>
+            <p className="mt-1 text-lg font-bold text-[#142033]"><TS>{EMPRESA.correo}</TS></p>
             <a href={`mailto:${EMPRESA.correo}`}><TS>Escribir correo →</TS></a>
           </div>
         )}
         <div className={TARJETA}>
           <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Horario</TS></p>
-          <p className="mt-1 font-semibold text-[#142033]">{EMPRESA.horario}</p>
+          <p className="mt-1 font-semibold text-[#142033]"><TS>{EMPRESA.horario}</TS></p>
         </div>
         <div className={TARJETA}>
           <p className="text-xs font-bold uppercase tracking-wider text-[#6B675C]"><TS>Ubicación</TS></p>
           <p className="mt-1 font-semibold text-[#142033]">{EMPRESA.domicilioCompleto || ubicacionEmpresa()}</p>
           <p className="text-sm text-[#6B675C]"><TS>Envíos a toda la República Mexicana</TS></p>
-          {EMPRESA.razonSocial && <p className="mt-2 text-sm text-[#6B675C]"><TS>Responsable:</TS> {EMPRESA.razonSocial}</p>}
+          {EMPRESA.razonSocial && <p className="mt-2 text-sm text-[#6B675C]"><TS>Responsable:</TS> <TS>{EMPRESA.razonSocial}</TS></p>}
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export default function Contacto() {
         {EMPRESA.redes.map((r) => (
           <li key={r.nombre}>
             <a href={r.url} target="_blank" rel="noopener noreferrer">
-              {r.nombre}
+              <TS>{r.nombre}</TS>
             </a>
           </li>
         ))}

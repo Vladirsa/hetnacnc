@@ -43,16 +43,16 @@ export const PuntosDestacados = ({
       icono: "🏭",
       texto: (
         <>
-          <TS>Hecho y vendido por</TS>{" "}
+          <TS>Hecho y vendido por</TS><TS>{" "}</TS>
           {taller.handle ? (
             <a
               href={`/${locale}/sellers/${taller.handle}`}
               className="font-semibold text-[#B34D07] hover:underline"
             >
-              {taller.name}
+              <TS>{taller.name}</TS>
             </a>
           ) : (
-            <span className="font-semibold">{taller.name}</span>
+            <span className="font-semibold"><TS>{taller.name}</TS></span>
           )}
         </>
       ),
@@ -97,7 +97,7 @@ export const PuntosDestacados = ({
       icono: "📜",
       texto: (
         <>
-          <TS>Licencia:</TS> <span className="font-semibold">{nombreLicencia(product.metadata)}</span>.{" "}
+          <TS>Licencia:</TS> <span className="font-semibold">{nombreLicencia(product.metadata)}</span>.<TS>{" "}</TS>
           <LocalizedClientLink href="/licencias-disenos" className="font-semibold text-[#B34D07] underline">
             <TS>Qué incluye</TS>
           </LocalizedClientLink>
@@ -107,22 +107,22 @@ export const PuntosDestacados = ({
   }
 
   if (material) {
-    puntos.push({ icono: "🪵", texto: <><TS>Material:</TS> <span className="font-semibold">{material}</span></> })
+    puntos.push({ icono: "🪵", texto: <><TS>Material:</TS> <span className="font-semibold"><TS>{material}</TS></span></> })
   } else if (categoria?.name) {
     puntos.push({
       icono: "🏷️",
       texto: (
         <>
-          <TS>Categoría:</TS>{" "}
+          <TS>Categoría:</TS><TS>{" "}</TS>
           {categoria.handle ? (
             <LocalizedClientLink
               href={`/categories/${categoria.handle}`}
               className="font-semibold text-[#B34D07] hover:underline"
             >
-              {categoria.name}
+              <TS>{categoria.name}</TS>
             </LocalizedClientLink>
           ) : (
-            <span className="font-semibold">{categoria.name}</span>
+            <span className="font-semibold"><TS>{categoria.name}</TS></span>
           )}
         </>
       ),
@@ -133,7 +133,7 @@ export const PuntosDestacados = ({
     icono: "↩️",
     texto: servicio ? (
       <>
-        <TS>Si lo que entregamos no corresponde a lo acordado, lo corregimos.</TS>{" "}
+        <TS>Si lo que entregamos no corresponde a lo acordado, lo corregimos.</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
           <TS>Ver política</TS>
         </LocalizedClientLink>
@@ -141,15 +141,15 @@ export const PuntosDestacados = ({
     ) : digital ? (
       <>
         <TS>Los archivos no tienen devolución una vez descargados, salvo que estén dañados o
-        no correspondan.</TS>{" "}
+        no correspondan.</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
           <TS>Ver política</TS>
         </LocalizedClientLink>
       </>
     ) : (
       <>
-        <span className="font-semibold">{EMPRESA.diasDevolucion} <TS>días naturales</TS></span> <TS>para
-        devolver, sin uso y en su empaque.</TS>{" "}
+        <span className="font-semibold"><TS>{EMPRESA.diasDevolucion}</TS> <TS>días naturales</TS></span> <TS>para
+        devolver, sin uso y en su empaque.</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/devoluciones" className="font-semibold text-[#B34D07] underline">
           <TS>Ver política</TS>
         </LocalizedClientLink>

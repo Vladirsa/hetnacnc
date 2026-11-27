@@ -5,6 +5,7 @@
 // precio, SKU, código de barras, QR a su ficha, nombre del taller, texto
 // libre). Imprime desde el navegador o descarga ZPL para Zebra.
 // Motor: src/lib/etiquetas.ts · Datos: GET /vendor/hetna-etiquetas.
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useMemo, useState } from "react"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
@@ -19,6 +20,8 @@ const Icono = (props) => (
 
 export const config: RouteConfig = {
   label: "Etiquetas",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: Icono,
 }
 
@@ -114,35 +117,35 @@ export default function Etiquetas() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Etiquetas de tus productos</h1>
+      <h1 style={S.h1}><T>Etiquetas de tus productos</T></h1>
       <p style={S.sub}>
-        Imprime etiquetas con nombre, precio, código de barras y QR a tu ficha en tu impresora de etiquetas (Zebra, TSC, Xprinter, Brother, Dymo…). Elige
-        la medida de tu rollo, qué datos lleva y cuántas de cada producto. Tu diseño se guarda en este navegador.
+        <T>Imprime etiquetas con nombre, precio, código de barras y QR a tu ficha en tu impresora de etiquetas (Zebra, TSC, Xprinter, Brother, Dymo…). Elige
+        la medida de tu rollo, qué datos lleva y cuántas de cada producto. Tu diseño se guarda en este navegador.</T>
       </p>
-      {error ? <div style={S.err}>{error}</div> : null}
+      {error ? <div style={S.err}><T>{error}</T></div> : null}
 
       <div style={S.grid}>
         <div>
           <div style={S.card}>
-            <h2 style={S.h2}>Medida de la etiqueta</h2>
+            <h2 style={S.h2}><T>Medida de la etiqueta</T></h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MEDIDAS.map((m) => (
                 <button key={m.id} type="button" style={S.chip(d.medidaId === m.id)} onClick={() => setD((x) => ({ ...x, medidaId: m.id }))}>
-                  {m.nombre}
+                  <T>{m.nombre}</T>
                 </button>
               ))}
               <button type="button" style={S.chip(d.medidaId === "otra")} onClick={() => setD((x) => ({ ...x, medidaId: "otra" }))}>
-                Otra
+                <T>Otra</T>
               </button>
             </div>
             {d.medidaId === "otra" ? (
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <label style={{ flex: 1, fontSize: 13 }}>
-                  Ancho (mm)
+                  <T>Ancho (mm)</T>
                   <input style={S.input} inputMode="decimal" value={d.ancho} onChange={(e) => setD((x) => ({ ...x, ancho: e.target.value }))} />
                 </label>
                 <label style={{ flex: 1, fontSize: 13 }}>
-                  Alto (mm)
+                  <T>Alto (mm)</T>
                   <input style={S.input} inputMode="decimal" value={d.alto} onChange={(e) => setD((x) => ({ ...x, alto: e.target.value }))} />
                 </label>
               </div>
@@ -150,7 +153,7 @@ export default function Etiquetas() {
           </div>
 
           <div style={S.card}>
-            <h2 style={S.h2}>Qué lleva</h2>
+            <h2 style={S.h2}><T>Qué lleva</T></h2>
             {[
               ["nombre", "Nombre del producto"],
               ["variante", "Medida o presentación"],
@@ -162,17 +165,17 @@ export default function Etiquetas() {
             ].map(([k, t]) => (
               <label key={k} style={S.label}>
                 <input type="checkbox" checked={!!d.campos[k]} onChange={(e) => campo(k, e.target.checked)} />
-                {t}
+                <T>{t}</T>
               </label>
             ))}
             <label style={{ fontSize: 13, display: "block", marginTop: 8 }}>
-              Texto libre (opcional)
-              <input style={S.input} maxLength={40} placeholder="Hecho en México · Garantía 30 días" value={d.campos.texto} onChange={(e) => campo("texto", e.target.value)} />
+              <T>Texto libre (opcional)</T>
+              <input style={S.input} maxLength={40} placeholder={traducir("Hecho en México · Garantía 30 días")} value={d.campos.texto} onChange={(e) => campo("texto", e.target.value)} />
             </label>
           </div>
 
           <div style={S.card}>
-            <h2 style={S.h2}>Diseño</h2>
+            <h2 style={S.h2}><T>Diseño</T></h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {[
                 ["clasica", "Clásica"],
@@ -180,52 +183,52 @@ export default function Etiquetas() {
                 ["precio-grande", "Precio grande"],
               ].map(([k, t]) => (
                 <button key={k} type="button" style={S.chip(d.acomodo === k)} onClick={() => setD((x) => ({ ...x, acomodo: k, campos: k === "qr-izquierda" ? { ...x.campos, qr: true } : x.campos }))}>
-                  {t}
+                  <T>{t}</T>
                 </button>
               ))}
             </div>
             <label style={{ fontSize: 13, display: "block", marginTop: 10 }}>
-              Tamaño de letra
+              <T>Tamaño de letra</T>
               <input type="range" min={0.7} max={1.4} step={0.05} value={d.letra} onChange={(e) => setD((x) => ({ ...x, letra: e.target.value }))} style={{ width: "100%" }} />
             </label>
           </div>
 
           <div style={S.card}>
-            <h2 style={S.h2}>Vista previa</h2>
+            <h2 style={S.h2}><T>Vista previa</T></h2>
             {muestra ? (
               <div style={{ background: "#F3F1EA", borderRadius: 10, padding: 16, display: "flex", justifyContent: "center" }}>
                 <div style={{ width: "100%", maxWidth: 320 }} dangerouslySetInnerHTML={{ __html: etiquetaSVG(aDatos(muestra), diseno, true).replace(/width="[\d.]+mm" height="[\d.]+mm"/, 'width="100%"') }} />
               </div>
             ) : (
-              <p style={S.sub}>Agrega productos para ver la etiqueta.</p>
+              <p style={S.sub}><T>Agrega productos para ver la etiqueta.</T></p>
             )}
             <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
               <button type="button" style={{ ...S.btn, opacity: total ? 1 : 0.5 }} disabled={!total} onClick={imprimir}>
-                Imprimir {total ? `${total} etiqueta${total === 1 ? "" : "s"}` : ""}
+                <T>Imprimir</T> <T>{total ? `${total} etiqueta${total === 1 ? "" : "s"}` : ""}</T>
               </button>
               <button type="button" style={{ ...S.btn2, opacity: total ? 1 : 0.5 }} disabled={!total} onClick={zpl}>
-                Descargar ZPL (Zebra)
+                <T>Descargar ZPL (Zebra)</T>
               </button>
             </div>
             <p style={{ ...S.sub, fontSize: 12.5, margin: "10px 0 0" }}>
-              Al imprimir, elige tu impresora de etiquetas, el tamaño de papel {medida.ancho} × {medida.alto} mm y márgenes en «Ninguno». El ZPL se manda a
-              una Zebra con Zebra Setup Utilities o arrastrándolo a su página de la impresora.
+              <T>Al imprimir, elige tu impresora de etiquetas, el tamaño de papel</T> <T>{medida.ancho}</T> × <T>{medida.alto}</T> <T>mm y márgenes en «Ninguno». El ZPL se manda a
+              una Zebra con Zebra Setup Utilities o arrastrándolo a su página de la impresora.</T>
             </p>
           </div>
         </div>
 
         <div style={S.card}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
-            <input style={S.input} placeholder="Buscar por nombre, medida o SKU" value={buscar} onChange={(e) => setBuscar(e.target.value)} />
+            <input style={S.input} placeholder={traducir("Buscar por nombre, medida o SKU")} value={buscar} onChange={(e) => setBuscar(e.target.value)} />
             <button type="button" style={S.btn2} onClick={() => setCantidades((c) => ({ ...c, ...Object.fromEntries(visibles.map((p) => [p.offer_id, c[p.offer_id] || 1])) }))}>
-              Todos
+              <T>Todos</T>
             </button>
             <button type="button" style={S.btn2} onClick={() => setCantidades({})}>
-              Ninguno
+              <T>Ninguno</T>
             </button>
           </div>
-          {!datos && !error ? <p style={S.sub}>Cargando tus productos…</p> : null}
-          {datos && !productos.length ? <p style={S.sub}>Todavía no tienes productos publicados.</p> : null}
+          {!datos && !error ? <p style={S.sub}><T>Cargando tus productos…</T></p> : null}
+          {datos && !productos.length ? <p style={S.sub}><T>Todavía no tienes productos publicados.</T></p> : null}
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>
               {visibles.map((p) => {
@@ -239,16 +242,16 @@ export default function Etiquetas() {
                       {p.imagen ? <img src={p.imagen} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 6 }} /> : null}
                     </td>
                     <td style={{ padding: "6px 4px", fontSize: 14 }}>
-                      <div style={{ fontWeight: 600 }}>{p.titulo}</div>
+                      <div style={{ fontWeight: 600 }}><T>{p.titulo}</T></div>
                       <div style={{ color: "#6B675C", fontSize: 12.5 }}>
-                        {[p.variante, p.sku && `SKU ${p.sku}`, p.precio != null && pesos(p.precio)].filter(Boolean).join(" · ")}
+                        <T>{[p.variante, p.sku && `SKU ${p.sku}`, p.precio != null && pesos(p.precio)].filter(Boolean).join(" · ")}</T>
                       </div>
                     </td>
                     <td style={{ padding: "6px 4px", width: 84 }}>
                       <input
                         style={S.input}
                         inputMode="numeric"
-                        aria-label="Cuántas etiquetas"
+                        aria-label={traducir("Cuántas etiquetas")}
                         value={n || ""}
                         placeholder="0"
                         onChange={(e) => setCantidades((c) => ({ ...c, [p.offer_id]: Math.max(0, Math.min(999, parseInt(e.target.value) || 0)) }))}

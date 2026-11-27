@@ -396,11 +396,11 @@ export default function FormSolicitudTaller({
       <div className="rounded-2xl border border-[#E7E4DC] bg-white p-8 text-center">
         <p className="text-2xl">✓</p>
         <h3 className="mt-2 text-xl font-extrabold text-[#142033]"><T>Recibimos tu solicitud</T></h3>
-        {folio && <p className="mt-1 font-semibold text-[#C2560A]"><T>Folio</T> {folio}</p>}
+        {folio && <p className="mt-1 font-semibold text-[#C2560A]"><T>Folio</T> <T>{folio}</T></p>}
         {afiliacion && <TarjetaAfiliacion afiliacion={afiliacion} />}
         <p className="mx-auto mt-2 max-w-md text-[#6B675C]">
           <T>Te enviamos un correo con una liga privada. Ahí verás las propuestas</T>
-          {nombreTaller ? ` de ${nombreTaller}` : " de los talleres"} <T>conforme lleguen, las comparas y eliges la que más te convenga.</T>
+          <T>{nombreTaller ? ` de ${nombreTaller}` : " de los talleres"}</T> <T>conforme lleguen, las comparas y eliges la que más te convenga.</T>
         </p>
         <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-[#17633A]"><T>Te respondemos en</T> {PLAZO_PRIMERA_RESPUESTA}.</p>
         <ol className="mx-auto mt-5 grid max-w-md gap-2 text-left text-sm text-[#40403A]">
@@ -432,22 +432,22 @@ export default function FormSolicitudTaller({
     <form onSubmit={enviar} className="grid gap-7 rounded-2xl border border-[#E7E4DC] bg-white p-5 sm:p-7">
       {nombreTaller && (
         <p className="rounded-xl bg-[#F3F1EA] px-4 py-3 text-sm text-[#40403A]">
-          <T>Cotizando con</T> <strong className="text-[#142033]">{nombreTaller}</strong>
+          <T>Cotizando con</T> <strong className="text-[#142033]"><T>{nombreTaller}</T></strong>
         </p>
       )}
       {prellenado?.desde === "producto" && !prellenado.archivos?.length && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
-          <strong className="text-[#0F7A4A]"><T>Diseño de la tienda:</T></strong> {prellenado.pieza}
-          {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
-          {prellenado.material ? ` · ${prellenado.material}` : ""}<T>. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
+          <strong className="text-[#0F7A4A]"><T>Diseño de la tienda:</T></strong> <T>{prellenado.pieza}</T>
+          <T>{prellenado.medidas ? ` · ${prellenado.medidas}` : ""}</T>
+          <T>{prellenado.material ? ` · ${prellenado.material}` : ""}</T><T>. Si ya compraste el archivo, súbelo abajo; si no, el taller lo verá en la tienda y lo
           incluirá en su propuesta. Revisa la cantidad, pon tu ciudad y envía.</T>
         </div>
       )}
       {prellenado && !(prellenado.desde === "producto" && !prellenado.archivos?.length) && (
         <div className="rounded-xl border-2 border-[#19B374] bg-[#E7F5EC] px-4 py-3 text-sm text-[#0F5F36]">
-          <strong className="text-[#0F7A4A]">{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</strong> {prellenado.pieza}
-          {prellenado.medidas ? ` · ${prellenado.medidas}` : ""}
-          {prellenado.material ? ` · ${prellenado.material}` : ""}<T>. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual</T> {prellenado.archivos?.length ? "lo subiste" : "lo generaste"}.
+          <strong className="text-[#0F7A4A]"><T>{prellenado.archivos?.length ? "Tu archivo ya viene cargado:" : "Tu diseño ya viene cargado:"}</T></strong> <T>{prellenado.pieza}</T>
+          <T>{prellenado.medidas ? ` · ${prellenado.medidas}` : ""}</T>
+          <T>{prellenado.material ? ` · ${prellenado.material}` : ""}</T><T>. Revisa la cantidad, pon tu ciudad y envía: los talleres reciben el archivo tal cual</T> <T>{prellenado.archivos?.length ? "lo subiste" : "lo generaste"}</T>.
         </div>
       )}
 
@@ -465,7 +465,7 @@ export default function FormSolicitudTaller({
               onClick={() => setNecesidad(necesidad === n.valor ? "" : n.valor)}
               className={chip(necesidad === n.valor)}
             >
-              <span className="block text-sm font-bold text-[#142033]">{n.valor}</span>
+              <span className="block text-sm font-bold text-[#142033]"><T>{n.valor}</T></span>
               <span className="block text-xs text-[#6B675C]"><T>{n.detalle}</T></span>
             </button>
           ))}
@@ -486,7 +486,7 @@ export default function FormSolicitudTaller({
               onClick={() => setTieneArchivo(tieneArchivo === t.valor ? "" : t.valor)}
               className={chip(tieneArchivo === t.valor)}
             >
-              <span className="block text-sm font-bold text-[#142033]">{t.valor}</span>
+              <span className="block text-sm font-bold text-[#142033]"><T>{t.valor}</T></span>
               <span className="block text-xs text-[#6B675C]"><T>{t.detalle}</T></span>
             </button>
           ))}
@@ -533,9 +533,9 @@ export default function FormSolicitudTaller({
                   <li key={a.id} className="rounded-xl border border-[#E7E4DC] text-sm">
                     <div className="flex items-center gap-3 px-3 py-2">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold text-[#142033]">{a.nombre}</span>
+                      <span className="block truncate font-semibold text-[#142033]"><T>{a.nombre}</T></span>
                       {a.error ? (
-                        <span className="block text-xs text-[#B3261E]">{a.error}</span>
+                        <span className="block text-xs text-[#B3261E]"><T>{a.error}</T></span>
                       ) : a.subido ? (
                         <span className="block text-xs text-[#2E7D32]"><T>Listo ·</T> {pesoLegible(a.tamano)}</span>
                       ) : (
@@ -545,7 +545,7 @@ export default function FormSolicitudTaller({
                       )}
                     </span>
                     {a.geo && !a.error && (
-                      <span className="hidden shrink-0 rounded-lg bg-[#F3F1EA] px-2 py-1 text-xs font-semibold text-[#142033] sm:block">📐 {a.geo}</span>
+                      <span className="hidden shrink-0 rounded-lg bg-[#F3F1EA] px-2 py-1 text-xs font-semibold text-[#142033] sm:block">📐 <T>{a.geo}</T></span>
                     )}
                     {!a.error && (
                       <select
@@ -564,7 +564,7 @@ export default function FormSolicitudTaller({
                         onClick={() => setArchivos((xs) => xs.map((x) => (x.id === a.id ? { ...x, verCad: !x.verCad } : x)))}
                         className="text-xs font-semibold text-[#C2560A] hover:underline"
                       >
-                        {a.verCad ? "Ocultar" : "Ver pieza"}
+                        <T>{a.verCad ? "Ocultar" : "Ver pieza"}</T>
                       </button>
                     )}
                     <button type="button" onClick={() => quitar(a.id)} className="text-xs font-semibold text-[#6B675C] hover:text-[#B3261E]">
@@ -720,7 +720,7 @@ export default function FormSolicitudTaller({
               <label className="flex items-start gap-2 text-sm text-[#40403A]">
                 <input type="checkbox" name="con_factura" value="1" className="mt-1 accent-[#C2560A]" />
                 <span>
-                  <T>Necesito factura (CFDI) con los datos de</T>{" "}
+                  <T>Necesito factura (CFDI) con los datos de</T><T>{" "}</T>
                   <a href="/mx/user/empresa" target="_blank" className="font-semibold text-[#C2560A] underline"><T>Mi empresa</T></a>
                 </span>
               </label>
@@ -738,7 +738,7 @@ export default function FormSolicitudTaller({
           <div>
             <label className={ETIQUETA} htmlFor="cp"><T>Código postal de entrega</T></label>
             <input id="cp" name="cp" className={CAMPO} inputMode="numeric" placeholder="5 dígitos" value={cp} onChange={(e) => cambiarCp(e.target.value)} autoComplete="postal-code" />
-            <span className="mt-1 block text-xs text-[#6B675C]">{avisoCp || "Con él te mostramos los talleres más cercanos."}</span>
+            <span className="mt-1 block text-xs text-[#6B675C]"><T>{avisoCp || "Con él te mostramos los talleres más cercanos."}</T></span>
           </div>
           <div>
             <label className={ETIQUETA} htmlFor="ciudad"><T>Ciudad de entrega</T></label>
@@ -818,13 +818,13 @@ export default function FormSolicitudTaller({
           disabled={estado === "enviando" || subiendo}
           className="rounded-xl bg-[#C2560A] px-6 py-3 font-semibold text-white hover:brightness-110 disabled:opacity-60"
         >
-          {estado === "enviando"
+          <T>{estado === "enviando"
             ? "Enviando…"
             : subiendo
               ? "Subiendo archivos…"
               : taller
                 ? "Solicitar cotización"
-                : "Enviar y recibir propuestas"}
+                : "Enviar y recibir propuestas"}</T>
         </button>
         <span className="text-xs text-[#6B675C]">
           <T>Es gratis y sin compromiso. Tu correo y WhatsApp sólo los ve HETNA: los talleres reciben lo que tú permitas en el paso 5, nunca tus datos sin tu autorización.</T>

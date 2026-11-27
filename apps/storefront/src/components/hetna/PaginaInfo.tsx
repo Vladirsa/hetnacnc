@@ -56,7 +56,7 @@ export default function PaginaInfo({
         <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#E7E4DC] bg-white p-6 sm:flex-row sm:items-center">
           <div>
             <p className="font-bold text-[#142033]"><TS>¿Tienes otra duda?</TS></p>
-            <p className="text-sm text-[#6B675C]">{EMPRESA.horario}</p>
+            <p className="text-sm text-[#6B675C]"><TS>{EMPRESA.horario}</TS></p>
           </div>
           <div className="flex flex-wrap gap-2">
             <a

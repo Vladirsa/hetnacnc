@@ -127,7 +127,7 @@ export function BibliotecaRecursos({ recursos }: { recursos: Recurso[] }) {
                 )}
                 <span className="flex flex-1 flex-col gap-2.5 p-5 lg:p-6">
                   <span className="flex flex-wrap items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wide">
-                    <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[#B34D07]">{TIPOS_RECURSO.find(([t]) => t === r.tipo)?.[1] || "Guía"}</span>
+                    <span className="rounded-full bg-[#FDEEE1] px-2 py-0.5 text-[#B34D07]"><T>{TIPOS_RECURSO.find(([t]) => t === r.tipo)?.[1] || "Guía"}</T></span>
                     {r.destacado && <span className="rounded-full bg-[#142033] px-2 py-0.5 text-white"><T>Recomendado</T></span>}
                   </span>
                   <span className="break-words text-[19px] font-bold leading-snug lg:text-[21px] text-[#1B1B18] group-hover:text-[#B34D07]"><T>{r.titulo}</T></span>

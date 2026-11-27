@@ -60,8 +60,8 @@ export default function QuienesSomos() {
       <div className="my-5 grid gap-3 sm:grid-cols-3">
         {CADENA.map(([t, d]) => (
           <div key={t} className="rounded-2xl bg-[#F3F1EA] p-4">
-            <p className="font-bold text-[#142033]">{t}</p>
-            <p className="mt-1 text-sm">{d}</p>
+            <p className="font-bold text-[#142033]"><TS>{t}</TS></p>
+            <p className="mt-1 text-sm"><TS>{d}</TS></p>
           </div>
         ))}
       </div>
@@ -84,7 +84,7 @@ export default function QuienesSomos() {
         <li><TS>Precios claros en pesos y envío calculado antes de pagar.</TS></li>
         <li><TS>Información clara de cada taller: servicios, máquinas, materiales y tiempos de entrega.</TS></li>
         <li><TS>Pagos y tratos dentro de la plataforma, para que tu compra quede respaldada.</TS></li>
-        <li><TS>Atención en español:</TS> {EMPRESA.horario}.</li>
+        <li><TS>Atención en español:</TS> <TS>{EMPRESA.horario}</TS>.</li>
       </ul>
     </PaginaInfo>
   )

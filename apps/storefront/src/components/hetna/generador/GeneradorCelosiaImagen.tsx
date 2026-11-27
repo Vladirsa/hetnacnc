@@ -232,10 +232,10 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
     <div className="flex flex-col gap-4">
       <Seccion titulo="1. Tu imagen" nota="Una captura o foto de la celosía que te gustó. Arrastra los 4 puntos naranjas a las esquinas del diseño para enderezarlo y quitar lo que sobra.">
         <label className="flex cursor-pointer items-center justify-center rounded-[10px] border-2 border-dashed border-[#2A3546] px-3 py-4 text-center text-[13px] text-[#C9D2E0] hover:border-[#C2560A]">
-          {im ? "Cambiar imagen" : "Subir imagen (JPG, PNG o WEBP)"}
+          <T>{im ? "Cambiar imagen" : "Subir imagen (JPG, PNG o WEBP)"}</T>
           <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
-        {error && <p className="mt-2 text-[12.5px] text-[#F28A3C]">{error}</p>}
+        {error && <p className="mt-2 text-[12.5px] text-[#F28A3C]"><T>{error}</T></p>}
         {im && url && <div className="mt-2"><Esquinas url={url} im={im} esquinas={esquinas} cambiar={setEsquinas} /></div>}
       </Seccion>
       {im && (
@@ -279,7 +279,7 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
             {modo === "pieza" && <Interruptor etiqueta="Ignorar el fondo (lo que toca la orilla de la foto)" activo={fondo} cambiar={setFondo} />}
             {!umbralAuto && (
               <label className="flex flex-col gap-1 text-[12.5px] text-[#C9D2E0]">
-                <span><T>Umbral:</T> {umbral}</span>
+                <span><T>Umbral:</T> <T>{umbral}</T></span>
                 <input type="range" min={1} max={254} value={umbral} onChange={(e) => setUmbral(Number(e.target.value))} className="accent-[#C2560A]" />
               </label>
             )}
@@ -300,11 +300,11 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
               <CampoNum etiqueta={proceso === "router" ? "Fresa / hueco mínimo" : "Hueco mínimo"} valor={hueco} cambiar={setHueco} />
             </div>
             <p className="mt-1 text-[12px] text-[#8A97AB]">
-              {proceso === "plasma"
+              <T>{proceso === "plasma"
                 ? "En plasma, los huecos y los puentes deben medir al menos el espesor de la lámina."
                 : proceso === "router"
                   ? "Con router, ningún hueco puede ser más angosto que la fresa ni tener esquinas más cerradas que ella."
-                  : "En láser se pueden detalles finos; en MDF deja puentes de al menos la mitad del espesor."}
+                  : "En láser se pueden detalles finos; en MDF deja puentes de al menos la mitad del espesor."}</T>
             </p>
           </Seccion>
           <Seccion titulo="Piezas que quedan sueltas">
@@ -360,8 +360,8 @@ export function GeneradorCelosiaImagen({ cabecera }: { cabecera?: React.ReactNod
       }
       panel={
         <>
-          {cabecera}
-          {panel}
+          <T>{cabecera}</T>
+          <T>{panel}</T>
         </>
       }
       dibujo={res?.r.dibujo ?? null}

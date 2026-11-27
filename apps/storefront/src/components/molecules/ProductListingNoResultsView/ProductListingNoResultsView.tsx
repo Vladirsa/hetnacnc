@@ -35,7 +35,7 @@ const ProductListingNoResultsView = ({ busqueda, sugerencias }: Props) => {
       <p className="mx-auto mt-3 max-w-xl text-[15px] text-[#6B675C]">
         {busqueda ? (
           <>
-            <T>Todavía no hay productos para “</T>{busqueda}<T>”. Pídelo y te lo cotizamos con talleres y proveedores de todo México.</T>
+            <T>Todavía no hay productos para “</T><T>{busqueda}</T><T>”. Pídelo y te lo cotizamos con talleres y proveedores de todo México.</T>
           </>
         ) : (
           <><T>Pídelo y te lo cotizamos con talleres y proveedores de todo México.</T></>
@@ -66,7 +66,7 @@ const ProductListingNoResultsView = ({ busqueda, sugerencias }: Props) => {
               href={e.href}
               className="rounded-full border border-[#E7E4DC] bg-[#FAF6EF] px-4 py-2 text-[14px] font-semibold text-[#142033] hover:border-[#C2560A]"
             >
-              {e.nombre}
+              <T>{e.nombre}</T>
             </LocalizedClientLink>
           ))}
         </div>

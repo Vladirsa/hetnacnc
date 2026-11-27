@@ -58,8 +58,8 @@ export default function HeroFijo() {
               rel="noopener noreferrer"
               className="font-semibold text-white hover:underline"
             >
-              <TS>WhatsApp</TS> {EMPRESA.whatsappVisible}
-            </a>{" "}
+              <TS>WhatsApp</TS> <TS>{EMPRESA.whatsappVisible}</TS>
+            </a><TS>{" "}</TS>
             <TS>· Fabricación en México · Sin registro para cotizar</TS>
           </p>
         </div>
@@ -70,8 +70,8 @@ export default function HeroFijo() {
                 {p.n}
               </span>
               <span>
-                <span className="block text-[15px] font-bold">{p.t}</span>
-                <span className="block text-[13px] text-[#C9D2E0]">{p.d}</span>
+                <span className="block text-[15px] font-bold"><TS>{p.t}</TS></span>
+                <span className="block text-[13px] text-[#C9D2E0]"><TS>{p.d}</TS></span>
               </span>
             </li>
           ))}

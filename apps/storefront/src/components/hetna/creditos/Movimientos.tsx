@@ -37,7 +37,7 @@ export const Movimientos = ({ movimientos }: { movimientos: Movimiento[] }) => (
                 m.cantidad >= 0 ? "text-[#1E7A52]" : "text-[#9B3225]"
               }`}
             >
-              {m.cantidad >= 0 ? "+" : "−"}
+              <TS>{m.cantidad >= 0 ? "+" : "−"}</TS>
               {Math.abs(m.cantidad)}
             </span>
           </li>

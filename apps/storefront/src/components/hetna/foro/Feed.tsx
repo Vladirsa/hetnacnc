@@ -68,10 +68,10 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
                 <Avatar a={p} size={64} />
               </span>
               <LocalizedClientLink href={urlPerfil(p.usuario)} className="font-bold text-[16px] text-[#1B1B18] hover:text-[#B34D07] truncate">
-                {p.nombre}
+                <TS>{p.nombre}</TS>
               </LocalizedClientLink>
               <span className="text-[13px] text-[#6B6A63]">
-                {TIPOS_CUENTA[p.tipo]?.nombre} · {p.reputacion} <TS>pts</TS>
+                <TS>{TIPOS_CUENTA[p.tipo]?.nombre}</TS> · <TS>{p.reputacion}</TS> <TS>pts</TS>
               </span>
               <LocalizedClientLink href="/foro-cnc/mi-perfil" className="text-[13px] font-semibold text-[#B34D07] hover:underline mt-1">
                 <TS>Editar perfil</TS>
@@ -83,7 +83,7 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
               <strong className="text-[15px] text-[#1B1B18] mt-1"><TS>Únete a la comunidad CNC</TS></strong>
               <p className="m-0 text-[13px] text-[#6B6A63] leading-relaxed"><TS>Pregunta, muestra tus trabajos y date a conocer. Es gratis.</TS></p>
               <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/register"} className={`${BTN} mt-2`}>
-                {sesion ? "Crear mi perfil" : "Crear cuenta gratis"}
+                <TS>{sesion ? "Crear mi perfil" : "Crear cuenta gratis"}</TS>
               </LocalizedClientLink>
               {!sesion && (
                 <LocalizedClientLink href="/login" className="text-center text-[13.5px] font-semibold text-[#B34D07] hover:underline mt-1">
@@ -134,8 +134,8 @@ export const ColIzquierda = ({ secciones, actual, sesion }: { secciones: Seccion
                   actual === s.slug ? "bg-[#FDEEE1] text-[#B34D07] font-semibold" : "text-[#1B1B18] hover:bg-[#F6F4EF]"
                 }`}
               >
-                <span className="truncate">{s.nombre}</span>
-                <span className="text-[12px] text-[#9A978C]">{s.temas}</span>
+                <span className="truncate"><TS>{s.nombre}</TS></span>
+                <span className="text-[12px] text-[#9A978C]"><TS>{s.temas}</TS></span>
               </LocalizedClientLink>
             </li>
           ))}
@@ -163,7 +163,7 @@ export const ChipsSecciones = ({ secciones, actual }: { secciones: Seccion[]; ac
           actual === s.slug ? "bg-[#142033] text-white border-[#142033]" : "bg-white text-[#44433D] border-[#D9D4C8]"
         }`}
       >
-        {s.nombre}
+        <TS>{s.nombre}</TS>
       </LocalizedClientLink>
     ))}
   </nav>
@@ -193,7 +193,7 @@ export const QuienesAyudan = ({ semana, siempre }: { semana: Ayudador[]; siempre
   return (
     <div className="bg-white border border-[#E7E4DC] rounded-[12px] p-4 flex flex-col gap-3">
       <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]">
-        {semana.length ? "Los que más ayudan esta semana" : "Los que más ayudan"}
+        <TS>{semana.length ? "Los que más ayudan esta semana" : "Los que más ayudan"}</TS>
       </span>
       {lista.map((a, i) => (
         <div key={a.id} className="flex items-center gap-2.5">
@@ -203,7 +203,7 @@ export const QuienesAyudan = ({ semana, siempre }: { semana: Ayudador[]; siempre
           </LocalizedClientLink>
           <span className="flex-1 min-w-0 flex flex-col">
             <LocalizedClientLink href={urlPerfil(a.usuario)} className="text-[14px] font-semibold text-[#1B1B18] truncate hover:text-[#B34D07]">
-              {a.nombre}
+              <TS>{a.nombre}</TS>
             </LocalizedClientLink>
             <span className="text-[12px] text-[#6B6A63] truncate"><TS>{a.detalle}</TS></span>
           </span>
@@ -237,13 +237,13 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 flex-wrap">
           <LocalizedClientLink href={urlPerfil(t.autor.usuario)} className="font-semibold text-[15px] text-[#1B1B18] hover:text-[#B34D07] truncate">
-            {t.autor.nombre}
+            <TS>{t.autor.nombre}</TS>
           </LocalizedClientLink>
           {t.autor.verificado && <Palomita />}
           {t.autor.taller ? <InsigniaTaller a={t.autor} /> : <InsigniaCuenta tipo={t.autor.tipo} />}
         </div>
         <span className="block truncate text-[12.5px] text-[#6B6A63]">
-          {t.autor.titular ? `${t.autor.titular} · ` : `${t.autor.reputacion} pts · `}
+          <TS>{t.autor.titular ? `${t.autor.titular} · ` : `${t.autor.reputacion} pts · `}</TS>
           {haceCuanto(t.ultimaActividad)}
         </span>
       </div>
@@ -264,7 +264,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
         )}
         {t.patrocinado && <span className="text-[11px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Patrocinado</TS></span>}
         <LocalizedClientLink href={`/foro-cnc/${t.seccion.slug}`} className="text-[12.5px] text-[#6B6A63] hover:text-[#B34D07]">
-          <TS>en</TS> {t.seccion.nombre}
+          <TS>en</TS> <TS>{t.seccion.nombre}</TS>
         </LocalizedClientLink>
       </div>
       <h3 className="m-0 text-[17px] leading-snug font-bold text-[#1B1B18]">
@@ -272,7 +272,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
           <TS>{t.titulo}</TS>
         </LocalizedClientLink>
       </h3>
-      {t.extracto && <p className="m-0 text-[14.5px] text-[#44433D] leading-relaxed line-clamp-3">{t.extracto}</p>}
+      {t.extracto && <p className="m-0 text-[14.5px] text-[#44433D] leading-relaxed line-clamp-3"><TS>{t.extracto}</TS></p>}
     </div>
 
     {t.foto && (
@@ -284,10 +284,10 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
 
     <div className="px-4 py-2 flex items-center justify-between text-[12.5px] text-[#6B6A63]">
       <span className="inline-flex items-center gap-1">
-        <Ico n="voto" size={13} /> {t.votos} <TS>útil</TS>
+        <Ico n="voto" size={13} /> <TS>{t.votos}</TS> <TS>útil</TS>
       </span>
       <span>
-        {t.respuestas} {t.respuestas === 1 ? "respuesta" : "respuestas"} · {t.vistas} <TS>vistas</TS>
+        <TS>{t.respuestas}</TS> <TS>{t.respuestas === 1 ? "respuesta" : "respuestas"}</TS> · <TS>{t.vistas}</TS> <TS>vistas</TS>
       </span>
     </div>
     <div className="grid grid-cols-3 border-t border-[#EFECE5] text-[13.5px] font-semibold text-[#44433D]">
@@ -295,7 +295,7 @@ export const Publicacion = ({ t }: { t: TemaResumen }) => (
         <Ico n="voto" size={15} /> <TS>Útil</TS>
       </LocalizedClientLink>
       <LocalizedClientLink href={`${urlTema(t)}#respuestas`} className={`py-2.5 text-center hover:bg-[#F6F4EF] inline-flex items-center justify-center gap-1.5 ${t.respuestas === 0 ? "text-[#B34D07]" : ""}`}>
-        <Ico n="respuesta" size={15} /> {t.respuestas === 0 ? "Responder" : "Comentar"}
+        <Ico n="respuesta" size={15} /> <TS>{t.respuestas === 0 ? "Responder" : "Comentar"}</TS>
       </LocalizedClientLink>
       <LocalizedClientLink href={urlTema(t)} className="py-2.5 text-center hover:bg-[#F6F4EF] inline-flex items-center justify-center gap-1.5">
         <Ico n="vista" size={15} /> <TS>Ver</TS>

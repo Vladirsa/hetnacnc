@@ -68,7 +68,7 @@ export default async function RecomiendaPage() {
           <section className="mt-6 rounded-[16px] border border-[#E7E4DC] bg-white p-5 lg:p-6">
             <h2 className="text-[17px] font-bold text-[#1B1B18]"><TS>Tu liga</TS></h2>
             <p className="mb-4 mt-1 text-[14px] text-[#6B6A63]">
-              <TS>Compártela por WhatsApp, Facebook o donde quieras. Tu código es</TS> <b className="text-[#1B1B18]">{d.codigo}</b>.
+              <TS>Compártela por WhatsApp, Facebook o donde quieras. Tu código es</TS> <b className="text-[#1B1B18]"><TS>{d.codigo}</TS></b>.
             </p>
             <CompartirLiga liga={d.liga} monto={d.monto} minimo={d.minimo} />
           </section>
@@ -76,15 +76,15 @@ export default async function RecomiendaPage() {
           <section className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
               <p className="text-[12px] font-semibold text-[#6B6A63]"><TS>Amigos registrados</TS></p>
-              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]">{d.amigos_registrados}</p>
+              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]"><TS>{d.amigos_registrados}</TS></p>
             </div>
             <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
               <p className="text-[12px] font-semibold text-[#6B6A63]"><TS>Por comprar</TS></p>
-              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]">{pendientes}</p>
+              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]"><TS>{pendientes}</TS></p>
             </div>
             <div className="rounded-[14px] border border-[#E7E4DC] bg-white p-4">
               <p className="text-[12px] font-semibold text-[#6B6A63]"><TS>Cupones ganados</TS></p>
-              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]">{d.cupones.length}</p>
+              <p className="mt-1 text-[26px] font-bold text-[#1B1B18]"><TS>{d.cupones.length}</TS></p>
             </div>
           </section>
 
@@ -93,7 +93,7 @@ export default async function RecomiendaPage() {
             {d.bienvenida.disponible && (
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border-2 border-dashed border-[#C2560A] bg-[#FFF8F2] p-4">
                 <div>
-                  <p className="text-[18px] font-bold tracking-wider text-[#1B1B18]">{d.bienvenida.codigo}</p>
+                  <p className="text-[18px] font-bold tracking-wider text-[#1B1B18]"><TS>{d.bienvenida.codigo}</TS></p>
                   <p className="text-[13px] text-[#4A4943]">
                     {pesos(d.monto)} <TS>en tu primera compra de</TS> {pesos(d.minimo)} <TS>o más</TS>
                   </p>
@@ -112,11 +112,11 @@ export default async function RecomiendaPage() {
               <div key={c.codigo} className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E7E4DC] p-4">
                 <div>
                   <p className={`text-[17px] font-bold tracking-wider ${c.usado || c.vencido ? "text-[#9A978C] line-through" : "text-[#1B1B18]"}`}>
-                    {c.codigo}
+                    <TS>{c.codigo}</TS>
                   </p>
                   <p className="text-[13px] text-[#4A4943]">
                     {pesos(d.monto)} <TS>en compras de</TS> {pesos(d.minimo)} <TS>o más</TS>
-                    {c.vence ? ` · vence el ${fecha(c.vence)}` : ""}
+                    <TS>{c.vence ? ` · vence el ${fecha(c.vence)}` : ""}</TS>
                   </p>
                 </div>
                 <span
@@ -124,7 +124,7 @@ export default async function RecomiendaPage() {
                     c.usado ? "bg-[#F1EFEA] text-[#6B6A63]" : c.vencido ? "bg-[#FDECEA] text-[#9B3225]" : "bg-[#E6F4EC] text-[#14683F]"
                   }`}
                 >
-                  {c.usado ? "Usado" : c.vencido ? "Vencido" : "Disponible"}
+                  <TS>{c.usado ? "Usado" : c.vencido ? "Vencido" : "Disponible"}</TS>
                 </span>
               </div>
             ))}
@@ -138,11 +138,11 @@ export default async function RecomiendaPage() {
             <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[14px] leading-relaxed text-[#4A4943]">
               <li><TS>Tu amigo entra con tu liga y crea su cuenta.</TS></li>
               <li>
-                <TS>En su primera compra de</TS> {pesos(d.minimo)} <TS>o más usa el código</TS> <b>{d.bienvenida.codigo}</b> <TS>y recibe</TS> {pesos(d.monto)} <TS>de
+                <TS>En su primera compra de</TS> {pesos(d.minimo)} <TS>o más usa el código</TS> <b><TS>{d.bienvenida.codigo}</TS></b> <TS>y recibe</TS> {pesos(d.monto)} <TS>de
                 descuento.</TS>
               </li>
               <li>
-                {d.dias_espera} <TS>días después de su compra, si no la canceló, te llega por correo tu cupón de</TS> {pesos(d.monto)}.
+                <TS>{d.dias_espera}</TS> <TS>días después de su compra, si no la canceló, te llega por correo tu cupón de</TS> {pesos(d.monto)}.
               </li>
             </ol>
             <h3 className="mt-4 text-[14px] font-bold text-[#1B1B18]"><TS>Condiciones</TS></h3>
@@ -151,13 +151,13 @@ export default async function RecomiendaPage() {
                 <TS>Los cupones aplican en compras de</TS> {pesos(d.minimo)} <TS>o más en productos (sin contar envío), uno por compra, y no se
                 cambian por dinero.</TS>
               </li>
-              <li>{d.bienvenida.codigo} <TS>es solo para la primera compra de cada cuenta.</TS></li>
+              <li><TS>{d.bienvenida.codigo}</TS> <TS>es solo para la primera compra de cada cuenta.</TS></li>
               <li>
                 <TS>Tu cupón de recompensa es personal (solo funciona con tu cuenta), de un solo uso y vence a los 90 días. Máximo 20
                 cupones por año.</TS>
               </li>
               <li>
-                <TS>La recompensa cuenta solo si tu amigo se registró con tu liga, es una persona distinta a ti y su compra de</TS>{" "}
+                <TS>La recompensa cuenta solo si tu amigo se registró con tu liga, es una persona distinta a ti y su compra de</TS><TS>{" "}</TS>
                 {pesos(d.minimo)} <TS>o más está pagada y no se canceló ni se devolvió.</TS>
               </li>
               <li><TS>HETNA puede cancelar cupones obtenidos con cuentas falsas o abusos, y cambiar o terminar la promoción avisando en esta página.</TS></li>

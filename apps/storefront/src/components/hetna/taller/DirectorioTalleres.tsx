@@ -145,7 +145,7 @@ export default function DirectorioTalleres({
       </div>
 
       <p className="mb-3 text-sm text-[#6B675C]">
-        {filtrados.length} {filtrados.length === 1 ? "taller" : "talleres"}
+        {filtrados.length} <T>{filtrados.length === 1 ? "taller" : "talleres"}</T>
         {hayFiltros && (
           <button
             onClick={() => {
@@ -198,13 +198,13 @@ export default function DirectorioTalleres({
                   )}
                 </div>
                 <p className="text-sm text-[#6B675C]">
-                  {ubicacion(t.perfil) || "Ubicación por confirmar"}
-                  {t.perfil.entrega ? ` · Entrega ${t.perfil.entrega}` : ""}
+                  <T>{ubicacion(t.perfil) || "Ubicación por confirmar"}</T>
+                  <T>{t.perfil.entrega ? ` · Entrega ${t.perfil.entrega}` : ""}</T>
                 </p>
                 {t.perfil.maquinas.length > 0 && (
                   <p className="mt-1 truncate text-xs text-[#40403A]">
-                    🛠 {t.perfil.maquinas.slice(0, 3).map((m) => m.nombre).join(" · ")}
-                    {t.perfil.maquinas.length > 3 ? ` y ${t.perfil.maquinas.length - 3} más` : ""}
+                    🛠 <T>{t.perfil.maquinas.slice(0, 3).map((m) => m.nombre).join(" · ")}</T>
+                    <T>{t.perfil.maquinas.length > 3 ? ` y ${t.perfil.maquinas.length - 3} más` : ""}</T>
                   </p>
                 )}
                 <div className="mt-2 flex flex-wrap gap-1.5">

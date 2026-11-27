@@ -55,8 +55,8 @@ export default function DistribuidoresPage() {
           {POR_QUE.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-2xl">{i}</p>
-              <p className="mt-2 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-2 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
@@ -68,7 +68,7 @@ export default function DistribuidoresPage() {
             <h2 className="text-2xl font-extrabold text-[#142033]"><TS>Cómo funciona</TS></h2>
             <ol className="mt-4 grid gap-3 text-[#40403A]">
               {PASOS.map((p, i) => (
-                <li key={i}><strong>{i + 1}.</strong> {p}</li>
+                <li key={i}><strong>{i + 1}.</strong> <TS>{p}</TS></li>
               ))}
             </ol>
           </div>

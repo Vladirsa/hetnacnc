@@ -34,8 +34,8 @@ export default async function Mensajes() {
           {!p ? (
             <p className="m-0 rounded-[12px] border border-[#E7E4DC] bg-white p-6 text-[15px] text-[#44433D]">
               <LocalizedClientLink href={sesion ? "/foro-cnc/mi-perfil" : "/login"} className="font-semibold text-[#B34D07] underline">
-                {sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}
-              </LocalizedClientLink>{" "}
+                <TS>{sesion ? "Crea tu perfil del foro" : "Entra con tu cuenta"}</TS>
+              </LocalizedClientLink><TS>{" "}</TS>
               <TS>para ver tus mensajes.</TS>
             </p>
           ) : lista.length ? (
@@ -46,11 +46,11 @@ export default async function Mensajes() {
                     <Avatar a={c.otro} size={44} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
-                        <span className={`truncate text-[15px] text-[#1B1B18] ${c.sinLeer ? "font-bold" : "font-semibold"}`}>{c.otro.nombre}</span>
+                        <span className={`truncate text-[15px] text-[#1B1B18] ${c.sinLeer ? "font-bold" : "font-semibold"}`}><TS>{c.otro.nombre}</TS></span>
                         <span className="shrink-0 text-[12px] text-[#9A978C]">{haceCuanto(c.ultimo)}</span>
                       </span>
                       <span className={`block truncate text-[13.5px] ${c.sinLeer ? "font-semibold text-[#1B1B18]" : "text-[#6B6A63]"}`}>
-                        {c.mio ? "Tú: " : ""}
+                        <TS>{c.mio ? "Tú: " : ""}</TS>
                         <TS>{c.texto}</TS>
                       </span>
                     </span>

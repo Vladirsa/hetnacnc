@@ -8,6 +8,7 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { descripcionCorta } from "@/lib/helpers/seo"
 import { NOMBRE_TIPO, empresaPorSlug, nombreVisible, slugCanonico } from "@/lib/hetna/directorio"
 import { listarTalleres } from "@/lib/hetna/talleres"
+import { CIUDADES, guiaPorSlug, h1EnCiudad } from "@/lib/seo/guias"
 
 // Perfil NO RECLAMADO de una empresa del directorio (lib/hetna/directorio.ts).
 // Confianza ante todo: dice claramente que la empresa no es parte de HETNA, de
@@ -48,12 +49,27 @@ function calculadoraDe(texto: string): { href: string; nombre: string } {
   return { href: "/cotizar/router-cnc", nombre: "router CNC" }
 }
 
+// Guía de la ciudad que corresponde al estado y al servicio de la empresa
+// (/cnc/<guía>/<ciudad>). Los perfiles del directorio son las páginas que Google
+// más visita: enlazar desde aquí ayuda a que encuentre las páginas de ciudad
+// (el reporte de Search Console del 27 nov mostró «cnc router puebla» llevando a
+// la página nacional en vez de la de Puebla).
+function guiaDeCiudad(estado: string | undefined, texto: string): { href: string; texto: string } | null {
+  const ciudad = estado ? CIUDADES.find((c) => c.estado === estado) : undefined
+  if (!ciudad) return null
+  const t = texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+  const slug = /plasma|oxicorte/.test(t) ? "corte-plasma" : /laser/.test(t) ? "corte-laser-mdf" : /impresion 3d|impresora 3d|3d print/.test(t) ? "impresion-3d" : "taller-router-cnc-mexico"
+  const guia = guiaPorSlug(slug)
+  return guia ? { href: `/cnc/${slug}/${ciudad.slug}`, texto: h1EnCiudad(guia, ciudad) } : null
+}
+
 export default async function PerfilDirectorioPage({ params }: Props) {
   const { slug } = await params
   const e = await empresaPorSlug(slug)
   if (!e) notFound()
   const donde = [e.ciudad, e.estado].filter(Boolean).join(", ")
   const calculadora = calculadoraDe(`${e.empresa} ${e.servicios || ""} ${e.segmento || ""}`)
+  const guiaCiudad = guiaDeCiudad(e.estado, `${e.empresa} ${e.servicios || ""} ${e.segmento || ""}`)
   const cercanos = e.estado
     ? (await listarTalleres().catch(() => [])).filter((t) => t.perfil.estado === e.estado).slice(0, 4)
     : []
@@ -61,9 +77,9 @@ export default async function PerfilDirectorioPage({ params }: Props) {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-4 py-8 lg:px-8">
       <nav className="mb-4 text-sm text-[#6B675C]">
-        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> ›{" "}
+        <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> ›<TS>{" "}</TS>
         <LocalizedClientLink href={e.estado ? `/talleres/directorio?estado=${encodeURIComponent(e.estado)}` : "/talleres/directorio"} className="hover:text-[#C2560A]">
-          <TS>Directorio</TS>{e.estado ? ` · ${e.estado}` : ""}
+          <TS>Directorio</TS><TS>{e.estado ? ` · ${e.estado}` : ""}</TS>
         </LocalizedClientLink>
       </nav>
 
@@ -71,24 +87,24 @@ export default async function PerfilDirectorioPage({ params }: Props) {
         <span className="inline-block rounded-full bg-[#F3F1EA] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#6B675C]">
           <TS>Perfil no reclamado</TS>
         </span>
-        <h1 className="mt-3 text-3xl font-extrabold text-[#142033]">{e.empresa}</h1>
+        <h1 className="mt-3 text-3xl font-extrabold text-[#142033]"><TS>{e.empresa}</TS></h1>
         <p className="mt-1 text-[#6B675C]">
-          {NOMBRE_TIPO[e.tipo]}
-          {donde ? ` · ${donde}` : ""}
-          {e.tamano ? ` · Empresa ${e.tamano.toLowerCase()}` : ""}
+          <TS>{NOMBRE_TIPO[e.tipo]}</TS>
+          <TS>{donde ? ` · ${donde}` : ""}</TS>
+          <TS>{e.tamano ? ` · Empresa ${e.tamano.toLowerCase()}` : ""}</TS>
         </p>
-        {e.servicios && <p className="mt-4 text-[#1B1B18]">{e.servicios}</p>}
+        {e.servicios && <p className="mt-4 text-[#1B1B18]"><TS>{e.servicios}</TS></p>}
         {/* Quien llega desde Google ve aquí mismo qué hacer (antes el formulario quedaba
             fuera de la pantalla del celular y no había ningún botón arriba). */}
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <a href="#cotizar" className="inline-flex justify-center rounded-xl bg-[#C2560A] px-5 py-3 text-center font-bold text-white hover:brightness-110">
-            <TS>Pide cotización a</TS> {e.empresa.length > 28 ? "esta empresa" : e.empresa}
+            <TS>Pide cotización a</TS> <TS>{e.empresa.length > 28 ? "esta empresa" : e.empresa}</TS>
           </a>
           <LocalizedClientLink
             href={calculadora.href}
             className="inline-flex justify-center rounded-xl border-2 border-[#142033] px-5 py-3 text-center font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
           >
-            <TS>Precio al instante de</TS> {calculadora.nombre}
+            <TS>Precio al instante de</TS> <TS>{calculadora.nombre}</TS>
           </LocalizedClientLink>
         </div>
         <p className="mt-4 text-[13px] text-[#6B675C]">
@@ -104,7 +120,7 @@ export default async function PerfilDirectorioPage({ params }: Props) {
             <b className="text-[#142033]"><TS>1. Te responde la red HETNA.</TS></b> <TS>Tu solicitud llega a los talleres registrados que hacen ese trabajo, para que no te quedes sin propuestas.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
-            <b className="text-[#142033]"><TS>2. Invitamos a</TS> {e.empresa}.</b> <TS>Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.</TS>
+            <b className="text-[#142033]"><TS>2. Invitamos a</TS> <TS>{e.empresa}</TS>.</b> <TS>Le avisamos qué necesitas y dónde para que se una y te cotice. No le damos tu nombre ni tu contacto.</TS>
           </li>
           <li className="rounded-xl bg-[#FAF8F3] p-3">
             <b className="text-[#142033]"><TS>3. Tú eliges.</TS></b> <TS>Comparas propuestas, pagas dentro de HETNA y el taller empieza a producir.</TS>
@@ -117,21 +133,30 @@ export default async function PerfilDirectorioPage({ params }: Props) {
 
       {cercanos.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> {e.estado}</h2>
+          <h2 className="text-xl font-extrabold text-[#142033]"><TS>Talleres de HETNA en</TS> <TS>{e.estado}</TS></h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {cercanos.map((t) => (
               <li key={t.id} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
                 <LocalizedClientLink href={`/talleres/${t.handle}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                  {t.nombre}
+                  <TS>{t.nombre}</TS>
                 </LocalizedClientLink>
                 <p className="text-[13px] text-[#6B675C]">
-                  {[t.perfil.ciudad, t.perfil.estado].filter(Boolean).join(", ")}
-                  {t.verificado ? " · ✓ Verificado" : ""}
+                  <TS>{[t.perfil.ciudad, t.perfil.estado].filter(Boolean).join(", ")}</TS>
+                  <TS>{t.verificado ? " · ✓ Verificado" : ""}</TS>
                 </p>
               </li>
             ))}
           </ul>
         </section>
+      )}
+
+      {guiaCiudad && (
+        <p className="mt-6 text-sm text-[#40403A]">
+          <TS>Compara con otras opciones:</TS>{" "}
+          <LocalizedClientLink href={guiaCiudad.href} className="font-semibold text-[#C2560A] hover:underline">
+            <TS>{guiaCiudad.texto}</TS>
+          </LocalizedClientLink>
+        </p>
       )}
 
       <section className="mt-6 rounded-2xl border-2 border-[#C2560A] bg-[#FDEEE1] p-6">

@@ -31,9 +31,9 @@ export default async function TallerEscaneosPage() {
         <div>
           <h1 className="text-[26px] lg:text-[32px] font-bold text-[#1B1B18] leading-tight"><TS>Escaneos 3D</TS></h1>
           <p className="mt-1.5 text-[14px] text-[#6B6A63]">
-            {count === 0
+            <TS>{count === 0
               ? "Convierte una pieza física en un archivo para fabricar."
-              : `${count} ${count === 1 ? "escaneo" : "escaneos"} · se quedan aquí, los bajas cuando quieras`}
+              : `${count} ${count === 1 ? "escaneo" : "escaneos"} · se quedan aquí, los bajas cuando quieras`}</TS>
           </p>
         </div>
         <LocalizedClientLink
@@ -67,14 +67,14 @@ export default async function TallerEscaneosPage() {
               >
                 <span className="flex-1 min-w-[180px]">
                   <span className="block text-[15px] font-semibold text-[#1B1B18]">
-                    {e.titulo || "Sin nombre"}
+                    <TS>{e.titulo || "Sin nombre"}</TS>
                   </span>
                   <span className="block text-[13px] text-[#6B6A63]">
-                    {MODO_ETIQUETA[e.modo]} · {e.n_fotos} {e.n_fotos === 1 ? "foto" : "fotos"}
+                    <TS>{MODO_ETIQUETA[e.modo]}</TS> · <TS>{e.n_fotos}</TS> <TS>{e.n_fotos === 1 ? "foto" : "fotos"}</TS>
                   </span>
                 </span>
                 <span className={`px-2.5 py-1 rounded-full text-[12px] font-semibold ${ESTATUS_CLASE[e.estatus]}`}>
-                  {ESTATUS_ETIQUETA[e.estatus]}
+                  <TS>{ESTATUS_ETIQUETA[e.estatus]}</TS>
                 </span>
                 <span className="text-[13px] text-[#6B6A63] w-[130px]">{fechaHora(e.created_at)}</span>
               </LocalizedClientLink>

@@ -94,7 +94,7 @@ export const InsigniaTaller = ({ a }: { a: Pick<Autor, "taller"> }) =>
         a.taller.verificado ? "bg-[#E6F4EC] text-[#14683F] hover:bg-[#D3ECDD]" : "bg-[#EEF1F6] text-[#2D4A73] hover:bg-[#E0E6EF]"
       }`}
     >
-      {a.taller.verificado ? "✓ Taller verificado" : "Taller HETNA"} ›
+      <T>{a.taller.verificado ? "✓ Taller verificado" : "Taller HETNA"}</T> ›
     </LocalizedClientLink>
   ) : null
 
@@ -113,7 +113,7 @@ export const AutorChip = ({ a, cuando, size = 36 }: { a: Autor; cuando?: string;
       </div>
       {a.titular && <span className="text-[12.5px] text-[#44433D] truncate">{a.titular}</span>}
       <span className="text-[12.5px] text-[#6B6A63]">
-        {a.reputacion} <T>pts</T>{cuando ? ` · ${haceCuanto(cuando)}` : ""}
+        {a.reputacion} <T>pts</T><T>{cuando ? ` · ${haceCuanto(cuando)}` : ""}</T>
       </span>
     </div>
   </div>
@@ -213,7 +213,7 @@ export const Cuerpo = ({ texto }: { texto: string }) => (
             ) : z.t === "liga" ? (
               <a key={j} href={z.v} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-[#B34D07] underline underline-offset-2 break-all">
                 {z.v.replace(/^https?:\/\/(www\.)?/, "").slice(0, 70)}
-                {z.v.replace(/^https?:\/\/(www\.)?/, "").length > 70 ? "…" : ""}
+                <T>{z.v.replace(/^https?:\/\/(www\.)?/, "").length > 70 ? "…" : ""}</T>
               </a>
             ) : (
               z.v.split(OCULTO).map((pedazo, k, arr) => (

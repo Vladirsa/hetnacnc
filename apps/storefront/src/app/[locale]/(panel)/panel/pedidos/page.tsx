@@ -20,7 +20,7 @@ export default async function PanelPedidos({ params }: { params: Promise<{ local
   return (
     <Tarjeta>
       <Titulo extra={<a className="text-[12px] font-semibold text-[#C2560A]" href={`${ADMIN}/orders`} target="_blank" rel="noreferrer"><TS>Todos en el dashboard →</TS></a>}><TS>Últimos pedidos</TS></Titulo>
-      {error && <Vacio><TS>No pude leer los pedidos:</TS> {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los pedidos:</TS> <TS>{error}</TS></Vacio>}
       {!error && ordenes.length === 0 && <Vacio><TS>Todavía no hay pedidos.</TS></Vacio>}
       <ul className="divide-y divide-[#EFEDE6]">
         {ordenes.map((o) => {
@@ -31,11 +31,11 @@ export default async function PanelPedidos({ params }: { params: Promise<{ local
             <li key={o.id} className="py-3">
               <a href={`${ADMIN}/orders/${o.id}`} target="_blank" rel="noreferrer" className="block">
                 <div className="flex items-baseline justify-between">
-                  <p className="text-[14px] font-extrabold text-[#142033]">#{o.display_id} <span className="font-semibold text-[#6B675C]">· {cliente}</span></p>
+                  <p className="text-[14px] font-extrabold text-[#142033]">#<TS>{o.display_id}</TS> <span className="font-semibold text-[#6B675C]">· <TS>{cliente}</TS></span></p>
                   <p className="text-[14px] font-black">{pesos(o.total, (o.currency_code || "mxn").toUpperCase())}</p>
                 </div>
-                <p className="mt-0.5 text-[12px] text-[#6B675C]">{fechaCorta(o.created_at)}{o.items?.length ? ` · ${o.items.slice(0, 2).map((i) => `${i.quantity}× ${i.title}`).join(", ")}${o.items.length > 2 ? "…" : ""}` : ""}</p>
-                <div className="mt-1.5 flex gap-1.5"><Etiqueta color={p[1] as any}>{p[0]}</Etiqueta><Etiqueta color={f[1]}>{f[0]}</Etiqueta></div>
+                <p className="mt-0.5 text-[12px] text-[#6B675C]">{fechaCorta(o.created_at)}<TS>{o.items?.length ? ` · ${o.items.slice(0, 2).map((i) => `${i.quantity}× ${i.title}`).join(", ")}${o.items.length > 2 ? "…" : ""}` : ""}</TS></p>
+                <div className="mt-1.5 flex gap-1.5"><Etiqueta color={p[1] as any}><TS>{p[0]}</TS></Etiqueta><Etiqueta color={f[1]}><TS>{f[0]}</TS></Etiqueta></div>
               </a>
             </li>
           )

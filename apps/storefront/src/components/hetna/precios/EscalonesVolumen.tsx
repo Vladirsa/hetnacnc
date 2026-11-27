@@ -42,7 +42,7 @@ export const EscalonesVolumen = ({
           {escalones.map((e) => (
             <tr key={e.desde} className="text-[#4A4943]">
               <td className="py-1">
-                {e.desde} <TS>o más</TS> <span className="text-[#6B6A63]">c/u</span>
+                <TS>{e.desde}</TS> <TS>o más</TS> <span className="text-[#6B6A63]">c/u</span>
               </td>
               <td className="py-1 text-right font-bold text-[#1F5B29]">
                 {dinero(e.precio)}
@@ -50,7 +50,7 @@ export const EscalonesVolumen = ({
               <td className="py-1 pl-2 text-right">
                 {e.porcentaje > 0 && (
                   <span className="rounded-md bg-[#1F5B29] px-1.5 py-0.5 text-[11px] font-bold text-white">
-                    −{e.porcentaje}%
+                    −<TS>{e.porcentaje}</TS>%
                   </span>
                 )}
               </td>
@@ -80,14 +80,14 @@ export const DistintivoVolumen = ({
   if (compacto) {
     return (
       <span className="text-[11px] font-semibold text-[#1F5B29]">
-        −{escalon.porcentaje}<TS>% llevando</TS> {escalon.desde}+
+        −<TS>{escalon.porcentaje}</TS><TS>% llevando</TS> <TS>{escalon.desde}</TS>+
       </span>
     )
   }
 
   return (
     <span className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#D9C9A8] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-semibold text-[#7A4A09]">
-      −{escalon.porcentaje}<TS>% llevando</TS> {escalon.desde} <TS>o más</TS>
+      −<TS>{escalon.porcentaje}</TS><TS>% llevando</TS> <TS>{escalon.desde}</TS> <TS>o más</TS>
     </span>
   )
 }

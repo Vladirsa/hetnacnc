@@ -242,7 +242,7 @@ export function GeneradorEsferas({ cabecera }: { cabecera?: React.ReactNode }) {
                 <Malla3D oscuro tris={tris} color={color} />
               </Visor3D>
             ) : (
-              <div className="grid h-[60vh] place-items-center text-[14px] text-[#8A97AB]">{aviso3D || "Armando el modelo 3D…"}</div>
+              <div className="grid h-[60vh] place-items-center text-[14px] text-[#8A97AB]"><T>{aviso3D || "Armando el modelo 3D…"}</T></div>
             )}
           </div>
         </div>

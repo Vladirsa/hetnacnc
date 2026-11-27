@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { DIAS_VIGENCIA_PROPUESTA } from "@/lib/hetna/promesas"
 import { useEffect, useState } from "react"
@@ -127,8 +128,8 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
             <img src={c.taller.logo} alt={c.taller.nombre} className="h-16 w-16 rounded-[12px] object-contain" />
           ) : null}
           <div className="min-w-0 flex-1">
-            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Cotización</T> {c.folio}</p>
-            <h1 className="m-0 text-[24px] font-bold leading-tight text-[#142033]">{c.taller.nombre}</h1>
+            <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Cotización</T> <Tr>{c.folio}</Tr></p>
+            <h1 className="m-0 text-[24px] font-bold leading-tight text-[#142033]"><Tr>{c.taller.nombre}</Tr></h1>
             <p className="m-0 mt-1 text-[14px] text-[#40403A]">
               {fecha(c.creada)} <T>· vigente hasta el</T> {fecha(vence(c).toISOString())}
             </p>
@@ -137,8 +138,8 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
         </div>
         {c.cliente ? (
           <p className="m-0 mt-4 text-[15px] text-[#40403A]">
-            <T>Para:</T> <b className="text-[#1B1B18]">{c.cliente.nombre}</b>
-            {c.cliente.empresa ? ` · ${c.cliente.empresa}` : ""}
+            <T>Para:</T> <b className="text-[#1B1B18]"><Tr>{c.cliente.nombre}</Tr></b>
+            <Tr>{c.cliente.empresa ? ` · ${c.cliente.empresa}` : ""}</Tr>
           </p>
         ) : null}
       </section>
@@ -162,13 +163,13 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           {c.items.map((i, k) => (
             <div key={k} className="flex flex-wrap items-start justify-between gap-2 py-3">
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-[15px] font-semibold text-[#1B1B18]">{i.nombre}</p>
+                <p className="m-0 text-[15px] font-semibold text-[#1B1B18]"><Tr>{i.nombre}</Tr></p>
                 <p className="m-0 text-[13px] text-[#7A776E]">
                   {i.cantidad} × {mxn(i.precio)}
-                  {i.descuento_pct ? ` · ${i.descuento_pct}% desc.` : ""}
-                  {i.sku ? ` · ${i.sku}` : ""}
+                  <Tr>{i.descuento_pct ? ` · ${i.descuento_pct}% desc.` : ""}</Tr>
+                  <Tr>{i.sku ? ` · ${i.sku}` : ""}</Tr>
                 </p>
-                {i.notas ? <p className="m-0 mt-1 whitespace-pre-line text-[13px] text-[#40403A]">{i.notas}</p> : null}
+                {i.notas ? <p className="m-0 mt-1 whitespace-pre-line text-[13px] text-[#40403A]"><Tr>{i.notas}</Tr></p> : null}
               </div>
               <p className="m-0 text-[15px] font-semibold text-[#1B1B18]">{mxn(i.subtotal)}</p>
             </div>
@@ -185,7 +186,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
           {c.envio && !totales.ivaConEnvio ? <Fila k={c.iva ? "Envío (sin IVA)" : "Envío"} v={mxn(c.envio)} /> : null}
           <div className="flex justify-between pt-1 text-[18px] font-bold text-[#142033]">
             <dt><T>Total</T></dt>
-            <dd className="m-0">{mxn(c.total)} {moneda}</dd>
+            <dd className="m-0">{mxn(c.total)} <Tr>{moneda}</Tr></dd>
           </div>
         </dl>
       </section>
@@ -200,7 +201,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
             {c.fecha_entrega ? <Dato k="Fecha estimada" v={fecha(c.fecha_entrega)} /> : null}
             {c.dias_habiles ? <Dato k="Tiempo de fabricación" v={`${c.dias_habiles} días hábiles`} /> : null}
           </dl>
-          {c.notas ? <p className="m-0 mt-3 whitespace-pre-line text-[14px] text-[#40403A]">{c.notas}</p> : null}
+          {c.notas ? <p className="m-0 mt-3 whitespace-pre-line text-[14px] text-[#40403A]"><Tr>{c.notas}</Tr></p> : null}
         </section>
       ) : null}
 
@@ -219,13 +220,13 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                   <input className={campo} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" maxLength={120} />
                   <button type="button" className={boton} disabled={trabajando !== "" || !nombre.trim()} onClick={aceptar}>
-                    {trabajando === "aceptar" ? "Un momento…" : "Aceptar cotización"}
+                    <Tr>{trabajando === "aceptar" ? "Un momento…" : "Aceptar cotización"}</Tr>
                   </button>
                 </div>
               </>
             ) : (
               <p className="m-0 text-[15px] text-[#1B1B18]">
-                <T>✅ Aceptada</T>{c.aceptada?.por ? ` por ${c.aceptada.por}` : ""}{c.aceptada?.en ? ` el ${fecha(c.aceptada.en)}` : ""}.
+                <T>✅ Aceptada</T><Tr>{c.aceptada?.por ? ` por ${c.aceptada.por}` : ""}</Tr><Tr>{c.aceptada?.en ? ` el ${fecha(c.aceptada.en)}` : ""}</Tr>.
               </p>
             )}
 
@@ -236,14 +237,14 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                   <p className="m-0 mt-1 text-[16px] font-semibold text-[#1B1B18]"><T>✅ Anticipo pagado:</T> {mxn(c.anticipo.pagado)}</p>
                 ) : (
                   <>
-                    <p className="m-0 mt-1 text-[22px] font-bold text-[#142033]">{mxn(resta)} {moneda}</p>
+                    <p className="m-0 mt-1 text-[22px] font-bold text-[#142033]">{mxn(resta)} <Tr>{moneda}</Tr></p>
                     {c.anticipo.pagado > 0 ? <p className="m-0 text-[13px] text-[#7A776E]"><T>Ya pagaste</T> {mxn(c.anticipo.pagado)} <T>de</T> {mxn(c.anticipo.monto)}.</p> : null}
                     {metodos.mercadopago || metodos.paypal ? (
                       <>
                         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                           {metodos.mercadopago ? (
                             <button type="button" className={boton} disabled={trabajando !== ""} onClick={() => pagar("pagar")}>
-                              {trabajando === "pagar" ? "Abriendo Mercado Pago…" : "Pagar con Mercado Pago"}
+                              <Tr>{trabajando === "pagar" ? "Abriendo Mercado Pago…" : "Pagar con Mercado Pago"}</Tr>
                             </button>
                           ) : null}
                           {metodos.paypal ? (
@@ -253,18 +254,18 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
                               disabled={trabajando !== ""}
                               onClick={() => pagar("paypal")}
                             >
-                              {trabajando === "paypal" ? "Abriendo PayPal…" : "Pagar con PayPal"}
+                              <Tr>{trabajando === "paypal" ? "Abriendo PayPal…" : "Pagar con PayPal"}</Tr>
                             </button>
                           ) : null}
                         </div>
                         <p className="m-0 mt-2 text-[12px] text-[#7A776E]">
-                          {metodos.mercadopago ? "Mercado Pago: tarjeta, transferencia, efectivo o saldo. " : ""}
-                          {metodos.paypal ? "PayPal: tu cuenta PayPal o tarjeta. " : ""}
-                          {metodos.paypal && c.anticipo.paypal_en_dolares
+                          <Tr>{metodos.mercadopago ? "Mercado Pago: tarjeta, transferencia, efectivo o saldo. " : ""}</Tr>
+                          <Tr>{metodos.paypal ? "PayPal: tu cuenta PayPal o tarjeta. " : ""}</Tr>
+                          <Tr>{metodos.paypal && c.anticipo.paypal_en_dolares
                             ? "PayPal cobra en dólares estadounidenses al tipo de cambio del día; verás el monto exacto antes de pagar. "
-                            : ""}
-                          <T>El pago llega directo a</T> {c.taller.nombre}.
-                          {!aceptada ? " Al pagar, la cotización queda aceptada." : ""}
+                            : ""}</Tr>
+                          <T>El pago llega directo a</T> <Tr>{c.taller.nombre}</Tr>.
+                          <Tr>{!aceptada ? " Al pagar, la cotización queda aceptada." : ""}</Tr>
                         </p>
                       </>
                     ) : (
@@ -276,7 +277,7 @@ export function CotizacionPublicaVista({ token, inicial, pago }: Props) {
             ) : null}
           </>
         )}
-        {error ? <p className="m-0 mt-3 text-[14px] text-[#B42318]">{error}</p> : null}
+        {error ? <p className="m-0 mt-3 text-[14px] text-[#B42318]"><Tr>{error}</Tr></p> : null}
 
         <div className="mt-5 flex flex-wrap gap-2">
           {c.pdf ? (
@@ -318,8 +319,8 @@ function Estado({ c, aceptada, rechazada }: { c: CotizacionPublica; aceptada: bo
 function Fila({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between">
-      <dt>{k}</dt>
-      <dd className="m-0">{v}</dd>
+      <dt><Tr>{k}</Tr></dt>
+      <dd className="m-0"><Tr>{v}</Tr></dd>
     </div>
   )
 }
@@ -327,8 +328,8 @@ function Fila({ k, v }: { k: string; v: string }) {
 function Dato({ k, v }: { k: string; v: string }) {
   return (
     <div>
-      <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]">{k}</dt>
-      <dd className="m-0 text-[15px] text-[#1B1B18]">{v}</dd>
+      <dt className="text-[12px] uppercase tracking-wide text-[#7A776E]"><Tr>{k}</Tr></dt>
+      <dd className="m-0 text-[15px] text-[#1B1B18]"><Tr>{v}</Tr></dd>
     </div>
   )
 }
@@ -360,7 +361,7 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
   return (
     <section className={caja}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Tu pedido</T> {p.folio}</h2>
+        <h2 className="m-0 text-[17px] font-bold text-[#142033]"><T>Tu pedido</T> <Tr>{p.folio}</Tr></h2>
         {p.entregado ? (
           <span className="text-[13px] text-[#1E7B3A]"><T>Entregado el</T> {fecha(p.entregado)}</span>
         ) : p.fecha_estimada && !cancelado ? (
@@ -382,7 +383,7 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
                     hecho ? "bg-[#1E7B3A] text-white" : ahora ? "bg-[#C2560A] text-white" : "bg-[#F3F2EE] text-[#7A776E]"
                   }`}
                 >
-                  {hecho ? "✓" : i + 1}
+                  <Tr>{hecho ? "✓" : i + 1}</Tr>
                 </span>
                 <span className={`text-[13px] leading-tight ${ahora ? "font-semibold text-[#1B1B18]" : "text-[#40403A]"}`}>{etapa(e)}</span>
               </li>
@@ -395,8 +396,8 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
         <div className="mt-5 rounded-[12px] bg-[#FAF9F6] p-4">
           <p className="m-0 text-[13px] uppercase tracking-wide text-[#7A776E]"><T>Envío</T></p>
           <p className="m-0 mt-1 text-[15px] text-[#1B1B18]">
-            {p.envio.paqueteria ? <b>{p.envio.paqueteria} · </b> : null}
-            <T>Guía</T> <span className="font-mono">{p.envio.guia}</span>
+            {p.envio.paqueteria ? <b><Tr>{p.envio.paqueteria}</Tr> · </b> : null}
+            <T>Guía</T> <span className="font-mono"><Tr>{p.envio.guia}</Tr></span>
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {p.envio.rastreo ? (
@@ -416,7 +417,7 @@ function Seguimiento({ p }: { p: NonNullable<CotizacionPublica["pedido"]> }) {
                 }
               }}
             >
-              {copiada ? "Guía copiada" : "Copiar número de guía"}
+              <Tr>{copiada ? "Guía copiada" : "Copiar número de guía"}</Tr>
             </button>
           </div>
         </div>
@@ -469,10 +470,10 @@ function InvitacionTaller({ refCodigo }: { refCodigo: string | null }) {
         href={href}
         className="mt-4 inline-flex items-center justify-center rounded-[10px] bg-[#142033] px-5 py-3 text-[15px] font-semibold text-white no-underline hover:bg-[#1f3150]"
       >
-        {refCodigo ? "Pruébalo gratis · 1 mes extra con esta invitación" : "Pruébalo gratis"}
+        <Tr>{refCodigo ? "Pruébalo gratis · 1 mes extra con esta invitación" : "Pruébalo gratis"}</Tr>
       </a>
       <p className="m-0 mt-3 text-[12px] text-[#7A776E]">
-        <T>Cotización hecha con el Cotizador de</T>{" "}
+        <T>Cotización hecha con el Cotizador de</T><Tr>{" "}</Tr>
         <a href="/cotizador" className="underline"><T>HETNA CNC</T></a>.
       </p>
     </section>

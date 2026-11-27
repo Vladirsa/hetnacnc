@@ -1,5 +1,6 @@
 "use client"
 
+import { T as Tr } from "@/components/hetna/i18n/Idioma"
 import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "next/navigation"
@@ -240,7 +241,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
             <span className="text-[13px] font-semibold text-[#1B1B18]"><T>Tipografía</T> {cargando && <span className="font-normal text-[#6B6A63]"><T>(cargando...)</T></span>}</span>
             {(["Cursiva", "Molde", "Esténcil"] as const).map((grupo) => (
               <div key={grupo} className="flex flex-col gap-1.5">
-                <span className="text-[12px] text-[#6B6A63]">{grupo === "Esténcil" ? "Esténcil (para plantillas y plasma)" : grupo}</span>
+                <span className="text-[12px] text-[#6B6A63]"><Tr>{grupo === "Esténcil" ? "Esténcil (para plantillas y plasma)" : grupo}</Tr></span>
                 <div className="flex flex-wrap gap-1.5">
                   {FUENTES.filter((t) => t.grupo === grupo).map((t) => (
                     <Opcion
@@ -256,7 +257,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
               </div>
             ))}
             <button type="button" onClick={() => archivoRef.current?.click()} className="self-start text-[13px] font-semibold text-[#B34D07] underline underline-offset-4">
-              {propia ? `Usando tu tipografía: ${propia.nombre} (cambiar)` : "Usar mi propia tipografía (TTF, OTF o WOFF)"}
+              <Tr>{propia ? `Usando tu tipografía: ${propia.nombre} (cambiar)` : "Usar mi propia tipografía (TTF, OTF o WOFF)"}</Tr>
             </button>
             <input ref={archivoRef} type="file" accept=".ttf,.otf,.woff" className="hidden" onChange={(e) => subirFuente(e.target.files?.[0])} />
           </div>
@@ -327,14 +328,14 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
 
         <section className="flex flex-col gap-4 min-w-0 order-first lg:order-none">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-[#6B6A63]"><T>Vista previa</T>{maquina === "router" && numero(fresa) > 0 ? " · en rojo lo que la fresa no alcanza" : ""}</span>
-            <span className="text-[13px] text-[#6B6A63]" aria-live="polite">{calculando || cargando ? "Calculando..." : ""}</span>
+            <span className="text-[13px] text-[#6B6A63]"><T>Vista previa</T><Tr>{maquina === "router" && numero(fresa) > 0 ? " · en rojo lo que la fresa no alcanza" : ""}</Tr></span>
+            <span className="text-[13px] text-[#6B6A63]" aria-live="polite"><Tr>{calculando || cargando ? "Calculando..." : ""}</Tr></span>
           </div>
           <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[220px]">
             {vista ? (
               <div className={`w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[460px] ${calculando ? "opacity-60" : ""}`} dangerouslySetInnerHTML={{ __html: vista }} />
             ) : (
-              <span className="text-[14px] text-[#6B6A63]">{cargando ? "Cargando tipografía..." : "Escribe un texto"}</span>
+              <span className="text-[14px] text-[#6B6A63]"><Tr>{cargando ? "Cargando tipografía..." : "Escribe un texto"}</Tr></span>
             )}
           </div>
 
@@ -382,9 +383,9 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
                 </button>
               </div>
               <p className="m-0 text-[12.5px] text-[#6B6A63]">
-                {tipo === "placa"
+                <Tr>{tipo === "placa"
                   ? "En el DXF: capa PLACA con el contorno y los barrenos (corte) y capa GRABADO con las letras (bolsillo o grabado)."
-                  : "En el DXF: capa CORTE con el contorno de las letras ya unidas, en mm."}
+                  : "En el DXF: capa CORTE con el contorno de las letras ya unidas, en mm."}</Tr>
               </p>
             </>
           )}

@@ -84,7 +84,7 @@ export default async function CursoDetalle({ params }: Props) {
           <TS>Academia CNC</TS>
         </LocalizedClientLink>
         <span>/</span>
-        <span className="text-[#1B1B18] font-medium">{curso.title}</span>
+        <span className="text-[#1B1B18] font-medium"><TS>{curso.title}</TS></span>
       </div>
 
       <div className="max-w-[1100px] mx-auto px-4 lg:px-8 py-6 lg:py-10 grid gap-8 lg:grid-cols-[1fr_340px] items-start">
@@ -100,12 +100,12 @@ export default async function CursoDetalle({ params }: Props) {
                 </span>
               )}
             </div>
-            <h1 className="font-display text-[28px] lg:text-[38px] leading-tight font-bold m-0 text-[#1B1B18]">{curso.title}</h1>
+            <h1 className="font-display text-[28px] lg:text-[38px] leading-tight font-bold m-0 text-[#1B1B18]"><TS>{curso.title}</TS></h1>
             {curso.description && (
-              <p className="m-0 text-[16px] text-[#6B6A63] leading-relaxed whitespace-pre-line">{curso.description}</p>
+              <p className="m-0 text-[16px] text-[#6B6A63] leading-relaxed whitespace-pre-line"><TS>{curso.description}</TS></p>
             )}
             <p className="m-0 text-[13.5px] text-[#6B6A63]">
-              {[
+              <TS>{[
                 curso.taller?.nombre ? `Por ${curso.taller.nombre}` : null,
                 totalLecciones ? `${totalLecciones} lecciones` : null,
                 duracion,
@@ -113,7 +113,7 @@ export default async function CursoDetalle({ params }: Props) {
                 "En español",
               ]
                 .filter(Boolean)
-                .join(" · ")}
+                .join(" · ")}</TS>
             </p>
           </div>
 
@@ -140,12 +140,12 @@ export default async function CursoDetalle({ params }: Props) {
             <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[13.5px] text-[#1B1B18]">
               <li><TS>✓ Acceso sin fecha de vencimiento</TS></li>
               <li><TS>✓ En el celular o la computadora</TS></li>
-              {(curso.vistas_previas ?? 0) > 0 && !gratis && <li>✓ {curso.vistas_previas} <TS>lecciones de muestra gratis</TS></li>}
+              {(curso.vistas_previas ?? 0) > 0 && !gratis && <li>✓ <TS>{curso.vistas_previas}</TS> <TS>lecciones de muestra gratis</TS></li>}
               {!gratis && <li><TS>✓ Pago seguro con Mercado Pago, tarjeta o PayPal</TS></li>}
             </ul>
             {curso.taller?.handle && (
               <LocalizedClientLink href={`/sellers/${curso.taller.handle}`} className="text-[13.5px] font-semibold text-[#B34D07] hover:underline">
-                <TS>Conoce el taller</TS> {curso.taller.nombre}
+                <TS>Conoce el taller</TS> <TS>{curso.taller.nombre}</TS>
               </LocalizedClientLink>
             )}
           </div>

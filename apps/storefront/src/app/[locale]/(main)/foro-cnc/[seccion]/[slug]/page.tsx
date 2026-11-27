@@ -1,3 +1,4 @@
+import { TITULOS_SEO_FORO } from "@/lib/seo/titulos-foro"
 import { metaEnIdioma } from "@/i18n/servidor"
 import { TS } from "@/i18n/TS"
 import type { Metadata } from "next"
@@ -52,12 +53,12 @@ async function generateMetadataEs({ params }: Props): Promise<Metadata> {
     ? extracto(`${extracto(pregunta, 60)} Respuesta: ${respuesta}`, 155)
     : extracto(pregunta || t.cuerpo, 155)
   return {
-    title: { absolute: `${t.titulo} | Foro CNC México` },
+    title: { absolute: TITULOS_SEO_FORO[slug] || `${t.titulo} | Foro CNC México` },
     description: descripcion,
     alternates: { canonical: url },
     robots: t.estado === "publicado" ? undefined : { index: false, follow: false },
     openGraph: {
-      title: t.titulo,
+      title: TITULOS_SEO_FORO[slug] || t.titulo,
       description: descripcion,
       url,
       type: "article",
@@ -210,7 +211,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
         </div>
         {r.estado !== "publicado" && (
           <span className="self-start text-[12px] font-bold text-[#9A4A06] bg-[#FFF3E0] px-2 py-0.5 rounded">
-            {r.estado === "revision" ? "En revisión: solo tú la ves" : "Oculta"}
+            <TS>{r.estado === "revision" ? "En revisión: solo tú la ves" : "Oculta"}</TS>
           </span>
         )}
         <Cuerpo texto={r.cuerpo} />
@@ -255,7 +256,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                   {t.resuelto && <span className="text-[12px] font-bold text-[#16794F]"><TS>✓ Resuelto</TS></span>}
                   {t.estado !== "publicado" && (
                     <span className="text-[12px] font-bold text-[#9A4A06] bg-[#FFF3E0] px-2 py-0.5 rounded">
-                      {t.estado === "revision" ? "En revisión: solo tú lo ves" : "Oculto"}
+                      <TS>{t.estado === "revision" ? "En revisión: solo tú lo ves" : "Oculto"}</TS>
                     </span>
                   )}
                 </div>
@@ -265,7 +266,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <AutorChip a={t.autor} cuando={t.creado} />
                 <span className="text-[12.5px] text-[#6B6A63]">
-                  {t.vistas} <TS>vistas · actividad</TS> {haceCuanto(t.ultimaActividad)}
+                  <TS>{t.vistas}</TS> <TS>vistas · actividad</TS> {haceCuanto(t.ultimaActividad)}
                 </span>
               </div>
               {t.evento && (
@@ -284,7 +285,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                     ) : (
                       <a key={l} href={l} target="_blank" rel="nofollow ugc noopener noreferrer" className="flex items-center gap-3 border border-[#E7E4DC] rounded-[10px] px-4 py-3 hover:border-[#C2560A]">
                         <span className="text-[#B34D07] font-semibold text-[14px] truncate">{new URL(l).hostname.replace(/^www\./, "")}</span>
-                        <span className="text-[13px] text-[#6B6A63] truncate">{l.replace(/^https?:\/\/(www\.)?[^/]+/, "") || "/"}</span>
+                        <span className="text-[13px] text-[#6B6A63] truncate"><TS>{l.replace(/^https?:\/\/(www\.)?[^/]+/, "") || "/"}</TS></span>
                       </a>
                     )
                   )}
@@ -313,7 +314,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                 {esAutor ? (
                   <>
                     <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
-                      {postulaciones.length ? `${postulaciones.length} ${postulaciones.length === 1 ? "postulación" : "postulaciones"}` : "Aún no hay postulaciones"}
+                      <TS>{postulaciones.length ? `${postulaciones.length} ${postulaciones.length === 1 ? "postulación" : "postulaciones"}` : "Aún no hay postulaciones"}</TS>
                     </h2>
                     <p className="m-0 text-[13.5px] text-[#6B6A63]"><TS>Sólo tú ves esta lista. Revisa el perfil de cada persona: su trayectoria, aptitudes avaladas y recomendaciones.</TS></p>
                     {postulaciones.map((g) => (
@@ -322,10 +323,10 @@ export default async function ForoTema({ params, searchParams }: Props) {
                           <Avatar a={g.autor} size={40} />
                           <div className="min-w-0 flex-1">
                             <LocalizedClientLink href={urlPerfil(g.autor.usuario)} className="block truncate font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                              {g.autor.nombre}
+                              <TS>{g.autor.nombre}</TS>
                             </LocalizedClientLink>
                             <span className="text-[12.5px] text-[#6B6A63]">
-                              {[g.autor.ciudad, g.autor.estadoMx].filter(Boolean).join(", ") || "Sin ubicación"} · {haceCuanto(g.creado)}
+                              <TS>{[g.autor.ciudad, g.autor.estadoMx].filter(Boolean).join(", ") || "Sin ubicación"}</TS> · {haceCuanto(g.creado)}
                             </span>
                           </div>
                           <LocalizedClientLink href={urlPerfil(g.autor.usuario)} className="shrink-0 text-[13.5px] font-semibold text-[#3B46A6] hover:underline">
@@ -347,7 +348,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
 
             <section className="flex flex-col gap-3" aria-label="Respuestas">
               <h2 className="m-0 text-[18px] font-bold text-[#1B1B18]">
-                {nPublicadas ? `${nPublicadas} ${nPublicadas === 1 ? "respuesta" : "respuestas"}` : "Aún no hay respuestas"}
+                <TS>{nPublicadas ? `${nPublicadas} ${nPublicadas === 1 ? "respuesta" : "respuestas"}` : "Aún no hay respuestas"}</TS>
               </h2>
               {nPublicadas === 0 && t.estado === "publicado" && !esAutor && (
                 <div className="rounded-[14px] border-2 border-dashed border-[#F2C98F] bg-[#FFF9F0] p-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
@@ -364,7 +365,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
               )}
               {nPublicadas === 0 && esAutor && t.estado === "publicado" && (
                 <p className="m-0 rounded-[12px] bg-[#EEF4FB] border border-[#C9DBF0] px-4 py-3 text-[14px] text-[#1E3A5F]">
-                  <TS>Tu tema ya está publicado</TS>{t.tipo === "pregunta" || t.tipo === "busco" ? " y les avisamos a los talleres de esta especialidad" : ""}<TS>. Cuando
+                  <TS>Tu tema ya está publicado</TS><TS>{t.tipo === "pregunta" || t.tipo === "busco" ? " y les avisamos a los talleres de esta especialidad" : ""}</TS><TS>. Cuando
                   alguien te dé la respuesta que sirve, márcala como la mejor: así el tema queda como resuelto.</TS>
                 </p>
               )}
@@ -416,7 +417,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
             {candidatos.length > 0 && <PedirRespuesta temaId={t.id} candidatos={candidatos} />}
             {talleres && (
               <LocalizedClientLink href={talleres.href} className="bg-[#142033] text-white rounded-[14px] p-4 flex flex-col gap-1 hover:bg-[#1B2A42]">
-                <strong className="text-[14.5px]"><TS>Talleres de</TS> {talleres.proceso}</strong>
+                <strong className="text-[14.5px]"><TS>Talleres de</TS> <TS>{talleres.proceso}</TS></strong>
                 <span className="text-[13px] text-[#C9D2E0]"><TS>Ve quién hace esto y pídele cotización.</TS></span>
               </LocalizedClientLink>
             )}
@@ -424,7 +425,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
             <AvisoSeguro />
             {relacionados && relacionados.temas.filter((x) => x.id !== t.id).length > 0 && (
               <div className="flex flex-col gap-3">
-                <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Más en</TS> {t.seccion.nombre}</span>
+                <span className="text-[12px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>Más en</TS> <TS>{t.seccion.nombre}</TS></span>
                 {relacionados.temas
                   .filter((x) => x.id !== t.id)
                   .slice(0, 5)
@@ -432,7 +433,7 @@ export default async function ForoTema({ params, searchParams }: Props) {
                     <LocalizedClientLink key={x.id} href={urlTema(x)} className="bg-white border border-[#E7E4DC] rounded-[12px] px-4 py-3 hover:border-[#C2560A] flex flex-col gap-1">
                       <span className="text-[14px] font-semibold text-[#1B1B18] leading-snug line-clamp-2"><TS>{x.titulo}</TS></span>
                       <span className="text-[12.5px] text-[#6B6A63]">
-                        {x.respuestas} {x.respuestas === 1 ? "respuesta" : "respuestas"}
+                        <TS>{x.respuestas}</TS> <TS>{x.respuestas === 1 ? "respuesta" : "respuestas"}</TS>
                       </span>
                     </LocalizedClientLink>
                   ))}

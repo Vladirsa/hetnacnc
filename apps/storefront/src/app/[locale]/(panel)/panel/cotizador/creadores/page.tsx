@@ -42,7 +42,7 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="creadores" />
-      {error && <Vacio><TS>No pude leer los creadores:</TS> {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los creadores:</TS> <TS>{error}</TS></Vacio>}
       {d && (
         <>
           <Tarjeta>
@@ -58,20 +58,20 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
               {d.creadores.map((c) => (
                 <li key={c.codigo} className="py-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-[15px] font-black tracking-wider text-[#142033]">{c.codigo}</p>
-                    <Etiqueta color={c.activo ? "verde" : "gris"}>{c.activo ? "activo" : "pausado"}</Etiqueta>
+                    <p className="text-[15px] font-black tracking-wider text-[#142033]"><TS>{c.codigo}</TS></p>
+                    <Etiqueta color={c.activo ? "verde" : "gris"}><TS>{c.activo ? "activo" : "pausado"}</TS></Etiqueta>
                   </div>
                   <p className="text-[13px] font-semibold">
-                    {c.nombre}
-                    {c.canal_url && <a href={c.canal_url} target="_blank" rel="noreferrer" className="ml-2 text-[12px] font-normal text-[#1D4F8C]">{c.red || "canal"} ↗</a>}
+                    <TS>{c.nombre}</TS>
+                    {c.canal_url && <a href={c.canal_url} target="_blank" rel="noreferrer" className="ml-2 text-[12px] font-normal text-[#1D4F8C]"><TS>{c.red || "canal"}</TS> ↗</a>}
                   </p>
                   <p className="text-[12px] text-[#40403A]">
-                    {c.visitas_30} <TS>visitas en 30 días (</TS>{c.visitas} <TS>en total) ·</TS> {c.registrados} <TS>registrados ·</TS> <b>{c.pagando} <TS>pagando</TS></b>
+                    <TS>{c.visitas_30}</TS> <TS>visitas en 30 días (</TS><TS>{c.visitas}</TS> <TS>en total) ·</TS> <TS>{c.registrados}</TS> <TS>registrados ·</TS> <b><TS>{c.pagando}</TS> <TS>pagando</TS></b>
                   </p>
                   <p className="text-[12px] text-[#6B675C]">
-                    <TS>Su audiencia:</TS> {c.dias_regalo} <TS>días · Él:</TS> {c.meses_por_taller} {c.meses_por_taller === 1 ? "mes" : "meses"} <TS>por taller que paga</TS>
-                    {c.comision_pct > 0 ? ` + ${c.comision_pct}% del primer pago` : ""}
-                    {c.meses_ganados > 0 && <> · <b className="text-[#0F7A4A]"><TS>ha ganado</TS> {c.meses_ganados} {c.meses_ganados === 1 ? "mes" : "meses"}</b></>}
+                    <TS>Su audiencia:</TS> <TS>{c.dias_regalo}</TS> <TS>días · Él:</TS> <TS>{c.meses_por_taller}</TS> <TS>{c.meses_por_taller === 1 ? "mes" : "meses"}</TS> <TS>por taller que paga</TS>
+                    <TS>{c.comision_pct > 0 ? ` + ${c.comision_pct}% del primer pago` : ""}</TS>
+                    {c.meses_ganados > 0 && <> · <b className="text-[#0F7A4A]"><TS>ha ganado</TS> <TS>{c.meses_ganados}</TS> <TS>{c.meses_ganados === 1 ? "mes" : "meses"}</TS></b></>}
                   </p>
                   {actuar && <AccionesCreador codigo={c.codigo} activo={c.activo} liga={`${SITIO}/${locale}/creadores/${c.codigo}`} meses={c.meses_por_taller} comision={c.comision_pct} />}
                 </li>
@@ -89,11 +89,11 @@ export default async function PanelCreadores({ params }: { params: Promise<{ loc
               {d.solicitudes.map((s) => (
                 <li key={s.id} className="py-3">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-[14px] font-extrabold">{s.nombre}</p>
+                    <p className="text-[14px] font-extrabold"><TS>{s.nombre}</TS></p>
                     <Etiqueta color={s.estado === "nueva" ? "ambar" : s.estado === "atendida" ? "verde" : "gris"}>{s.estado === "atendida" && s.codigo ? s.codigo : s.estado}</Etiqueta>
                   </div>
                   <p className="text-[12px] text-[#40403A]">
-                    {s.correo} · {s.red}{s.seguidores ? ` · ${s.seguidores}` : ""} ·{" "}
+                    <TS>{s.correo}</TS> · <TS>{s.red}</TS><TS>{s.seguidores ? ` · ${s.seguidores}` : ""}</TS> ·<TS>{" "}</TS>
                     <a href={s.canal_url} target="_blank" rel="noreferrer" className="text-[#1D4F8C]"><TS>ver canal ↗</TS></a>
                   </p>
                   {s.mensaje && <p className="mt-1 text-[12px] italic text-[#6B675C]">“<TS>{s.mensaje}</TS>”</p>}

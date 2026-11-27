@@ -6,6 +6,7 @@
 // burbujas, orgánico) y una torsión. Se mueve un número y todo se recalcula.
 // Sale el STL para imprimir y, para router CNC, el patrón desenrollado como
 // relieve plano o el modelo al CAM. Motor: lib/generador/parametrico.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
@@ -148,14 +149,14 @@ export function GeneradorParametrico() {
         <div className="grid grid-cols-2 gap-1.5">
           {MODELOS_INICIO.map((m) => (
             <button key={m.id} type="button" onClick={() => setFuente({ tipo: "inicio", id: m.id })} aria-pressed={fuente.tipo === "inicio" && fuente.id === m.id} className={botonSel(fuente.tipo === "inicio" && fuente.id === m.id)}>
-              {m.nombre}
+              <T>{m.nombre}</T>
             </button>
           ))}
         </div>
         <label className="mt-2 flex flex-col gap-1.5">
           <Etiqueta>O sube el tuyo (STL u OBJ)</Etiqueta>
           <input type="file" accept=".stl,.obj" onChange={(e) => subir(e.target.files?.[0])} className="text-[13px] text-[#C9D2E0]" />
-          {fuente.tipo === "archivo" && <span className="text-[11.5px] text-[#8A97AB]">Cargado: {fuente.nombre}</span>}
+          {fuente.tipo === "archivo" && <span className="text-[11.5px] text-[#8A97AB]">Cargado: <T>{fuente.nombre}</T></span>}
         </label>
         {fuente.tipo === "archivo" && (
           <div className="mt-2 grid grid-cols-3 gap-1.5">
@@ -175,7 +176,7 @@ export function GeneradorParametrico() {
         <div className="grid grid-cols-2 gap-1.5">
           {PATRONES.map((p) => (
             <button key={p.id} type="button" onClick={() => setPatron(p.id)} aria-pressed={patron === p.id} title={p.nota} className={botonSel(patron === p.id)}>
-              {p.nombre}
+              <T>{p.nombre}</T>
             </button>
           ))}
         </div>
@@ -203,15 +204,15 @@ export function GeneradorParametrico() {
       </Seccion>
 
       {trabajando && <Aviso>Preparando el modelo…</Aviso>}
-      {error && <Aviso tipo="error">{error}</Aviso>}
-      {listo && r!.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
+      {error && <Aviso tipo="error"><T>{error}</T></Aviso>}
+      {listo && r!.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
   const diseno2d = (
     <div className="flex h-full flex-col gap-3 p-4">
       {!listo ? (
-        <p className="m-0 text-[14px] text-[#8A97AB]">{trabajando ? "Preparando el modelo…" : "Elige o sube un modelo."}</p>
+        <p className="m-0 text-[14px] text-[#8A97AB]"><T>{trabajando ? "Preparando el modelo…" : "Elige o sube un modelo."}</T></p>
       ) : (
         <>
           <Datos
@@ -268,7 +269,7 @@ export function GeneradorParametrico() {
           </Boton>
         </div>
       </div>
-      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      {aviso && <Aviso tipo="error"><T>{aviso}</T></Aviso>}
     </div>
   )
 
@@ -283,7 +284,7 @@ export function GeneradorParametrico() {
       diseno2d={diseno2d}
       exportacion={exportacion}
       avisos={[]}
-      barra={listo ? <span>· {PATRONES.find((p) => p.id === patron)?.nombre} · {r!.celdas} celdas por vuelta</span> : null}
+      barra={listo ? <span>· <T>{PATRONES.find((p) => p.id === patron)?.nombre}</T> · <T>{r!.celdas}</T> celdas por vuelta</span> : null}
     />
   )
 }

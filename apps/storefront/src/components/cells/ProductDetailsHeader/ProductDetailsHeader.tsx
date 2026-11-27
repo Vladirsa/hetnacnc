@@ -274,12 +274,12 @@ export const ProductDetailsHeader = ({
     >
       {seller?.name && (
         <p className="mb-2 text-[13px] text-[#6B6A63]">
-          <T>Vendido por</T>{" "}
+          <T>Vendido por</T><T>{" "}</T>
           <a
             href={`/${locale}/sellers/${seller.handle}`}
             className="font-semibold text-[#B34D07] hover:underline"
           >
-            {seller.name}
+            <T>{seller.name}</T>
           </a>
           {/* Tienda propia o taller de la plataforma (auditoría 19 nov, punto 4) */}
           {origenDe(seller) === "hetna" ? (
@@ -311,7 +311,7 @@ export const ProductDetailsHeader = ({
                         : { t: "En existencia", ok: true }
             return d ? (
               <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${d.ok ? "bg-[#E8F5EC] text-[#17633A]" : "bg-[#FDECEA] text-[#9B3225]"}`}>
-                {d.ok ? "● " : ""}{d.t}
+                <T>{d.ok ? "● " : ""}</T><T>{d.t}</T>
               </span>
             ) : null
           })()}
@@ -319,11 +319,11 @@ export const ProductDetailsHeader = ({
       )}
 
       <h1 className="text-[22px] font-bold leading-snug text-[#1B1B18] lg:text-[26px]" data-testid="product-title">
-        {product.title}
+        <T>{product.title}</T>
       </h1>
       {universal?.sku && (
         <p className="mt-1 text-[12px] text-[#6B6A63]" data-testid="product-sku">
-          <T>SKU:</T> <span className="font-mono">{universal.sku}</span>
+          <T>SKU:</T> <span className="font-mono"><T>{universal.sku}</T></span>
         </p>
       )}
 
@@ -331,14 +331,14 @@ export const ProductDetailsHeader = ({
         <DescargarGratis productId={product.id} />
       ) : compraPropia ? (
         <div className="mt-4" data-testid="product-compra-propia">
-          {compraPropia}
+          <T>{compraPropia}</T>
         </div>
       ) : esCreditos ? (
         <div className="mt-4 rounded-[12px] bg-[#F7F5EF] px-4 py-4" data-testid="product-creditos-cta">
           <p className="m-0 text-[14px] text-[#4A4943]">
-            {creditosDelPaquete
+            <T>{creditosDelPaquete
               ? `${creditosDelPaquete} créditos para el escaneo 3D y el cotizador. `
-              : "Créditos para el escaneo 3D y el cotizador. "}
+              : "Créditos para el escaneo 3D y el cotizador. "}</T>
             <T>Se pagan con Mercado Pago o PayPal y se acreditan en tu cuenta.</T>
           </p>
           <LocalizedClientLink
@@ -373,19 +373,19 @@ export const ProductDetailsHeader = ({
                     {precioTexto(precioLista as number)}
                   </span>
                   <span className="rounded bg-[#9B3225] px-1.5 py-0.5 text-[12px] font-bold text-white">
-                    −{porcentaje}%
+                    −<T>{porcentaje}</T>%
                   </span>
                 </>
               )}
             </div>
             {descarga ? (
               <p className="mt-1 text-[12.5px] text-[#6B6A63]" data-testid="product-precio-nota">
-                {universal?.notaPrecio ? `${universal.notaPrecio} · ` : ivaIncluido ? "IVA incluido · " : ""}<T>Sin envío: es descarga</T>
+                <T>{universal?.notaPrecio ? `${universal.notaPrecio} · ` : ivaIncluido ? "IVA incluido · " : ""}</T><T>Sin envío: es descarga</T>
               </p>
             ) : universal?.notaPrecio ? (
               <p className="mt-1 text-[12px] text-[#6B6A63]" data-testid="product-precio-nota">
-                {universal.notaPrecio}
-                {fisico ? " · El envío se calcula antes de pagar" : ""}
+                <T>{universal.notaPrecio}</T>
+                <T>{fisico ? " · El envío se calcula antes de pagar" : ""}</T>
               </p>
             ) : (
               ivaIncluido && <p className="mt-1 text-[12px] text-[#6B6A63]"><T>IVA incluido</T></p>
@@ -393,7 +393,7 @@ export const ProductDetailsHeader = ({
           </>
         ) : hayAnyPrecio(hasAnyPrice, variantPrice) ? (
           <span className="text-[30px] font-bold leading-none text-[#1B1B18]" data-testid="product-price-current">
-            {variantPrice!.calculated_price}
+            <T>{variantPrice!.calculated_price}</T>
           </span>
         ) : (
           // Sin precio en esta región (p. ej. planos digitales que aún no se venden en México):
@@ -408,15 +408,15 @@ export const ProductDetailsHeader = ({
 
         {fisico && hayOferta && disponibles > 0 && disponibles <= EXISTENCIAS_BAJAS && (
           <p className="mt-2 text-[13px] font-bold text-[#9B3225]">
-            {disponibles === 1 ? "Queda 1 pieza" : `Solo quedan ${disponibles} piezas`}
+            <T>{disponibles === 1 ? "Queda 1 pieza" : `Solo quedan ${disponibles} piezas`}</T>
           </p>
         )}
         {/* Un archivo no se agota: nunca se habla de existencias */}
         {fisico && hayOferta && disponibles === 0 && (
           <p className="mt-2 text-[13px] font-bold text-[#9B3225]">
-            {enCarrito > 0
+            <T>{enCarrito > 0
               ? "Ya tienes en el carrito todo lo que hay"
-              : "Agotado por ahora"}
+              : "Agotado por ahora"}</T>
           </p>
         )}
         {fisico && hayOferta && disponibles === 0 && enCarrito === 0 && (
@@ -428,8 +428,8 @@ export const ProductDetailsHeader = ({
         <dl className="mt-4 grid grid-cols-2 gap-2" data-testid="product-datos-clave">
           {universal.datosClave.map(([k, v]) => (
             <div key={k} className="rounded-[10px] border border-[#E7E4DC] bg-[#FAF9F6] px-3 py-2">
-              <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-[#6B6A63]">{k}</dt>
-              <dd className="m-0 text-[14px] font-semibold leading-snug text-[#142033]">{v}</dd>
+              <dt className="text-[11.5px] font-semibold uppercase tracking-wide text-[#6B6A63]"><T>{k}</T></dt>
+              <dd className="m-0 text-[14px] font-semibold leading-snug text-[#142033]"><T>{v}</T></dd>
             </div>
           ))}
         </dl>
@@ -443,11 +443,11 @@ export const ProductDetailsHeader = ({
       {!fisico && !descarga && hayOferta && (
         // Archivo o servicio: cantidad fija en 1, sin existencias ni envío
         <p className="mt-4 rounded-[8px] bg-[#EEF7F0] px-3 py-2 text-[14px] font-semibold text-[#17633A]" data-testid="product-entrega-digital">
-          {tipo === "digital" ? "⬇️ Descarga inmediata tras el pago" : "🧑‍💻 Servicio en línea: no se envía nada por paquetería"}
+          <T>{tipo === "digital" ? "⬇️ Descarga inmediata tras el pago" : "🧑‍💻 Servicio en línea: no se envía nada por paquetería"}</T>
         </p>
       )}
 
-      {antesDeComprar}
+      <T>{antesDeComprar}</T>
 
       {fisico && hayOferta && disponibles > 0 && (
         <div className="mt-4 flex items-center gap-3">
@@ -463,7 +463,7 @@ export const ProductDetailsHeader = ({
               −
             </button>
             <span className="w-10 text-center text-[15px] font-semibold text-[#1B1B18]">
-              {cantidadValida}
+              <T>{cantidadValida}</T>
             </span>
             <button
               type="button"
@@ -476,7 +476,7 @@ export const ProductDetailsHeader = ({
             </button>
           </div>
           <span className="text-[12px] text-[#6B6A63]">
-            {disponibles} {disponibles === 1 ? "disponible" : "disponibles"}
+            <T>{disponibles}</T> <T>{disponibles === 1 ? "disponible" : "disponibles"}</T>
           </span>
         </div>
       )}
@@ -489,7 +489,7 @@ export const ProductDetailsHeader = ({
           className="w-full py-3.5 text-[16px] font-bold"
           data-testid="product-buy-now-button"
         >
-          {noSePuedeComprar ? "No disponible" : descarga ? "Comprar y descargar ahora" : "Comprar ahora"}
+          <T>{noSePuedeComprar ? "No disponible" : descarga ? "Comprar y descargar ahora" : "Comprar ahora"}</T>
         </Button>
 
         <button
@@ -505,7 +505,7 @@ export const ProductDetailsHeader = ({
       {botonesFuera && !noSePuedeComprar && (
         <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-[#E7E4DC] bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(20,32,51,0.35)] backdrop-blur lg:hidden">
           <div className="min-w-0 flex-1">
-            <p className="m-0 truncate text-[12.5px] text-[#6B6A63]">{product.title}</p>
+            <p className="m-0 truncate text-[12.5px] text-[#6B6A63]"><T>{product.title}</T></p>
             {typeof offerAmount === "number" && (
               <p className="m-0 text-[18px] font-bold leading-tight text-[#1B1B18]">
                 {precioTexto(offerAmount)}
@@ -514,7 +514,7 @@ export const ProductDetailsHeader = ({
             )}
           </div>
           <Button onClick={comprarAhora} disabled={isAddingItem} loading={comprando} className="shrink-0 px-5 py-3 text-[15px] font-bold">
-            {descarga ? "Comprar y descargar" : "Comprar ahora"}
+            <T>{descarga ? "Comprar y descargar" : "Comprar ahora"}</T>
           </Button>
         </div>
       )}
@@ -558,8 +558,8 @@ export const ProductDetailsHeader = ({
           className="mt-1 w-full rounded-sm border border-[#E7E4DC] py-2.5 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A]"
           data-testid="compare-offers-button"
         >
-          <T>Comparar otras</T> {otherOffersCount}{" "}
-          {otherOffersCount === 1 ? "oferta" : "ofertas"}
+          <T>Comparar otras</T> <T>{otherOffersCount}</T><T>{" "}</T>
+          <T>{otherOffersCount === 1 ? "oferta" : "ofertas"}</T>
         </button>
       )}
 

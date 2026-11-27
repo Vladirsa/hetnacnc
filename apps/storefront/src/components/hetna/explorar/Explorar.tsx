@@ -36,9 +36,9 @@ function GrupoFiltro({ g, sp, base }: { g: Grupo; sp: URLSearchParams; base: str
                 o.activa ? "border-[#C2560A] bg-[#C2560A]" : "border-[#B8BEC6] bg-white"
               }`}
             >
-              {o.activa ? "✓" : ""}
+              <TS>{o.activa ? "✓" : ""}</TS>
             </span>
-            <span className="min-w-0 flex-1 truncate">{o.nombre}</span>
+            <span className="min-w-0 flex-1 truncate"><TS>{o.nombre}</TS></span>
             <span className="text-[12.5px] text-[#8A8F96]">{o.n}</span>
           </LocalizedClientLink>
         </li>
@@ -119,11 +119,11 @@ function TarjetaTaller({ t }: { t: Taller }) {
       )}
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[15px] font-bold leading-snug text-[#142033]">{t.nombre}</span>
+          <span className="text-[15px] font-bold leading-snug text-[#142033]"><TS>{t.nombre}</TS></span>
           {t.verificado && <span className="rounded-full bg-[#E8F5EC] px-2 py-0.5 text-[11px] font-bold text-[#1E7A3C]"><TS>✓ Verificado</TS></span>}
         </span>
-        {lugar && <span className="mt-0.5 block text-[13px] text-[#6B6A63]">📍 {lugar}</span>}
-        {maquinas.length > 0 && <span className="mt-1.5 block text-[12.5px] leading-snug text-[#40403A]">{maquinas.slice(0, 4).join(" · ")}</span>}
+        {lugar && <span className="mt-0.5 block text-[13px] text-[#6B6A63]">📍 <TS>{lugar}</TS></span>}
+        {maquinas.length > 0 && <span className="mt-1.5 block text-[12.5px] leading-snug text-[#40403A]"><TS>{maquinas.slice(0, 4).join(" · ")}</TS></span>}
       </span>
       <span aria-hidden className="shrink-0 self-center text-[13px] font-bold text-[#B34D07]"><TS>Ver ›</TS></span>
     </LocalizedClientLink>
@@ -170,7 +170,7 @@ export function Explorar({
                 sp.get("disponible") === "1" ? "border-[#C2560A] bg-[#C2560A]" : "border-[#B8BEC6] bg-white"
               }`}
             >
-              {sp.get("disponible") === "1" ? "✓" : ""}
+              <TS>{sp.get("disponible") === "1" ? "✓" : ""}</TS>
             </span>
             <TS>Sólo con existencia</TS>
           </LocalizedClientLink>
@@ -184,7 +184,7 @@ export function Explorar({
       <p className="mt-2 max-w-[75ch] text-[15px] leading-relaxed text-[#40403A]"><TS>{info.intro}</TS></p>
       {query && (
         <p className="mt-2 text-[14px] text-[#40403A]">
-          <TS>Resultados de «</TS><strong className="text-[#142033]">{query}</strong>» ·{" "}
+          <TS>Resultados de «</TS><strong className="text-[#142033]"><TS>{query}</TS></strong>» ·<TS>{" "}</TS>
           <LocalizedClientLink href={base} className="font-bold text-[#B34D07] underline">
             <TS>Quitar búsqueda</TS>
           </LocalizedClientLink>
@@ -206,8 +206,8 @@ export function Explorar({
                     activa ? "border-[#C2560A] text-[#C2560A]" : "border-transparent text-[#40403A] hover:text-[#142033]"
                   }`}
                 >
-                  {p.nombre}
-                  <span className="text-[12.5px] font-medium text-[#8A8F96]">{r.totales[p.id]}</span>
+                  <TS>{p.nombre}</TS>
+                  <span className="text-[12.5px] font-medium text-[#8A8F96]"><TS>{r.totales[p.id]}</TS></span>
                 </LocalizedClientLink>
               </li>
             )
@@ -230,8 +230,8 @@ export function Explorar({
                     c.activa ? "border-[#142033] bg-[#142033] text-white" : "border-[#D4D9DF] bg-white text-[#1E2329] hover:border-[#142033]"
                   }`}
                 >
-                  {c.nombre}
-                  <span className={c.activa ? "text-white/70" : "text-[#8A8F96]"}>{c.activa ? "✕" : c.n}</span>
+                  <TS>{c.nombre}</TS>
+                  <span className={c.activa ? "text-white/70" : "text-[#8A8F96]"}><TS>{c.activa ? "✕" : c.n}</TS></span>
                 </LocalizedClientLink>
               </li>
             ))}
@@ -245,7 +245,7 @@ export function Explorar({
                     sp.get("max_price") === "0" ? "border-[#142033] bg-[#142033] text-white" : "border-[#D4D9DF] bg-white text-[#1E2329] hover:border-[#142033]"
                   }`}
                 >
-                  <TS>Gratis</TS>{sp.get("max_price") === "0" ? " ✕" : ""}
+                  <TS>Gratis</TS><TS>{sp.get("max_price") === "0" ? " ✕" : ""}</TS>
                 </LocalizedClientLink>
               </li>
             )}
@@ -264,7 +264,7 @@ export function Explorar({
                 </LocalizedClientLink>
               )}
             </div>
-            {filtros}
+            <TS>{filtros}</TS>
           </PanelFiltros>
         )}
 
@@ -278,7 +278,7 @@ export function Explorar({
                 rel="nofollow"
                 className="hidden h-8 items-center gap-1.5 rounded-full bg-[#142033] px-3 text-[12.5px] font-semibold text-white md:inline-flex"
               >
-                {a.nombre} <span aria-hidden className="opacity-70">✕</span>
+                <TS>{a.nombre}</TS> <span aria-hidden className="opacity-70">✕</span>
               </LocalizedClientLink>
             ))}
             <span className="text-[13px] text-[#6B6A63]" data-testid="explorar-total">
@@ -302,7 +302,7 @@ export function Explorar({
               </ul>
             ) : (
               <p className="rounded-xl border border-dashed border-[#C5CCD3] bg-white p-6 text-center text-[14.5px] text-[#40403A]">
-                <TS>Ningún taller cumple esos filtros.</TS>{" "}
+                <TS>Ningún taller cumple esos filtros.</TS><TS>{" "}</TS>
                 <LocalizedClientLink href={`${base}${sinFiltros(sp)}`} className="font-bold text-[#B34D07] underline">
                   <TS>Ver todos</TS>
                 </LocalizedClientLink>
@@ -335,7 +335,7 @@ export function Explorar({
                       href={e.ruta}
                       className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[#D4D9DF] bg-white px-3 text-[13px] font-semibold text-[#1E2329] hover:border-[#C2560A] hover:text-[#C2560A]"
                     >
-                      {e.nombre} <span className="font-medium text-[#8A8F96]">{e.total}</span>
+                      <TS>{e.nombre}</TS> <span className="font-medium text-[#8A8F96]">{e.total}</span>
                     </LocalizedClientLink>
                   </li>
                 ))}

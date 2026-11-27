@@ -129,7 +129,7 @@ export function BibliotecaHerrajes({ valor, cambiar, lista }: { valor: DefHerraj
               }}
               className="ml-auto rounded-[6px] px-2 py-1 text-[12px] text-[#FF9A9A] hover:bg-[#2A1515]"
             >
-              {HERRAJES_BASE.some((b) => b.id === actual.id) ? "Volver a las de fábrica" : "Borrar"}
+              <T>{HERRAJES_BASE.some((b) => b.id === actual.id) ? "Volver a las de fábrica" : "Borrar"}</T>
             </button>
           )}
         </div>

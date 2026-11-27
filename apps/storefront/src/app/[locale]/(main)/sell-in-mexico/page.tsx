@@ -59,8 +59,8 @@ export default function SellInMexicoPage() {
           {PASOS.map(([n, t, d]) => (
             <div key={n} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="grid h-9 w-9 place-items-center rounded-full bg-[#C2560A] font-extrabold text-white">{n}</p>
-              <p className="mt-3 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-3 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
@@ -70,8 +70,8 @@ export default function SellInMexicoPage() {
           {POR_QUE.map(([i, t, d]) => (
             <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
               <p className="text-3xl">{i}</p>
-              <p className="mt-2 font-bold text-[#142033]">{t}</p>
-              <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+              <p className="mt-2 font-bold text-[#142033]"><TS>{t}</TS></p>
+              <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
             </div>
           ))}
         </div>
@@ -80,8 +80,8 @@ export default function SellInMexicoPage() {
         <div className="mt-4 grid gap-3">
           {PREGUNTAS.map(([q, a]) => (
             <details key={q} className="rounded-xl border border-[#E7E4DC] bg-white p-4">
-              <summary className="cursor-pointer font-semibold text-[#142033]">{q}</summary>
-              <p className="mt-2 text-sm text-[#40403A]">{a}</p>
+              <summary className="cursor-pointer font-semibold text-[#142033]"><TS>{q}</TS></summary>
+              <p className="mt-2 text-sm text-[#40403A]"><TS>{a}</TS></p>
             </details>
           ))}
         </div>

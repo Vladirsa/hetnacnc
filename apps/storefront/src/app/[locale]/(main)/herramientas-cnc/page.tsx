@@ -176,8 +176,8 @@ export default function HerramientasCnc() {
             <ul className="m-0 mt-6 grid list-none gap-3 p-0 sm:grid-cols-2">
               {PROCESOS_CALC.map(([t, d]) => (
                 <li key={t} className="rounded-[12px] border border-[#E7E4DC] bg-white p-3.5">
-                  <p className="m-0 text-[14.5px] font-bold text-[#1B1B18]">{t}</p>
-                  <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#5B5A54]">{d}</p>
+                  <p className="m-0 text-[14.5px] font-bold text-[#1B1B18]"><TS>{t}</TS></p>
+                  <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#5B5A54]"><TS>{d}</TS></p>
                 </li>
               ))}
             </ul>
@@ -215,7 +215,7 @@ export default function HerramientasCnc() {
           <div className="mt-5 flex flex-wrap gap-2">
             {PRECIOS.map(([t, h]) => (
               <LocalizedClientLink key={h} href={h} className="rounded-full border border-white/25 px-4 py-2 text-[14px] font-semibold hover:bg-white hover:text-[#142033]">
-                {t}
+                <TS>{t}</TS>
               </LocalizedClientLink>
             ))}
           </div>
@@ -246,8 +246,8 @@ export default function HerramientasCnc() {
                 <li key={t} className="flex gap-3 rounded-[12px] border border-white/10 bg-white/[0.04] p-3.5">
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#19B374] text-[12px] font-black text-white">✓</span>
                   <span>
-                    <span className="block text-[14.5px] font-bold">{t}</span>
-                    <span className="mt-0.5 block text-[13px] leading-snug text-white/60">{d}</span>
+                    <span className="block text-[14.5px] font-bold"><TS>{t}</TS></span>
+                    <span className="mt-0.5 block text-[13px] leading-snug text-white/60"><TS>{d}</TS></span>
                   </span>
                 </li>
               ))}
@@ -276,15 +276,15 @@ export default function HerramientasCnc() {
           <div>
             <h2 className="m-0 text-[26px] font-extrabold leading-tight text-[#1B1B18]"><TS>Preguntas frecuentes</TS></h2>
             <p className="m-0 mt-3 text-[15px] leading-relaxed text-[#4A4943]">
-              <TS>¿Buscas otra cosa?</TS>{" "}
+              <TS>¿Buscas otra cosa?</TS><TS>{" "}</TS>
               <LocalizedClientLink href="/disenar" className="font-semibold text-[#B34D07] hover:underline">
                 <TS>Diseñar en 3D y 2D</TS>
               </LocalizedClientLink>
-              ,{" "}
+              ,<TS>{" "}</TS>
               <LocalizedClientLink href="/laboratorio-cam" className="font-semibold text-[#B34D07] hover:underline">
                 <TS>DXF a G-code</TS>
-              </LocalizedClientLink>{" "}
-              o{" "}
+              </LocalizedClientLink><TS>{" "}</TS>
+              o<TS>{" "}</TS>
               <LocalizedClientLink href="/fabricacion" className="font-semibold text-[#B34D07] hover:underline">
                 <TS>que un taller te la fabrique</TS>
               </LocalizedClientLink>
@@ -295,10 +295,10 @@ export default function HerramientasCnc() {
             {PREGUNTAS.map((q) => (
               <details key={q.p} className="group px-4 py-3.5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-bold text-[#1B1B18]">
-                  {q.p}
+                  <TS>{q.p}</TS>
                   <span className="text-[18px] text-[#B34D07] transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="m-0 mt-2 text-[14px] leading-relaxed text-[#4A4943]">{q.r}</p>
+                <p className="m-0 mt-2 text-[14px] leading-relaxed text-[#4A4943]"><TS>{q.r}</TS></p>
               </details>
             ))}
           </div>
@@ -313,7 +313,7 @@ export default function HerramientasCnc() {
             {PROGRAMAS.map((x) => (
               <li key={x.slug} className="list-none">
                 <LocalizedClientLink href={`/programas/${x.slug}`} className="block rounded-[12px] border border-[#E7E4DC] bg-white px-4 py-3 text-[15px] font-semibold text-[#0E2A5C] hover:border-[#C2560A]">
-                  {x.herramienta.nombre}
+                  <TS>{x.herramienta.nombre}</TS>
                 </LocalizedClientLink>
               </li>
             ))}

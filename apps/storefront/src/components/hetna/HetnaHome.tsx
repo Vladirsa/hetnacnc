@@ -391,10 +391,10 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
                 )}
                 <div className="p-4 flex flex-col gap-2">
                   <h3 className="font-display text-[15.5px] font-bold m-0 text-[#1B1B18] line-clamp-2">
-                    {a.title}
+                    <TS>{a.title}</TS>
                   </h3>
                   <p className="m-0 text-[13px] text-[#6B6A63] leading-relaxed line-clamp-2">
-                    {a.excerpt}
+                    <TS>{a.excerpt}</TS>
                   </p>
                 </div>
               </LocalizedClientLink>

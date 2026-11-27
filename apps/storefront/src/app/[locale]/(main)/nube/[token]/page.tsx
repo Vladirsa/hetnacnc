@@ -64,7 +64,7 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
     return (
       <main className="container max-w-[760px] py-16 text-center">
         <h1 className="text-2xl font-bold text-[#142033]"><TS>Liga no disponible</TS></h1>
-        <p className="mt-2 text-[#40403A]">{d.error}</p>
+        <p className="mt-2 text-[#40403A]"><TS>{d.error}</TS></p>
         <p className="mt-1 text-[#6B675C]"><TS>Pide al taller que te comparta una nueva.</TS></p>
       </main>
     )
@@ -76,36 +76,36 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
   return (
     <main className="container max-w-[860px] py-8 md:py-12">
       <p className="m-0 text-[13px] font-semibold uppercase tracking-wide text-[#C2560A]"><TS>HetNa Cloud · archivos compartidos</TS></p>
-      <h1 className="m-0 mt-1 text-[26px] font-extrabold text-[#142033]">{d.proyecto.nombre}</h1>
+      <h1 className="m-0 mt-1 text-[26px] font-extrabold text-[#142033]"><TS>{d.proyecto.nombre}</TS></h1>
       <p className="m-0 mt-1 text-[14px] text-[#6B675C]">
-        {d.taller ? (
+        <TS>{d.taller ? (
           <>
             <TS>Compartido por</TS>{" "}
             <LocalizedClientLink href={`/talleres/${d.taller.handle}`} className="font-semibold text-[#142033] hover:underline">
-              {d.taller.nombre}
+              <TS>{d.taller.nombre}</TS>
             </LocalizedClientLink>
           </>
         ) : (
           "Compartido por un taller de HETNA"
-        )}
-        {" · "}<TS>la liga vence el</TS> {new Date(d.vence).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
-        {d.solo_liberados ? " · sólo archivos liberados para producción" : ""}
+        )}</TS>
+        <TS>{" · "}</TS><TS>la liga vence el</TS> {new Date(d.vence).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
+        <TS>{d.solo_liberados ? " · sólo archivos liberados para producción" : ""}</TS>
       </p>
 
       {grupos.map((g) => (
         <section key={g.id || "sin"} className="mt-6 rounded-2xl border border-[#E7E4DC] bg-white p-5">
-          <h2 className="m-0 text-[17px] font-bold text-[#142033]">{g.sin ? g.nombre : `Pieza: ${g.nombre}`}</h2>
+          <h2 className="m-0 text-[17px] font-bold text-[#142033]"><TS>{g.sin ? g.nombre : `Pieza: ${g.nombre}`}</TS></h2>
           {(g.material || g.cantidad) && (
-            <p className="m-0 mt-0.5 text-[14px] text-[#6B675C]">{[g.material, g.cantidad ? `${g.cantidad} piezas` : ""].filter(Boolean).join(" · ")}</p>
+            <p className="m-0 mt-0.5 text-[14px] text-[#6B675C]"><TS>{[g.material, g.cantidad ? `${g.cantidad} piezas` : ""].filter(Boolean).join(" · ")}</TS></p>
           )}
           {g.archivos.length ? (
             <ul className="m-0 mt-3 flex list-none flex-col divide-y divide-[#EFECE4] p-0">
               {g.archivos.map((a) => (
                 <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                   <span className="min-w-0">
-                    <strong className="block truncate text-[15px] text-[#1B1B18]">{a.nombre}</strong>
+                    <strong className="block truncate text-[15px] text-[#1B1B18]"><TS>{a.nombre}</TS></strong>
                     <span className="text-[13px] text-[#6B675C]">
-                      {[a.categoria, `rev. ${a.revision}`, a.estado, tamano(a.tamano)].filter(Boolean).join(" · ")}
+                      <TS>{[a.categoria, `rev. ${a.revision}`, a.estado, tamano(a.tamano)].filter(Boolean).join(" · ")}</TS>
                     </span>
                   </span>
                   {a.url ? (
@@ -119,12 +119,12 @@ export default async function NubeCompartida({ params }: { params: Promise<{ tok
               ))}
             </ul>
           ) : (
-            <p className="m-0 mt-2 text-[14px] text-[#6B675C]"><TS>Sin archivos</TS> {d.solo_liberados ? "liberados " : ""}<TS>todavía.</TS></p>
+            <p className="m-0 mt-2 text-[14px] text-[#6B675C]"><TS>Sin archivos</TS> <TS>{d.solo_liberados ? "liberados " : ""}</TS><TS>todavía.</TS></p>
           )}
         </section>
       ))}
       <p className="mt-6 text-center text-[13px] text-[#6B675C]">
-        <TS>Las ligas de descarga duran 15 minutos: si una ya no abre, recarga esta página. ¿Tienes taller?</TS>{" "}
+        <TS>Las ligas de descarga duran 15 minutos: si una ya no abre, recarga esta página. ¿Tienes taller?</TS><TS>{" "}</TS>
         <LocalizedClientLink href="/talleres/unete" className="font-semibold text-[#C2560A]">
           <TS>Organiza tus archivos con HetNa Cloud</TS>
         </LocalizedClientLink>

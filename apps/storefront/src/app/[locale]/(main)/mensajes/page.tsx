@@ -29,12 +29,12 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
             <li key={c.id}>
               <Link href={`/${locale}/mensajes/${c.id}`} className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-[#1E3250]">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-gray-900 dark:text-white">{c.tallerNombre}</p>
-                  {c.productoTitulo && <p className="truncate text-xs text-gray-500">{c.productoTitulo}</p>}
-                  <p className="truncate text-sm text-gray-600 dark:text-gray-300">{c.ultimo}</p>
+                  <p className="truncate font-semibold text-gray-900 dark:text-white"><TS>{c.tallerNombre}</TS></p>
+                  {c.productoTitulo && <p className="truncate text-xs text-gray-500"><TS>{c.productoTitulo}</TS></p>}
+                  <p className="truncate text-sm text-gray-600 dark:text-gray-300"><TS>{c.ultimo}</TS></p>
                 </div>
                 {c.sinLeer > 0 && (
-                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#C2560A] px-2 text-xs font-bold text-white">{c.sinLeer}</span>
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#C2560A] px-2 text-xs font-bold text-white"><TS>{c.sinLeer}</TS></span>
                 )}
               </Link>
             </li>

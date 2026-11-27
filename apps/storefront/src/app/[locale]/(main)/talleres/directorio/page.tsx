@@ -59,7 +59,7 @@ export default async function DirectorioPage({
         <LocalizedClientLink href="/talleres" className="hover:text-[#C2560A]"><TS>Talleres</TS></LocalizedClientLink> <TS>› Directorio</TS>
       </nav>
       <h1 className="text-3xl font-extrabold text-[#142033] sm:text-4xl">
-        <TS>Directorio CNC de México</TS>{estadoSel ? `: ${estadoSel}` : ""}
+        <TS>Directorio CNC de México</TS><TS>{estadoSel ? `: ${estadoSel}` : ""}</TS>
       </h1>
       <p className="mt-2 max-w-3xl text-[#40403A]">
         <TS>Empresas de maquinado, corte y fabricación CNC, proveedores e instructores que todavía no forman parte de HETNA.
@@ -70,7 +70,7 @@ export default async function DirectorioPage({
         <div className="rounded-2xl border border-[#E7E4DC] bg-white p-4 text-sm text-[#40403A]">
           <p className="font-bold text-[#142033]"><TS>¿Buscas quién te fabrique?</TS></p>
           <p className="mt-1">
-            <TS>Al pedir cotización desde un perfil, tu solicitud llega a la red de talleres HETNA</TS>{enHetna ? ` (${enHetna} ${estadoSel ? "en " + estadoSel : "registrados"})` : ""} <TS>y
+            <TS>Al pedir cotización desde un perfil, tu solicitud llega a la red de talleres HETNA</TS><TS>{enHetna ? ` (${enHetna} ${estadoSel ? "en " + estadoSel : "registrados"})` : ""}</TS> <TS>y
             además invitamos a esa empresa a responderte. Tus datos de contacto no se comparten y pagas dentro de HETNA.</TS>
           </p>
         </div>
@@ -93,7 +93,7 @@ export default async function DirectorioPage({
             href={liga({ estado: estadoSel, tipo: t })}
             className={`${CHIP} ${tipoSel === t ? "bg-[#142033] text-white" : "bg-[#F3F1EA] text-[#40403A]"}`}
           >
-            {NOMBRE_TIPO[t]}
+            <TS>{NOMBRE_TIPO[t]}</TS>
           </LocalizedClientLink>
         ))}
       </div>
@@ -107,7 +107,7 @@ export default async function DirectorioPage({
             href={liga({ estado: e, tipo: tipoSel })}
             className={`${CHIP} ${estadoSel === e ? "bg-[#C2560A] text-white" : "bg-white text-[#40403A] border border-[#E7E4DC]"}`}
           >
-            {e}
+            <TS>{e}</TS>
           </LocalizedClientLink>
         ))}
       </div>
@@ -118,7 +118,7 @@ export default async function DirectorioPage({
             href={rutaEstado(porEstado.find((x) => x.ciudad.estado === estadoSel)!.ciudad)}
             className="font-semibold text-[#C2560A] underline"
           >
-            <TS>Ver la página de talleres CNC en</TS> {estadoSel} <TS>con servicios y preguntas frecuentes →</TS>
+            <TS>Ver la página de talleres CNC en</TS> <TS>{estadoSel}</TS> <TS>con servicios y preguntas frecuentes →</TS>
           </LocalizedClientLink>
         </p>
       )}
@@ -129,7 +129,7 @@ export default async function DirectorioPage({
             {porEstado.map((x) => (
               <li key={x.ciudad.slug}>
                 <LocalizedClientLink href={rutaEstado(x.ciudad)} className="text-[#C2560A] hover:underline">
-                  <TS>Talleres CNC en</TS> {x.ciudad.estado}
+                  <TS>Talleres CNC en</TS> <TS>{x.ciudad.estado}</TS>
                 </LocalizedClientLink>
               </li>
             ))}
@@ -138,12 +138,12 @@ export default async function DirectorioPage({
       )}
 
       <p className="mt-6 text-sm text-[#6B675C]">
-        {lista.length} {lista.length === 1 ? "empresa" : "empresas"}
-        {paginas > 1 ? ` · página ${paginaSel} de ${paginas}` : ""}
+        <TS>{lista.length}</TS> <TS>{lista.length === 1 ? "empresa" : "empresas"}</TS>
+        <TS>{paginas > 1 ? ` · página ${paginaSel} de ${paginas}` : ""}</TS>
       </p>
       {lista.length === 0 ? (
         <p className="mt-3 rounded-2xl border border-[#E7E4DC] bg-white p-6 text-[#40403A]">
-          <TS>No hay empresas con este filtro.</TS>{" "}
+          <TS>No hay empresas con este filtro.</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/talleres" className="font-semibold text-[#C2560A] underline">
             <TS>Ver los talleres de HETNA</TS>
           </LocalizedClientLink>
@@ -153,13 +153,13 @@ export default async function DirectorioPage({
           {visibles.map((e) => (
             <li key={e.slug} className="rounded-2xl border border-[#E7E4DC] bg-white p-4">
               <LocalizedClientLink href={`/talleres/directorio/${e.slug}`} className="font-bold text-[#142033] hover:text-[#C2560A]">
-                {e.empresa}
+                <TS>{e.empresa}</TS>
               </LocalizedClientLink>
               <p className="mt-0.5 text-[13px] text-[#6B675C]">
-                {NOMBRE_TIPO[e.tipo]}
-                {e.ciudad || e.estado ? ` · ${[e.ciudad, e.estado].filter(Boolean).join(", ")}` : ""}
+                <TS>{NOMBRE_TIPO[e.tipo]}</TS>
+                <TS>{e.ciudad || e.estado ? ` · ${[e.ciudad, e.estado].filter(Boolean).join(", ")}` : ""}</TS>
               </p>
-              {e.servicios && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]">{e.servicios}</p>}
+              {e.servicios && <p className="mt-2 line-clamp-2 text-sm text-[#40403A]"><TS>{e.servicios}</TS></p>}
               <span className="mt-2 inline-block rounded-full bg-[#F3F1EA] px-2 py-0.5 text-[11px] font-semibold text-[#6B675C]">
                 <TS>Perfil no reclamado</TS>
               </span>

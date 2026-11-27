@@ -148,7 +148,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     <main className="flex-1 bg-[#FAF9F6]">
       <div className="mx-auto max-w-[1280px] px-4 py-6 lg:px-8">
         <p className="m-0 text-[12px] font-bold uppercase tracking-[.18em] text-[#0EA5E9]"><T>Impresión 3D · paramétrico</T></p>
-        <h1 className="font-display m-0 mt-1 text-[26px] font-bold text-[#1B1B18] lg:text-[34px]">{inicial ? `${modelo.nombre}: modelo 3D a tu medida` : "Modelos 3D a tu medida"}</h1>
+        <h1 className="font-display m-0 mt-1 text-[26px] font-bold text-[#1B1B18] lg:text-[34px]"><T>{inicial ? `${modelo.nombre}: modelo 3D a tu medida` : "Modelos 3D a tu medida"}</T></h1>
         <p className="m-0 mt-1 max-w-3xl text-[15px] text-[#4A4943]">
           <T>Elige un modelo, ajusta sus medidas y descarga el STL listo para imprimir, sin saber CAD. O pide que un taller de HETNA te lo imprima.</T>
         </p>
@@ -157,7 +157,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
         <div className="mt-5 flex flex-col gap-3">
           {CATEGORIAS.map((c) => (
             <div key={c.id} className="flex flex-wrap items-center gap-2">
-              <span className="w-[120px] shrink-0 text-[13px] font-semibold text-[#6B675C]">{c.nombre}</span>
+              <span className="w-[120px] shrink-0 text-[13px] font-semibold text-[#6B675C]"><T>{c.nombre}</T></span>
               {MODELOS.filter((m) => m.categoria === c.id).map((m) => (
                 <button
                   key={m.id}
@@ -165,7 +165,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
                   onClick={() => elegir(m)}
                   className={`rounded-full border px-3 py-1.5 text-[13px] ${m.id === modelo.id ? "border-[#0EA5E9] bg-[#0EA5E9] text-white" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#0EA5E9]"}`}
                 >
-                  {m.nombre}
+                  <T>{m.nombre}</T>
                 </button>
               ))}
             </div>
@@ -174,12 +174,12 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="overflow-hidden rounded-[14px] border border-[#E7E4DC]">
-            <Visor3D>{malla ? <Malla3D tris={mc.vista && enPiezas ? enPiezas.tris : malla.tris} color={0x0ea5e9} colores={mc.vista} /> : <div className="grid h-full place-items-center text-[#6B675C]">{error || "Armando el modelo…"}</div>}</Visor3D>
+            <Visor3D>{malla ? <Malla3D tris={mc.vista && enPiezas ? enPiezas.tris : malla.tris} color={0x0ea5e9} colores={mc.vista} /> : <div className="grid h-full place-items-center text-[#6B675C]"><T>{error || "Armando el modelo…"}</T></div>}</Visor3D>
           </div>
 
           <div className="flex flex-col gap-4 rounded-[14px] border border-[#E7E4DC] bg-white p-4">
             <div>
-              <h2 className="m-0 text-[18px] font-bold text-[#142033]">{modelo.nombre}</h2>
+              <h2 className="m-0 text-[18px] font-bold text-[#142033]"><T>{modelo.nombre}</T></h2>
               <p className="m-0 mt-1 text-[13.5px] text-[#4A4943]"><T>{modelo.texto}</T></p>
             </div>
 
@@ -189,7 +189,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
               return (
                 <label key={p.k} className="flex flex-col gap-1">
                   <span className="flex items-center justify-between text-[13px] text-[#1B1B18]">
-                    {p.nombre}
+                    <T>{p.nombre}</T>
                     <span className="flex items-center gap-1">
                       <input
                         type="number"
@@ -202,7 +202,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
                         // Fondo y letra fijos: dentro del estudio oscuro (.tema-estudio) el texto salía blanco sobre blanco
                         style={{ background: "#1C2431", color: "#E6EBF2", borderColor: "#2B3648" }}
                       />
-                      <span className="w-6 text-[12px] text-[#6B675C]">{p.unidad ?? "mm"}</span>
+                      <span className="w-6 text-[12px] text-[#6B675C]"><T>{p.unidad ?? "mm"}</T></span>
                     </span>
                   </span>
                   <input type="range" min={p.min} max={p.max} step={paso} value={v} onChange={(e) => setValores({ ...valores, [p.k]: Number(e.target.value) })} className="accent-[#0EA5E9]" />
@@ -212,7 +212,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
             {malla && (
               <p className="m-0 rounded-[8px] bg-[#F3F1EA] px-3 py-2 text-[13px] text-[#40403A]">
-                <T>Medidas:</T> <b>{malla.medidas.map(r1).join(" × ")} <T>mm</T></b> · {Math.round(malla.tris.length / 9).toLocaleString("es-MX")} <T>triángulos</T>
+                <T>Medidas:</T> <b><T>{malla.medidas.map(r1).join(" × ")}</T> <T>mm</T></b> · {Math.round(malla.tris.length / 9).toLocaleString("es-MX")} <T>triángulos</T>
               </p>
             )}
 
@@ -236,7 +236,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
                 <TarjetaColores mc={mc} archivo={nombreArchivo.replace(/\.stl$/, "")} titulo={modelo.nombre} />
               </div>
             )}
-            {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]">{aviso}</p>}
+            {aviso && <p className="m-0 text-[13px] text-[#8A1C1C]"><T>{aviso}</T></p>}
             <button type="button" onClick={() => setValores(valoresIniciales(modelo))} className="text-[13px] font-semibold text-[#0284C7] underline">
               <T>Volver a las medidas de fábrica</T>
             </button>

@@ -1,6 +1,7 @@
 // Mensajes: todas las conversaciones del taller con sus clientes por el chat
 // de HETNA (las que empezó el cliente con "Preguntar al taller" y las que el
 // taller empezó desde Mis clientes). Cada una se abre en la página del chat.
+import { T } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import type { RouteConfig } from "@mercurjs/dashboard-sdk"
@@ -11,7 +12,9 @@ const Icono = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export const config: RouteConfig = { label: "Mensajes", icon: Icono }
+export const config: RouteConfig = { label: "Mensajes",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation", icon: Icono }
 
 type Conv = { id: string; cliente: string; producto: string | null; token: string; sin_leer: number; estado: string; fecha: string; ultimo: string; ultimo_de: string }
 
@@ -40,15 +43,15 @@ export default function MensajesPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px 80px" }}>
-      <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" }}>Mensajes</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, color: "#142033", letterSpacing: "-0.02em" }}><T>Mensajes</T></h1>
       <p style={{ color: "#6B675C", fontSize: 14, margin: "4px 0 16px" }}>
-        Tus conversaciones con clientes dentro de HETNA{sinLeer ? ` · ${sinLeer} sin leer` : ""}. Para escribirle a quien ya te compró, entra a <Link to="/mis-clientes" style={{ color: "#C2560A", fontWeight: 700 }}>Mis clientes</Link>.
+        <T>Tus conversaciones con clientes dentro de HETNA</T><T>{sinLeer ? ` · ${sinLeer} sin leer` : ""}</T><T>. Para escribirle a quien ya te compró, entra a</T> <Link to="/mis-clientes" style={{ color: "#C2560A", fontWeight: 700 }}><T>Mis clientes</T></Link>.
       </p>
-      {error && <p style={{ color: "#B3261E" }}>{error}</p>}
-      {!d && !error && <p style={{ color: "#6B675C" }}>Cargando…</p>}
-      {d && !d.disponible && <div style={{ ...vidrio, padding: 20, color: "#6B675C" }}>El chat no está disponible por ahora.</div>}
+      {error && <p style={{ color: "#B3261E" }}><T>{error}</T></p>}
+      {!d && !error && <p style={{ color: "#6B675C" }}><T>Cargando…</T></p>}
+      {d && !d.disponible && <div style={{ ...vidrio, padding: 20, color: "#6B675C" }}><T>El chat no está disponible por ahora.</T></div>}
       {d && d.disponible && d.conversaciones.length === 0 && (
-        <div style={{ ...vidrio, padding: 24, textAlign: "center", color: "#6B675C" }}>Todavía no tienes mensajes. Cuando un cliente te pregunte algo desde tu producto o tu perfil, aparecerá aquí.</div>
+        <div style={{ ...vidrio, padding: 24, textAlign: "center", color: "#6B675C" }}><T>Todavía no tienes mensajes. Cuando un cliente te pregunte algo desde tu producto o tu perfil, aparecerá aquí.</T></div>
       )}
       {d && d.conversaciones.length > 0 && (
         <div style={{ ...vidrio, overflow: "hidden" }}>
@@ -60,16 +63,16 @@ export default function MensajesPage() {
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontWeight: c.sin_leer ? 800 : 700, color: "#142033", fontSize: 14 }}>
-                  {c.cliente}{c.producto ? <span style={{ fontWeight: 500, color: "#6B675C" }}> · {c.producto}</span> : null}
+                  <T>{c.cliente}</T>{c.producto ? <span style={{ fontWeight: 500, color: "#6B675C" }}> · <T>{c.producto}</T></span> : null}
                 </p>
                 <p style={{ margin: "2px 0 0", fontSize: 13, color: "#55544D", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {c.ultimo_de === "taller" ? "Tú: " : ""}{c.ultimo || "—"}
+                  <T>{c.ultimo_de === "taller" ? "Tú: " : ""}</T><T>{c.ultimo || "—"}</T>
                 </p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ margin: 0, fontSize: 12, color: "#9A968B" }}>{hace(c.fecha)}</p>
-                {c.sin_leer > 0 && <span style={{ display: "inline-block", marginTop: 4, background: "#C2560A", color: "#fff", borderRadius: 999, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}>{c.sin_leer}</span>}
-                {c.estado === "cerrada" && <p style={{ margin: 0, fontSize: 11, color: "#9A968B" }}>cerrada</p>}
+                {c.sin_leer > 0 && <span style={{ display: "inline-block", marginTop: 4, background: "#C2560A", color: "#fff", borderRadius: 999, padding: "1px 8px", fontSize: 12, fontWeight: 700 }}><T>{c.sin_leer}</T></span>}
+                {c.estado === "cerrada" && <p style={{ margin: 0, fontSize: 11, color: "#9A968B" }}><T>cerrada</T></p>}
               </div>
             </a>
           ))}

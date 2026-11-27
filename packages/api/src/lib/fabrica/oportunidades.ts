@@ -13,7 +13,7 @@
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { STORE_URL, T_PROPUESTA, T_SOLICITUD, ligaTrabajo, nuevoId } from "../licitacion"
-import { privacidadDe, trabajoPublicoPrivado } from "../licitacion-privacidad"
+import { materialClaro, privacidadDe, trabajoPublicoPrivado } from "../licitacion-privacidad"
 import { T_POST, crearPublicacion, ligaPara, urlCorta } from "../social-hub"
 import { fondoDe, musicaAlAzar, subir, temaDe } from "./index"
 import { T_PROMO, cuandoPromo, vozPara } from "./promociones"
@@ -79,7 +79,7 @@ export async function fichaSolicitud(knex: any, solicitudId: string) {
   datos.push(["Cotizaciones", n ? `${n} recibida${n === 1 ? "" : "s"}` : "sé el primero"])
   return {
     cinta: { texto: `${pub.tipo === "suministro" ? "Se busca proveedor" : "Se busca taller CNC"}${pub.estado_mx || pub.ciudad ? ` en ${pub.estado_mx || pub.ciudad}` : ""}` },
-    titulo: `Cotízale a este cliente: ${t.servicio ? [t.servicio, t.material && `en ${t.material}`].filter(Boolean).join(" ") : t.material ? `trabajo en ${t.material}` : "trabajo de fabricación CNC"}`,
+    titulo: `Cotízale a este cliente: ${t.servicio ? [t.servicio, materialClaro(t.material) && `en ${materialClaro(t.material)}`].filter(Boolean).join(" ") : materialClaro(t.material) ? `trabajo en ${materialClaro(t.material)}` : "trabajo de fabricación CNC"}`,
     datos: datos.map(([k, v]) => [k, String(v).slice(0, 60)]) as [string, string][],
     sub: `Datos al ${hoyTexto()}`,
     cta: "Regístrate gratis y cotiza",

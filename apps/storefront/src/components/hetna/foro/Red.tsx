@@ -56,7 +56,7 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
     <div className="flex flex-col gap-5">
       {grupos.map((g) => (
         <div key={g.tipo}>
-          <h3 className="m-0 mb-2 text-[13px] font-bold uppercase tracking-wide text-[#9A978C]">{TIPOS_TRAYECTORIA[g.tipo]}</h3>
+          <h3 className="m-0 mb-2 text-[13px] font-bold uppercase tracking-wide text-[#9A978C]"><TS>{TIPOS_TRAYECTORIA[g.tipo]}</TS></h3>
           <ol className="m-0 flex list-none flex-col gap-3 border-l-2 border-[#E7E4DC] p-0 pl-4">
             {g.pasos.map((p, i) => (
               <li key={i} className="relative">
@@ -71,9 +71,9 @@ export function Trayectoria({ pasos }: { pasos: Paso[] }) {
                 </strong>
                 {(p.lugar || p.desde || p.hasta) && (
                   <span className="block text-[13.5px] text-[#6B6A63]">
-                    {p.lugar}
-                    {p.lugar && (p.desde || p.hasta) ? " · " : ""}
-                    {[p.desde, p.hasta].filter(Boolean).join(" – ")}
+                    <TS>{p.lugar}</TS>
+                    <TS>{p.lugar && (p.desde || p.hasta) ? " · " : ""}</TS>
+                    <TS>{[p.desde, p.hasta].filter(Boolean).join(" – ")}</TS>
                   </span>
                 )}
                 {p.detalle && <p className="m-0 mt-1 whitespace-pre-line text-[14px] leading-relaxed text-[#44433D]"><TS>{p.detalle}</TS></p>}
@@ -105,10 +105,10 @@ export function ListaRecomendaciones({ lista, propio }: { lista: Recomendacion[]
             <Avatar a={r.autor} size={36} />
             <div className="min-w-0">
               <LocalizedClientLink href={urlPerfil(r.autor.usuario)} className="block truncate text-[14.5px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-                {r.autor.nombre}
+                <TS>{r.autor.nombre}</TS>
               </LocalizedClientLink>
               <span className="text-[12.5px] text-[#6B6A63]">
-                {RELACIONES[r.relacion]} · {haceCuanto(r.creado)}
+                <TS>{RELACIONES[r.relacion]}</TS> · {haceCuanto(r.creado)}
               </span>
             </div>
           </div>
@@ -143,11 +143,11 @@ export function TarjetaPersona({
       <Avatar a={a} size={42} />
       <div className="min-w-0 flex-1">
         <LocalizedClientLink href={urlPerfil(a.usuario)} className="flex items-center gap-1 text-[14.5px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-          <span className="truncate">{a.nombre}</span>
+          <span className="truncate"><TS>{a.nombre}</TS></span>
           {a.verificado && <Palomita />}
         </LocalizedClientLink>
         <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-[#6B6A63]">
-          {a.taller ? <InsigniaTaller a={a} /> : <span>{TIPOS_CUENTA[a.tipo]?.nombre}</span>}
+          {a.taller ? <InsigniaTaller a={a} /> : <span><TS>{TIPOS_CUENTA[a.tipo]?.nombre}</TS></span>}
           {detalle && <span className="truncate"><TS>{detalle}</TS></span>}
         </div>
       </div>
@@ -165,10 +165,10 @@ export function TarjetaTallerRed({ t, sesion, siguiendo = false }: { t: Taller; 
       </span>
       <div className="min-w-0 flex-1">
         <LocalizedClientLink href={`/talleres/${t.handle}`} className="flex items-center gap-1 text-[14.5px] font-semibold text-[#1B1B18] hover:text-[#B34D07]">
-          <span className="truncate">{t.nombre}</span>
+          <span className="truncate"><TS>{t.nombre}</TS></span>
           {t.verificado && <span className="text-[12px] text-[#1E7B3A]" title="Taller verificado">✓</span>}
         </LocalizedClientLink>
-        <span className="block truncate text-[12.5px] text-[#6B6A63]">{donde || t.perfil.servicios.slice(0, 2).join(" · ") || "Taller CNC"}</span>
+        <span className="block truncate text-[12.5px] text-[#6B6A63]"><TS>{donde || t.perfil.servicios.slice(0, 2).join(" · ") || "Taller CNC"}</TS></span>
       </div>
       {sesion && <BotonSeguir objetivo={objetivoTaller(t.id)} siguiendo={siguiendo} seguidores={0} conCuenta={false} chico />}
     </div>
@@ -191,7 +191,7 @@ export function ProductosRed({ productos }: { productos: ProductoRed[] }) {
             <span className="block p-2.5">
               <span className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-[#1B1B18]"><TS>{p.titulo}</TS></span>
               {p.precio !== null && <span className="mt-1 block text-[13.5px] font-bold text-[#C2560A]">{pesos.format(p.precio)}</span>}
-              <span className="mt-0.5 block truncate text-[12px] text-[#6B6A63]">{p.taller.nombre}</span>
+              <span className="mt-0.5 block truncate text-[12px] text-[#6B6A63]"><TS>{p.taller.nombre}</TS></span>
             </span>
           </LocalizedClientLink>
         ))}

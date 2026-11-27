@@ -147,7 +147,7 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
         }
       >
         <label className="flex cursor-pointer items-center justify-center rounded-[10px] border-2 border-dashed border-[#2A3546] px-3 py-4 text-center text-[13px] text-[#C9D2E0] hover:border-[#C2560A]">
-          {subida ? "Cambiar imagen" : "Subir imagen (JPG, PNG o WEBP)"}
+          <T>{subida ? "Cambiar imagen" : "Subir imagen (JPG, PNG o WEBP)"}</T>
           <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => abrir(e.target.files?.[0])} />
         </label>
         {error && <p className="mt-2 text-[12.5px] text-[#F28A3C]">{error}</p>}
@@ -166,12 +166,12 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
               ]}
             />
             <p className="mt-1 text-[12px] text-[#8A97AB]">
-              {altura === "ia" ? "Para caras, mascotas y objetos: la IA calcula qué está cerca y qué lejos (la foto se procesa en el servidor de HETNA y no se guarda)." : "Lo claro sube y lo oscuro baja."}
+              <T>{altura === "ia" ? "Para caras, mascotas y objetos: la IA calcula qué está cerca y qué lejos (la foto se procesa en el servidor de HETNA y no se guarda)." : "Lo claro sube y lo oscuro baja."}</T>
             </p>
             {altura === "ia" && estadoIA === "cargando" && <p className="text-[12.5px] text-[#F28A3C]"><T>La IA está calculando la profundidad… (unos segundos)</T></p>}
             {altura === "ia" && estadoIA === "error" && (
               <p className="text-[12.5px] text-[#F28A3C]">
-                {errorIA}{" "}
+                {errorIA}<T>{" "}</T>
                 <button type="button" className="underline" onClick={() => setIntentoIA((n) => n + 1)}>
                   <T>Reintentar</T>
                 </button>
@@ -189,7 +189,7 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
           <CampoNum etiqueta="Relieve" valor={relieve} cambiar={setRelieve} />
         </div>
         <p className="mt-1 text-[12px] text-[#8A97AB]">
-          {banca ? "El relieve es cuánto baja el asiento en lo más oscuro de la imagen." : "El relieve es cuánto sale lo más claro sobre el fondo fijo."}
+          <T>{banca ? "El relieve es cuánto baja el asiento en lo más oscuro de la imagen." : "El relieve es cuánto sale lo más claro sobre el fondo fijo."}</T>
         </p>
       </Seccion>
       <Seccion titulo="4. Material y corte" nota="Fresa 0 = láser. Con fresa, las ranuras llevan alivio en las esquinas para que entren.">
@@ -292,11 +292,11 @@ export function GeneradorCostillas({ cabecera }: { cabecera?: React.ReactNode })
       datos={datos}
       vacio={
         <p className="text-center text-[14px] text-[#8A97AB]">
-          {subida && altura === "ia"
+          <T>{subida && altura === "ia"
             ? estadoIA === "error"
               ? "No se pudo calcular la profundidad con IA: reintenta o usa «Por brillo»."
               : "La IA está calculando la profundidad…"
-            : `Sube una imagen y aquí aparece tu ${banca ? "banca" : "pared"} de costillas, en 3D y lista para cortar.`}
+            : `Sube una imagen y aquí aparece tu ${banca ? "banca" : "pared"} de costillas, en 3D y lista para cortar.`}</T>
         </p>
       }
     />

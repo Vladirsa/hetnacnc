@@ -2,6 +2,7 @@
 
 // Etiquetas en braille y etiquetas para cajas organizadoras (módulo "Llaveros y
 // placas" del 3D Studio). El motor está en lib/generador/placas3d.ts.
+import { T } from "@/components/hetna/i18n/Idioma"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -72,7 +73,7 @@ export function GeneradorPlacas3D({ modo, cabecera }: { modo: ModoPlaca; cabecer
     <div className="flex flex-col gap-4">
       {cabecera}
       <label className="flex flex-col gap-1.5">
-        <Etiqueta>{braille ? "Texto (un renglón por línea, hasta 6)" : `Etiquetas (una por línea, hasta ${MAX_ETIQUETAS})`}</Etiqueta>
+        <Etiqueta><T>{braille ? "Texto (un renglón por línea, hasta 6)" : `Etiquetas (una por línea, hasta ${MAX_ETIQUETAS})`}</T></Etiqueta>
         <textarea value={texto} onChange={(e) => setTexto(e.target.value.slice(0, 2000))} rows={braille ? 3 : 5} className={campo} />
       </label>
       {braille ? (

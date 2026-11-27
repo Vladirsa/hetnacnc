@@ -77,11 +77,11 @@ export function BotonSeguir({
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
         <button type="button" onClick={clic} disabled={pendiente} aria-pressed={estado.siguiendo} className={`${BTN} ${tam} ${color}`}>
-          {estado.siguiendo ? "✓ Siguiendo" : `+ ${etiqueta}`}
+          <T>{estado.siguiendo ? "✓ Siguiendo" : `+ ${etiqueta}`}</T>
         </button>
         {conCuenta && (
           <span className={`text-[13px] ${oscuro ? "text-white/80" : "text-[#6B6A63]"}`}>
-            {estado.seguidores === 1 ? "1 seguidor" : `${estado.seguidores} seguidores`}
+            <T>{estado.seguidores === 1 ? "1 seguidor" : `${estado.seguidores} seguidores`}</T>
           </span>
         )}
       </div>
@@ -124,7 +124,7 @@ export function Aptitudes({ perfilId, avales, puedeAvalar }: { perfilId: string;
                   a.yo ? "bg-[#16794F] text-white" : "bg-white text-[#16794F] ring-1 ring-[#BFE0CC] hover:bg-[#EAF6EF]"
                 }`}
               >
-                {a.yo ? "✓ Avalado" : "+ Avalar"}
+                <T>{a.yo ? "✓ Avalado" : "+ Avalar"}</T>
               </button>
             ) : (
               <span className="w-1" />
@@ -170,7 +170,7 @@ export function FormRecomendar({
         onClick={() => setAbierto(true)}
         className={`${BTN} self-start border border-[#E0DCD2] bg-white px-4 py-2 text-[14px] text-[#44433D] hover:border-[#C2560A]`}
       >
-        {previa ? "Editar mi recomendación" : `Recomendar a ${nombre}`}
+        <T>{previa ? "Editar mi recomendación" : `Recomendar a ${nombre}`}</T>
       </button>
     )
   const enviar = (e: React.FormEvent) => {
@@ -209,7 +209,7 @@ export function FormRecomendar({
       {error && <PideCuenta error={error} />}
       <div className="flex gap-2">
         <button type="submit" disabled={pendiente} className={`${BTN} bg-[#C2560A] px-4 py-2 text-[14px] text-white hover:bg-[#A84A08]`}>
-          {pendiente ? "Enviando…" : "Enviar recomendación"}
+          <T>{pendiente ? "Enviando…" : "Enviar recomendación"}</T>
         </button>
         <button type="button" onClick={() => setAbierto(false)} className="px-3 text-[14px] font-semibold text-[#6B6A63]">
           <T>Cancelar</T>
@@ -293,7 +293,7 @@ export function Postularme({ temaId, yaPostulado }: { temaId: number; yaPostulad
       {error && <PideCuenta error={error} />}
       <div className="flex gap-2">
         <button type="submit" disabled={pendiente} className={`${BTN} bg-[#3B46A6] px-4 py-2 text-[14px] text-white`}>
-          {pendiente ? "Enviando…" : "Enviar postulación"}
+          <T>{pendiente ? "Enviando…" : "Enviar postulación"}</T>
         </button>
         <button type="button" onClick={() => setAbierto(false)} className="px-3 text-[14px] font-semibold text-[#6B6A63]">
           <T>Cancelar</T>
@@ -536,7 +536,7 @@ export function FormRed({ inicial }: { inicial: { aptitudes: string[]; trayector
       {error && <PideCuenta error={error} onCerrar={() => setError("")} />}
       <div className="flex items-center gap-3">
         <button type="button" onClick={guardar} disabled={pendiente} className={`${BTN} rounded-[10px] bg-[#C2560A] px-5 py-3 text-[14.5px] text-white hover:bg-[#A84A08]`}>
-          {pendiente ? "Guardando…" : "Guardar currículum"}
+          <T>{pendiente ? "Guardando…" : "Guardar currículum"}</T>
         </button>
         {guardado && <span className="text-[14px] font-semibold text-[#16794F]"><T>✓ Guardado</T></span>}
       </div>

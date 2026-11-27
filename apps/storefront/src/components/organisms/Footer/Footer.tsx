@@ -106,7 +106,7 @@ export function Footer() {
         <span className="text-white font-semibold text-[13.5px]"><TS>Atención a clientes</TS></span>
         {EMPRESA.correo ? (
           <a href={`mailto:${EMPRESA.correo}`} className="hover:text-white">
-            {EMPRESA.correo}
+            <TS>{EMPRESA.correo}</TS>
           </a>
         ) : null}
         <a
@@ -115,9 +115,9 @@ export function Footer() {
           rel="noopener noreferrer"
           className="hover:text-white"
         >
-          <TS>WhatsApp</TS> {EMPRESA.whatsappVisible}
+          <TS>WhatsApp</TS> <TS>{EMPRESA.whatsappVisible}</TS>
         </a>
-        <span>{EMPRESA.horario}</span>
+        <span><TS>{EMPRESA.horario}</TS></span>
       </address>
       <div
         className="pt-5 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center"

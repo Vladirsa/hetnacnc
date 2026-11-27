@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { activandoDesdeCorreo, afiliar } from "../lib/afiliacion"
 import { sendEmail } from "../lib/resend"
+import { guardarIdiomaCorreo } from "../lib/idioma-correo"
 import { welcomeEmailHtml } from "../lib/email-templates"
 import { mandarCorreoVerificacion, requiereVerificacion } from "../lib/verificar-correo"
 
@@ -26,6 +27,11 @@ export default async function customerCreatedWelcomeEmail({
     // cuenta: no les mandamos correo de bienvenida, solo a quien se registró.
     if (!customer?.email || !customer.has_account) {
       return
+    }
+
+    // Se registró desde la tienda en inglés: sus correos (empezando por éste) en inglés
+    if ((customer.metadata as any)?.idioma === "en") {
+      await guardarIdiomaCorreo(customer.email, "en").catch((e) => logger.warn(`[idioma-correo] ${customer.email}: ${(e as Error).message}`))
     }
 
     // Número de afiliación para toda cuenta nueva (lib/afiliacion.ts)

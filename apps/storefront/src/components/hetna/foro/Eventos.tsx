@@ -44,8 +44,8 @@ export function FechaCuadro({ inicio }: { inicio: string }) {
   const p = partes(inicio)
   return (
     <span className="flex h-[58px] w-[54px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-[#E7E4DC] bg-white leading-none">
-      <span className="text-[11px] font-bold uppercase text-[#C2560A]">{MESES[p.m - 1]}</span>
-      <span className="mt-1 text-[22px] font-extrabold text-[#142033]">{p.dia}</span>
+      <span className="text-[11px] font-bold uppercase text-[#C2560A]"><TS>{MESES[p.m - 1]}</TS></span>
+      <span className="mt-1 text-[22px] font-extrabold text-[#142033]"><TS>{p.dia}</TS></span>
     </span>
   )
 }
@@ -59,8 +59,8 @@ export function TarjetaEvento({ t }: { t: TemaResumen }) {
         <span className="block text-[15.5px] font-bold leading-snug text-[#1B1B18]"><TS>{t.titulo}</TS></span>
         <span className="mt-0.5 block text-[13.5px] text-[#44433D]">{fechaEvento(t.evento.inicio)}</span>
         <span className="block truncate text-[13px] text-[#6B6A63]">
-          {t.evento.modalidad === "en_linea" ? "🖥 En línea · " : "📍 "}
-          {t.evento.lugar} <TS>· por</TS> {t.autor.nombre}
+          <TS>{t.evento.modalidad === "en_linea" ? "🖥 En línea · " : "📍 "}</TS>
+          <TS>{t.evento.lugar}</TS> <TS>· por</TS> <TS>{t.autor.nombre}</TS>
         </span>
       </span>
     </LocalizedClientLink>
@@ -75,11 +75,11 @@ export function FichaEvento({ t, e }: { t: { titulo: string; seccion: { slug: st
       <div className="min-w-0 flex-1 text-[14.5px] text-[#1B1B18]">
         <div className="font-bold">
           {fechaEvento(e.inicio)}
-          {e.fin ? ` — ${e.fin.split("T")[0] === e.inicio.split("T")[0] ? `${e.fin.split("T")[1]} h` : fechaEvento(e.fin)}` : ""}
+          <TS>{e.fin ? ` — ${e.fin.split("T")[0] === e.inicio.split("T")[0] ? `${e.fin.split("T")[1]} h` : fechaEvento(e.fin)}` : ""}</TS>
         </div>
         <div className="text-[#44433D]">
-          {e.modalidad === "en_linea" ? "🖥 En línea: " : "📍 "}
-          {e.lugar}
+          <TS>{e.modalidad === "en_linea" ? "🖥 En línea: " : "📍 "}</TS>
+          <TS>{e.lugar}</TS>
         </div>
         {e.liga && (
           <a href={e.liga} target="_blank" rel="nofollow ugc noopener noreferrer" className="text-[13.5px] font-semibold text-[#14683F] underline">

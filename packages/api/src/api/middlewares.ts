@@ -126,6 +126,13 @@ export default defineMiddlewares({
             matcher: "/store/simulador/certificado",
             middlewares: [authenticate("customer", ["session", "bearer"])],
         },
+        // Idioma de los correos del cliente (lib/idioma-correo.ts)
+        {
+            method: ["POST"],
+            matcher: "/store/hetna-idioma",
+            bodyParser: { sizeLimit: "2kb" },
+            middlewares: [authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+        },
         {
             method: ["GET"],
             matcher: "/store/mi-membresia",

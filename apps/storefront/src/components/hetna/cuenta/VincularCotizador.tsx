@@ -73,7 +73,7 @@ export function VincularCotizador() {
       {estado.vinculado ? (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            <T>Tu cuenta está vinculada con</T> <b className="text-[#1B1B18]">{estado.taller}</b> <T>· plan</T>{" "}
+            <T>Tu cuenta está vinculada con</T> <b className="text-[#1B1B18]">{estado.taller}</b> <T>· plan</T><T>{" "}</T>
             <b className="text-[#1B1B18]">{NOMBRE_PLAN[estado.plan] || estado.plan}</b><T>. El botón Cotizador entra directo, sin
             volver a escribir tu contraseña.</T>
           </p>
@@ -102,7 +102,7 @@ export function VincularCotizador() {
           </p>
           <p className="m-0 mt-3 font-mono text-[34px] font-extrabold tracking-[0.25em] text-[#142033]">{codigo.codigo}</p>
           <p className="m-0 mt-1 text-[12.5px] text-[#6B6A63]">
-            <T>Vence a las</T>{" "}
+            <T>Vence a las</T><T>{" "}</T>
             {new Date(codigo.expira).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit" })}<T>. Esta página se actualiza sola
             cuando lo escribas.</T>
           </p>
@@ -110,7 +110,7 @@ export function VincularCotizador() {
       ) : (
         <>
           <p className="m-0 mt-1 text-[14px] text-[#6B6A63]">
-            <T>Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con</T> {LIMITE_COTIZACIONES_GRATIS}{" "}
+            <T>Usa el Cotizador con esta misma cuenta, sin otra contraseña: 14 días con todo abierto y después gratis con</T> {LIMITE_COTIZACIONES_GRATIS}<T>{" "}</T>
             <T>cotizaciones al mes. Si ya tienes un taller en el Cotizador con este correo, se une solo.</T>
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -126,7 +126,7 @@ export function VincularCotizador() {
               disabled={trabajando}
               className="rounded-[10px] border border-[#E7E4DC] px-4 py-2 text-[14px] font-semibold text-[#1B1B18] hover:border-[#C2560A] disabled:opacity-60"
             >
-              {trabajando ? "Generando…" : "Mi taller usa otro correo"}
+              <T>{trabajando ? "Generando…" : "Mi taller usa otro correo"}</T>
             </button>
           </div>
           {error && <p className="m-0 mt-2 text-[13px] font-semibold text-[#9B3225]">{error}</p>}

@@ -75,7 +75,7 @@ const CampoInput = ({ f, valor, cambiar }: { f: Campo; valor: unknown; cambiar: 
             placeholder={f.req ? "necesario" : "opcional"}
             className="w-full min-w-0 bg-transparent px-3 py-2.5 font-mono text-[16px] text-[#142033] outline-none placeholder:font-sans placeholder:text-[#C5C2B8]"
           />
-          {f.unidad && <span className="pr-3 text-[13px] text-[#9A978C] whitespace-nowrap">{f.unidad}</span>}
+          {f.unidad && <span className="pr-3 text-[13px] text-[#9A978C] whitespace-nowrap"><T>{f.unidad}</T></span>}
         </span>
       )}
       {f.ayuda && <span className="text-[12px] text-[#6B6A63]"><T>{f.ayuda}</T></span>}
@@ -427,7 +427,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               <span className={`grid h-9 w-9 place-items-center rounded-[10px] ${activo ? "bg-[#C2560A] text-white" : "bg-white/10 text-white"}`}>
                 <IconoProceso id={p.icono} />
               </span>
-              <span className={`text-[13px] font-bold leading-tight ${activo ? "text-[#142033]" : "text-white"}`}>{p.corto}</span>
+              <span className={`text-[13px] font-bold leading-tight ${activo ? "text-[#142033]" : "text-white"}`}><T>{p.corto}</T></span>
             </button>
           )
         })}
@@ -437,14 +437,14 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
         {/* formulario */}
         <section className="flex flex-col gap-4 rounded-[16px] border border-[#E7E4DC] bg-white p-4 shadow-[0_1px_2px_rgba(20,32,51,0.04)] lg:p-5">
           <div>
-            <h2 className="m-0 font-display text-[18px] font-bold text-[#142033]">{proceso.nombre}</h2>
+            <h2 className="m-0 font-display text-[18px] font-bold text-[#142033]"><T>{proceso.nombre}</T></h2>
             <p className="m-0 mt-0.5 text-[13px] leading-snug text-[#6B6A63]"><T>{proceso.texto}</T></p>
           </div>
           {proceso.modos.length > 1 && (
             <div className="grid grid-cols-2 gap-1 rounded-[12px] bg-[#F1EFE8] p-1">
               {proceso.modos.map((m) => (
                 <button key={m.id} type="button" onClick={() => setModoId(m.id)} className={`rounded-[9px] px-2 py-2 text-[13px] font-semibold transition ${m.id === calc.id ? "bg-[#142033] text-white shadow-sm" : "text-[#6B6A63] hover:text-[#142033]"}`}>
-                  {m.nombre}
+                  <T>{m.nombre}</T>
                 </button>
               ))}
             </div>
@@ -452,7 +452,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
 
           {tieneMaquina && proceso.presets.length > 0 && (
             <div className="flex flex-col gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{proceso.presetEtiqueta}<T>: empieza con una típica</T></span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]"><T>{proceso.presetEtiqueta}</T><T>: empieza con una típica</T></span>
               <div className="flex flex-wrap gap-1.5">
                 {proceso.presets.map((p) => {
                   const puesto = Object.entries(p.valores).every(([k, v]) => String(e[k] ?? "") === String(v))
@@ -464,7 +464,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       title={p.nombre}
                       className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ${puesto ? "border-[#C2560A] bg-[#FFF3EA] text-[#A84A08]" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#C2560A]"}`}
                     >
-                      {p.nombre.length > 34 ? p.nombre.slice(0, 32) + "…" : p.nombre}
+                      <T>{p.nombre.length > 34 ? p.nombre.slice(0, 32) + "…" : p.nombre}</T>
                     </button>
                   )
                 })}
@@ -487,7 +487,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       </button>
                     )}
                     <button type="button" onClick={guardarMaquina} className="rounded-full border px-2.5 py-1 text-[12px] font-semibold" style={{ borderColor: NARANJA, color: NARANJA }}>
-                      {perfilGuardado ? "Mi máquina ✓ guardada" : "Guardar como mi máquina"}
+                      <T>{perfilGuardado ? "Mi máquina ✓ guardada" : "Guardar como mi máquina"}</T>
                     </button>
                   </span>
                 )}
@@ -517,7 +517,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               )}
               {R.faltan.length > 0 && (
                 <div className="rounded-[12px] border border-[#F2C98F] bg-[#FFF6E8] px-4 py-3 text-[14px] text-[#5A3A12]">
-                  <strong><T>Falta:</T></strong> {R.faltan.join(", ")}.
+                  <strong><T>Falta:</T></strong> <T>{R.faltan.join(", ")}</T>.
                 </div>
               )}
               {principal && (
@@ -529,7 +529,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                     </div>
                     <div className="flex gap-2">
                       <button type="button" onClick={copiar} className="rounded-[10px] border border-white/20 bg-white/10 px-3 py-2 text-[13px] font-semibold text-white hover:bg-white/20">
-                        {copiado ? "Copiado ✓" : "Copiar"}
+                        <T>{copiado ? "Copiado ✓" : "Copiar"}</T>
                       </button>
                       <a href={whatsapp} target="_blank" rel="noopener noreferrer" title="Manda estos parámetros a tu operador, a un compañero o a un cliente" className="inline-flex items-center gap-1.5 rounded-[10px] bg-[#19B374] px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#15A067]">
                         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 3L8.5 11.5M17 3l-5 14-3.5-5.5L3 8l14-5z" /></svg>
@@ -542,7 +542,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       {grandes.map((f) => (
                         <div key={f.etiqueta} className="min-w-0 bg-[#142033] px-5 py-4">
                           <dt className="text-[12px] font-semibold text-white/60"><T>{f.etiqueta}</T></dt>
-                          <dd className={`m-0 mt-1 break-words font-bold leading-none tracking-tight text-white ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono text-[26px] sm:text-[30px]" : "text-[19px] leading-tight sm:text-[21px]"}`}>{f.valor}</dd>
+                          <dd className={`m-0 mt-1 break-words font-bold leading-none tracking-tight text-white ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono text-[26px] sm:text-[30px]" : "text-[19px] leading-tight sm:text-[21px]"}`}><T>{f.valor}</T></dd>
                           {f.nota && <dd className="m-0 mt-1.5 text-[11.5px] leading-snug text-white/55"><T>{f.nota}</T></dd>}
                         </div>
                       ))}
@@ -558,13 +558,13 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                 if (!filas.length) return null
                 return (
                   <div key={b.titulo} className="rounded-[16px] border border-[#E7E4DC] bg-white p-4">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]">{n === 0 ? "Detalle del corte" : b.titulo}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9A978C]"><T>{n === 0 ? "Detalle del corte" : b.titulo}</T></span>
                     <dl className="m-0 mt-2 grid gap-x-6 sm:grid-cols-2">
                       {filas.map((f) => (
                         <div key={f.etiqueta} className={`flex flex-col gap-1 border-t border-[#F0EEE7] py-2.5 ${f.destacado ? "sm:col-span-2" : ""}`}>
                           <div className="flex items-baseline justify-between gap-3">
                             <dt className="text-[13px] text-[#6B6A63]"><T>{f.etiqueta}</T></dt>
-                            <dd className={`m-0 text-right font-bold text-[#142033] ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono" : ""} ${f.destacado ? "text-[20px]" : "text-[15px]"}`}>{f.valor}</dd>
+                            <dd className={`m-0 text-right font-bold text-[#142033] ${/^[≈<>\d$-]/.test(f.valor) ? "font-mono" : ""} ${f.destacado ? "text-[20px]" : "text-[15px]"}`}><T>{f.valor}</T></dd>
                           </div>
                           {f.medidor && <MedidorBarra m={f.medidor} />}
                           {f.nota && <dd className="m-0 text-[11.5px] leading-snug text-[#9A978C]"><T>{f.nota}</T></dd>}
@@ -582,7 +582,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                   </span>
                   <ul className="m-0 mt-1.5 flex flex-col gap-1.5 pl-5 text-[13.5px] leading-snug text-[#5A3A12]">
                     {R.avisos.map((a) => (
-                      <li key={a}>{a}</li>
+                      <li key={a}><T>{a}</T></li>
                     ))}
                   </ul>
                 </div>
@@ -614,7 +614,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                       className="min-w-0 flex-1 rounded-[10px] border border-[#DEDACF] bg-[#FBFAF7] px-3 py-2.5 text-[15px] text-[#142033] outline-none focus:border-[#C2560A] focus:bg-white"
                     />
                     <button type="submit" disabled={envio.estado === "enviando"} className="rounded-[10px] bg-[#142033] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#1E2E47] disabled:opacity-60">
-                      {envio.estado === "enviando" ? "Enviando…" : "Enviar"}
+                      <T>{envio.estado === "enviando" ? "Enviando…" : "Enviar"}</T>
                     </button>
                   </div>
                   <label className="flex items-start gap-2 text-[12.5px] text-[#6B6A63]">
@@ -635,7 +635,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
                     {R.consejos.map((c) => (
                       <li key={c} className="flex gap-2">
                         <span className="mt-[3px] h-4 w-4 flex-none rounded-full bg-[#E6F4EC] text-center text-[11px] font-bold leading-4 text-[#16794F]">✓</span>
-                        <span>{c}</span>
+                        <span><T>{c}</T></span>
                       </li>
                     ))}
                   </ul>
@@ -643,7 +643,7 @@ export const CalculadoraCNC = ({ procesoInicial }: { procesoInicial?: string }) 
               )}
               {R.supuestos.length > 0 && (
                 <p className="m-0 text-[12px] leading-snug text-[#6B6A63]">
-                  <strong><T>Cómo se calculó:</T></strong> {R.supuestos.join(" ")}
+                  <strong><T>Cómo se calculó:</T></strong> <T>{R.supuestos.join(" ")}</T>
                 </p>
               )}
               <p className="m-0 text-[12px] leading-snug text-[#6B6A63]"><T>Son puntos de partida calculados con rangos de fabricantes y los límites de tu máquina. Prueba siempre primero en un retazo del mismo material.</T></p>

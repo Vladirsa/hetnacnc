@@ -74,7 +74,7 @@ export default async function BlogForo({ searchParams }: Props) {
                   href={`/foro-cnc/blog?seccion=${s.slug}`}
                   className={`rounded-full px-3.5 py-1.5 text-[13.5px] font-semibold ${seccion === s.slug ? "bg-[#142033] text-white" : "bg-white border border-[#E0DCD2] text-[#44433D]"}`}
                 >
-                  {s.nombre}
+                  <TS>{s.nombre}</TS>
                 </LocalizedClientLink>
               ))}
           </nav>
@@ -89,7 +89,7 @@ export default async function BlogForo({ searchParams }: Props) {
         ) : (
           <div className="bg-white border border-dashed border-[#D9D4C8] rounded-[12px] p-8 text-center">
             <p className="m-0 text-[15px] text-[#44433D]">
-              {seccion ? `Todavía no hay guías de ${nombre(seccion)}.` : "Pronto publicamos las primeras guías."} <TS>Mientras, pregunta en el foro: la
+              <TS>{seccion ? `Todavía no hay guías de ${nombre(seccion)}.` : "Pronto publicamos las primeras guías."}</TS> <TS>Mientras, pregunta en el foro: la
               comunidad te ayuda.</TS>
             </p>
           </div>

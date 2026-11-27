@@ -14,7 +14,7 @@ export default function SigueHetna({ className = "" }: { className?: string }) {
           rel="noopener noreferrer"
           className="rounded-full border border-[#E7E4DC] bg-white px-3 py-1.5 text-xs font-semibold text-[#142033] hover:border-[#C2560A] hover:text-[#C2560A]"
         >
-          {r.nombre}
+          <TS>{r.nombre}</TS>
         </a>
       ))}
     </div>

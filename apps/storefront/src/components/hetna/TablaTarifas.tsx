@@ -39,7 +39,7 @@ export async function TablaTarifas() {
               {g.filas.map((f) => (
                 <tr key={f.concepto} className="border-t border-[#E7E4DC] align-top">
                   <td className="px-4 py-2.5 font-medium text-[#142033]">
-                    {f.concepto}
+                    <TS>{f.concepto}</TS>
                     {f.nota && <span className="mt-0.5 block text-[12.5px] font-normal text-[#6B6A63]"><TS>{f.nota}</TS></span>}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-right font-semibold text-[#1B1B18]">{f.precio}</td>

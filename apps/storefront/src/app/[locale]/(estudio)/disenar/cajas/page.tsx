@@ -39,7 +39,7 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
         <img src={rutaArchivo(locale, "miniatura", g.id)} alt={`${g.nombre}: caja para corte láser y router CNC`} loading="lazy" className="h-full w-full object-cover mix-blend-luminosity opacity-90 group-hover:mix-blend-normal group-hover:opacity-100" />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3.5">
-        <span className="text-[15px] font-bold text-[#E6EBF2] group-hover:text-[#F28A3C]">{g.nombre}</span>
+        <span className="text-[15px] font-bold text-[#E6EBF2] group-hover:text-[#F28A3C]"><TS>{g.nombre}</TS></span>
         <span className="flex-1 text-[12.5px] leading-snug text-[#8A97AB]"><TS>{g.descripcion}</TS></span>
         <span className="mt-2 self-start rounded-full bg-[#12301F] px-2 py-0.5 text-[11px] font-bold text-[#9BE3B8]"><TS>Gratis</TS></span>
       </div>
@@ -67,7 +67,7 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
           <span className="inline-block rounded-full bg-[#FF6A1A] px-3 py-1 text-[11.5px] font-bold uppercase tracking-wide text-white"><TS>Gratis · sin instalar · sin cuenta</TS></span>
           <h1 className="mt-2 text-[28px] lg:text-[36px] font-bold leading-[1.08] text-white"><TS>Cajas de madera y acrílico para láser y router</TS></h1>
           <p className="mt-2 max-w-[720px] text-[15.5px] leading-relaxed text-[#C9D2E0]">
-            {generadores.length > 0 ? `${generadores.length} diseños` : "Más de 170 diseños"} <TS>que se ajustan a tus medidas y al espesor de tu material: pones los números, ves la pieza y
+            <TS>{generadores.length > 0 ? `${generadores.length} diseños` : "Más de 170 diseños"}</TS> <TS>que se ajustan a tus medidas y al espesor de tu material: pones los números, ves la pieza y
             descargas DXF, SVG, PDF o el archivo para LightBurn. Si no tienes máquina, un taller cercano te la corta.</TS>
           </p>
         </div>
@@ -84,7 +84,7 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
             {grupos.map((g) => (
               <a key={g.id} href={`#${g.id}`} className="inline-flex items-center gap-2 rounded-full border-2 border-[#1F2937] bg-[#121923] px-3.5 py-1.5 text-[13px] font-semibold text-[#E6EBF2] hover:border-[#FF6A1A]">
                 <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: TEXTO_GRUPOS[g.id]?.color || "#FF6A1A" }} />
-                {g.nombre} <span className="font-normal text-[#8A97AB]">{porGrupo.get(g.id)?.length}</span>
+                <TS>{g.nombre}</TS> <span className="font-normal text-[#8A97AB]"><TS>{porGrupo.get(g.id)?.length}</TS></span>
               </a>
             ))}
           </nav>
@@ -109,7 +109,7 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
                     <div className="flex items-start gap-3">
                       <span className="mt-1 h-9 w-9 shrink-0 rounded-[10px]" style={{ background: t?.color || "#FF6A1A" }} />
                       <div>
-                        <h2 className="text-[22px] font-bold leading-tight text-white">{g.nombre}</h2>
+                        <h2 className="text-[22px] font-bold leading-tight text-white"><TS>{g.nombre}</TS></h2>
                         {t && <p className="mt-0.5 text-[14px] text-[#C9D2E0]"><TS>{t.texto}</TS></p>}
                       </div>
                     </div>
@@ -126,8 +126,8 @@ export default async function CatalogoCajas({ params }: { params: Promise<{ loca
           </div>
 
           <p className="mt-12 text-[12.5px] text-[#8A97AB]">
-            <TS>Motor de cajas basado en</TS>{" "}
-            <a href="https://github.com/florianfesti/boxes" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#F28A3C] hover:underline"><TS>Boxes.py</TS></a>{" "}
+            <TS>Motor de cajas basado en</TS><TS>{" "}</TS>
+            <a href="https://github.com/florianfesti/boxes" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#F28A3C] hover:underline"><TS>Boxes.py</TS></a><TS>{" "}</TS>
             <TS>(licencia GPL-3.0), un proyecto libre de Florian Festi y colaboradores. HETNA lo ofrece sin cambios como servicio;
             la interfaz, las traducciones y la conexión con talleres son de HETNA.</TS>
           </p>

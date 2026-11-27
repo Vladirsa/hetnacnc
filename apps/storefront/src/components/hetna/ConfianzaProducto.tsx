@@ -1,3 +1,4 @@
+import { TS } from "@/i18n/TS"
 import { EMPRESA } from "@/lib/hetna/empresa"
 import type { TipoFicha } from "@/lib/hetna/tipo-ficha"
 
@@ -23,7 +24,7 @@ export default function ConfianzaProducto({ tipo = "fisico" }: { tipo?: TipoFich
         <li key={t} className="flex gap-2">
           <span className="font-bold text-[#C2560A]">✓</span>
           <span>
-            <strong className="text-[#142033]">{t}.</strong> <span className="text-[#40403A]">{d}</span>
+            <strong className="text-[#142033]"><TS>{t}</TS>.</strong> <span className="text-[#40403A]"><TS>{d}</TS></span>
           </span>
         </li>
       ))}

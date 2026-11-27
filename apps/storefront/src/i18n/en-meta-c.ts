@@ -82,6 +82,8 @@ export const EN_META_C: Record<string, string> = {
   "Generador de cajas gratis para láser y router CNC | HETNA CNC": "Free Box Generator for Laser and CNC Router | HETNA CNC",
   "Generador de engranes en DXF gratis": "Free Gear Generator in DXF",
   "Generador de engranes en DXF gratis | HETNA CNC": "Free Gear Generator in DXF | HETNA CNC",
+  "Generador de letras y letreros para corte láser y CNC": "Letter and Sign Generator for Laser Cutting and CNC",
+  "Generador de letras y letreros para corte láser y CNC | HETNA CNC": "Letter and Sign Generator for Laser Cutting and CNC | HETNA CNC",
   "Generador de letreros en DXF para CNC y láser": "Sign Generator in DXF for CNC and Laser",
   "Generador de letreros en DXF para CNC y láser | HETNA CNC": "Sign Generator in DXF for CNC and Laser | HETNA CNC",
   "Generador de moldes 3D gratis: de STL a molde para resina, yeso o silicona": "Free 3D Mold Generator: From STL to Mold for Resin, Plaster or Silicone",

@@ -21,7 +21,7 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
   return (
     <div className="grid gap-4">
       <SubApp locale={locale} actual="latam" />
-      {error && <Vacio><TS>No pude leer los registros:</TS> {error}</Vacio>}
+      {error && <Vacio><TS>No pude leer los registros:</TS> <TS>{error}</TS></Vacio>}
       {d && (
         <>
           <Tarjeta>
@@ -33,8 +33,8 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
             <ul className="mt-3 divide-y divide-[#EFEDE6]">
               {filas.map(({ k, p, c }) => (
                 <li key={k} className="flex items-center justify-between py-2 text-[13px]">
-                  <span className="font-semibold">{p.bandera} {p.nombre} <span className="font-normal text-[#6B675C]">({p.moneda})</span></span>
-                  <span className="text-[#40403A]">{c.talleres} <TS>talleres ·</TS> {c.clientes} <TS>clientes</TS></span>
+                  <span className="font-semibold"><TS>{p.bandera}</TS> <TS>{p.nombre}</TS> <span className="font-normal text-[#6B675C]">(<TS>{p.moneda}</TS>)</span></span>
+                  <span className="text-[#40403A]"><TS>{c.talleres}</TS> <TS>talleres ·</TS> <TS>{c.clientes}</TS> <TS>clientes</TS></span>
                 </li>
               ))}
             </ul>
@@ -47,11 +47,11 @@ export default async function PanelLatam({ params }: { params: Promise<{ locale:
               {d.ultimos.map((r) => (
                 <li key={r.id} className="py-2.5 text-[13px]">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-bold">{d!.paises[r.pais]?.bandera} {r.empresa || r.nombre}</span>
-                    <Etiqueta color={r.tipo === "taller" ? "verde" : "azul"}>{r.tipo}</Etiqueta>
+                    <span className="font-bold"><TS>{d!.paises[r.pais]?.bandera}</TS> {r.empresa || r.nombre}</span>
+                    <Etiqueta color={r.tipo === "taller" ? "verde" : "azul"}><TS>{r.tipo}</TS></Etiqueta>
                   </div>
-                  <p className="text-[12px] text-[#40403A]">{[r.nombre, r.ciudad, r.correo, r.telefono].filter(Boolean).join(" · ")}</p>
-                  {r.maquinas && <p className="text-[12px] text-[#6B675C]">{r.maquinas}</p>}
+                  <p className="text-[12px] text-[#40403A]"><TS>{[r.nombre, r.ciudad, r.correo, r.telefono].filter(Boolean).join(" · ")}</TS></p>
+                  {r.maquinas && <p className="text-[12px] text-[#6B675C]"><TS>{r.maquinas}</TS></p>}
                   {r.mensaje && <p className="text-[12px] italic text-[#6B675C]">“<TS>{r.mensaje}</TS>”</p>}
                   <p className="text-[11px] text-[#9A968B]">{hace(r.created_at)}</p>
                 </li>

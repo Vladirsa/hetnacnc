@@ -6,6 +6,7 @@
 // 3. POST /vendor/hetna-libros crea el producto digital (lib/publicar-libro.ts).
 // La entrega al comprador ya la hace la tienda: correo con el enlace y Mis
 // descargas.
+import { T, traducir } from "../../lib/idioma"
 import { useEffect, useState } from "react"
 import { Badge, Button, Container, Heading, Input, Label, Text, Textarea, toast } from "@medusajs/ui"
 import { BookOpen } from "@medusajs/icons"
@@ -13,6 +14,8 @@ import type { RouteConfig } from "@mercurjs/dashboard-sdk"
 
 export const config: RouteConfig = {
   label: "Libros y PDF",
+  // Nombre traducido con src/i18n/{es,en}.json (llave = texto en español)
+  translationNs: "translation",
   icon: BookOpen,
   rank: 21,
 }
@@ -159,24 +162,24 @@ export default function LibrosPage() {
       <Container className="p-0 overflow-hidden">
         <div className="bg-[#142033] px-6 py-6 text-white">
           <Text size="xsmall" className="font-semibold uppercase tracking-wide text-[#FFC53D]">
-            Academia HETNA
+            <T>Academia HETNA</T>
           </Text>
           <Heading level="h1" className="mt-1 text-white">
-            Vende tus libros, manuales y guías en PDF
+            <T>Vende tus libros, manuales y guías en PDF</T>
           </Heading>
           <Text className="mt-1 max-w-2xl text-white/75">
-            ¿Tienes un manual de tu máquina, una guía de parámetros o un libro de diseño? Publícalo aquí y véndelo a talleres y
-            alumnos de todo México.
+            <T>¿Tienes un manual de tu máquina, una guía de parámetros o un libro de diseño? Publícalo aquí y véndelo a talleres y
+            alumnos de todo México.</T>
           </Text>
         </div>
         <div className="grid gap-3 px-6 py-5 sm:grid-cols-2 lg:grid-cols-3">
           {BENEFICIOS.map(([t, d]) => (
             <div key={t} className="rounded-lg border p-3">
               <Text weight="plus" size="small">
-                {t}
+                <T>{t}</T>
               </Text>
               <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
-                {d}
+                <T>{d}</T>
               </Text>
             </div>
           ))}
@@ -184,46 +187,46 @@ export default function LibrosPage() {
       </Container>
 
       <Container className="flex flex-col gap-5 px-6 py-5">
-        <Heading level="h2">Publicar un libro o PDF</Heading>
+        <Heading level="h2"><T>Publicar un libro o PDF</T></Heading>
 
         <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
           <div className="flex flex-col gap-2">
-            <Label size="small">Portada</Label>
+            <Label size="small"><T>Portada</T></Label>
             {portada ? (
-              <img src={portada} alt="Portada" className="aspect-[3/4] w-full rounded-md border object-cover" />
+              <img src={portada} alt={traducir("Portada")} className="aspect-[3/4] w-full rounded-md border object-cover" />
             ) : (
               <div className="flex aspect-[3/4] w-full items-center justify-center rounded-md border border-dashed text-sm text-ui-fg-subtle">
-                Sin portada
+                <T>Sin portada</T>
               </div>
             )}
             <label className="inline-flex">
               <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={elegirPortada} disabled={!!subiendo} />
               <span className="w-full cursor-pointer rounded-md border px-3 py-1.5 text-center text-sm font-medium hover:bg-ui-bg-subtle">
-                {subiendo === "portada" ? "Subiendo…" : portada ? "Cambiar portada" : "Subir portada"}
+                <T>{subiendo === "portada" ? "Subiendo…" : portada ? "Cambiar portada" : "Subir portada"}</T>
               </span>
             </label>
             <Text size="xsmall" className="text-ui-fg-subtle">
-              Vertical, como la portada de un libro (por ejemplo 900×1200 px).
+              <T>Vertical, como la portada de un libro (por ejemplo 900×1200 px).</T>
             </Text>
           </div>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <Label size="small">Archivo PDF</Label>
+              <Label size="small"><T>Archivo PDF</T></Label>
               <div className="flex flex-wrap items-center gap-3">
                 <label className="inline-flex">
                   <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={elegirPdf} disabled={!!subiendo} />
                   <span className="cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-ui-bg-subtle">
-                    {subiendo === "pdf" ? "Subiendo PDF…" : pdf ? "Cambiar PDF" : "Subir PDF"}
+                    <T>{subiendo === "pdf" ? "Subiendo PDF…" : pdf ? "Cambiar PDF" : "Subir PDF"}</T>
                   </span>
                 </label>
                 {pdf ? (
                   <Badge color="green" size="small">
-                    {pdf.nombre} · {pdf.mb} MB
+                    <T>{pdf.nombre}</T> · <T>{pdf.mb}</T> <T>MB</T>
                   </Badge>
                 ) : (
                   <Text size="xsmall" className="text-ui-fg-subtle">
-                    Máximo {maxMb} MB. Se guarda privado: sólo lo baja quien lo compra.
+                    <T>Máximo</T> <T>{maxMb}</T> <T>MB. Se guarda privado: sólo lo baja quien lo compra.</T>
                   </Text>
                 )}
               </div>
@@ -231,21 +234,21 @@ export default function LibrosPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1 sm:col-span-2">
-                <Label size="small">Título</Label>
-                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Manual de parámetros para láser CO₂" maxLength={140} />
+                <Label size="small"><T>Título</T></Label>
+                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={traducir("Manual de parámetros para láser CO₂")} maxLength={140} />
               </div>
               <div className="flex flex-col gap-1">
-                <Label size="small">Autor (opcional)</Label>
-                <Input value={autor} onChange={(e) => setAutor(e.target.value)} placeholder="Tu nombre o el de tu taller" />
+                <Label size="small"><T>Autor (opcional)</T></Label>
+                <Input value={autor} onChange={(e) => setAutor(e.target.value)} placeholder={traducir("Tu nombre o el de tu taller")} />
               </div>
               <div className="flex flex-col gap-1">
-                <Label size="small">Páginas (opcional)</Label>
+                <Label size="small"><T>Páginas (opcional)</T></Label>
                 <Input type="number" min={1} value={paginas} onChange={(e) => setPaginas(e.target.value)} placeholder="120" />
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label size="small">De qué trata</Label>
+              <Label size="small"><T>De qué trata</T></Label>
               <Textarea
                 rows={5}
                 value={descripcion}
@@ -255,7 +258,7 @@ export default function LibrosPage() {
             </div>
 
             <div className="flex max-w-xs flex-col gap-1">
-              <Label size="small">Precio (MXN)</Label>
+              <Label size="small"><T>Precio (MXN)</T></Label>
               <Input
                 type="number"
                 min={20}
@@ -266,32 +269,32 @@ export default function LibrosPage() {
               />
               <label className="mt-1 flex items-center gap-1.5 text-sm text-ui-fg-subtle">
                 <input type="checkbox" checked={gratis} onChange={(e) => setGratis(e.target.checked)} />
-                Libro gratis (se descarga con cuenta)
+                <T>Libro gratis (se descarga con cuenta)</T>
               </label>
             </div>
 
             {error && (
               <Text size="small" className="text-ui-fg-error">
-                {error}
+                <T>{error}</T>
               </Text>
             )}
             <div>
               <Button onClick={publicar} isLoading={publicando} disabled={!!subiendo}>
-                Publicar libro
+                <T>Publicar libro</T>
               </Button>
             </div>
             <Text size="xsmall" className="text-ui-fg-subtle">
-              Al publicar confirmas que el contenido es tuyo o tienes permiso para venderlo (ver Términos para vendedores).
+              <T>Al publicar confirmas que el contenido es tuyo o tienes permiso para venderlo (ver Términos para vendedores).</T>
             </Text>
           </div>
         </div>
       </Container>
 
       <Container className="flex flex-col gap-3 px-6 py-5">
-        <Heading level="h2">Mis libros</Heading>
+        <Heading level="h2"><T>Mis libros</T></Heading>
         {libros === null ? (
           <Text size="small" className="text-ui-fg-subtle">
-            Cargando…
+            <T>Cargando…</T>
           </Text>
         ) : libros.length ? (
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -303,15 +306,15 @@ export default function LibrosPage() {
                   <div className="aspect-[3/4] w-full rounded bg-ui-bg-subtle" />
                 )}
                 <Text size="small" weight="plus" className="line-clamp-2">
-                  {l.titulo}
+                  <T>{l.titulo}</T>
                 </Text>
                 <div className="flex gap-1">
                   <Badge size="2xsmall" color={l.estado === "published" ? "green" : "grey"}>
-                    {l.estado === "published" ? "Publicado" : l.estado}
+                    <T>{l.estado === "published" ? "Publicado" : l.estado}</T>
                   </Badge>
                   {l.gratis && (
                     <Badge size="2xsmall" color="blue">
-                      Gratis
+                      <T>Gratis</T>
                     </Badge>
                   )}
                 </div>
@@ -320,7 +323,7 @@ export default function LibrosPage() {
           </div>
         ) : (
           <Text size="small" className="text-ui-fg-subtle">
-            Todavía no publicas ningún libro.
+            <T>Todavía no publicas ningún libro.</T>
           </Text>
         )}
       </Container>

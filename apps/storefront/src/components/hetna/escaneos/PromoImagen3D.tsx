@@ -133,8 +133,8 @@ export async function PromoImagen3D() {
           <ul className="m-0 mt-6 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
             {USOS.map(([t, d]) => (
               <li key={t} className="rounded-[14px] border border-white/10 bg-white/[0.03] p-5">
-                <p className="m-0 text-[16px] font-bold">{t}</p>
-                <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed text-white/60">{d}</p>
+                <p className="m-0 text-[16px] font-bold"><TS>{t}</TS></p>
+                <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed text-white/60"><TS>{d}</TS></p>
               </li>
             ))}
           </ul>
@@ -144,8 +144,8 @@ export async function PromoImagen3D() {
               <li key={t} className="flex gap-3">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#F07A1A] text-[15px] font-extrabold">{i + 1}</span>
                 <span>
-                  <span className="block text-[16px] font-bold">{t}</span>
-                  <span className="mt-1 block text-[13.5px] leading-relaxed text-white/60">{d}</span>
+                  <span className="block text-[16px] font-bold"><TS>{t}</TS></span>
+                  <span className="mt-1 block text-[13.5px] leading-relaxed text-white/60"><TS>{d}</TS></span>
                 </span>
               </li>
             ))}
@@ -166,10 +166,10 @@ export async function PromoImagen3D() {
             {FAQ_IMAGEN_3D.map((f) => (
               <details key={f.p} className="group px-4 py-3.5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-bold">
-                  {f.p}
+                  <TS>{f.p}</TS>
                   <span className="text-[18px] text-[#F07A1A] transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="m-0 mt-2 text-[14px] leading-relaxed text-white/65">{f.r}</p>
+                <p className="m-0 mt-2 text-[14px] leading-relaxed text-white/65"><TS>{f.r}</TS></p>
               </details>
             ))}
           </div>

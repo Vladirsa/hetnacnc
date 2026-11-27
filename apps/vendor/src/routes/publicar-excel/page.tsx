@@ -7,6 +7,7 @@
 //   3. Se revisa todo sin publicar nada (POST /vendor/hetna-publicar/excel,
 //      modo "revisar") y, al confirmar, se publican (modo "importar").
 // El servidor (lib/importar-productos) sólo actualiza productos de este taller.
+import { T } from "../../lib/idioma"
 import { useRef, useState } from "react"
 import { Link } from "react-router-dom"
 // Sin "config": no sale en el menú, se entra desde Publicar producto.
@@ -71,21 +72,21 @@ function Problemas({ titulo, lista, color }) {
   if (!lista?.length) return null
   return (
     <div style={{ marginTop: 12 }}>
-      <p style={{ margin: "0 0 6px", fontWeight: 700, color }}>{titulo} ({lista.length})</p>
+      <p style={{ margin: "0 0 6px", fontWeight: 700, color }}><T>{titulo}</T> (<T>{lista.length}</T>)</p>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr style={{ textAlign: "left", color: C.tenue }}>
-            <th style={{ padding: 4, width: 70 }}>Renglón</th>
-            <th style={{ padding: 4, width: 190 }}>Columna</th>
-            <th style={{ padding: 4 }}>Qué pasa</th>
+            <th style={{ padding: 4, width: 70 }}><T>Renglón</T></th>
+            <th style={{ padding: 4, width: 190 }}><T>Columna</T></th>
+            <th style={{ padding: 4 }}><T>Qué pasa</T></th>
           </tr>
         </thead>
         <tbody>
           {lista.slice(0, 200).map((p, i) => (
             <tr key={i} style={{ borderTop: `1px solid ${C.borde}` }}>
-              <td style={{ padding: 4, fontWeight: 700 }}>{p.fila ?? "—"}</td>
-              <td style={{ padding: 4 }}>{p.columna || ""}</td>
-              <td style={{ padding: 4 }}>{p.mensaje}</td>
+              <td style={{ padding: 4, fontWeight: 700 }}><T>{p.fila ?? "—"}</T></td>
+              <td style={{ padding: 4 }}><T>{p.columna || ""}</T></td>
+              <td style={{ padding: 4 }}><T>{p.mensaje}</T></td>
             </tr>
           ))}
         </tbody>
@@ -98,13 +99,13 @@ function Lista({ titulo, items, color }) {
   if (!items?.length) return null
   return (
     <div style={{ marginTop: 10 }}>
-      <p style={{ margin: "0 0 4px", fontWeight: 700, color }}>{titulo} ({items.length})</p>
+      <p style={{ margin: "0 0 4px", fontWeight: 700, color }}><T>{titulo}</T> (<T>{items.length}</T>)</p>
       {items.map((i) => (
         <p key={i.handle} style={{ margin: "2px 0", fontSize: 13 }}>
-          {i.nombre}{" "}
+          <T>{i.nombre}</T><T>{" "}</T>
           <span style={{ color: C.tenue, fontSize: 12 }}>
-            · {i.variantes} {i.variantes === 1 ? "presentación" : "presentaciones"} · {i.categoria}
-            {i.estado === "draft" ? " · borrador" : ""}
+            · <T>{i.variantes}</T> <T>{i.variantes === 1 ? "presentación" : "presentaciones"}</T> · <T>{i.categoria}</T>
+            <T>{i.estado === "draft" ? " · borrador" : ""}</T>
           </span>
         </p>
       ))}
@@ -172,50 +173,50 @@ export default function PublicarExcel() {
 
   return (
     <div style={S.page}>
-      <h1 style={S.h1}>Publicar con Excel</h1>
+      <h1 style={S.h1}><T>Publicar con Excel</T></h1>
       <p style={S.sub}>
-        Sube muchos productos de una vez (hasta 25 productos y 100 renglones por archivo, de 2 MB como máximo). Primero se revisa todo y nada se publica hasta que confirmas. Para uno solo,
-        usa <Link to="/publicar" style={{ color: C.naranja, fontWeight: 700 }}>Publicar producto</Link>.
+        <T>Sube muchos productos de una vez (hasta 25 productos y 100 renglones por archivo, de 2 MB como máximo). Primero se revisa todo y nada se publica hasta que confirmas. Para uno solo,
+        usa</T> <Link to="/publicar" style={{ color: C.naranja, fontWeight: 700 }}><T>Publicar producto</T></Link>.
       </p>
 
       <div style={S.caja}>
-        <p style={S.paso}>1. Baja la plantilla</p>
-        <p style={S.ayuda}>Trae las categorías de la tienda, ejemplos e instrucciones. Precio: el final con IVA incluido. Peso y medidas: del paquete ya empacado.</p>
+        <p style={S.paso}><T>1. Baja la plantilla</T></p>
+        <p style={S.ayuda}><T>Trae las categorías de la tienda, ejemplos e instrucciones. Precio: el final con IVA incluido. Peso y medidas: del paquete ya empacado.</T></p>
         <button type="button" style={S.btn2} onClick={() => bajarPlantilla().catch((e) => setError(e.message))}>
-          Bajar plantilla
+          <T>Bajar plantilla</T>
         </button>
       </div>
 
       <div style={S.caja}>
-        <p style={S.paso}>2. Elige el Excel lleno y las fotos</p>
+        <p style={S.paso}><T>2. Elige el Excel lleno y las fotos</T></p>
         <p style={S.ayuda}>
-          En la columna "Fotos" de cada producto escribe el nombre del archivo (por ejemplo <b>fresa-6mm.jpg</b>) y aquí elige esas mismas fotos.
-          Fondo blanco, como en Publicar producto. JPG, PNG o WEBP de hasta {MAX_MB} MB.
+          <T>En la columna "Fotos" de cada producto escribe el nombre del archivo (por ejemplo</T> <b><T>fresa-6mm.jpg</T></b><T>) y aquí elige esas mismas fotos.
+          Fondo blanco, como en Publicar producto. JPG, PNG o WEBP de hasta</T> {MAX_MB} <T>MB.</T>
         </p>
         <div style={{ display: "grid", gap: 10 }}>
           <label style={{ fontSize: 13 }}>
-            <b>Excel (.xlsx):</b>{" "}
+            <b><T>Excel (.xlsx):</T></b><T>{" "}</T>
             <input type="file" accept=".xlsx" disabled={!!ocupado} onChange={(e) => { setExcel(e.target.files?.[0] || null); setRev(null); setFin(null) }} />
           </label>
           <label style={{ fontSize: 13 }}>
-            <b>Fotos:</b>{" "}
+            <b><T>Fotos:</T></b><T>{" "}</T>
             <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={!!ocupado} onChange={(e) => { setFotos(Array.from(e.target.files || [])); setRev(null); setFin(null) }} />
-            {fotos.length > 0 && <span style={{ color: C.tenue }}> {fotos.length} {fotos.length === 1 ? "foto" : "fotos"}</span>}
+            {fotos.length > 0 && <span style={{ color: C.tenue }}> <T>{fotos.length}</T> <T>{fotos.length === 1 ? "foto" : "fotos"}</T></span>}
           </label>
         </div>
         <button type="button" style={{ ...S.btn, marginTop: 12, opacity: excel && !ocupado ? 1 : 0.5 }} disabled={!excel || !!ocupado} onClick={revisar}>
-          Revisar
+          <T>Revisar</T>
         </button>
       </div>
 
-      {ocupado && <p style={{ color: C.tenue, fontSize: 14 }}>{ocupado}</p>}
-      {error && <p style={{ color: C.rojo, fontSize: 14, background: "#FDECEA", padding: 10, borderRadius: 8 }}>{error}</p>}
+      {ocupado && <p style={{ color: C.tenue, fontSize: 14 }}><T>{ocupado}</T></p>}
+      {error && <p style={{ color: C.rojo, fontSize: 14, background: "#FDECEA", padding: 10, borderRadius: 8 }}><T>{error}</T></p>}
 
       {rev && !fin && (
         <div style={S.caja}>
-          <p style={S.paso}>3. Revisión</p>
+          <p style={S.paso}><T>3. Revisión</T></p>
           <p style={S.ayuda}>
-            {rev.productos} productos · {rev.crear.length} nuevos · {rev.actualizar.length} a actualizar · {errores} errores
+            <T>{rev.productos}</T> <T>productos ·</T> <T>{rev.crear.length}</T> <T>nuevos ·</T> <T>{rev.actualizar.length}</T> <T>a actualizar ·</T> <T>{errores}</T> <T>errores</T>
           </p>
           <Problemas titulo="Errores (hay que corregirlos en el Excel)" lista={rev.errores} color={C.rojo} />
           <Problemas titulo="Avisos (se puede publicar, pero revísalos)" lista={rev.avisos} color={C.ambar} />
@@ -224,12 +225,12 @@ export default function PublicarExcel() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
             {!errores && listos > 0 && (
               <button type="button" style={S.btn} disabled={!!ocupado} onClick={() => publicar(false)}>
-                Publicar {listos} {listos === 1 ? "producto" : "productos"}
+                <T>Publicar</T> <T>{listos}</T> <T>{listos === 1 ? "producto" : "productos"}</T>
               </button>
             )}
             {errores > 0 && listos > 0 && (
               <button type="button" style={S.btn2} disabled={!!ocupado} onClick={() => publicar(true)}>
-                Publicar sólo los {listos} sin errores
+                <T>Publicar sólo los</T> <T>{listos}</T> <T>sin errores</T>
               </button>
             )}
           </div>
@@ -238,15 +239,15 @@ export default function PublicarExcel() {
 
       {fin?.resultados && (
         <div style={S.caja}>
-          <p style={S.paso}>Listo</p>
+          <p style={S.paso}><T>Listo</T></p>
           <p style={S.ayuda}>
-            {fin.resultados.filter((r) => r.accion === "creado").length} publicados · {fin.resultados.filter((r) => r.accion === "actualizado").length} actualizados ·{" "}
-            {fin.resultados.filter((r) => r.accion === "error").length} con error
+            <T>{fin.resultados.filter((r) => r.accion === "creado").length}</T> <T>publicados ·</T> <T>{fin.resultados.filter((r) => r.accion === "actualizado").length}</T> <T>actualizados ·</T><T>{" "}</T>
+            <T>{fin.resultados.filter((r) => r.accion === "error").length}</T> <T>con error</T>
           </p>
           {fin.resultados.map((r) => (
             <p key={r.handle} style={{ margin: "2px 0", fontSize: 13, color: r.accion === "error" ? C.rojo : C.azul }}>
-              {r.accion === "error" ? "✗" : "✓"} {r.nombre}
-              <span style={{ color: C.tenue, fontSize: 12 }}> · {r.accion}{r.mensaje ? ` · ${r.mensaje}` : ""}</span>
+              <T>{r.accion === "error" ? "✗" : "✓"}</T> <T>{r.nombre}</T>
+              <span style={{ color: C.tenue, fontSize: 12 }}> · <T>{r.accion}</T><T>{r.mensaje ? ` · ${r.mensaje}` : ""}</T></span>
             </p>
           ))}
           <Problemas titulo="Avisos" lista={fin.avisos} color={C.ambar} />

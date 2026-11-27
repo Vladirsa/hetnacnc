@@ -55,9 +55,10 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     texto: "Escribe el texto, elige la letra y descarga el DXF con las letras unidas.",
     icono: "letrero",
     acceso: "gratis",
-    titulo: "Generador de letreros en DXF para CNC y láser",
+    // Search Console (27 nov 2026): «generador de letras para corte láser» en posición 6.5
+    titulo: "Generador de letras y letreros para corte láser y CNC",
     descripcion:
-      "Escribe un nombre o un letrero, elige entre 19 tipografías y descarga gratis el DXF con las letras unidas, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
+      "Generador de letras gratis: escribe un nombre o un letrero, elige entre 19 tipografías y descarga el DXF con las letras unidas para corte láser o router CNC, con barra o en placa con barrenos. Revisa si tu fresa alcanza todos los detalles.",
   },
   {
     slug: "llaveros",

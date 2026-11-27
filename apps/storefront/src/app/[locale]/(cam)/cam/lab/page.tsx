@@ -47,7 +47,7 @@ export default async function CamStudio3D({ params }: { params: Promise<{ locale
                   <div className="flex items-baseline justify-between gap-3">
                     <b className="text-[14px]"><TS>{s.titulo}</TS></b>
                     <span className="shrink-0 text-[14px] font-bold text-[#F28A3C]">
-                      {s.desde !== null ? `Desde ${pesos(s.desde, s.moneda)}` : "Cotización"}
+                      <TS>{s.desde !== null ? `Desde ${pesos(s.desde, s.moneda)}` : "Cotización"}</TS>
                     </span>
                   </div>
                   {s.subtitulo && <p className="m-0 text-[12px] text-[#8A97AB]"><TS>{s.subtitulo}</TS></p>}
@@ -59,7 +59,7 @@ export default async function CamStudio3D({ params }: { params: Promise<{ locale
             <TS>La simulación es de referencia: prueba todo programa en vacío y con avance reducido antes de cortar.</TS>
           </p>
           <p className="mb-0 mt-3 text-[12.5px] text-[#8A97AB]">
-            <TS>¿Ya pagaste?</TS>{" "}
+            <TS>¿Ya pagaste?</TS><TS>{" "}</TS>
             <LocalizedClientLink href="/user/cam" className="font-semibold text-[#F28A3C] underline">
               <TS>Mira tus trabajos CAM</TS>
             </LocalizedClientLink>
