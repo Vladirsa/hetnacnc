@@ -93,6 +93,17 @@ export const HERRAMIENTAS_DISENO: HerramientaDiseno[] = [
     meta: "Generador gratis de cortadores de galletas para impresión 3D: figuras, nombres o tu propio dibujo, con sello de texto o ícono. Descarga el STL al instante.",
   },
   {
+    slug: "ferulas-3d",
+    nombre: "Férulas termoformables",
+    texto: "Férulas ventiladas a la medida para mano, muñeca, dedo o pata de perro y gato: se imprimen planas y se moldean con calor.",
+    icono: "generador",
+    acceso: "gratis",
+    titulo: "Férulas impresas en 3D a la medida: generador de férulas termoformables (STL)",
+    descripcion:
+      "Para fisioterapeutas, terapeutas de mano, ortopedistas y veterinarios: mete las medidas del paciente y descarga la férula ventilada en STL para imprimir plana y moldear con calor. Antebrazo y muñeca con hueco para el pulgar, dedo y pata de perro o gato, con ventilación en panal, óvalos o círculos y ranuras para velcro. Si no tienes impresora, un taller de HETNA la imprime.",
+    meta: "Generador de férulas ventiladas para impresión 3D: antebrazo, muñeca, dedo y pata de mascota a la medida. Se imprimen planas y se moldean con calor.",
+  },
+  {
     slug: "rompecabezas",
     nombre: "Rompecabezas",
     texto: "Mide la placa, elige cuántas piezas y descarga las líneas de corte.",
@@ -553,6 +564,7 @@ export const ESTUDIOS: Record<Estudio, { nombre: string; herramientas: { slug: s
       { slug: "llaveros", corto: "Llaveros y placas" },
       { slug: "texturizador", corto: "Texturizador" },
       { slug: "cortadores-galletas", corto: "Cortadores de galletas" },
+      { slug: "ferulas-3d", corto: "Férulas" },
       { slug: "partir-3d", corto: "Partir modelo" },
       { slug: "moldes-3d", corto: "Moldes" },
       { slug: "modelos-3d", corto: "Modelos a tu medida" },
