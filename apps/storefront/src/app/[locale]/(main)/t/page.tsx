@@ -48,8 +48,8 @@ export default async function DirectorioTalleresPage() {
                     </span>
                   )}
                   <span className="min-w-0">
-                    <span className="block text-[16px] font-semibold text-[#1B1B18]">{t.nombre}</span>
-                    {t.ciudad ? <span className="block text-[13px] text-[#7A776E]">{t.ciudad}</span> : null}
+                    <span className="block text-[16px] font-semibold text-[#1B1B18]"><TS>{t.nombre}</TS></span>
+                    {t.ciudad ? <span className="block text-[13px] text-[#7A776E]"><TS>{t.ciudad}</TS></span> : null}
                     {t.descripcion ? <span className="mt-1 line-clamp-2 block text-[13px] text-[#40403A]"><TS>{t.descripcion}</TS></span> : null}
                   </span>
                 </a>
@@ -58,10 +58,10 @@ export default async function DirectorioTalleresPage() {
           </ul>
         ) : (
           <p className="m-0 mt-6 rounded-[16px] border border-[#E7E4DC] bg-white p-5 text-[15px] text-[#40403A]">
-            <TS>Pronto verás aquí los talleres. Mientras tanto puedes</TS>{" "}
+            <TS>Pronto verás aquí los talleres. Mientras tanto puedes</TS><TS>{" "}</TS>
             <a href="/cotizar" className="underline">
               <TS>publicar tu proyecto</TS>
-            </a>{" "}
+            </a><TS>{" "}</TS>
             <TS>y recibir cotizaciones de varios talleres.</TS>
           </p>
         )}
