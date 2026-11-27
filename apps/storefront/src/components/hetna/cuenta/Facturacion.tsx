@@ -2,6 +2,7 @@
 
 // Datos fiscales del cliente y la factura (CFDI) de cada pedido: pedirla al
 // taller y descargar el PDF y el XML cuando el taller los sube.
+import { T } from "@/components/hetna/i18n/Idioma"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 
@@ -38,21 +39,21 @@ export function FormFiscal({
     <form onSubmit={guardar} className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={ETIQUETA} htmlFor="rfc">RFC</label>
+          <label className={ETIQUETA} htmlFor="rfc"><T>RFC</T></label>
           <input id="rfc" value={d.rfc} onChange={(e) => cambia("rfc", e.target.value.toUpperCase().replace(/\s/g, ""))} maxLength={13} required className={CAMPO} placeholder="XAXX010101000" />
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="cp">Código postal fiscal</label>
+          <label className={ETIQUETA} htmlFor="cp"><T>Código postal fiscal</T></label>
           <input id="cp" value={d.cp} onChange={(e) => cambia("cp", e.target.value.replace(/\D/g, "").slice(0, 5))} inputMode="numeric" required className={CAMPO} placeholder="El de tu constancia" />
         </div>
       </div>
       <div>
-        <label className={ETIQUETA} htmlFor="razon">Nombre o razón social</label>
+        <label className={ETIQUETA} htmlFor="razon"><T>Nombre o razón social</T></label>
         <input id="razon" value={d.razon_social} onChange={(e) => cambia("razon_social", e.target.value)} maxLength={254} required className={CAMPO} placeholder="Tal como aparece en tu constancia, sin “SA de CV”" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={ETIQUETA} htmlFor="regimen">Régimen fiscal</label>
+          <label className={ETIQUETA} htmlFor="regimen"><T>Régimen fiscal</T></label>
           <select id="regimen" value={d.regimen} onChange={(e) => cambia("regimen", e.target.value)} required className={CAMPO}>
             <option value="">Elige tu régimen…</option>
             {Object.entries(regimenes).map(([k, v]) => (
@@ -63,7 +64,7 @@ export function FormFiscal({
           </select>
         </div>
         <div>
-          <label className={ETIQUETA} htmlFor="uso">Uso del CFDI</label>
+          <label className={ETIQUETA} htmlFor="uso"><T>Uso del CFDI</T></label>
           <select id="uso" value={d.uso_cfdi} onChange={(e) => cambia("uso_cfdi", e.target.value)} required className={CAMPO}>
             {Object.entries(usos).map(([k, v]) => (
               <option key={k} value={k}>
@@ -74,13 +75,13 @@ export function FormFiscal({
         </div>
       </div>
       <div>
-        <label className={ETIQUETA} htmlFor="correo">Correo para recibir facturas (opcional)</label>
+        <label className={ETIQUETA} htmlFor="correo"><T>Correo para recibir facturas (opcional)</T></label>
         <input id="correo" type="email" value={d.correo} onChange={(e) => cambia("correo", e.target.value)} className={CAMPO} placeholder="Si es distinto al de tu cuenta" />
       </div>
       <p className="m-0 text-[12.5px] text-[#6B6A63]">
-        Los datos deben coincidir con tu constancia de situación fiscal del SAT; si no, el taller no podrá timbrar la factura.
+        <T>Los datos deben coincidir con tu constancia de situación fiscal del SAT; si no, el taller no podrá timbrar la factura.</T>
       </p>
-      {estado && <p className={`m-0 rounded-[10px] px-3 py-2 text-[14px] ${estado.ok ? "bg-[#EAF6EF] text-[#14683F]" : "bg-[#FDECEA] text-[#B3261E]"}`}>{estado.texto}</p>}
+      {estado && <p className={`m-0 rounded-[10px] px-3 py-2 text-[14px] ${estado.ok ? "bg-[#EAF6EF] text-[#14683F]" : "bg-[#FDECEA] text-[#B3261E]"}`}><T>{estado.texto}</T></p>}
       <button type="submit" disabled={pendiente} className="h-11 justify-self-start rounded-[10px] bg-[#C2560A] px-6 font-semibold text-white hover:bg-[#A84A08] disabled:opacity-60">
         {pendiente ? "Guardando…" : "Guardar datos fiscales"}
       </button>
@@ -125,7 +126,7 @@ export function FacturaPedido({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#E7E4DC] bg-[#FAF9F6] px-4 py-3">
       <div className="text-[13.5px] text-[#44433D]">
-        <strong className="block text-[14px] text-[#142033]">Factura · {taller}</strong>
+        <strong className="block text-[14px] text-[#142033]"><T>Factura ·</T> {taller}</strong>
         {!factura && (pagado ? "Puedes pedir la factura (CFDI) de esta compra." : "Podrás pedir factura cuando el pago esté confirmado.")}
         {factura?.estado === "solicitada" && "Solicitada. El taller la emite y te avisamos por correo cuando esté lista."}
         {factura?.estado === "emitida" && "Lista para descargar."}
@@ -137,18 +138,18 @@ export function FacturaPedido({
           <>
             {factura.tiene_pdf && (
               <button type="button" onClick={() => abrir("pdf")} disabled={pendiente} className={`${boton} border-[#C2560A] bg-[#C2560A] text-white`}>
-                Descargar PDF
+                <T>Descargar PDF</T>
               </button>
             )}
             {factura.tiene_xml && (
               <button type="button" onClick={() => abrir("xml")} disabled={pendiente} className={`${boton} border-[#C9C4B8] bg-white text-[#44433D]`}>
-                XML
+                <T>XML</T>
               </button>
             )}
           </>
         ) : !tieneFiscal && pagado ? (
           <LocalizedClientLink href="/user/settings#fiscal" className={`${boton} border-[#C2560A] bg-white text-[#B34D07]`}>
-            Agregar datos fiscales
+            <T>Agregar datos fiscales</T>
           </LocalizedClientLink>
         ) : (!factura || factura.estado === "rechazada") && pagado ? (
           <button type="button" onClick={pedir} disabled={pendiente} className={`${boton} border-[#C2560A] bg-white text-[#B34D07]`}>
