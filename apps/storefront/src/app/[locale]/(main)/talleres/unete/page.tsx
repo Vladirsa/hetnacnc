@@ -98,7 +98,7 @@ export default async function UneteTallerPage() {
             <li><TS>✓ Cobro seguro antes de fabricar</TS></li>
             {abiertos.total > 0 && (
               <li className="font-semibold text-[#F2A25F]">
-                {abiertos.total === 1 ? "1 trabajo esperando precio" : `${abiertos.total} trabajos esperando precio`} <TS>ahora</TS>
+                <TS>{abiertos.total === 1 ? "1 trabajo esperando precio" : `${abiertos.total} trabajos esperando precio`}</TS> <TS>ahora</TS>
               </li>
             )}
           </ul>
@@ -112,8 +112,8 @@ export default async function UneteTallerPage() {
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {COMO_GANAS.map(([t, d]) => (
               <div key={t} className="rounded-2xl border border-[#E7E4DC] bg-white p-5">
-                <p className="font-bold text-[#142033]">$ {t}</p>
-                <p className="mt-1 text-sm text-[#6B675C]">{d}</p>
+                <p className="font-bold text-[#142033]">$ <TS>{t}</TS></p>
+                <p className="mt-1 text-sm text-[#6B675C]"><TS>{d}</TS></p>
               </div>
             ))}
           </div>
@@ -132,8 +132,8 @@ export default async function UneteTallerPage() {
             <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {RECIBES.map(([t, d]) => (
                 <li key={t}>
-                  <span className="block font-bold text-[#142033]">{t}</span>
-                  <span className="text-sm text-[#6B675C]">{d}</span>
+                  <span className="block font-bold text-[#142033]"><TS>{t}</TS></span>
+                  <span className="text-sm text-[#6B675C]"><TS>{d}</TS></span>
                 </li>
               ))}
             </ul>
@@ -173,8 +173,8 @@ export default async function UneteTallerPage() {
               ["Visibilidad profesional", "Perfil, reseñas e insignia de Taller verificado."],
             ].map(([t, d]) => (
               <div key={t} className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-                <p className="font-bold">{t}</p>
-                <p className="mt-1 text-sm text-white/70">{d}</p>
+                <p className="font-bold"><TS>{t}</TS></p>
+                <p className="mt-1 text-sm text-white/70"><TS>{d}</TS></p>
               </div>
             ))}
           </div>
@@ -183,19 +183,19 @@ export default async function UneteTallerPage() {
               {talleres.length > 0 && (
                 <div>
                   <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Talleres en la red</TS></dt>
-                  <dd className="text-2xl font-extrabold">{talleres.length}</dd>
+                  <dd className="text-2xl font-extrabold"><TS>{talleres.length}</TS></dd>
                 </div>
               )}
               {verificados > 0 && (
                 <div>
                   <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Verificados</TS></dt>
-                  <dd className="text-2xl font-extrabold">{verificados}</dd>
+                  <dd className="text-2xl font-extrabold"><TS>{verificados}</TS></dd>
                 </div>
               )}
               {estados > 0 && (
                 <div>
                   <dt className="text-xs uppercase tracking-wider text-white/60"><TS>Estados</TS></dt>
-                  <dd className="text-2xl font-extrabold">{estados}</dd>
+                  <dd className="text-2xl font-extrabold"><TS>{estados}</TS></dd>
                 </div>
               )}
               {abiertos.total > 0 && (
@@ -208,7 +208,7 @@ export default async function UneteTallerPage() {
           )}
           {quedanFundador > 0 && (
             <p className="mt-6 rounded-xl bg-[#C2560A] px-4 py-3 text-sm font-semibold">
-              <TS>Quedan</TS> {quedanFundador} <TS>lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.</TS>{" "}
+              <TS>Quedan</TS> <TS>{quedanFundador}</TS> <TS>lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.</TS><TS>{" "}</TS>
               <LocalizedClientLink href="/talleres/fundadores" className="underline">
                 <TS>Ver detalles</TS>
               </LocalizedClientLink>
