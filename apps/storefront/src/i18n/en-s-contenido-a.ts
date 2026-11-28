@@ -85,6 +85,8 @@ export const EN_S_CONTENIDO_A: Record<string, string> = {
   "Otros países:": "Other countries:",
   "Pide cotización a": "Request a quote from",
   "Precio al instante de": "Instant price for",
+  "Cotiza con talleres en": "Get quotes from shops in",
+  "Compara con otras opciones:": "Compare with other options:",
   "Esta empresa todavía no es parte de HETNA. La información es pública y viene de su propio sitio web; no la ha revisado la empresa ni HETNA la verificó.": "This company is not yet part of HETNA. The information is public and comes from its own website; the company has not reviewed it and HETNA has not verified it.",
   "Pide una cotización": "Request a quote",
   "1. Te responde la red HETNA.": "1. The HETNA network answers.",
