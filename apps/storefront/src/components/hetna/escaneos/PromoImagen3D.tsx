@@ -109,18 +109,11 @@ export async function PromoImagen3D() {
                 </span>
               </div>
               <span className="text-center text-[28px] text-[#F07A1A]">→</span>
-              <div
-                className="grid aspect-[4/3] place-items-center rounded-[12px] text-center text-[14px] text-white/70"
-                style={{ background: "radial-gradient(circle at 50% 45%, rgba(240,122,26,0.25), transparent 70%)" }}
-              >
-                <span>
-                  <svg viewBox="0 0 64 64" className="mx-auto mb-2 h-12 w-12 text-[#F07A1A]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                    <path d="M32 6 56 19v26L32 58 8 45V19L32 6Z" />
-                    <path d="M8 19l24 13 24-13M32 32v26" />
-                  </svg>
-                  <TS>Tu modelo 3D con textura</TS>
-                </span>
-              </div>
+              {/* Ejemplo real de cómo queda un modelo (Vlado, 28 nov 2026) */}
+              <figure className="relative m-0 aspect-[4/3] overflow-hidden rounded-[12px] bg-[#0B0F15]">
+                <img src="/img/estudio/ejemplo-imagen-a-3d.jpg" alt="Ejemplo de modelo 3D con textura hecho con Imagen a 3D" loading="lazy" className="h-full w-full object-contain" />
+                <figcaption className="absolute left-2 top-2 rounded-full bg-[#F07A1A] px-2 py-0.5 text-[11px] font-semibold text-white"><TS>Así queda tu modelo 3D</TS></figcaption>
+              </figure>
             </div>
           )}
         </div>
