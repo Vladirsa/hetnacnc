@@ -8,6 +8,7 @@ Cada `.py` de esta carpeta genera diseños digitales originales de HETNA en mil�
 | `tanda1_plantillas.py` | Plantilla para jaladeras 64–192 mm, plantilla sistema 32, escuadras de ensamble a 90° |
 | `tanda2_plantillas.py` | Plantilla para chalupa eléctrica 2x4 y 4x4, plantilla para bisagra de piano, guía de sierra circular |
 | `tanda3_organizadores.py` | Organizador de fresas de router, porta llaves Allen, porta puntas de 1/4" (STL + DXF) |
+| `tanda5_casa.py` | Porta llaves de pared con repisa, ménsula decorativa para repisa (par), gancho de pared para audífonos |
 | `tanda4_impresion3d.py` | Maceta cónica de 10 cm con plato, soporte para celular o tableta, organizador de escritorio (STL) |
 
 ## Guardarlos en Backblaze
