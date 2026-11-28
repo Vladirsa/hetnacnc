@@ -225,7 +225,7 @@ export default function TarjetaProducto({
                 </span>
               ))}
           </span>
-          <span className="min-h-[34px] text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-2">
+          <span className="min-h-[34px] text-[13px] leading-[1.3] text-[#1B1B18] line-clamp-3 sm:line-clamp-2">
             <TS>{product.title}</TS>
           </span>
 
