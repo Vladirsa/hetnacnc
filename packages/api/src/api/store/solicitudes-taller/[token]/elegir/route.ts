@@ -109,7 +109,7 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
           fila("Cliente", s.contacto?.nombre || "") +
           fila("Correo", s.contacto?.email || "") +
           fila("Teléfono", s.contacto?.telefono || "") +
-          fila("Cobro", directo ? `Directo al taller (${cobro?.metodos.join(" y ")}), sin comisión` : `Cobra HETNA y se transfiere completo al taller al confirmar la entrega`) +
+          fila("Cobro", directo ? `Directo al taller (${cobro?.metodos.join(" y ")}), sin comisión` : `Cobra HETNA y se transfiere al taller al confirmar la entrega, menos la comisión del cobro (Mercado Pago / Stripe)`) +
           fila("Liga de pago", pagoUrl ? "Generada y enviada al cliente" : "NO se generó: mándala a mano") +
           `</table>`
       ),
@@ -122,8 +122,8 @@ export const POST = async (req: MedusaRequest<{ propuesta_id?: string }>, res: M
         resumen +
           `<p style="color:#40403A">${
             directo
-              ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. HETNA no cobra comisión: el pago es completo para ti.`
-              : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió, completo (HETNA no cobra comisión). Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
+              ? `El cliente te paga directo a tu ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")}. HETNA no cobra comisión; ${esc(cobro?.metodos.includes("mercadopago") ? "Mercado Pago" : "PayPal")} sólo te descuenta su comisión normal de cobro.`
+              : `El cliente le paga a HETNA y te transferimos cuando confirme que recibió. HETNA no cobra comisión; sólo se descuenta lo que Mercado Pago cobra por recibir el pago. Conecta tu Mercado Pago o PayPal en la app para cobrar directo la próxima vez.`
           }</p>` +
           bloqueContacto +
           `<p style="color:#40403A;background:#FFF8EE;padding:10px 12px;border-radius:8px"><strong>Recomendado: formalicen su acuerdo con HETNA SafeDeal.</strong> Es opcional, pero protege a los dos (pagos, entregas, calidad y planos). Se prepara y se firma desde HETNA con un código por correo.</p>` +
