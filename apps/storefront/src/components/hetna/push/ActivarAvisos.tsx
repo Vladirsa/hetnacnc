@@ -11,13 +11,13 @@ import { activarPushCliente, desactivarPushCliente, llavePush } from "@/lib/data
 
 type Estado = "cargando" | "no-soportado" | "ios-instalar" | "bloqueado" | "inactivo" | "activo" | "activando"
 
-const aBytes = (b64: string) => {
+export const aBytes = (b64: string) => {
   const relleno = "=".repeat((4 - (b64.length % 4)) % 4)
   const crudo = atob((b64 + relleno).replace(/-/g, "+").replace(/_/g, "/"))
   return Uint8Array.from(crudo, (c) => c.charCodeAt(0))
 }
 
-const nombreDispositivo = () => {
+export const nombreDispositivo = () => {
   const ua = navigator.userAgent
   if (/iphone|ipad/i.test(ua)) return "iPhone/iPad"
   if (/android/i.test(ua)) return "Android"
@@ -26,7 +26,7 @@ const nombreDispositivo = () => {
   return "Navegador"
 }
 
-async function registro() {
+export async function registro() {
   return (await navigator.serviceWorker.getRegistration("/")) || (await navigator.serviceWorker.register("/sw.js"))
 }
 

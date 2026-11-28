@@ -37,6 +37,8 @@ type Props = {
   procesoInicial?: TipoMaquina
   /** Texto con el material del producto ("Pino", "MDF 6 mm"…): sale elegido el que más se parece */
   materialInicial?: string
+  /** Título del recuadro (por omisión, según sea físico o diseño) */
+  encabezado?: string
 }
 
 const FORMATOS_3D = ["STL", "OBJ", "STEP", "3MF"]
@@ -73,7 +75,7 @@ export function indiceMaterial(mats: { nombre: string; espesor: number }[], text
 const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-2.5 text-[14px] outline-none focus:border-[#E85D04]"
 const etiqueta = "block text-[12.5px] font-semibold text-[#1E2329]"
 
-export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial, materialInicial }: Props) {
+export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial, materialInicial, encabezado }: Props) {
   const es3D = !fisico && formatos.length > 0 && formatos.every((f) => FORMATOS_3D.includes(f))
   const todos: TipoMaquina[] = ["laser_co2", "router", "plasma", "impresora_3d"]
   const lista: TipoMaquina[] = fisico ? todos : es3D ? ["impresora_3d"] : formatos.some((f) => FORMATOS_3D.includes(f)) ? todos : ["laser_co2", "router", "plasma"]
@@ -99,14 +101,19 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   }, [vistaPrevia])
 
   const cfg = useConfigPrecios()
-  const deFicha = leerMedidas(medidas)
+  // Medidas de la ficha: si son de menos de 1 cm sin unidad ("Tabla 2 x 1") no se sabe en qué vienen: se escriben a mano
+  const leidas = leerMedidas(medidas)
+  const deFicha = leidas && Math.max(leidas.largo, leidas.ancho) >= 10 ? leidas : null
   const [servicio, setServicio] = useState<TipoMaquina>(procesos[0])
   const mats = useMemo(() => materialesPara(servicio), [servicio])
   const [iMat, setIMat] = useState(() => indiceMaterial(materialesPara(procesos[0]), materialInicial))
-  // Medidas: ancho × largo × alto. Si el diseño trae medidas, cambiar una
-  // ajusta las otras en proporción (escala `k`) para no deformarlo.
-  const [k, setK] = useState(1)
-  const [manual, setManual] = useState({ ancho: "", largo: "", alto: "" })
+  // Medidas: ancho × largo × alto, en cm o mm (28 nov 2026, Vlado: se
+  // escriben libres; antes, con medidas de la ficha, sólo se escalaban y no se
+  // podía borrar el número ni poner el alto). Con «Mantener proporción», cambiar
+  // una ajusta las otras para no deformar el diseño.
+  const [unidad, setUnidad] = useState<"cm" | "mm">("cm")
+  const [proporcion, setProporcion] = useState(true)
+  const [med, setMed] = useState<{ ancho: string; largo: string; alto: string } | null>(null)
   const [cantidad, setCantidad] = useState("10")
   const [conGrabado, setConGrabado] = useState(false)
   const [texto, setTexto] = useState("")
@@ -135,24 +142,41 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
         }
       : null
   const num = (v: string) => parseFloat(v.replace(",", ".")) || 0
+  const aMm = (v: string) => num(v) * (unidad === "cm" ? 10 : 1)
+  const deMm = (mm: number) => (mm > 0 ? String(Math.round((unidad === "cm" ? mm / 10 : mm) * 10) / 10) : "")
+  // ancho ↔ largo de la pieza base (así venían en la ficha)
+  const baseDe = { ancho: base?.largo || 0, largo: base?.ancho || 0, alto: base?.alto || 0 }
+  // lo que se ve en los campos: lo que escribió el cliente o, al inicio, las medidas del diseño
+  const vista = med ?? { ancho: deMm(baseDe.ancho), largo: deMm(baseDe.largo), alto: deMm(baseDe.alto) }
+  const cambiarMedida = (clave: "ancho" | "largo" | "alto", v: string) => {
+    const nuevo = { ...vista, [clave]: v }
+    // en proporción: las otras dos siguen a la que cambió (sólo con un número válido; vacío se deja escribir)
+    if (proporcion && base && baseDe[clave] > 0 && aMm(v) > 0) {
+      const f = aMm(v) / baseDe[clave]
+      for (const o of ["ancho", "largo", "alto"] as const) if (o !== clave && baseDe[o] > 0) nuevo[o] = deMm(baseDe[o] * f)
+    }
+    setMed(nuevo)
+  }
+  const cambiarUnidad = (u: "cm" | "mm") => {
+    if (u === unidad) return
+    const f = u === "mm" ? 10 : 0.1
+    const conv = (v: string) => (num(v) > 0 ? String(Math.round(num(v) * f * 10) / 10) : v)
+    setMed({ ancho: conv(vista.ancho), largo: conv(vista.largo), alto: conv(vista.alto) })
+    setUnidad(u)
+  }
+  const anchoMm = aMm(vista.ancho), largoMm = aMm(vista.largo), altoMm = aMm(vista.alto)
   // Ancho y largo son obligatorios; el alto sólo en impresión 3D
-  const faltaAlto = servicio === "impresora_3d" && !(num(manual.alto) > 0)
-  const piezaBase: Pieza | null =
-    base ||
-    (num(manual.ancho) > 0 && num(manual.largo) > 0 && !faltaAlto
-      ? piezaAMano(num(manual.ancho), num(manual.largo), num(manual.alto), "normal", servicio === "impresora_3d")
-      : null)
-  const escala = base ? k : 1
-  const pieza: Pieza | null = piezaBase
-    ? {
-        ...piezaBase,
-        largo: piezaBase.largo * escala,
-        ancho: piezaBase.ancho * escala,
-        alto: piezaBase.alto * escala,
-        metrosCorte: piezaBase.metrosCorte * escala,
-        volumenCm3: piezaBase.volumenCm3 * escala ** 3,
-      }
-    : null
+  const faltaAlto = servicio === "impresora_3d" && !(altoMm > 0) && !(base && baseDe.alto > 0)
+  let pieza: Pieza | null = null
+  if (anchoMm > 0 && largoMm > 0 && !faltaAlto) {
+    if (base) {
+      // la pieza del diseño, estirada en cada eje a lo que pidió el cliente
+      const kx = baseDe.ancho > 0 ? anchoMm / baseDe.ancho : 1, ky = baseDe.largo > 0 ? largoMm / baseDe.largo : 1
+      const kz = baseDe.alto > 0 && altoMm > 0 ? altoMm / baseDe.alto : 1
+      pieza = { ...base, largo: base.largo * kx, ancho: base.ancho * ky, alto: baseDe.alto > 0 ? base.alto * kz : altoMm, metrosCorte: base.metrosCorte * Math.sqrt(kx * ky), volumenCm3: base.volumenCm3 * kx * ky * kz }
+    } else pieza = piezaAMano(anchoMm, largoMm, altoMm, "normal", servicio === "impresora_3d")
+  }
+  const cambiado = med !== null
 
   // Grabado: letra de ~18 % del ancho (entre 5 y 25 mm), media letra rellena
   const altoLetra = pieza ? Math.min(25, Math.max(5, pieza.ancho * 0.18)) : 10
@@ -182,9 +206,9 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
 
   // Las tres medidas y la cantidad, en un solo renglón
   const dims = [
-    { clave: "ancho", nombre: "Ancho mm", base: base?.largo },
-    { clave: "largo", nombre: "Largo mm", base: base?.ancho },
-    { clave: "alto", nombre: servicio === "impresora_3d" ? "Alto mm" : "Alto (opc.)", base: base?.alto },
+    { clave: "ancho", nombre: "Ancho" },
+    { clave: "largo", nombre: "Largo" },
+    { clave: "alto", nombre: servicio === "impresora_3d" ? "Alto" : "Alto (opc.)" },
   ] as const
   const [verCalculo, setVerCalculo] = useState(false)
 
@@ -200,7 +224,7 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
     >
       <div className="flex items-baseline justify-between gap-2">
         <h2 id="titulo-fabricar" className="fuente-condensada m-0 text-[19px] font-bold uppercase leading-none text-[#1E2329]">
-          <T>{fisico ? "Fabrícalo a tu medida" : "Fabrícalo con un taller"}</T>
+          <T>{encabezado || (fisico ? "Fabrícalo a tu medida" : "Fabrícalo con un taller")}</T>
         </h2>
         <span className="shrink-0 text-[12px] text-[#5B6370]"><T>precio al momento</T></span>
       </div>
@@ -222,16 +246,13 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
       <div className="mt-2 grid grid-cols-4 gap-2">
         {dims.map((d) => (
           <label key={d.clave} className="block min-w-0">
-            <span className="block truncate text-[11px] text-[#5B6370]"><T>{d.nombre}</T></span>
+            <span className="block truncate text-[11px] text-[#5B6370]"><T>{d.nombre}</T> {unidad}</span>
             <input
               className={campo + " mt-0.5"}
               inputMode="decimal"
               placeholder={d.clave === "alto" && servicio !== "impresora_3d" ? "—" : "0"}
-              value={base ? (d.base ? String(Math.round(d.base * k)) : "") : manual[d.clave]}
-              disabled={Boolean(base) && !d.base}
-              onChange={(e) =>
-                base ? d.base && num(e.target.value) > 0 && setK(num(e.target.value) / d.base) : setManual({ ...manual, [d.clave]: e.target.value })
-              }
+              value={vista[d.clave]}
+              onChange={(e) => cambiarMedida(d.clave, e.target.value.replace(/[^\d.,]/g, ""))}
             />
           </label>
         ))}
@@ -239,6 +260,22 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
           <span className="block text-[11px] text-[#5B6370]"><T>Cantidad</T></span>
           <input className={campo + " mt-0.5"} inputMode="numeric" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
         </label>
+      </div>
+
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#5B6370]">
+        <span className="inline-flex overflow-hidden rounded-md border border-[#C5CCD3]" role="group" aria-label="Unidad de las medidas">
+          {(["cm", "mm"] as const).map((u) => (
+            <button key={u} type="button" aria-pressed={unidad === u} onClick={() => cambiarUnidad(u)} className={`min-h-[30px] px-3 font-semibold ${unidad === u ? "bg-[#1E2329] text-white" : "bg-white text-[#1E2329]"}`}>
+              {u}
+            </button>
+          ))}
+        </span>
+        {base && (
+          <label className="inline-flex items-center gap-1.5">
+            <input type="checkbox" checked={proporcion} onChange={(e) => setProporcion(e.target.checked)} />
+            <T>Mantener proporción</T>
+          </label>
+        )}
       </div>
 
       {conGrabado && servicio !== "impresora_3d" && (
@@ -298,10 +335,10 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
           <T>Cómo se calculó</T>
         </button>
         <T>{" · "}</T><T>Precio orientativo; el real lo da cada taller.</T>
-        {base && k !== 1 && (
+        {base && cambiado && (
           <>
             <T>{" · "}</T>
-            <button type="button" onClick={() => setK(1)} className="font-semibold text-[#E85D04] underline">
+            <button type="button" onClick={() => setMed(null)} className="font-semibold text-[#E85D04] underline">
               <T>Medidas originales</T>
             </button>
           </>

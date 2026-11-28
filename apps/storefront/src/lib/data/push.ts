@@ -52,3 +52,34 @@ export async function desactivarPushCliente(endpoint: string): Promise<{ ok: boo
     return { ok: false }
   }
 }
+
+/** Aviso de productos nuevos: sin cuenta (si hay sesión, también queda ligado al cliente). */
+export async function activarPushNovedades(suscripcion: Suscripcion, dispositivo?: string): Promise<{ ok: boolean; mensaje?: string }> {
+  const auth = (await getAuthHeaders().catch(() => ({}))) as { authorization?: string }
+  try {
+    const r = await fetch(`${API}/store/hetna-push/novedades`, {
+      method: "POST",
+      headers: { "x-publishable-api-key": PK, "content-type": "application/json", ...(auth.authorization ? { authorization: auth.authorization } : {}) },
+      body: JSON.stringify({ suscripcion, dispositivo }),
+      cache: "no-store",
+    })
+    const j = (await r.json().catch(() => ({}))) as { message?: string }
+    return r.ok ? { ok: true } : { ok: false, mensaje: j.message || "No se pudieron activar los avisos." }
+  } catch {
+    return { ok: false, mensaje: "No se pudieron activar los avisos." }
+  }
+}
+
+export async function desactivarPushNovedades(endpoint: string): Promise<{ ok: boolean }> {
+  try {
+    const r = await fetch(`${API}/store/hetna-push/novedades`, {
+      method: "DELETE",
+      headers: { "x-publishable-api-key": PK, "content-type": "application/json" },
+      body: JSON.stringify({ endpoint }),
+      cache: "no-store",
+    })
+    return { ok: r.ok }
+  } catch {
+    return { ok: false }
+  }
+}

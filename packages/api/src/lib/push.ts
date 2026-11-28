@@ -71,6 +71,12 @@ export async function asegurarTablaPush(knex: any) {
       t.timestamp("updated_at", { useTz: true }).notNullable().defaultTo(knex.fn.now())
     })
   }
+  // Avisos de productos nuevos (28 nov 2026): también para visitantes sin cuenta
+  if (!(await knex.schema.hasColumn(T_PUSH, "novedades"))) {
+    await knex.schema.alterTable(T_PUSH, (t: any) => {
+      t.boolean("novedades").notNullable().defaultTo(false).index()
+    })
+  }
   tabla = true
 }
 
@@ -86,7 +92,7 @@ export function validarSuscripcion(b: any): Suscripcion | null {
 export async function guardarSuscripcion(
   knex: any,
   s: Suscripcion,
-  quien: { customerId?: string | null; sellerId?: string | null },
+  quien: { customerId?: string | null; sellerId?: string | null; novedades?: boolean },
   dispositivo?: string
 ) {
   await asegurarTablaPush(knex)
@@ -100,9 +106,11 @@ export async function guardarSuscripcion(
   }
   if (quien.customerId) fila.customer_id = quien.customerId
   if (quien.sellerId) fila.seller_id = quien.sellerId
+  if (quien.novedades !== undefined) fila.novedades = quien.novedades
   const actualizar = ["p256dh", "auth", "dispositivo", "fallos", "updated_at"]
   if (quien.customerId) actualizar.push("customer_id")
   if (quien.sellerId) actualizar.push("seller_id")
+  if (quien.novedades !== undefined) actualizar.push("novedades")
   await knex(T_PUSH).insert(fila).onConflict("endpoint").merge(actualizar)
 }
 
@@ -110,7 +118,7 @@ export async function guardarSuscripcion(
 export async function borrarSuscripcion(
   knex: any,
   endpoint: string,
-  quien: "cliente" | "taller" | "todo" = "todo",
+  quien: "cliente" | "taller" | "novedades" | "todo" = "todo",
   // Sólo la suscripción de esa cuenta (antes un taller podía borrar la de otro)
   dueno?: { sellerId?: string; customerId?: string }
 ) {
@@ -119,14 +127,15 @@ export async function borrarSuscripcion(
   if (dueno?.sellerId) q.where({ seller_id: dueno.sellerId })
   if (dueno?.customerId) q.where({ customer_id: dueno.customerId })
   if (quien === "todo") return q.delete()
-  await q.clone().update(quien === "cliente" ? { customer_id: null } : { seller_id: null })
-  await knex(T_PUSH).where({ endpoint: String(endpoint || "") }).whereNull("customer_id").whereNull("seller_id").delete()
+  await q.clone().update(quien === "cliente" ? { customer_id: null } : quien === "taller" ? { seller_id: null } : { novedades: false })
+  // sin cuenta, sin taller y sin avisos de novedades ya no sirve
+  await knex(T_PUSH).where({ endpoint: String(endpoint || "") }).whereNull("customer_id").whereNull("seller_id").where({ novedades: false }).delete()
 }
 
 export async function tieneSuscripcion(knex: any, endpoint: string) {
   await asegurarTablaPush(knex)
-  const f = await knex(T_PUSH).where({ endpoint: String(endpoint || "") }).first("customer_id", "seller_id")
-  return { cliente: !!f?.customer_id, taller: !!f?.seller_id }
+  const f = await knex(T_PUSH).where({ endpoint: String(endpoint || "") }).first("customer_id", "seller_id", "novedades")
+  return { cliente: !!f?.customer_id, taller: !!f?.seller_id, novedades: !!f?.novedades }
 }
 
 async function mandar(knex: any, filas: { endpoint: string; p256dh: string; auth: string }[], aviso: AvisoPush, logger?: any) {
@@ -216,4 +225,26 @@ export async function pushATodosLosClientes(knex: any, aviso: AvisoPush, logger?
     logger?.warn?.(`[push] todos: ${(e as Error).message}`)
     return 0
   }
+}
+
+/** Aviso de productos nuevos a quien lo pidió (con o sin cuenta). */
+export async function pushNovedades(knex: any, aviso: AvisoPush, logger?: any) {
+  try {
+    if (!listo()) return 0
+    await asegurarTablaPush(knex)
+    const filas = await knex(T_PUSH).where({ novedades: true }).select("endpoint", "p256dh", "auth")
+    return await mandar(knex, filas, aviso, logger)
+  } catch (e) {
+    logger?.warn?.(`[push] novedades: ${(e as Error).message}`)
+    return 0
+  }
+}
+
+/** El texto del aviso diario de productos nuevos (null si no hubo). */
+export function avisoNovedades(productos: { title: string; handle: string }[]): AvisoPush | null {
+  const p = productos.filter((x) => x.title && x.handle)
+  if (!p.length) return null
+  if (p.length === 1) return { titulo: "Nuevo en HETNA", cuerpo: p[0].title, url: `/mx/products/${p[0].handle}`, etiqueta: "novedades" }
+  const nombres = p.slice(0, 3).map((x) => x.title).join(", ")
+  return { titulo: `${p.length} productos nuevos en HETNA`, cuerpo: p.length > 3 ? `${nombres} y ${p.length - 3} más` : nombres, url: "/mx/novedades", etiqueta: "novedades" }
 }
