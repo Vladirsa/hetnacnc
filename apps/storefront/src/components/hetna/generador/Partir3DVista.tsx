@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
@@ -27,6 +27,9 @@ type Props = {
 
 export default function Partir3DVista({ modelo, piezas, cortes, marcas = [], modo = "piezas", separar, alto = 460, alTocar }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  // piezas escondidas en la vista explotada (para ver los pernos o coples de las de atrás)
+  const [ocultas, setOcultas] = useState<number[]>([])
+  useEffect(() => setOcultas([]), [piezas])
   const tocar = useRef(alTocar)
   tocar.current = alTocar
   const estado = useRef<{ scene: THREE.Scene; camera: THREE.PerspectiveCamera; grupo: THREE.Group; render: () => void; tam: number; listo: boolean; blanco: THREE.Mesh | null } | null>(null)
@@ -133,6 +136,7 @@ export default function Partir3DVista({ modelo, piezas, cortes, marcas = [], mod
     const explotado = modo === "piezas" && piezas && piezas.length > 1
     if (explotado) {
       piezas!.forEach((p, i) => {
+        if (ocultas.includes(i)) return
         const m = malla(p.tris, COLORES[i % COLORES.length])
         m.geometry.computeBoundingBox()
         const c = m.geometry.boundingBox!.getCenter(new THREE.Vector3())
@@ -195,7 +199,38 @@ export default function Partir3DVista({ modelo, piezas, cortes, marcas = [], mod
       s.listo = true
     }
     s.render()
-  }, [modelo, piezas, cortes, marcas, modo, separar])
+  }, [modelo, piezas, cortes, marcas, modo, separar, ocultas])
 
-  return <div ref={ref} className={`w-full rounded-[12px] overflow-hidden border border-[#2B3648] ${alTocar && modo === "cortes" ? "cursor-crosshair" : ""}`} style={{ height: alto }} />
+  const explotada = modo === "piezas" && !!piezas && piezas.length > 1
+  return (
+    <div className="relative">
+      <div ref={ref} className={`w-full rounded-[12px] overflow-hidden border border-[#2B3648] ${alTocar && modo === "cortes" ? "cursor-crosshair" : ""}`} style={{ height: alto }} />
+      {explotada && (
+        // ocultar o mostrar cada pieza (Vlado, 28 nov 2026): así se ven los pernos y coples
+        <div className="absolute bottom-2 left-2 right-2 flex gap-1.5 overflow-x-auto rounded-[10px] bg-[#0B0F15]/85 p-1.5" role="group" aria-label="Mostrar u ocultar piezas">
+          {piezas!.map((p, i) => {
+            const oculta = ocultas.includes(i)
+            return (
+              <button
+                key={i}
+                type="button"
+                aria-pressed={!oculta}
+                onClick={() => setOcultas((o) => (oculta ? o.filter((x) => x !== i) : [...o, i]))}
+                className={`flex shrink-0 items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] font-semibold ${oculta ? "bg-[#1C2431] text-[#6B778A] line-through" : "bg-[#243045] text-white"}`}
+                title={oculta ? "Mostrar pieza" : "Ocultar pieza"}
+              >
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: `#${COLORES[i % COLORES.length].toString(16).padStart(6, "0")}`, opacity: oculta ? 0.35 : 1 }} />
+                {p.nombre || `Pieza ${i + 1}`}
+              </button>
+            )
+          })}
+          {ocultas.length > 0 && (
+            <button type="button" onClick={() => setOcultas([])} className="shrink-0 rounded-[7px] px-2 py-1 text-[12px] font-semibold text-[#F28A3C] underline">
+              Ver todas
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
