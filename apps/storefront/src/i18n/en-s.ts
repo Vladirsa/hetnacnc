@@ -10,6 +10,7 @@ import { EN_S_CONTENIDO_D } from "./en-s-contenido-d"
 import { EN_S_CONTENIDO_E } from "./en-s-contenido-e"
 import { EN_S_CONTENIDO_F } from "./en-s-contenido-f"
 import { EN_S_CONTENIDO_G } from "./en-s-contenido-g"
+import { EN_S_SABER, REGLAS_S_SABER } from "./en-s-saber"
 
 export const EN_S: Record<string, string> = {
   ...EN_S_LUGARES,
@@ -20,9 +21,11 @@ export const EN_S: Record<string, string> = {
   ...EN_S_CONTENIDO_E,
   ...EN_S_CONTENIDO_F,
   ...EN_S_CONTENIDO_G,
+  ...EN_S_SABER,
 }
 
 export const REGLAS_S: [RegExp, string][] = [
+  ...REGLAS_S_SABER,
   // Guías por ciudad (components/hetna/guias/GuiaCnc.tsx)
   [/^¿Hay talleres de (.+) en (.+)\?$/, "Are there shops for ⟪$1⟫ in ⟪$2⟫?"],
   [/^, incluido el envío a (.+) si no recoges$/, ", including shipping to ⟪$1⟫ if you don't pick up"],
