@@ -97,7 +97,7 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
           items: (cart.items || []).map((i) => ({ title: i.title, quantity: i.quantity, thumbnail: i.thumbnail, unit_price: i.unit_price, product_handle: i.product_handle })),
           total: cart.total || 0,
           currency_code: cart.currency_code,
-          cart_url: `${storefrontUrl}/mx/cart`,
+          cart_url: `${storefrontUrl}/mx/cart/recuperar?id=${cart.id}`,
           metadata: cart.metadata,
         },
       })
@@ -145,7 +145,7 @@ export default async function abandonedCartReminder(container: MedusaContainer) 
           subject: "¿Te ayudamos a terminar tu compra?",
           html: abandonedCartSegundoEmailHtml({
             items: cart.items || [],
-            cartUrl: `${storefrontUrl}/mx/cart`,
+            cartUrl: `${storefrontUrl}/mx/cart/recuperar?id=${cart.id}`,
             whatsappUrl: `https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hola, tengo una duda sobre mi carrito en HETNA CNC")}`,
             cupon,
           }),
