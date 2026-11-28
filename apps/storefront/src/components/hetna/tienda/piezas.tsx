@@ -30,6 +30,7 @@ export function textoConteo(n: number, como: ComoSeCompra | "cotizacion") {
 const ETIQUETAS: Record<string, { texto: string; clase: string }> = {
   descarga: { texto: "Descarga inmediata", clase: "bg-[#1E2329] text-white" },
   servicio: { texto: "Servicio", clase: "bg-white text-[#1E2329] ring-1 ring-[#1E2329]" },
+  fisico: { texto: "Producto físico", clase: "bg-white text-[#1E2329] ring-1 ring-[#1E2329]" },
   creditos: { texto: "Compra en línea", clase: "bg-white text-[#1E2329] ring-1 ring-[#1E2329]" },
   cotizacion: { texto: "Cotización", clase: "bg-[#E85D04] text-white" },
   talleres: { texto: "Para talleres", clase: "bg-[#1E2329] text-white" },
