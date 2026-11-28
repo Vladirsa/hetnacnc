@@ -97,6 +97,10 @@ export const asegurarCobro = async (knex: any) => {
     [T_SOLICITUD, "pagado", "numeric(12,2)"],
     [T_SOLICITUD, "liquidado_en", "timestamptz"],
     [T_PROPUESTA, "anticipo_pct", "integer"],
+    // Lo que Mercado Pago o Stripe le cobraron a HETNA por ese pago (sólo
+    // cobra HETNA). Se descuenta al liquidarle al taller (decisión del dueño,
+    // 27 nov 2026: licitaciones sin comisión HETNA, pero sí la del cobro).
+    [T_PAGO, "costo_cobro", "numeric(12,2) not null default 0"],
   ]
   for (const [tabla, col, tipo] of cols) {
     await knex.raw(`alter table ?? add column if not exists ?? ${tipo}`, [tabla, col])
@@ -109,6 +113,14 @@ export const asegurarCobro = async (knex: any) => {
 // cobra sólo planes, verificaciones y certificaciones. Se deja la tabla en 0 por
 // plan (y no se borra) por si algún día se decide otra cosa.
 export const PCT_POR_PLAN: Record<string, number> = { gratis: 0, taller: 0, pro: 0, industrial: 0 }
+
+// Decisión del dueño (27 nov 2026): sigue sin comisión HETNA, pero cuando
+// cobra HETNA se descuenta al liquidar lo que Mercado Pago o Stripe le cobran
+// por recibir el pago. Aplica 15 días después de avisar a los vendedores
+// (cláusula 17 de sus términos). Cuando cobra el taller, su Mercado Pago o
+// PayPal ya le descuenta su comisión solo.
+export const COSTO_COBRO_DESDE = Date.parse(process.env.COSTO_COBRO_DESDE || "2026-12-13T00:00:00-06:00")
+const aplicaCostoCobro = () => Date.now() >= COSTO_COBRO_DESDE
 
 /** Plan del taller para la comisión: gratis | taller | pro | industrial. */
 export async function planComision(seller: { email?: string | null; metadata?: any }, logger?: any): Promise<string> {
@@ -396,6 +408,8 @@ type DatosPago = {
   monto: number
   comision: number
   comisionCobrada: boolean
+  // Comisión del procesador que paga HETNA (cobra HETNA); 0 si cobró el taller
+  costoCobro?: number
   // Comisión mínima que debió descontarse (cobro directo con MP)
   comisionMinima?: number
   estado: string
@@ -448,6 +462,7 @@ export async function registrarPagoLicitacion(knex: any, solicitudId: string, da
       monto: r2(datos.monto),
       comision: r2(datos.comision),
       comision_cobrada: datos.comisionCobrada,
+      costo_cobro: r2(datos.costoCobro || 0),
       // Un pago ya aprobado sólo cambia a reembolso/contracargo, nunca a "revisar"
       estado: yaAprobado && aprobado ? "approved" : estado,
       pagador: datos.pagador || null,
@@ -470,6 +485,8 @@ export async function registrarPagoLicitacion(knex: any, solicitudId: string, da
           ...(!yaAprobado && mismoCobro
             ? { tipo: registro.tipo, monto: registro.monto, comision: registro.comision, comision_cobrada: registro.comision_cobrada }
             : {}),
+          // La comisión del procesador llega con la aprobación (OXXO/SPEI la tienen hasta que se paga)
+          ...(previo.cobra === "hetna" && registro.costo_cobro > Number(previo.costo_cobro || 0) ? { costo_cobro: registro.costo_cobro } : {}),
         })
     }
     else await trx(T_PAGO).insert({ id: nuevoId("pag"), ...registro })
@@ -662,6 +679,12 @@ export async function avisoMercadoPago(knex: any, pagoId: string, sol: string | 
   const monto = r2(pago.transaction_amount)
   const pct = pctDe(s)
   const descontada = Number(pago.marketplace_fee ?? pago.fee_details?.find?.((f) => f.type === "application_fee")?.amount ?? 0)
+  // Lo que Mercado Pago le cobra a HETNA por recibir el pago (cobra HETNA)
+  const costoMp = r2(
+    (Array.isArray(pago.fee_details) ? pago.fee_details : [])
+      .filter((f: any) => f?.type === "mercadopago_fee")
+      .reduce((a: number, f: any) => a + Number(f.amount || 0), 0)
+  )
   await registrarPagoLicitacion(
     knex,
     s.id,
@@ -676,6 +699,7 @@ export async function avisoMercadoPago(knex: any, pagoId: string, sol: string | 
       comision: cobra === "taller" ? r2(descontada) : comisionDe(monto, pct),
       comisionMinima: cobra === "taller" ? comisionDe(monto, pct) : undefined,
       comisionCobrada: cobra === "taller",
+      costoCobro: cobra === "hetna" && aplicaCostoCobro() ? costoMp : 0,
       estado: String(pago.status || ""),
       pagador: pago.payer?.email || null,
     },
@@ -761,14 +785,15 @@ export async function comisionesPaypalPendientes(knex: any, hasta: string) {
  *  Las de antes de Licitaciones 2.0 (sin filas de pago) no llevan comisión. */
 export async function liquidacionTaller(knex: any, s: any) {
   await asegurarCobro(knex)
-  const pagos = await knex(T_PAGO).where({ solicitud_id: s.id, estado: "approved", cobra: "hetna" }).select("monto", "comision")
+  const pagos = await knex(T_PAGO).where({ solicitud_id: s.id, estado: "approved", cobra: "hetna" }).select("monto", "comision", "costo_cobro")
   if (!pagos.length && !s.cobro && s.pago_estado === "pagado") {
     const cobrado = r2(Number(s.pago_monto || 0))
-    return { cobrado, comision: 0, aPagar: cobrado }
+    return { cobrado, comision: 0, costoCobro: 0, aPagar: cobrado }
   }
   const cobrado = r2(pagos.reduce((a, x) => a + Number(x.monto), 0))
   const comision = r2(pagos.reduce((a, x) => a + Number(x.comision), 0))
-  return { cobrado, comision, aPagar: r2(cobrado - comision) }
+  const costoCobro = r2(pagos.reduce((a, x) => a + Number(x.costo_cobro || 0), 0))
+  return { cobrado, comision, costoCobro, aPagar: r2(cobrado - comision - costoCobro) }
 }
 
 /** Aviso de Stripe de un pago de licitación: se vuelve a consultar la sesión con la llave de HETNA.
@@ -784,6 +809,16 @@ export async function avisoStripeLicitacion(knex: any, sesionId: string, logger?
   const monto = r2(Number(sesion.amount_total || 0) / 100)
   const estado = sesion.payment_status === "paid" ? "approved" : sesion.status === "expired" ? "cancelled" : sesion.status === "complete" ? "pending" : "pending"
   if (sesion.status === "open") return null // todavía no paga ni elige método
+  // Lo que Stripe le cobra a HETNA (se sabe cuando el pago ya entró)
+  let costoStripe = 0
+  if (estado === "approved" && sesion.payment_intent && aplicaCostoCobro()) {
+    try {
+      const pi = await stripe<any>(`/payment_intents/${sesion.payment_intent}`, { metodo: "GET", datos: { expand: ["latest_charge.balance_transaction"] } })
+      costoStripe = r2(Number(pi?.latest_charge?.balance_transaction?.fee || 0) / 100)
+    } catch {
+      costoStripe = 0 // sin el dato no se descuenta nada; HETNA lo absorbe
+    }
+  }
   return registrarPagoLicitacion(
     knex,
     s.id,
@@ -795,6 +830,7 @@ export async function avisoStripeLicitacion(knex: any, sesionId: string, logger?
       monto,
       comision: comisionDe(monto, pctDe(s)), // cobra HETNA: se descuenta al liquidar al taller
       comisionCobrada: false,
+      costoCobro: costoStripe,
       estado,
       pagador: sesion.customer_details?.email || null,
     },
