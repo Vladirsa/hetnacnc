@@ -209,6 +209,8 @@ body { background: #FAF9F6; }
    todas se ven iguales sin tocar su lógica. Ver app/[locale]/(estudio). */
 .tema-estudio { background: #0D1015; color: #E6EBF2; }
 .tema-estudio .bg-white { background-color: #1C2431; }
+/* Vistas previas de dibujos (letras y piezas en tono oscuro): siempre en blanco para que se distingan (Vlado, 28 nov 2026) */
+.tema-estudio .vista-clara { background-color: #FFFFFF; border-color: #D5D0C4; }
 .tema-estudio .bg-\[\#FAF9F6\], .tema-estudio .bg-\[\#F4F3EF\] { background-color: #0D1015; }
 .tema-estudio .bg-\[\#F7F5EF\] { background-color: #0F151E; }
 .tema-estudio .hover\:bg-\[\#F7F5EF\]:hover { background-color: #232D3D; }

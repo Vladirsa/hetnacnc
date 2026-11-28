@@ -44,10 +44,17 @@ function descargar(nombre: string, contenido: string | ArrayBuffer, tipo: string
 
 // Áreas de trabajo comunes en México
 const HOJAS = [
+  { id: "300x200", nombre: "Láser chico 300 × 200", ancho: 300, alto: 200 },
+  { id: "400x400", nombre: "Láser de diodo 400 × 400", ancho: 400, alto: 400 },
   { id: "600x400", nombre: "Láser 600 × 400", ancho: 600, alto: 400 },
   { id: "900x600", nombre: "Láser 900 × 600", ancho: 900, alto: 600 },
+  { id: "1000x600", nombre: "Láser 1000 × 600", ancho: 1000, alto: 600 },
   { id: "1300x900", nombre: "Láser 1300 × 900", ancho: 1300, alto: 900 },
+  { id: "1600x1000", nombre: "Láser 1600 × 1000", ancho: 1600, alto: 1000 },
+  { id: "1220x1220", nombre: "Media hoja 1220 × 1220", ancho: 1220, alto: 1220 },
   { id: "1220x2440", nombre: "Hoja MDF 1220 × 2440", ancho: 2440, alto: 1220 },
+  { id: "1500x3000", nombre: "Router 1500 × 3000", ancho: 3000, alto: 1500 },
+  { id: "otra", nombre: "Otra medida", ancho: 0, alto: 0 },
 ]
 
 const Etiqueta = ({ children }: { children: React.ReactNode }) => (
@@ -116,6 +123,8 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
   const [cable, setCable] = useState("8")
   const [construccion, setConstruccion] = useState<Construccion>("mdf_acrilico")
   const [hojaId, setHojaId] = useState("600x400")
+  const [hojaAncho, setHojaAncho] = useState("800")
+  const [hojaAlto, setHojaAlto] = useState("500")
   const [separar, setSeparar] = useState(0)
   const [hojaVista, setHojaVista] = useState(0)
 
@@ -162,7 +171,10 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
   }, [fuente, texto, alto, espaciado, profundidad, espesor, espesorFrente, pared, construccion, cable])
 
   const listo = !!r && !r.errores.length
-  const hoja = HOJAS.find((h) => h.id === hojaId) || HOJAS[0]
+  const elegida = HOJAS.find((h) => h.id === hojaId) || HOJAS[2]
+  // "Otra medida": la del área de corte de su máquina (entre 100 mm y 4 m)
+  const lado = (v: string) => Math.max(100, Math.min(4000, numero(v) || 0))
+  const hoja = elegida.id === "otra" ? { ...elegida, ancho: lado(hojaAncho), alto: lado(hojaAlto) } : elegida
 
   // Anidado por material: cada material y espesor va en sus propias hojas
   const grupos = useMemo(() => {
@@ -286,11 +298,17 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
         >
           {HOJAS.map((h) => (
             <option key={h.id} value={h.id}>
-              {h.nombre} mm
+              {h.id === "otra" ? h.nombre : `${h.nombre} mm`}
             </option>
           ))}
         </select>
       </label>
+      {hojaId === "otra" && (
+        <div className="grid grid-cols-2 gap-2">
+          <CampoNum etiqueta="Ancho del área" valor={hojaAncho} cambiar={(v) => (setHojaAncho(v), setHojaVista(0))} />
+          <CampoNum etiqueta="Alto del área" valor={hojaAlto} cambiar={(v) => (setHojaAlto(v), setHojaVista(0))} />
+        </div>
+      )}
 
       <label className="flex flex-col gap-1.5">
         <Etiqueta><T>Separar capas (vista 3D)</T></Etiqueta>
@@ -312,19 +330,26 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
         <p className="m-0 text-[14px] text-[#8A97AB]">{fuente ? "Revisa los datos del panel." : "Cargando la tipografía…"}</p>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-2">
-            {hojas.map((x, k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setHojaVista(k)}
-                className={`rounded-[8px] px-3 py-1.5 text-[12.5px] font-semibold ${
-                  k === hojaVista ? "bg-[#C2560A] text-white" : "bg-[#1C2431] text-[#C9D2E0] hover:bg-[#243045]"
-                }`}
-              >
-                {x.material} <T>· hoja</T> {x.i + 1}/{x.total}
-              </button>
-            ))}
+          {/* Muchas hojas llenaban la pantalla del celular con botones: ahora un selector con flechas (Vlado, 28 nov 2026) */}
+          <div className="flex items-center gap-2">
+            <button type="button" aria-label="Hoja anterior" disabled={hojaVista <= 0} onClick={() => setHojaVista((k) => Math.max(0, k - 1))} className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] bg-[#1C2431] text-[16px] text-white disabled:opacity-40">
+              ‹
+            </button>
+            <select
+              value={hojaVista}
+              onChange={(e) => setHojaVista(Number(e.target.value))}
+              aria-label="Hoja que se ve"
+              className="min-w-0 flex-1 rounded-[8px] bg-[#1C2431] px-3 py-2 text-[13px] font-semibold text-white outline-none focus:ring-1 focus:ring-[#C2560A]"
+            >
+              {hojas.map((x, k) => (
+                <option key={k} value={k}>
+                  {x.material} · hoja {x.i + 1} de {x.total}
+                </option>
+              ))}
+            </select>
+            <button type="button" aria-label="Hoja siguiente" disabled={hojaVista >= hojas.length - 1} onClick={() => setHojaVista((k) => Math.min(hojas.length - 1, k + 1))} className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] bg-[#1C2431] text-[16px] text-white disabled:opacity-40">
+              ›
+            </button>
           </div>
           {actual && (
             <div
