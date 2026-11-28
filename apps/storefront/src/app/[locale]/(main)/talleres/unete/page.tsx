@@ -13,6 +13,7 @@ import {
 import { AvisoReclamarPerfil } from "@/components/hetna/taller/AvisoReclamarPerfil"
 import { GuardarInvitacion } from "@/components/hetna/taller/GuardarInvitacion"
 import { ComparativaComisiones } from "@/components/hetna/taller/ComparativaComisiones"
+import { LoQueDebesSaber } from "@/components/hetna/taller/LoQueDebesSaber"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres } from "@/lib/hetna/talleres"
@@ -120,6 +121,8 @@ export default async function UneteTallerPage() {
         </section>
 
         <ComparativaComisiones />
+
+        <LoQueDebesSaber />
 
         <PasosTaller />
         <BeneficiosTaller />
