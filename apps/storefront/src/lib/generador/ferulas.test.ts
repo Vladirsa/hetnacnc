@@ -91,6 +91,10 @@ test("férula con forma: dos mitades curvas que cierran alrededor del brazo", as
   const zB = t.slice(r.malla.partes![0].triangulos * 9).filter((_, i) => i % 3 === 2)
   const minA = zA.reduce((a, b) => Math.min(a, b), Infinity), maxB = zB.reduce((a, b) => Math.max(a, b), -Infinity)
   assert.ok(minA > r.diametro / 2 - 5 && maxB < r.diametro / 2 + 5, `${minA} ${maxB}`)
+  // las dos mitades con las caras hacia afuera: volumen con signo positivo en cada una
+  const vol = (tt: number[]) => { let v = 0; for (let i = 0; i < tt.length; i += 9) v += (tt[i] * (tt[i + 4] * tt[i + 8] - tt[i + 5] * tt[i + 7]) - tt[i + 1] * (tt[i + 3] * tt[i + 8] - tt[i + 5] * tt[i + 6]) + tt[i + 2] * (tt[i + 3] * tt[i + 7] - tt[i + 4] * tt[i + 6])) / 6; return v }
+  const nA = r.malla.partes![0].triangulos * 9
+  assert.ok(vol(t.slice(0, nA)) > 1000 && vol(t.slice(nA)) > 1000, `volúmenes ${vol(t.slice(0, nA))} y ${vol(t.slice(nA))}`)
   // subdividir no cambia el área
   const area = (tt: number[]) => { let a = 0; for (let i = 0; i < tt.length; i += 9) { const u = [tt[i + 3] - tt[i], tt[i + 4] - tt[i + 1], tt[i + 5] - tt[i + 2]], v = [tt[i + 6] - tt[i], tt[i + 7] - tt[i + 1], tt[i + 8] - tt[i + 2]]; a += Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2 } return a }
   const tri = [0, 0, 0, 10, 0, 0, 0, 10, 0]

@@ -66,6 +66,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     }
     if (!cambia) return
     setModelo(m)
+    setCat(m.categoria)
     setValores(limpiarValores(m, v))
   }, [inicial])
 
@@ -115,6 +116,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
   const elegir = (m: Modelo3D) => {
     setModelo(m)
+    setCat(m.categoria)
     setValores(valoresIniciales(m))
     setMalla(null)
     setAviso("")

@@ -23,7 +23,26 @@ export function AvisosNovedades({ compacto = false }: { compacto?: boolean }) {
     const instalada = window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone
     if (!soporta) return setEstado(ios && !instalada ? "ios-instalar" : "no-soportado")
     if (Notification.permission === "denied") return setEstado("bloqueado")
-    setEstado(Notification.permission === "granted" && localStorage.getItem(CLAVE) === "1" ? "activo" : "inactivo")
+    if (!(Notification.permission === "granted" && localStorage.getItem(CLAVE) === "1")) return setEstado("inactivo")
+    // ya lo había activado: se vuelve a mandar la suscripción de este navegador (si el servidor la
+    // borró o el navegador la cambió, así se recupera); si ya no hay, queda como inactivo
+    let vivo = true
+    ;(async () => {
+      try {
+        const sub = await (await registro()).pushManager.getSubscription()
+        if (!sub) {
+          localStorage.removeItem(CLAVE)
+          return vivo && setEstado("inactivo")
+        }
+        const r = await activarPushNovedades(sub.toJSON() as never, nombreDispositivo())
+        if (vivo) setEstado(r.ok ? "activo" : "inactivo")
+      } catch {
+        if (vivo) setEstado("inactivo")
+      }
+    })()
+    return () => {
+      vivo = false
+    }
   }, [])
 
   const activar = async () => {

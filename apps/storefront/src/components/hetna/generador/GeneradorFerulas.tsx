@@ -4,7 +4,7 @@
 // paciente (persona o animal), elige la ventilación y las correas, y sale la pieza
 // PLANA en STL para imprimir y moldear con calor. Motor: lib/generador/ferulas.ts.
 import { T } from "@/components/hetna/i18n/Idioma"
-import { useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams } from "next/navigation"
 
@@ -87,7 +87,9 @@ export function GeneradorFerulas() {
     [tipo, lado, circ, largos, cobertura, holgura, grosor, margen, ventilacion, hueco, puente, correas, anchoCorrea]
   )
   const r = useMemo(() => hacerFerula(opciones), [opciones])
-  const r3 = useMemo(() => (forma === "forma" ? hacerFerula3D(opciones) : null), [opciones, forma])
+  // la de 2 piezas pesa más: se recalcula con las medidas "diferidas" para no trabar el teclado
+  const opcionesDiferidas = useDeferredValue(opciones)
+  const r3 = useMemo(() => (forma === "forma" ? hacerFerula3D(opcionesDiferidas) : null), [opcionesDiferidas, forma])
   // lo que se ve y se descarga en 3D: la pieza plana o las dos mitades con forma
   const malla3d = r3 && !r3.errores.length ? r3.malla : r.malla
   const listo = !r.errores.length && r.malla.tris.length > 0 && (!r3 || !r3.errores.length)
@@ -179,7 +181,8 @@ export function GeneradorFerulas() {
           <T>{e}</T>
         </Aviso>
       ))}
-      {listo && r.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
+      {/* con forma, los avisos de las 2 piezas salen junto a la vista 3D */}
+      {listo && forma === "plana" && r.avisos.map((a) => <Aviso key={a}><T>{a}</T></Aviso>)}
     </div>
   )
 
@@ -191,7 +194,7 @@ export function GeneradorFerulas() {
         <>
           <Datos
             filas={[
-              ["Pieza plana", medidas],
+              [forma === "forma" ? "Dos mitades" : "Pieza plana", medidas],
               ["Ventilación", ventilacion === "ninguna" ? "Sin huecos" : `${r.huecos} huecos`],
               ["Correas", `${r.correas} de ${r1(numero(anchoCorrea))} mm`],
               ...(tipo === "antebrazo" ? ([["Pulgar", `Brazo ${lado}`]] as [string, string][]) : []),
@@ -246,7 +249,7 @@ export function GeneradorFerulas() {
           <Boton
             tipo="primario"
             onClick={() => {
-              const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL(malla3d), locale, {
+              const ok = mandarAFabricar(`${archivo}${forma === "forma" ? "-2-mitades" : ""}.stl`, mallaSTL(malla3d), locale, {
                 pieza: `${forma === "forma" ? "Férula con forma, 2 mitades" : "Férula termoformable"} · ${nombreTipo}${tipo === "antebrazo" ? ` (brazo ${lado})` : ""}`,
                 medidas,
                 material: "PLA o PETG",

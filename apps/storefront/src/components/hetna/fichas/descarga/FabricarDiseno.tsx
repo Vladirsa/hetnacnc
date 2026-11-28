@@ -108,7 +108,8 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const cfg = useConfigPrecios()
   // Medidas de la ficha: si son de menos de 1 cm sin unidad ("Tabla 2 x 1") no se sabe en qué vienen: se escriben a mano
   const leidas = leerMedidas(medidas)
-  const deFicha = leidas && Math.max(leidas.largo, leidas.ancho) >= 10 ? leidas : null
+  const sinUnidad = !!medidas && !/\b(mm|cm|m)\b/i.test(medidas)
+  const deFicha = leidas && (!sinUnidad || Math.max(leidas.largo, leidas.ancho) >= 10) ? leidas : null
   const [servicio, setServicio] = useState<TipoMaquina>(procesos[0])
   const mats = useMemo(() => materialesPara(servicio), [servicio])
   const [iMat, setIMat] = useState(() => indiceMaterial(materialesPara(procesos[0]), materialInicial))
@@ -156,15 +157,22 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   const baseMm: Medidas | null = base ? { ancho: String(baseDe.ancho), largo: String(baseDe.largo), alto: String(baseDe.alto) } : null
   const cambiarMedida = (clave: keyof Medidas, v: string) => setMed(medidasTrasCambio(vista, clave, v, { proporcion, base: baseMm, unidad }))
   const cambiarUnidad = (u: Unidad) => {
-    setMed(medidasEnUnidad(vista, unidad, u))
+    // si no ha escrito nada, sigue mostrando las del diseño (no cuenta como cambio)
+    if (med) setMed(medidasEnUnidad(med, unidad, u))
     setUnidad(u)
   }
   const anchoMm = aMm(vista.ancho), largoMm = aMm(vista.largo), altoMm = aMm(vista.alto)
   // Ancho y largo son obligatorios; el alto sólo en impresión 3D
   const faltaAlto = servicio === "impresora_3d" && !(altoMm > 0) && !(base && baseDe.alto > 0)
   let pieza: Pieza | null = null
-  if (anchoMm > 0 && largoMm > 0 && !faltaAlto) {
-    if (base) {
+  if (base && !med && !faltaAlto) {
+    // sin cambios: la pieza del diseño tal cual (sin el redondeo de lo que se muestra)
+    pieza = base
+  } else if (anchoMm > 0 && largoMm > 0 && !faltaAlto) {
+    if (base && !(baseDe.alto > 0) && altoMm > 0 && servicio === "impresora_3d") {
+      // un dibujo plano (sin alto) que se va a imprimir: el volumen sale del alto que escribió
+      pieza = piezaAMano(anchoMm, largoMm, altoMm, "normal", true)
+    } else if (base) {
       // la pieza del diseño, estirada en cada eje a lo que pidió el cliente
       const kx = baseDe.ancho > 0 ? anchoMm / baseDe.ancho : 1, ky = baseDe.largo > 0 ? largoMm / baseDe.largo : 1
       const kz = baseDe.alto > 0 && altoMm > 0 ? altoMm / baseDe.alto : 1

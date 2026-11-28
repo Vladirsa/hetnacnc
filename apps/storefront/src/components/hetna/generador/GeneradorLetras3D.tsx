@@ -171,7 +171,7 @@ function LetrasCapas({ selector }: { selector: React.ReactNode }) {
   }, [fuente, texto, alto, espaciado, profundidad, espesor, espesorFrente, pared, construccion, cable])
 
   const listo = !!r && !r.errores.length
-  const elegida = HOJAS.find((h) => h.id === hojaId) || HOJAS[2]
+  const elegida = HOJAS.find((h) => h.id === hojaId) || HOJAS.find((h) => h.id === "600x400")!
   // "Otra medida": la del área de corte de su máquina (entre 100 mm y 4 m)
   const lado = (v: string) => Math.max(100, Math.min(4000, numero(v) || 0))
   const hoja = elegida.id === "otra" ? { ...elegida, ancho: lado(hojaAncho), alto: lado(hojaAlto) } : elegida

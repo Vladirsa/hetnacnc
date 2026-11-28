@@ -266,10 +266,13 @@ export function hacerFerula3D(o: OpcionesFerula, abertura = 4): ResultadoFerula3
       ? [[0, circMedia(o.circunferencias[0])], [o.largos[0], circMedia(o.circunferencias[1])], [o.largos[0] + o.largos[1], circMedia(o.circunferencias[2])]]
       : [[0, circMedia(o.circunferencias[0])], [o.largos[0], circMedia(o.circunferencias[1])]]
   const radio = (y: number) => anchoEn(y, est) / (2 * Math.PI)
+  const radioMin = Math.min(...est.map((e) => e[1])) / (2 * Math.PI)
   // la pieza plana: x a lo ancho (centrada), y a lo largo, z = grosor (0 por dentro, grosor por fuera)
   const doblar = (t: number[], giro: number) => {
-    // sólo a lo ancho (lo que se dobla), cada 5 mm: en un radio de 4 cm la cuerda se aparta 0.08 mm del arco
-    const fina = subdividir(subdividir(t, 5, true), 12)
+    // sólo a lo ancho (lo que se dobla), con el paso que deja la cuerda a menos de 0.1 mm del arco
+    // en el radio más chico (s = √(8·r·0.1)), entre 3 y 8 mm
+    const paso = Math.max(3, Math.min(8, Math.sqrt(8 * radioMin * 0.1)))
+    const fina = subdividir(t, paso, true)
     const r: number[] = new Array(fina.length)
     for (let i = 0; i < fina.length; i += 3) {
       const x = fina[i], y = fina[i + 1], z = fina[i + 2]
@@ -280,8 +283,6 @@ export function hacerFerula3D(o: OpcionesFerula, abertura = 4): ResultadoFerula3
       r[i + 1] = y
       r[i + 2] = R * Math.cos(a)
     }
-    // al girar 180° la pieza queda del revés: se invierte el orden para que las caras miren hacia afuera
-    if (Math.cos(giro) < 0) for (let i = 0; i < r.length; i += 9) for (let k = 0; k < 3; k++) [r[i + 3 + k], r[i + 6 + k]] = [r[i + 6 + k], r[i + 3 + k]]
     return r
   }
   const tA = doblar(arriba.malla.tris, 0)
