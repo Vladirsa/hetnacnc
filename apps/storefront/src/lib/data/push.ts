@@ -3,6 +3,8 @@
 // Notificaciones al celular del cliente (packages/api/src/lib/push.ts). El
 // navegador no tiene el token de la sesión (va en una cookie httpOnly), así que
 // estas acciones lo agregan y hablan con la API.
+import { cabeceraIpCliente } from "@/lib/seguridad/ip-firmada"
+
 import { getAuthHeaders } from "./cookies"
 
 const API = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -53,13 +55,13 @@ export async function desactivarPushCliente(endpoint: string): Promise<{ ok: boo
   }
 }
 
-/** Aviso de productos nuevos: sin cuenta (si hay sesión, también queda ligado al cliente). */
+/** Aviso de productos nuevos: sin cuenta y sin ligarlo a ella (sólo novedades, máximo uno al día).
+ *  Lleva la IP firmada del visitante para el límite por IP del API. */
 export async function activarPushNovedades(suscripcion: Suscripcion, dispositivo?: string): Promise<{ ok: boolean; mensaje?: string }> {
-  const auth = (await getAuthHeaders().catch(() => ({}))) as { authorization?: string }
   try {
     const r = await fetch(`${API}/store/hetna-push/novedades`, {
       method: "POST",
-      headers: { "x-publishable-api-key": PK, "content-type": "application/json", ...(auth.authorization ? { authorization: auth.authorization } : {}) },
+      headers: { "x-publishable-api-key": PK, "content-type": "application/json", ...(await cabeceraIpCliente()) },
       body: JSON.stringify({ suscripcion, dispositivo }),
       cache: "no-store",
     })
@@ -74,7 +76,7 @@ export async function desactivarPushNovedades(endpoint: string): Promise<{ ok: b
   try {
     const r = await fetch(`${API}/store/hetna-push/novedades`, {
       method: "DELETE",
-      headers: { "x-publishable-api-key": PK, "content-type": "application/json" },
+      headers: { "x-publishable-api-key": PK, "content-type": "application/json", ...(await cabeceraIpCliente()) },
       body: JSON.stringify({ endpoint }),
       cache: "no-store",
     })

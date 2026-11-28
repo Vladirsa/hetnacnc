@@ -88,6 +88,18 @@ export function validarSuscripcion(b: any): Suscripcion | null {
   return { endpoint, keys: { p256dh, auth } }
 }
 
+/** ¿La dirección es de un servicio de avisos del navegador (Chrome, Firefox, Edge, Safari)? */
+export function endpointDePush(endpoint: string): boolean {
+  try {
+    const u = new URL(endpoint)
+    if (u.protocol !== "https:" || u.port) return false
+    const h = u.hostname.toLowerCase()
+    return h === "fcm.googleapis.com" || h === "updates.push.services.mozilla.com" || h === "web.push.apple.com" || h.endsWith(".push.apple.com") || h.endsWith(".notify.windows.com")
+  } catch {
+    return false
+  }
+}
+
 /** Guarda (o actualiza) la suscripción de este navegador para un cliente o un taller. */
 export async function guardarSuscripcion(
   knex: any,

@@ -163,11 +163,11 @@ export default defineMiddlewares({
             middlewares: [authenticate("customer", ["session", "bearer"])],
         },
         {
-            // Aviso de productos nuevos: sin cuenta (se liga al cliente si hay sesión), limitado por IP
+            // Aviso de productos nuevos: sin cuenta, limitado por IP (la tienda manda la IP firmada)
             method: ["POST", "DELETE"],
             matcher: "/store/hetna-push/novedades",
             bodyParser: { sizeLimit: "4kb" },
-            middlewares: [limitarNovedades, authenticate("customer", ["session", "bearer"], { allowUnauthenticated: true })],
+            middlewares: [limitarNovedades],
         },
         ...vendorCoursesMiddlewares,
         ...storeCreditos3dMiddlewares,

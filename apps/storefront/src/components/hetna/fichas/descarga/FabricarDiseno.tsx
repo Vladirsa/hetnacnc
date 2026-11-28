@@ -22,6 +22,7 @@ import { type GeoCad, leerDxf, leerObj, leerStl, leerSvg } from "@/lib/cotizador
 import { estimar, materialesPara, type Pieza, piezaAMano, piezaDeGeo, pesos, SERVICIOS, type TipoMaquina } from "@/lib/cotizador/estimador"
 import { useConfigPrecios } from "@/lib/cotizador/config-precios"
 import type { FormatoVista } from "@/lib/hetna/ficha-tecnica"
+import { aMmDe, deMmEn, type Medidas, medidasEnUnidad, medidasTrasCambio, type Unidad } from "@/lib/cotizador/medidas-fabricar"
 
 type Props = {
   titulo: string
@@ -39,6 +40,10 @@ type Props = {
   materialInicial?: string
   /** Título del recuadro (por omisión, según sea físico o diseño) */
   encabezado?: string
+  /** Piezas al abrir (10 por omisión; 1 en las piezas impresas, que se compran sueltas) */
+  cantidadInicial?: number
+  /** Volumen real de la pieza (cm³): sin modelo, en impresión 3D se usa en vez de estimarlo de la caja */
+  volumenCm3?: number
 }
 
 const FORMATOS_3D = ["STL", "OBJ", "STEP", "3MF"]
@@ -75,7 +80,7 @@ export function indiceMaterial(mats: { nombre: string; espesor: number }[], text
 const campo = "mt-1 min-h-[44px] w-full rounded-md border border-[#C5CCD3] bg-white px-2.5 text-[14px] outline-none focus:border-[#E85D04]"
 const etiqueta = "block text-[12.5px] font-semibold text-[#1E2329]"
 
-export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial, materialInicial, encabezado }: Props) {
+export default function FabricarDiseno({ titulo, handle, formatos, medidas, vistaPrevia, fisico = false, procesoInicial, materialInicial, encabezado, cantidadInicial = 10, volumenCm3 }: Props) {
   const es3D = !fisico && formatos.length > 0 && formatos.every((f) => FORMATOS_3D.includes(f))
   const todos: TipoMaquina[] = ["laser_co2", "router", "plasma", "impresora_3d"]
   const lista: TipoMaquina[] = fisico ? todos : es3D ? ["impresora_3d"] : formatos.some((f) => FORMATOS_3D.includes(f)) ? todos : ["laser_co2", "router", "plasma"]
@@ -111,10 +116,11 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
   // escriben libres; antes, con medidas de la ficha, sólo se escalaban y no se
   // podía borrar el número ni poner el alto). Con «Mantener proporción», cambiar
   // una ajusta las otras para no deformar el diseño.
-  const [unidad, setUnidad] = useState<"cm" | "mm">("cm")
-  const [proporcion, setProporcion] = useState(true)
-  const [med, setMed] = useState<{ ancho: string; largo: string; alto: string } | null>(null)
-  const [cantidad, setCantidad] = useState("10")
+  const [unidad, setUnidad] = useState<Unidad>("cm")
+  // libre por omisión: cada medida se escribe por su lado (la queja era que al poner una cambiaba la otra)
+  const [proporcion, setProporcion] = useState(false)
+  const [med, setMed] = useState<Medidas | null>(null)
+  const [cantidad, setCantidad] = useState(String(cantidadInicial))
   const [conGrabado, setConGrabado] = useState(false)
   const [texto, setTexto] = useState("")
 
@@ -138,30 +144,19 @@ export default function FabricarDiseno({ titulo, handle, formatos, medidas, vist
           // impresa llena ~20–40 % de su caja (un soporte en L, ~23 %), no el
           // 60 % que se usa para piezas escritas a mano: con eso 10 soportes
           // NEMA 23 salían en $6,000–8,000.
-          ...(servicio === "impresora_3d" ? { volumenCm3: ((deFicha.largo * deFicha.ancho * deFicha.alto) / 1000) * 0.3 } : {}),
+          ...(servicio === "impresora_3d" ? { volumenCm3: volumenCm3 && volumenCm3 > 0 ? volumenCm3 : ((deFicha.largo * deFicha.ancho * deFicha.alto) / 1000) * 0.3 } : {}),
         }
       : null
-  const num = (v: string) => parseFloat(v.replace(",", ".")) || 0
-  const aMm = (v: string) => num(v) * (unidad === "cm" ? 10 : 1)
-  const deMm = (mm: number) => (mm > 0 ? String(Math.round((unidad === "cm" ? mm / 10 : mm) * 10) / 10) : "")
+  const aMm = (v: string) => aMmDe(v, unidad)
+  const deMm = (mm: number) => deMmEn(mm, unidad)
   // ancho ↔ largo de la pieza base (así venían en la ficha)
   const baseDe = { ancho: base?.largo || 0, largo: base?.ancho || 0, alto: base?.alto || 0 }
   // lo que se ve en los campos: lo que escribió el cliente o, al inicio, las medidas del diseño
   const vista = med ?? { ancho: deMm(baseDe.ancho), largo: deMm(baseDe.largo), alto: deMm(baseDe.alto) }
-  const cambiarMedida = (clave: "ancho" | "largo" | "alto", v: string) => {
-    const nuevo = { ...vista, [clave]: v }
-    // en proporción: las otras dos siguen a la que cambió (sólo con un número válido; vacío se deja escribir)
-    if (proporcion && base && baseDe[clave] > 0 && aMm(v) > 0) {
-      const f = aMm(v) / baseDe[clave]
-      for (const o of ["ancho", "largo", "alto"] as const) if (o !== clave && baseDe[o] > 0) nuevo[o] = deMm(baseDe[o] * f)
-    }
-    setMed(nuevo)
-  }
-  const cambiarUnidad = (u: "cm" | "mm") => {
-    if (u === unidad) return
-    const f = u === "mm" ? 10 : 0.1
-    const conv = (v: string) => (num(v) > 0 ? String(Math.round(num(v) * f * 10) / 10) : v)
-    setMed({ ancho: conv(vista.ancho), largo: conv(vista.largo), alto: conv(vista.alto) })
+  const baseMm: Medidas | null = base ? { ancho: String(baseDe.ancho), largo: String(baseDe.largo), alto: String(baseDe.alto) } : null
+  const cambiarMedida = (clave: keyof Medidas, v: string) => setMed(medidasTrasCambio(vista, clave, v, { proporcion, base: baseMm, unidad }))
+  const cambiarUnidad = (u: Unidad) => {
+    setMed(medidasEnUnidad(vista, unidad, u))
     setUnidad(u)
   }
   const anchoMm = aMm(vista.ancho), largoMm = aMm(vista.largo), altoMm = aMm(vista.alto)
