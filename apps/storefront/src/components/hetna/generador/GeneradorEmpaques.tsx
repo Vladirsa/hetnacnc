@@ -337,7 +337,7 @@ export function GeneradorEmpaques() {
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true">
                             <path d={ICONOS[f.gen]} />
                           </svg>
-                          {f.nombre}
+                          <T>{f.nombre}</T>
                         </button>
                       ))}
                     </div>
@@ -345,7 +345,7 @@ export function GeneradorEmpaques() {
                 </div>
               )
             })}
-            {def.detalle && <p className="m-0 text-[12.5px] text-[#6B6A63]">{def.nombre}: <T>{def.detalle}</T>.</p>}
+            {def.detalle && <p className="m-0 text-[12.5px] text-[#6B6A63]"><T>{def.nombre}</T>: <T>{def.detalle}</T>.</p>}
           </div>
 
           <div className="flex flex-col gap-2">

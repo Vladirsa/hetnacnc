@@ -1,6 +1,6 @@
 "use client"
 
-import { T } from "@/components/hetna/i18n/Idioma"
+import { T, useT } from "@/components/hetna/i18n/Idioma"
 import { useRef, useState } from "react"
 
 import { ligaWhatsApp } from "@/lib/hetna/empresa"
@@ -69,6 +69,7 @@ function Chips({ opciones, elegidas, alCambiar }: { opciones: string[]; elegidas
 }
 
 export default function FormRegistroTaller() {
+  const tr = useT()
   const [servicios, setServicios] = useState<string[]>([])
   const [materiales, setMateriales] = useState<string[]>([])
   const [fotos, setFotos] = useState<Foto[]>([])
@@ -187,9 +188,9 @@ export default function FormRegistroTaller() {
           <div>
             <label className={ETIQUETA} htmlFor="estado_mx"><T>Estado</T></label>
             <select id="estado_mx" name="estado_mx" className={CAMPO} defaultValue="">
-              <option value="">Selecciona</option>
+              <option value="">{tr("Selecciona")}</option>
               {ESTADOS.map((x) => (
-                <option key={x}>{x}</option>
+                <option key={x} value={x}>{x}</option>
               ))}
             </select>
           </div>
@@ -224,9 +225,9 @@ export default function FormRegistroTaller() {
           <div>
             <label className={ETIQUETA} htmlFor="capacidad"><T>¿Cuánto puedes producir?</T></label>
             <select id="capacidad" name="capacidad" className={CAMPO} defaultValue="">
-              <option value="">Selecciona</option>
+              <option value="">{tr("Selecciona")}</option>
               {CAPACIDAD.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>{tr(c)}</option>
               ))}
             </select>
           </div>
