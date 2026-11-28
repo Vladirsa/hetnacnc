@@ -29,7 +29,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   {
     p: "¿Tiene costo registrarse?",
     corta: true,
-    r: "No. Registrarte, tener tu perfil y recibir solicitudes es gratis. Los trabajos de fabricación que ganas no pagan comisión a HETNA; en la tienda sólo se cobra una comisión cuando vendes, y la ves en tu panel antes de vender. Hay planes opcionales que ponen tus propuestas primero.",
+    r: "No. Registrarte, tener tu perfil y recibir solicitudes es gratis. Los trabajos de fabricación que ganas no pagan comisión a HETNA (sólo la comisión de cobro de Mercado Pago o PayPal); en la tienda sólo se cobra una comisión cuando vendes, y la ves en tu panel antes de vender. Hay planes opcionales que ponen tus propuestas primero.",
   },
   {
     p: "¿Cómo recibo proyectos?",
@@ -66,7 +66,7 @@ export const PREGUNTAS_TALLER: PreguntaTaller[] = [
   },
   {
     p: "¿Cómo me pagan?",
-    r: "HETNA no cobra comisión por los trabajos que ganas en solicitudes de fabricación. Si el cliente paga dentro de HETNA, el pago queda registrado y protegido: directo a tu Mercado Pago o PayPal conectado (ese servicio te descuenta su tarifa) o a HETNA como respaldo, que te lo libera completo, menos las retenciones que marque la ley, cuando el cliente confirma que recibió. Si cliente y taller acuerdan pagar por fuera, ese trato es directamente entre ustedes y no tiene la protección de HETNA. En las ventas de tu tienda el pago siempre es dentro de HETNA, con la comisión de la lista de precios.",
+    r: "HETNA no cobra comisión por los trabajos que ganas en solicitudes de fabricación. Si el cliente paga dentro de HETNA, el pago queda registrado y protegido: directo a tu Mercado Pago o PayPal conectado (ese servicio te descuenta su tarifa) o a HETNA como respaldo, que te lo libera cuando el cliente confirma que recibió, menos la comisión que Mercado Pago le cobra a HETNA por recibir el pago y las retenciones que marque la ley. Si cliente y taller acuerdan pagar por fuera, ese trato es directamente entre ustedes y no tiene la protección de HETNA. En las ventas de tu tienda el pago siempre es dentro de HETNA, con la comisión de la lista de precios.",
   },
   {
     p: "¿Qué pasa después de registrarme?",
