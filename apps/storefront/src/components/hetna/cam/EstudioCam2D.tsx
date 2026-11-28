@@ -121,6 +121,13 @@ type Op = {
   // posición T de la fresa en el cambiador (de la ficha de la fresa)
   numero?: number
 }
+// Capas del diseñador de vectores → operación (en este orden: el corte al final)
+const OPS_POR_CAPA: [string, TipoOp][] = [
+  ["barrenos", "barrenado"],
+  ["grabado", "grabado_v"],
+  ["cajeado", "cajeado"],
+  ["corte", "corte"],
+]
 const CON_ACABADO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra", "incrustacion_macho"]
 const CON_PESTANAS: TipoOp[] = ["corte", "fuera", "incrustacion_macho"]
 const CON_ALIVIO: TipoOp[] = ["corte", "fuera", "dentro", "cajeado", "incrustacion_hembra"]
@@ -358,7 +365,16 @@ export function EstudioCam2D() {
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("pieza")) return
     tomarPiezaParaCam2D().then((p) => {
-      if (p) abrir(new File([p.dxf], p.nombre.replace(/[^\w.\- ]/g, "").slice(0, 80) || "pieza.dxf", { type: "application/dxf" }))
+      if (!p) return
+      abrir(new File([p.dxf], p.nombre.replace(/[^\w.\- ]/g, "").slice(0, 80) || "pieza.dxf", { type: "application/dxf" }))
+      // Del diseñador de vectores: espesor de su hoja y una operación por capa
+      const esp = p.extra?.espesor ? String(Math.round(p.extra.espesor * 100) / 100) : espesor
+      if (p.extra?.espesor) setEspesor(esp)
+      if (p.extra?.porCapas && maquina.tipo !== "laser") {
+        const enDibujo = new Set(leerDXF(p.dxf).trazos.map((t) => t.capa))
+        const sugeridas = OPS_POR_CAPA.filter(([capa]) => enDibujo.has(capa)).map(([capa, tipo]) => ({ ...nuevaOp(tipo, esp), capa }))
+        if (sugeridas.length) setOps(sugeridas)
+      }
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

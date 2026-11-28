@@ -72,6 +72,7 @@ const FIJAS: [string, Frecuencia, number][] = [
   ...PROGRAMAS.map((x) => [`/programas/${x.slug}`, "weekly", 0.8] as [string, Frecuencia, number]),
   ["/disenar", "weekly", 0.9],
   ["/disenar/cajas", "weekly", 0.9],
+  ["/cam/disenar", "weekly", 0.6],
   ["/cam/subir", "weekly", 0.6],
   ["/cam/lab", "weekly", 0.6],
   ["/cam/torno", "weekly", 0.6],

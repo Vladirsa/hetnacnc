@@ -57,12 +57,16 @@ export async function tomarPiezaParaLaboratorio(): Promise<{ nombre: string; dat
 
 // ---- CAM Studio 2D (corte láser o router: perfiles, cajas, barrenos) ----
 // Igual que la pieza 3D: el DXF se guarda un momento y el CAM 2D lo abre solo.
-export async function mandarACam2D(nombre: string, dxf: string, locale: string): Promise<boolean> {
+// Extra (del diseñador de vectores): el espesor de la hoja y que el CAM arme una
+// operación por capa (corte, cajeado, grabado, barrenos).
+export type ExtraCam2D = { espesor?: number; porCapas?: boolean }
+
+export async function mandarACam2D(nombre: string, dxf: string, locale: string, extra?: ExtraCam2D): Promise<boolean> {
   try {
     const db = await abrir()
     await new Promise<void>((ok, mal) => {
       const tx = db.transaction(ALMACEN, "readwrite")
-      tx.objectStore(ALMACEN).put({ nombre, datos: dxf, t: Date.now() }, "pendiente2d")
+      tx.objectStore(ALMACEN).put({ nombre, datos: dxf, t: Date.now(), extra: extra || null }, "pendiente2d")
       tx.oncomplete = () => ok()
       tx.onerror = () => mal(tx.error)
     })
@@ -75,10 +79,10 @@ export async function mandarACam2D(nombre: string, dxf: string, locale: string):
 }
 
 /** El DXF que dejó un generador para el CAM 2D, si sigue vigente (y se borra). */
-export async function tomarPiezaParaCam2D(): Promise<{ nombre: string; dxf: string } | null> {
+export async function tomarPiezaParaCam2D(): Promise<{ nombre: string; dxf: string; extra?: ExtraCam2D } | null> {
   try {
     const db = await abrir()
-    const fila = await new Promise<{ nombre: string; datos: string; t: number } | undefined>((ok, mal) => {
+    const fila = await new Promise<{ nombre: string; datos: string; t: number; extra?: ExtraCam2D | null } | undefined>((ok, mal) => {
       const tx = db.transaction(ALMACEN, "readwrite")
       const st = tx.objectStore(ALMACEN)
       const r = st.get("pendiente2d")
@@ -90,7 +94,8 @@ export async function tomarPiezaParaCam2D(): Promise<{ nombre: string; dxf: stri
     })
     db.close()
     if (!fila || typeof fila.datos !== "string" || Date.now() - fila.t > VIGENCIA) return null
-    return { nombre: fila.nombre, dxf: fila.datos }
+    const extra = fila.extra && typeof fila.extra === "object" ? { espesor: Number(fila.extra.espesor) > 0 ? Number(fila.extra.espesor) : undefined, porCapas: fila.extra.porCapas === true } : undefined
+    return { nombre: fila.nombre, dxf: fila.datos, extra }
   } catch {
     return null
   }

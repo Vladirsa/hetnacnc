@@ -1,13 +1,14 @@
 "use client"
 
 // Barra de arriba del CAM Studio (pantalla completa, como el 3D y 2D Studio):
-// cambia entre 2D (router y láser), 3D (3, 4 y 5 ejes) y Torno.
+// cambia entre Diseñar (vectores), 2D (router y láser), 3D (3, 4 y 5 ejes) y Torno.
 import { T } from "@/components/hetna/i18n/Idioma"
 import { usePathname } from "next/navigation"
 
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 const PESTANAS = [
+  { href: "/cam/disenar", corto: "Diseñar", nombre: "vectores" },
   { href: "/cam/subir", corto: "2D", nombre: "Router y láser" },
   { href: "/cam/lab", corto: "3D", nombre: "3, 4 y 5 ejes" },
   { href: "/cam/torno", corto: "Torno", nombre: "eje rotativo" },
