@@ -82,7 +82,7 @@ export async function ComparativaComisiones() {
           <TS>• Vendes con el nombre de tu taller y</TS> <b><TS>emites tu factura (CFDI) directamente a tu cliente</TS></b>.
         </li>
         <li>
-          <TS>• Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión.</TS><TS>{" "}</TS>
+          <TS>• Las solicitudes de fabricación (licitaciones) que ganes no pagan comisión a HETNA; sólo se descuenta la comisión de cobro de Mercado Pago o PayPal.</TS><TS>{" "}</TS>
           <LocalizedClientLink href="/terminos-vendedores" className="font-semibold text-[#C2560A] underline">
             <TS>Ver todas las tarifas</TS>
           </LocalizedClientLink>

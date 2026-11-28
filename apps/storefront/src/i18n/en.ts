@@ -5,6 +5,12 @@ import { EN_PAGINAS } from "./en-paginas"
 import { EN_UI_AUDITORIA, REGLAS_UI_AUDITORIA } from "./en-ui-auditoria"
 
 export const EN: Record<string, string> = {
+  // Ficha de diseños digitales y pie de página (faltaban en /us, 28 nov 2026)
+  "Comprar y descargar ahora": "Buy and download now",
+  "Sin envío: es descarga": "No shipping: instant download",
+  " · Sin envío: es descarga": " · No shipping: instant download",
+  "IVA incluido": "Tax included",
+  "Eliminar mi cuenta": "Delete my account",
   // Primero, para que las entradas de abajo tengan prioridad
   ...EN_PAGINAS,
   ...EN_UI_AUDITORIA,

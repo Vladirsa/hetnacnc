@@ -467,7 +467,7 @@ export default function MapaTalleres({
                 style={{ background: t.color }}
                 dangerouslySetInnerHTML={{ __html: svgIcono(t, 15) }}
               />
-              {t.nombre} <span className="text-[#6B675C]">({totales[t.id]})</span>
+              <T>{t.nombre}</T> <span className="text-[#6B675C]">({totales[t.id]})</span>
             </button>
           )
         })}

@@ -13,6 +13,7 @@ import {
 import { AvisoReclamarPerfil } from "@/components/hetna/taller/AvisoReclamarPerfil"
 import { GuardarInvitacion } from "@/components/hetna/taller/GuardarInvitacion"
 import { ComparativaComisiones } from "@/components/hetna/taller/ComparativaComisiones"
+import { LoQueDebesSaber } from "@/components/hetna/taller/LoQueDebesSaber"
 import { TarjetaTrabajo } from "@/components/hetna/trabajos/TarjetaTrabajo"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { listarTalleres } from "@/lib/hetna/talleres"
@@ -121,6 +122,8 @@ export default async function UneteTallerPage() {
 
         <ComparativaComisiones />
 
+        <LoQueDebesSaber />
+
         <PasosTaller />
         <BeneficiosTaller />
         <PerfilesTaller />
@@ -208,7 +211,7 @@ export default async function UneteTallerPage() {
           )}
           {quedanFundador > 0 && (
             <p className="mt-6 rounded-xl bg-[#C2560A] px-4 py-3 text-sm font-semibold">
-              <TS>Quedan</TS> <TS>{quedanFundador}</TS> <TS>lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.</TS><TS>{" "}</TS>
+              <TS>{`Quedan ${quedanFundador} de ${CUPO_FUNDADORES} lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis.`}</TS><TS>{" "}</TS>
               <LocalizedClientLink href="/talleres/fundadores" className="underline">
                 <TS>Ver detalles</TS>
               </LocalizedClientLink>

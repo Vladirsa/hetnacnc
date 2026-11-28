@@ -380,7 +380,7 @@ export const ProductDetailsHeader = ({
             </div>
             {descarga ? (
               <p className="mt-1 text-[12.5px] text-[#6B6A63]" data-testid="product-precio-nota">
-                <T>{universal?.notaPrecio ? `${universal.notaPrecio} · ` : ivaIncluido ? "IVA incluido · " : ""}</T><T>Sin envío: es descarga</T>
+                {universal?.notaPrecio ? <><T>{universal.notaPrecio}</T>{" · "}</> : ivaIncluido ? <><T>IVA incluido</T>{" · "}</> : null}<T>Sin envío: es descarga</T>
               </p>
             ) : universal?.notaPrecio ? (
               <p className="mt-1 text-[12px] text-[#6B6A63]" data-testid="product-precio-nota">

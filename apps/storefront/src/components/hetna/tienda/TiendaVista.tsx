@@ -11,7 +11,6 @@ import { useMemo, useState } from "react"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { trackCotizarBusqueda } from "@/lib/analytics/events"
 import type { CatalogoTienda, CategoriaTienda, ProductoTienda } from "@/lib/hetna/tienda"
-import { Avisame } from "./Avisame"
 import { BTN, BTN2, Etiqueta, Patron, mxn, textoConteo, textoDesde } from "./piezas"
 
 type Proceso = { nombre: string; servicio: string; texto: string; imagen: string }
@@ -42,7 +41,6 @@ export function TiendaVista({
   const [filtro, setFiltro] = useState<Filtro>("todo")
   const cats = catalogo.categorias
   const conProductos = cats.filter((c) => c.conteo > 0)
-  const proximas = cats.filter((c) => c.conteo === 0)
   const digitales = cats.filter((c) => c.clave === "disenos-digitales" || c.clave === "creditos-3d")
   const suma = (xs: CategoriaTienda[]) => xs.reduce((s, c) => s + c.conteo, 0)
 
@@ -51,7 +49,6 @@ export function TiendaVista({
     ["comprar", "Comprar ahora", suma(conProductos)],
     ["cotizar", "Cotizar", procesos.length],
     ["digital", "Digital", suma(digitales)],
-    ["proximamente", "Próximamente", proximas.length],
   ]
 
   const termino = q.trim()
@@ -137,7 +134,6 @@ export function TiendaVista({
                 ))}
                 {verTodo && <TarjetaCotizador planes={catalogo.planes} />}
                 {verTodo && <TarjetaTalleres activos={catalogo.talleres.activos} verificados={catalogo.talleres.verificados} />}
-                {(verTodo || filtro === "proximamente") && !catalogo.fallo && proximas.map((c) => <TarjetaProxima key={c.clave} c={c} />)}
               </div>
               {verTodo && !catalogo.fallo && (
                 <p className="fuente-mono mt-4 text-[13px] leading-relaxed text-[#5B6370]">
@@ -249,22 +245,6 @@ function TarjetaCategoria({ c }: { c: CategoriaTienda }) {
       <LocalizedClientLink href={`/tienda/${c.clave}`} className={`${BTN} mt-2 w-full`}>
         <T>{ACCION[c.clave]}</T>
       </LocalizedClientLink>
-    </Tarjeta>
-  )
-}
-
-function TarjetaProxima({ c }: { c: CategoriaTienda }) {
-  return (
-    <Tarjeta foto={<Foto c={{ ...c, imagen: undefined }} />}>
-      <div>
-        <Etiqueta tipo="proximamente" />
-      </div>
-      <h3 className="fuente-condensada text-[24px] font-bold uppercase leading-none text-[#1E2329]"><T>{c.nombre}</T></h3>
-      <p className="text-[14px] leading-snug text-[#5B6370]"><T>{c.descripcion}</T></p>
-      <Cifras izq="0 productos" der="Aún sin productos" />
-      <div className="mt-2">
-        <Avisame categoria={c.clave} nombre={c.nombre} />
-      </div>
     </Tarjeta>
   )
 }

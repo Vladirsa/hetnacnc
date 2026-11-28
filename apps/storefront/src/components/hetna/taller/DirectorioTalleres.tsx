@@ -3,7 +3,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del navegador,
 // y next/image TRUENA con las que no empiezan en "/" o "https://" (una vista
 // previa "blob:", por ejemplo).
-import { T } from "@/components/hetna/i18n/Idioma"
+import { T, useT } from "@/components/hetna/i18n/Idioma"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 
 import { useMemo, useState } from "react"
@@ -36,6 +36,7 @@ export default function DirectorioTalleres({
   porUnirse?: PorUnirse
   paises?: EmpresasPorPais
 }) {
+  const tr = useT()
   const [q, setQ] = useState("")
   const [estado, setEstado] = useState("")
   const [servicio, setServicio] = useState("")
@@ -95,48 +96,48 @@ export default function DirectorioTalleres({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar taller, ciudad o servicio"
+          placeholder={tr("Buscar taller, ciudad o servicio")}
           className={`${SELECT} sm:col-span-2 lg:col-span-1`}
           aria-label="Buscar taller"
         />
         <select value={estado} onChange={(e) => setEstado(e.target.value)} className={SELECT} aria-label="Estado">
-          <option value="">Todos los estados</option>
+          <option value="">{tr("Todos los estados")}</option>
           {estados.map((x) => (
-            <option key={x}>{x}</option>
+            <option key={x} value={x}>{tr(x)}</option>
           ))}
         </select>
         <select value={servicio} onChange={(e) => setServicio(e.target.value)} className={SELECT} aria-label="Servicio">
-          <option value="">Todos los servicios</option>
+          <option value="">{tr("Todos los servicios")}</option>
           {servicios.map((x) => (
-            <option key={x}>{x}</option>
+            <option key={x} value={x}>{tr(x)}</option>
           ))}
         </select>
         <select value={material} onChange={(e) => setMaterial(e.target.value)} className={SELECT} aria-label="Material">
-          <option value="">Todos los materiales</option>
+          <option value="">{tr("Todos los materiales")}</option>
           {materiales.map((x) => (
-            <option key={x}>{x}</option>
+            <option key={x} value={x}>{tr(x)}</option>
           ))}
         </select>
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <select value={maquina} onChange={(e) => setMaquina(e.target.value)} className={SELECT} aria-label="Tipo de máquina">
-          <option value="">Cualquier máquina</option>
+          <option value="">{tr("Cualquier máquina")}</option>
           {TIPOS_MAQUINA.filter(([v]) => tiposPresentes.has(v)).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
+            <option key={v} value={v}>{tr(l)}</option>
           ))}
         </select>
         <select value={areaMin} onChange={(e) => setAreaMin(Number(e.target.value))} className={SELECT} aria-label="Tamaño de pieza">
-          <option value={0}>Cualquier tamaño</option>
-          <option value={300}>Piezas de 30 cm o más</option>
-          <option value={600}>Piezas de 60 cm o más</option>
-          <option value={1200}>Hojas de 1.22 × 2.44 m</option>
-          <option value={1500}>1.5 m o más</option>
+          <option value={0}>{tr("Cualquier tamaño")}</option>
+          <option value={300}>{tr("Piezas de 30 cm o más")}</option>
+          <option value={600}>{tr("Piezas de 60 cm o más")}</option>
+          <option value={1200}>{tr("Hojas de 1.22 × 2.44 m")}</option>
+          <option value={1500}>{tr("1.5 m o más")}</option>
         </select>
         <select value={orden} onChange={(e) => setOrden(e.target.value as typeof orden)} className={SELECT} aria-label="Ordenar">
-          <option value="recomendados">Recomendados</option>
-          <option value="calificacion">Mejor calificados</option>
-          <option value="nombre">Por nombre</option>
+          <option value="recomendados">{tr("Recomendados")}</option>
+          <option value="calificacion">{tr("Mejor calificados")}</option>
+          <option value="nombre">{tr("Por nombre")}</option>
         </select>
         <label className="flex items-center gap-2 text-sm text-[#40403A]">
           <input type="checkbox" checked={soloVerificados} onChange={(e) => setSoloVerificados(e.target.checked)} className="accent-[#C2560A]" />

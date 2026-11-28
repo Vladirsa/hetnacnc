@@ -10,6 +10,7 @@ import { EN_S_CONTENIDO_D } from "./en-s-contenido-d"
 import { EN_S_CONTENIDO_E } from "./en-s-contenido-e"
 import { EN_S_CONTENIDO_F } from "./en-s-contenido-f"
 import { EN_S_CONTENIDO_G } from "./en-s-contenido-g"
+import { EN_S_SABER, REGLAS_S_SABER } from "./en-s-saber"
 
 export const EN_S: Record<string, string> = {
   ...EN_S_LUGARES,
@@ -20,9 +21,11 @@ export const EN_S: Record<string, string> = {
   ...EN_S_CONTENIDO_E,
   ...EN_S_CONTENIDO_F,
   ...EN_S_CONTENIDO_G,
+  ...EN_S_SABER,
 }
 
 export const REGLAS_S: [RegExp, string][] = [
+  ...REGLAS_S_SABER,
   // Guías por ciudad (components/hetna/guias/GuiaCnc.tsx)
   [/^¿Hay talleres de (.+) en (.+)\?$/, "Are there shops for ⟪$1⟫ in ⟪$2⟫?"],
   [/^, incluido el envío a (.+) si no recoges$/, ", including shipping to ⟪$1⟫ if you don't pick up"],
@@ -49,6 +52,9 @@ export const REGLAS_S: [RegExp, string][] = [
     /^(.+) Plano con lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC\.$/,
     "⟪$1⟫ Plan with cut list, sheet layout, assembly steps, and DXF for a CNC router.",
   ],
+  // Talleres fundadores (mismo número en /talleres/fundadores y /talleres/unete)
+  [/^Quedan (\d+) de (\d+) lugares de fundador$/, "$1 of $2 founding spots left"],
+  [/^Quedan (\d+) de (\d+) lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis\.$/, "$1 of $2 Founding Shop spots left: permanent badge and 6 months of the Pro plan free."],
   // Modelos 3D y anuncios
   [/^(.+): modelo 3D a tu medida$/, "⟪$1⟫: custom-size 3D model"],
   [/^(\d+) días en (.+)$/, "$1 days on ⟪$2⟫"],

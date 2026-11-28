@@ -33,8 +33,12 @@ async function generateMetadataEs({ params }: Props): Promise<Metadata> {
     title: titulo,
     description: descripcionCorta(`${nombre}: ${e.servicios || NOMBRE_TIPO[e.tipo]}${donde ? ` en ${donde}` : ""}. Pide cotización con HETNA CNC.`),
     alternates: { canonical: `https://hetnacnc.com/mx/talleres/directorio/${canonico}` },
-    // Sin descripción de servicios la página es muy delgada para Google
-    robots: e.servicios ? undefined : { index: false, follow: true },
+    // Perfil vacío fuera de Google (plan SEO del 27 nov 2026, riesgo 1): se indexa
+    // con servicios y lugar, o con una descripción de servicios con sustancia. La
+    // regla «servicios y ciudad» a secas sacaba 105 perfiles con 545 impresiones
+    // en 3 meses (perfiles con buena descripción y sin ciudad en la hoja); ésta
+    // saca sólo los de verdad vacíos (19 perfiles, 14 impresiones).
+    robots: perfilIndexable(e) ? undefined : { index: false, follow: true },
   }
 }
 
@@ -49,18 +53,23 @@ function calculadoraDe(texto: string): { href: string; nombre: string } {
   return { href: "/cotizar/router-cnc", nombre: "router CNC" }
 }
 
+function perfilIndexable(e: { servicios?: string; ciudad?: string; estado?: string; region?: string }) {
+  const servicios = (e.servicios || "").trim()
+  return !!servicios && (!!(e.ciudad || e.estado || e.region) || servicios.length >= 80)
+}
+
 // Guía de la ciudad que corresponde al estado y al servicio de la empresa
 // (/cnc/<guía>/<ciudad>). Los perfiles del directorio son las páginas que Google
 // más visita: enlazar desde aquí ayuda a que encuentre las páginas de ciudad
 // (el reporte de Search Console del 27 nov mostró «cnc router puebla» llevando a
 // la página nacional en vez de la de Puebla).
-function guiaDeCiudad(estado: string | undefined, texto: string): { href: string; texto: string } | null {
+function guiaDeCiudad(estado: string | undefined, texto: string): { href: string; texto: string; ciudad: string } | null {
   const ciudad = estado ? CIUDADES.find((c) => c.estado === estado) : undefined
   if (!ciudad) return null
   const t = texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
   const slug = /plasma|oxicorte/.test(t) ? "corte-plasma" : /laser/.test(t) ? "corte-laser-mdf" : /impresion 3d|impresora 3d|3d print/.test(t) ? "impresion-3d" : "taller-router-cnc-mexico"
   const guia = guiaPorSlug(slug)
-  return guia ? { href: `/cnc/${slug}/${ciudad.slug}`, texto: h1EnCiudad(guia, ciudad) } : null
+  return guia ? { href: `/cnc/${slug}/${ciudad.slug}`, texto: h1EnCiudad(guia, ciudad), ciudad: ciudad.nombre } : null
 }
 
 export default async function PerfilDirectorioPage({ params }: Props) {
@@ -100,11 +109,17 @@ export default async function PerfilDirectorioPage({ params }: Props) {
           <a href="#cotizar" className="inline-flex justify-center rounded-xl bg-[#C2560A] px-5 py-3 text-center font-bold text-white hover:brightness-110">
             <TS>Pide cotización a</TS> <TS>{e.empresa.length > 28 ? "esta empresa" : e.empresa}</TS>
           </a>
+          {/* Con ciudad: la guía de esa ciudad (talleres de la zona y precio al
+              instante); sin ciudad, la calculadora del servicio. */}
           <LocalizedClientLink
-            href={calculadora.href}
+            href={guiaCiudad ? guiaCiudad.href : calculadora.href}
             className="inline-flex justify-center rounded-xl border-2 border-[#142033] px-5 py-3 text-center font-bold text-[#142033] hover:bg-[#142033] hover:text-white"
           >
-            <TS>Precio al instante de</TS> <TS>{calculadora.nombre}</TS>
+            {guiaCiudad ? (
+              <><TS>Cotiza con talleres en</TS> <TS>{guiaCiudad.ciudad}</TS></>
+            ) : (
+              <><TS>Precio al instante de</TS> <TS>{calculadora.nombre}</TS></>
+            )}
           </LocalizedClientLink>
         </div>
         <p className="mt-4 text-[13px] text-[#6B675C]">

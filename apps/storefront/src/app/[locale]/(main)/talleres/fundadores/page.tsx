@@ -43,7 +43,7 @@ export default async function FundadoresPage() {
               <TS>Registrar mi taller</TS>
             </LocalizedClientLink>
             {quedan > 0 ? (
-              <span className="text-white/80"><TS>Quedan</TS> <strong className="text-white"><TS>{quedan}</TS></strong> <TS>lugares de fundador</TS></span>
+              <span className="font-semibold text-white"><TS>{`Quedan ${quedan} de ${CUPO} lugares de fundador`}</TS></span>
             ) : (
               <span className="text-white/80"><TS>El cupo de fundadores se llenó, pero puedes registrarte gratis.</TS></span>
             )}

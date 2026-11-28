@@ -184,6 +184,31 @@ function redirigirSlugViejo(request: NextRequest): NextResponse | null {
   return NextResponse.redirect(url, 301);
 }
 
+// Contenido que no cambia por país (plan SEO del 27 nov 2026, riesgo 3): el
+// foro, el blog, las guías, las herramientas de diseño y el directorio existían
+// igual en /do/, /pe/, /sv/… y Google repartía la fuerza entre las copias (el
+// artículo «Cuánto cobrar por un trabajo de corte CNC» salía como /do/ y no como
+// /mx/). El canonical ya apuntaba a /mx, pero es sólo una sugerencia: el 301 hace
+// que Google junte las copias en una. /us no se toca: es la versión en inglés.
+// La tienda, los productos y el cotizador sí cambian por país (moneda, envío) y
+// conservan su versión con hreflang (lib/helpers/hreflang.ts).
+const SECCIONES_SIN_PAIS = new Set([
+  'foro-cnc', 'aprendizaje-cnc', 'cnc', 'disenar', 'talleres', 'herramientas-cnc', 'calculadora-cnc',
+  'laboratorio-cam', 'planos', 'programas', 'quienes-somos', 'preguntas-frecuentes', 'licencias-disenos',
+  'aviso-de-privacidad', 'terminos-y-condiciones', 'terminos-vendedores',
+]);
+const LOCALES_PROPIOS = new Set(['mx', 'us']);
+
+function redirigirContenidoAMexico(request: NextRequest): NextResponse | null {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  const [, locale, seccion] = request.nextUrl.pathname.split('/');
+  const loc = (locale || '').toLowerCase();
+  if (!/^[a-z]{2}$/.test(loc) || LOCALES_PROPIOS.has(loc) || !SECCIONES_SIN_PAIS.has(seccion || '')) return null;
+  const url = request.nextUrl.clone();
+  url.pathname = '/mx' + request.nextUrl.pathname.slice(1 + loc.length);
+  return NextResponse.redirect(url, 301);
+}
+
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.includes('.')) {
     return NextResponse.next();
@@ -191,6 +216,9 @@ export async function middleware(request: NextRequest) {
 
   const slugViejo = redirigirSlugViejo(request);
   if (slugViejo) return slugViejo;
+
+  const aMexico = redirigirContenidoAMexico(request);
+  if (aMexico) return aMexico;
 
   const { pathname } = request.nextUrl;
   const cacheIdCookie = request.cookies.get('_medusa_cache_id');

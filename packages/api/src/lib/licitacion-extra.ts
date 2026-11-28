@@ -112,6 +112,20 @@ export async function preguntar(knex: any, s: any, sellerId: string, texto: stri
     { titulo: "Un taller te hizo una pregunta", cuerpo: `${folio}: ${pregunta}`, url: `${ligaPropuestas(s.token)}#preguntas`, etiqueta: `sol-${s.id}` },
     logger
   )
+  // Por WhatsApp a quien platica con HETNA por ahí (muchos no leen el correo)
+  const { avisarClienteWhatsapp } = require("./cliente-whatsapp")
+  const porWa = await avisarClienteWhatsapp(
+    knex,
+    s,
+    `Un taller tiene una pregunta sobre su solicitud *${folio}* antes de mandarle su precio:\n\n«${pregunta}»\n\nPuede contestar aquí mismo por WhatsApp o en su liga (la respuesta la verán todos los talleres que cotizan, para que todos le den precio con la misma información): ${ligaPropuestas(s.token)}#preguntas`,
+    logger
+  )
+  // Lo que conteste por WhatsApp se guarda como respuesta (lib/respuesta-whatsapp)
+  if (porWa) {
+    const { asegurarColumnaWa } = require("./respuesta-whatsapp")
+    await asegurarColumnaWa(knex)
+    await knex(T_PREGUNTA).where({ id }).update({ wa_enviada_en: knex.fn.now() }).catch(() => null)
+  }
   if (s.contacto?.email) {
     const r = await sendEmail({
       to: s.contacto.email,
