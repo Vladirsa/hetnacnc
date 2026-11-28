@@ -20,7 +20,7 @@ export async function avisarLiquidacion(knex: any, s: any, motivo: string): Prom
     html:
       `<p>${motivo} ${folio}${p?.taller ? ` (${esc(p.taller)})` : ""}.</p>` +
       (liq && liq.aPagar > 0
-        ? `<p>Cobrado por HETNA: <strong>${pesos(liq.cobrado)}</strong><br>Comisión HETNA (${s.comision_pct ?? "—"}%): <strong>${pesos(liq.comision)}</strong><br>Transferir al taller: <strong>${pesos(liq.aPagar)}</strong>${p?.taller_email ? ` (${esc(p.taller_email)})` : ""}</p>`
+        ? `<p>Cobrado por HETNA: <strong>${pesos(liq.cobrado)}</strong><br>Comisión HETNA (${s.comision_pct ?? "—"}%): <strong>${pesos(liq.comision)}</strong><br>Comisión del cobro (Mercado Pago / Stripe): <strong>${pesos(liq.costoCobro || 0)}</strong><br>Transferir al taller: <strong>${pesos(liq.aPagar)}</strong>${p?.taller_email ? ` (${esc(p.taller_email)})` : ""}</p>`
         : `<p>${s.cobro === "taller" ? "El cliente le pagó directo al taller" : "No hay pagos cobrados por HETNA"}: no hay nada que liquidar.</p>`),
   })
 }
