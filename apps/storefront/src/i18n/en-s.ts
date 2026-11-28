@@ -49,6 +49,9 @@ export const REGLAS_S: [RegExp, string][] = [
     /^(.+) Plano con lista de corte, acomodo en la hoja, pasos de armado y DXF para router CNC\.$/,
     "⟪$1⟫ Plan with cut list, sheet layout, assembly steps, and DXF for a CNC router.",
   ],
+  // Talleres fundadores (mismo número en /talleres/fundadores y /talleres/unete)
+  [/^Quedan (\d+) de (\d+) lugares de fundador$/, "$1 of $2 founding spots left"],
+  [/^Quedan (\d+) de (\d+) lugares de Taller fundador: insignia permanente y 6 meses de plan Pro gratis\.$/, "$1 of $2 Founding Shop spots left: permanent badge and 6 months of the Pro plan free."],
   // Modelos 3D y anuncios
   [/^(.+): modelo 3D a tu medida$/, "⟪$1⟫: custom-size 3D model"],
   [/^(\d+) días en (.+)$/, "$1 days on ⟪$2⟫"],
