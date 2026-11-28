@@ -82,3 +82,23 @@ export const lugarTrabajo = (t: TrabajoPublico) => [t.ciudad, t.estado_mx].filte
 // Días que le quedan para recibir propuestas; 0 si cierra hoy.
 export const diasRestantes = (t: TrabajoPublico) =>
   t.cierra_en ? Math.max(0, Math.ceil((new Date(t.cierra_en).getTime() - Date.now()) / 86_400_000)) : null
+
+// Cuántas solicitudes han llegado, por material y por estado (sólo conteos).
+export type ResumenSolicitudes = {
+  total: number
+  por_material: { nombre: string; n: number }[]
+  por_estado: { nombre: string; n: number }[]
+}
+
+export async function resumenSolicitudes(): Promise<ResumenSolicitudes | null> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/solicitudes-resumen`, {
+      headers: cabeceras(),
+      next: { revalidate: 600 },
+    })
+    if (!res.ok) return null
+    return (await res.json()) as ResumenSolicitudes
+  } catch {
+    return null
+  }
+}
