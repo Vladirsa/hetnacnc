@@ -19,7 +19,7 @@ import { listarTalleres } from "@/lib/hetna/talleres"
 import { PLANES_APP } from "@/lib/hetna/app-taller"
 
 export type ClaveCategoria = "disenos-digitales" | "servicios-cam" | "creditos-3d" | "maquinas-cnc" | "herramientas-materiales"
-export type ComoSeCompra = "descarga" | "servicio" | "creditos" | "proximamente"
+export type ComoSeCompra = "descarga" | "servicio" | "fisico" | "creditos" | "proximamente"
 
 export type DefCategoria = {
   clave: ClaveCategoria
@@ -57,14 +57,14 @@ export const CATEGORIAS: DefCategoria[] = [
     clave: "maquinas-cnc",
     nombre: "Máquinas CNC",
     descripcion: "Routers, láser, plasma y fresadoras de talleres y distribuidores de México.",
-    como: "servicio",
+    como: "fisico",
     patron: "rejilla",
   },
   {
     clave: "herramientas-materiales",
     nombre: "Herramientas y materiales",
     descripcion: "Fresas, boquillas, consumibles y material en hoja para tu taller.",
-    como: "servicio",
+    como: "fisico",
     patron: "rejilla",
   },
 ]
