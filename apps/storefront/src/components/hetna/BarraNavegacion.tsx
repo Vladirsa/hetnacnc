@@ -96,7 +96,7 @@ const MenuProductos = ({ tienda }: { tienda: MenuTienda | null }) => (
     {tienda && (
       <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[340px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
         <p className="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-[#8A887F]"><TS>Categorías</TS></p>
-        {tienda.categorias.map((c) => (
+        {tienda.categorias.filter((c) => c.conteo > 0).map((c) => (
           <LocalizedClientLink
             key={c.clave}
             href={"/tienda/" + c.clave}
@@ -219,7 +219,7 @@ const OpcionHerramienta = ({
       </span>
     )}
     <span className="flex flex-col">
-      <span className="text-[13.5px] font-semibold text-[#1B1B18]"><TS>{titulo}</TS></span>
+      <span className="text-[13.5px] font-semibold text-[#1B1B18]"><TS>{titulo}</TS></span>{" "}
       {texto && <span className="text-[12px] text-[#6B6A63] leading-snug"><TS>{texto}</TS></span>}
     </span>
   </LocalizedClientLink>
@@ -313,7 +313,7 @@ const MenuComunidad = () => (
     <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full w-[300px] bg-white border border-[#E7E4DC] rounded-b-[12px] shadow-[0_12px_30px_rgba(15,24,38,0.18)] p-2 whitespace-normal">
       {COMUNIDAD.map((c) => (
         <LocalizedClientLink key={c.href} href={c.href} className="block rounded-[8px] px-3 py-2.5 hover:bg-[#FAF6EF]">
-          <span className="block text-[13.5px] font-bold text-[#1B1B18]"><TS>{c.titulo}</TS></span>
+          <span className="block text-[13.5px] font-bold text-[#1B1B18]"><TS>{c.titulo}</TS></span>{" "}
           <span className="block text-[12.5px] text-[#6B6A63]"><TS>{c.texto}</TS></span>
         </LocalizedClientLink>
       ))}
