@@ -12,6 +12,7 @@ import { intentarResponder, pausarChat } from "../../../lib/whatsapp-bot"
 import { tokenValido } from "../../../lib/social-hub-token"
 import { atenderPropuestaWhatsapp } from "../../../lib/propuesta-whatsapp"
 import { atenderSolicitud } from "../../../lib/solicitud-conversacion"
+import { atenderRespuestaPregunta } from "../../../lib/respuesta-whatsapp"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   if (!tokenValido(req)) return res.status(401).json({ message: "No autorizado." })
@@ -38,6 +39,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     // Taller verificado que contesta un aviso con precio y días: su propuesta (lib/propuesta-whatsapp)
     if (await atenderPropuestaWhatsapp(req.scope, knex, logger, m).catch((e: Error) => { logger.warn(`[propuesta-whatsapp] ${e.message}`); return false }))
       return res.json({ manejado: true, accion: "propuesta" })
+    // Cliente que contesta por WhatsApp la pregunta de un taller (lib/respuesta-whatsapp)
+    if (await atenderRespuestaPregunta(knex, m, logger).catch((e: Error) => { logger.warn(`[respuesta-whatsapp] ${e.message}`); return false }))
+      return res.json({ manejado: true, accion: "respuesta" })
     // Cliente con solicitud en plática: completa sus datos (lib/solicitud-conversacion)
     if (await atenderSolicitud(knex, m, logger).catch((e: Error) => { logger.warn(`[solicitud-conversacion] ${e.message}`); return false }))
       return res.json({ manejado: true, accion: "solicitud" })

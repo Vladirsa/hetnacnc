@@ -25,6 +25,23 @@ export async function avisarPropuestaNueva(knex: any, logger: any, s: any, p: { 
     `Tiene una nueva propuesta para su solicitud *${folio}*: $${p.precio.toLocaleString("es-MX")} ${p.moneda}, entrega en ${p.dias} días.\n\nPuede compararla con las demás aquí: ${ligaPropuestas(s.token)}`,
     logger
   )
+  // A HETNA: cada propuesta es una venta en camino (Telegram y el celular del dueño)
+  try {
+    const { mandarPrivado } = require("./social-telegram")
+    await mandarPrivado(knex, { texto: `💰 Nueva propuesta en ${folio}: $${p.precio.toLocaleString("es-MX")} ${p.moneda}, ${p.dias} días.\n${ligaPropuestas(s.token)}` }).catch(() => null)
+    const { correosDeLaCasa } = require("./cuentas-casa")
+    const casa = (await knex("customer").whereNull("deleted_at").whereIn(knex.raw("lower(email)"), correosDeLaCasa()).pluck("id").catch(() => [])) as string[]
+    for (const id of casa)
+      await pushACliente(
+        knex,
+        { customerId: id },
+        { titulo: `💰 Nueva propuesta en ${folio}`, cuerpo: `$${p.precio.toLocaleString("es-MX")} ${p.moneda}, entrega en ${p.dias} días.`, url: ligaPropuestas(s.token), etiqueta: `hetna-prop-${s.id}` },
+        logger,
+        { whatsapp: false }
+      )
+  } catch (e) {
+    logger?.warn?.(`[licitacion] aviso de propuesta a HETNA: ${(e as Error).message}`)
+  }
   if (s.contacto?.email) {
     const r = await sendEmail({
       to: s.contacto.email,
