@@ -27,9 +27,9 @@ export const DistintivoEnvioGratis = ({
 
   if (compacto) {
     return (
-      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#1F5B29]">
+      <span className="flex items-start gap-1 text-[11px] font-semibold leading-tight text-[#1F5B29]">
         <span aria-hidden>🚚</span>
-        <span className="truncate"><TS>Envío gratis desde</TS> <TS>{monto}</TS></span>
+        <span><TS>Envío gratis desde</TS> <TS>{monto}</TS></span>
       </span>
     )
   }
