@@ -75,7 +75,9 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
   ])
   const todos = (todosResp as { response: { products: HttpTypes.StoreProduct[] } }).response.products
   const tipo = (p: HttpTypes.StoreProduct) => tipoFicha(p as never)
-  const conPrecio = todos.filter((p) => precioMinimo(p) !== null || (p.metadata as Record<string, unknown> | null)?.archivo_gratis === true)
+  const sePuedeComprar = (p: HttpTypes.StoreProduct) =>
+    precioMinimo(p) !== null || (p.metadata as Record<string, unknown> | null)?.archivo_gratis === true
+  const conPrecio = todos.filter(sePuedeComprar)
   const MAX = 14
 
   // Más vendidos y las categorías se piden en paralelo (auditoría Thermos)
@@ -124,16 +126,19 @@ export const FilasProductos = async ({ locale }: { locale: string }) => {
     productos: [...conPrecio].sort((a, b) => (precioMinimo(a) ?? 0) - (precioMinimo(b) ?? 0)).slice(0, MAX),
   })
   filas.push({
-    titulo: "Máquinas, herramientas y materiales",
+    titulo: "Piezas listas para comprar",
+    subtitulo: "Hechas por talleres de HETNA, con precio y envío",
     href: "/categories",
-    productos: todos.filter((p) => tipo(p) === "fisico" && !esCreditos(p)).slice(0, MAX),
+    productos: conPrecio.filter((p) => tipo(p) === "fisico" && !esCreditos(p)).slice(0, MAX),
   })
 
   // Y las categorías que sí tienen productos
-  conCategoria.forEach((c, i) => filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: porCategoria[i] }))
+  conCategoria.forEach((c, i) => filas.push({ titulo: c.name, href: `/categories/${c.handle}`, productos: porCategoria[i].filter((p) => tipo(p) !== "fisico" || sePuedeComprar(p)) }))
 
   // Y al final, lo que no cupo en ninguna fila
-  filas.push({ titulo: "Más productos", href: "/categories", productos: todos.slice(0, 100), min: 1 })
+  // Sólo lo que ya se puede comprar: lo que aún no tiene precio (muebles
+  // "Próximamente") no sale en la portada hasta que se pueda pagar (27 nov 2026).
+  filas.push({ titulo: "Más productos", href: "/categories", productos: conPrecio.slice(0, 100), min: 1 })
 
   // Cada producto una sola vez: cada fila se queda sólo con lo que no salió antes
   const yaSalio = new Set<string>()

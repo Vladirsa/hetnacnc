@@ -72,4 +72,6 @@ export const EN_FASE4_F: Record<string, string> = {
   "Oficio": "Legal",
   "Tabloide": "Tabloid",
   "Tablero 1220×2440": "Board 1220×2440",
+  "Piezas listas para comprar": "Parts ready to buy",
+  "Hechas por talleres de HETNA, con precio y envío": "Made by HETNA shops, with price and shipping",
 }
