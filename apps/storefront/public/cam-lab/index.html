@@ -189,6 +189,10 @@ dl.kv dd{margin:0;font:500 12.5px/1.5 var(--f-mono);text-align:right;font-varian
   .panes{overflow:visible}
   .kpis{grid-template-columns:1fr 1fr}
   .jobinfo{order:3;flex-basis:100%;margin-left:0}
+  /* los botones de arriba bajan de renglón y no se salen de la pantalla (Vlado, 28 nov 2026) */
+  .topbar{flex-wrap:wrap;min-width:0;max-width:100%}
+  .topactions{flex-wrap:wrap;flex-basis:100%;min-width:0}
+  .topactions .btn{flex:1 1 auto;min-width:0;white-space:nowrap}
   .dro{top:auto;bottom:62px;left:10px;right:10px;min-width:0;padding:6px 9px}
   .dro .ttl,.dro .gl{display:none}
   .dro table{display:block;font-size:12px}.dro tbody{display:flex;flex-wrap:wrap;gap:2px 14px}.dro tr{display:flex;gap:6px}.dro td.v{min-width:0}.dro td.ax{padding-right:0}
