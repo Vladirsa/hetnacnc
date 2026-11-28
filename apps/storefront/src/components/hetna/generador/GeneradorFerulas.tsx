@@ -10,7 +10,7 @@ import { useParams } from "next/navigation"
 
 import { Aviso, Boton, CampoNum, Datos, Seccion, TarjetaExport, descargar, numero, r1 } from "@/components/hetna/estudio3d/Controles"
 import { mandarAFabricar } from "@/lib/generador/aCotizador"
-import { FERULAS, MEDIDAS_INICIALES, type TipoFerula, type Ventilacion, hacerFerula } from "@/lib/generador/ferulas"
+import { FERULAS, MEDIDAS_INICIALES, type TipoFerula, type Ventilacion, hacerFerula, hacerFerula3D } from "@/lib/generador/ferulas"
 import { dibujoDXF, dibujoSVG, mallaSTL } from "@/lib/generador/vectores"
 
 const Estudio3D = dynamic(() => import("@/components/hetna/estudio3d/Estudio3D").then((m) => m.Estudio3D), { ssr: false })
@@ -52,6 +52,8 @@ export function GeneradorFerulas() {
   const [correas, setCorreas] = useState(String(ini.correas))
   const [anchoCorrea, setAnchoCorrea] = useState(String(ini.anchoCorrea))
   const [aviso, setAviso] = useState("")
+  // "plana": se imprime plana y se moldea con calor; "forma": sale curva, en 2 mitades que cierran alrededor (Vlado, 28 nov 2026)
+  const [forma, setForma] = useState<"plana" | "forma">("forma")
 
   // Al cambiar de tipo se cargan medidas de partida de ese tipo
   const cambiarTipo = (t: TipoFerula) => {
@@ -66,9 +68,8 @@ export function GeneradorFerulas() {
     setAnchoCorrea(String(m.anchoCorrea))
   }
 
-  const r = useMemo(
-    () =>
-      hacerFerula({
+  const opciones = useMemo(
+    () => ({
         tipo,
         lado,
         circunferencias: circ.map(numero),
@@ -85,10 +86,14 @@ export function GeneradorFerulas() {
       }),
     [tipo, lado, circ, largos, cobertura, holgura, grosor, margen, ventilacion, hueco, puente, correas, anchoCorrea]
   )
-  const listo = !r.errores.length && r.malla.tris.length > 0
+  const r = useMemo(() => hacerFerula(opciones), [opciones])
+  const r3 = useMemo(() => (forma === "forma" ? hacerFerula3D(opciones) : null), [opciones, forma])
+  // lo que se ve y se descarga en 3D: la pieza plana o las dos mitades con forma
+  const malla3d = r3 && !r3.errores.length ? r3.malla : r.malla
+  const listo = !r.errores.length && r.malla.tris.length > 0 && (!r3 || !r3.errores.length)
   const nombreTipo = FERULAS.find((f) => f.id === tipo)?.nombre || "Férula"
   const archivo = `ferula-${tipo}${tipo === "antebrazo" ? `-${lado}` : ""}`
-  const medidas = listo ? `${r1(r.largo)} × ${r1(r.ancho)} × ${r1(numero(grosor))} mm` : ""
+  const medidas = listo ? (r3 ? `${r1(r3.largo)} mm de largo, ${r1(r3.diametro)} mm de diámetro, 2 mitades` : `${r1(r.largo)} × ${r1(r.ancho)} × ${r1(numero(grosor))} mm`) : ""
   const vista2d = useMemo(() => (listo ? dibujoSVG(r.dibujo, "vista") : ""), [r, listo])
 
   const panel = (
@@ -97,6 +102,16 @@ export function GeneradorFerulas() {
         Para uso bajo indicación de un profesional de la salud o de un veterinario. No sustituye la valoración médica ni sirve para inmovilizar una
         fractura sin supervisión.
       </Aviso>
+      <Seccion titulo="Forma" nota={forma === "forma" ? "Sale curva con la forma del brazo, dedo o pata, en 2 mitades que cierran alrededor con las correas." : "Se imprime plana y el profesional la moldea con calor sobre el paciente."}>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button type="button" onClick={() => setForma("forma")} aria-pressed={forma === "forma"} className={botonSel(forma === "forma")}>
+            <T>Con forma (2 piezas)</T>
+          </button>
+          <button type="button" onClick={() => setForma("plana")} aria-pressed={forma === "plana"} className={botonSel(forma === "plana")}>
+            <T>Plana termoformable</T>
+          </button>
+        </div>
+      </Seccion>
       <Seccion titulo="Tipo de férula">
         <div className="grid grid-cols-3 gap-1.5">
           {FERULAS.map((f) => (
@@ -129,7 +144,7 @@ export function GeneradorFerulas() {
 
       <Seccion titulo="Ajuste" nota="La cobertura es qué parte de la vuelta cubre: abierta para poder ponerla y quitarla. La holgura deja lugar al acolchado o la venda.">
         <div className="grid grid-cols-2 gap-2">
-          <CampoNum etiqueta="Cobertura (%)" valor={cobertura} cambiar={setCobertura} />
+          {forma === "plana" && <CampoNum etiqueta="Cobertura (%)" valor={cobertura} cambiar={setCobertura} />}
           <CampoNum etiqueta="Holgura (mm)" valor={holgura} cambiar={setHolgura} />
           <CampoNum etiqueta="Grosor (mm)" valor={grosor} cambiar={setGrosor} />
           <CampoNum etiqueta="Borde sólido (mm)" valor={margen} cambiar={setMargen} />
@@ -198,12 +213,12 @@ export function GeneradorFerulas() {
     <div className="flex max-w-[760px] flex-col gap-4">
       <div>
         <h3 className="m-0 text-[18px] font-bold">Archivos</h3>
-        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">En milímetros. La férula se imprime plana y se moldea con calor.</p>
+        <p className="m-0 mt-1 text-[13px] text-[#8A97AB]">{forma === "forma" ? "En milímetros. Dos mitades con forma: se imprime cada una por separado." : "En milímetros. La férula se imprime plana y se moldea con calor."}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <TarjetaExport titulo="Para impresión 3D" nota="PLA o PETG, plana sobre la cama, sin soportes; 3 o 4 perímetros y 30 % de relleno o más.">
+        <TarjetaExport titulo="Para impresión 3D" nota={forma === "forma" ? "PETG o PLA; cada mitad por separado, con soportes en árbol del lado de afuera; 3 o 4 perímetros y 30 % de relleno o más." : "PLA o PETG, plana sobre la cama, sin soportes; 3 o 4 perímetros y 30 % de relleno o más."}>
           <div className="flex gap-2">
-            <Boton tipo="primario" onClick={() => descargar(`${archivo}.stl`, mallaSTL(r.malla), "model/stl")}>
+            <Boton tipo="primario" onClick={() => descargar(`${archivo}${forma === "forma" ? "-2-mitades" : ""}.stl`, mallaSTL(malla3d), "model/stl")}>
               STL
             </Boton>
           </div>
@@ -215,20 +230,24 @@ export function GeneradorFerulas() {
           </div>
         </TarjetaExport>
       </div>
+      {forma === "plana" ? (
       <Aviso>
         Cómo se moldea: se calienta la pieza en agua caliente o con pistola de calor hasta que se ablande (el PLA se ablanda alrededor de 60 °C), se
         deja enfriar unos segundos para no quemar y se moldea sobre una media o venda tubular, en la postura indicada. Al enfriarse queda rígida. Lo
         debe hacer o supervisar el profesional que indicó la férula.
       </Aviso>
+      ) : (
+        <Aviso>Cómo se pone: se abre, se coloca la mitad de abajo, luego la de arriba encima (los huecos del pulgar coinciden) y se aprietan las correas por las ranuras. Pruébala con el acolchado o la venda que se va a usar. Lo debe revisar el profesional que indicó la férula.</Aviso>
+      )}
       <div className="flex flex-col gap-2 rounded-[12px] border border-[#C2560A]/50 bg-[#C2560A]/10 p-4">
         <span className="text-[15px] font-bold">¿No tienes impresora 3D?</span>
-        <span className="text-[13px] text-[#F2D29B]">Un taller de HETNA la imprime y te la envía lista para moldear.</span>
+        <span className="text-[13px] text-[#F2D29B]">{forma === "forma" ? "Un taller de HETNA imprime las dos mitades y te las envía." : "Un taller de HETNA la imprime y te la envía lista para moldear."}</span>
         <div className="flex gap-2">
           <Boton
             tipo="primario"
             onClick={() => {
-              const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL(r.malla), locale, {
-                pieza: `Férula termoformable · ${nombreTipo}${tipo === "antebrazo" ? ` (brazo ${lado})` : ""}`,
+              const ok = mandarAFabricar(`${archivo}.stl`, mallaSTL(malla3d), locale, {
+                pieza: `${forma === "forma" ? "Férula con forma, 2 mitades" : "Férula termoformable"} · ${nombreTipo}${tipo === "antebrazo" ? ` (brazo ${lado})` : ""}`,
                 medidas,
                 material: "PLA o PETG",
                 proceso: "Impresión 3D",
@@ -248,13 +267,13 @@ export function GeneradorFerulas() {
     <Estudio3D
       llenar
       titulo={nombreTipo}
-      subtitulo="Férulas termoformables"
+      subtitulo={forma === "forma" ? "Férulas con forma, en 2 piezas" : "Férulas termoformables"}
       materialInicial="naranja"
-      tris={listo ? r.malla.tris : undefined}
+      tris={listo ? malla3d.tris : undefined}
       panel={panel}
       diseno2d={diseno2d}
       exportacion={exportacion}
-      avisos={[]}
+      avisos={r3 ? [...r3.errores, ...r3.avisos] : []}
       barra={listo ? <span>· <T>{medidas}</T></span> : null}
     />
   )

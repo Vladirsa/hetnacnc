@@ -209,3 +209,89 @@ export function hacerFerula(o: OpcionesFerula): ResultadoFerula {
   if (o.cobertura > 0.75) avisos.push("Con más de 75 % de cobertura puede costar trabajo ponerla y quitarla.")
   return { dibujo, malla: ex.malla, largo: L, ancho, huecos: huecos.length, correas: posCorreas.length, errores: [], avisos }
 }
+
+// ── Con forma, en 2 piezas (28 nov 2026, Vlado) ─────────────────────────────
+// En vez de imprimirla plana y moldearla con calor, sale ya curva con la forma
+// del brazo, el dedo o la pata: una mitad de arriba y una de abajo que cierran
+// alrededor con las correas. Cada mitad es la misma pieza plana (huecos,
+// ranuras, pulgar) con media circunferencia, doblada sobre el círculo de la
+// medida en cada punto: el ancho de la pieza se vuelve el arco.
+
+/** Parte los triángulos hasta que ningún lado mida más de `max` mm (para doblar sin que se note el quiebre).
+ *  Con `soloX`, sólo cuenta lo que avanza el lado en X (la dirección que se dobla). Pura. */
+export function subdividir(t: number[], max: number, soloX = false): number[] {
+  const out: number[] = []
+  const pila: number[][] = []
+  for (let i = 0; i < t.length; i += 9) pila.push(t.slice(i, i + 9))
+  const d2 = (a: number[], b: number[]) => (soloX ? (a[0] - b[0]) ** 2 : (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2)
+  while (pila.length) {
+    const s = pila.pop()!
+    const A = s.slice(0, 3), B = s.slice(3, 6), C = s.slice(6, 9)
+    const l = [d2(A, B), d2(B, C), d2(C, A)]
+    const k = l.indexOf(Math.max(...l))
+    if (l[k] <= max * max) {
+      out.push(...s)
+      continue
+    }
+    // se parte el lado más largo por la mitad (los vecinos también lo parten: no quedan huecos)
+    const [P, Q, R] = k === 0 ? [A, B, C] : k === 1 ? [B, C, A] : [C, A, B]
+    const M = [(P[0] + Q[0]) / 2, (P[1] + Q[1]) / 2, (P[2] + Q[2]) / 2]
+    pila.push([...P, ...M, ...R], [...M, ...Q, ...R])
+  }
+  return out
+}
+
+export type ResultadoFerula3D = { malla: Malla; largo: number; diametro: number; huecos: number; correas: number; errores: string[]; avisos: string[] }
+
+/**
+ * La férula con forma: dos mitades (arriba y abajo) dobladas sobre el radio de
+ * cada medida, cerradas alrededor del brazo con una abertura de `abertura` mm
+ * entre ellas a cada lado (para ponerla y apretarla con las correas).
+ */
+export function hacerFerula3D(o: OpcionesFerula, abertura = 4): ResultadoFerula3D {
+  const vacio = (e: string[]): ResultadoFerula3D => ({ malla: { tris: [], avisos: [] }, largo: 0, diametro: 0, huecos: 0, correas: 0, errores: e, avisos: [] })
+  // cada mitad cubre media circunferencia menos la abertura de los lados
+  const circMedia = (c: number) => c + o.holgura
+  const cob = (c: number) => Math.max(0.3, (circMedia(c) / 2 - abertura) / circMedia(c))
+  const cobertura = cob(Math.min(...o.circunferencias.filter((c) => c > 0)))
+  const arriba = hacerFerula({ ...o, cobertura })
+  if (arriba.errores.length) return vacio(arriba.errores)
+  // la de abajo lleva el hueco del pulgar del otro lado: así los dos medios huecos coinciden
+  const abajo = hacerFerula({ ...o, cobertura, lado: o.lado === "derecho" ? "izquierdo" : "derecho" })
+  if (abajo.errores.length) return vacio(abajo.errores)
+
+  // radio (por dentro) en cada punto del largo, con las mismas estaciones que la pieza plana
+  const est: [number, number][] =
+    o.tipo === "antebrazo"
+      ? [[0, circMedia(o.circunferencias[0])], [o.largos[0], circMedia(o.circunferencias[1])], [o.largos[0] + o.largos[1], circMedia(o.circunferencias[2])]]
+      : [[0, circMedia(o.circunferencias[0])], [o.largos[0], circMedia(o.circunferencias[1])]]
+  const radio = (y: number) => anchoEn(y, est) / (2 * Math.PI)
+  // la pieza plana: x a lo ancho (centrada), y a lo largo, z = grosor (0 por dentro, grosor por fuera)
+  const doblar = (t: number[], giro: number) => {
+    // sólo a lo ancho (lo que se dobla), cada 5 mm: en un radio de 4 cm la cuerda se aparta 0.08 mm del arco
+    const fina = subdividir(subdividir(t, 5, true), 12)
+    const r: number[] = new Array(fina.length)
+    for (let i = 0; i < fina.length; i += 3) {
+      const x = fina[i], y = fina[i + 1], z = fina[i + 2]
+      const R0 = radio(y)
+      const a = x / R0 + giro // el ancho se vuelve arco sobre el radio interior
+      const R = R0 + z
+      r[i] = R * Math.sin(a)
+      r[i + 1] = y
+      r[i + 2] = R * Math.cos(a)
+    }
+    // al girar 180° la pieza queda del revés: se invierte el orden para que las caras miren hacia afuera
+    if (Math.cos(giro) < 0) for (let i = 0; i < r.length; i += 9) for (let k = 0; k < 3; k++) [r[i + 3 + k], r[i + 6 + k]] = [r[i + 6 + k], r[i + 3 + k]]
+    return r
+  }
+  const tA = doblar(arriba.malla.tris, 0)
+  const tB = doblar(abajo.malla.tris, Math.PI)
+  // de pie sobre la mesa como en el brazo: z hacia arriba, el largo en y
+  const dmax = 2 * (Math.max(...est.map((e) => e[1])) / (2 * Math.PI) + o.grosor)
+  const subir = (t: number[]) => t.map((v, i) => (i % 3 === 2 ? v + dmax / 2 : v))
+  const malla: Malla = { tris: [...subir(tA), ...subir(tB)], avisos: [], partes: [{ nombre: "Mitad de arriba", triangulos: tA.length / 9 }, { nombre: "Mitad de abajo", triangulos: tB.length / 9 }] }
+  const avisos = [...arriba.avisos.filter((a) => !a.includes("cama de impresión") && !a.includes("cobertura"))]
+  avisos.push("Imprime cada mitad por separado, con soportes en árbol del lado de afuera, y ciérralas con las correas.")
+  if (arriba.largo > 250) avisos.push(`Cada mitad mide ${Math.round(arriba.largo)} mm de largo: necesitas una cama de ese tamaño.`)
+  return { malla, largo: arriba.largo, diametro: dmax, huecos: arriba.huecos + abajo.huecos, correas: arriba.correas, errores: [], avisos }
+}
