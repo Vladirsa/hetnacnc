@@ -66,6 +66,21 @@ export function Footer() {
     { label: "Calculadora de avance y RPM", path: "/calculadora-cnc" },
   ]
 
+  // Páginas de servicio por ciudad (plan SEO del 27 nov 2026, riesgo 2): las 5
+  // ciudades de la meta, empezando por Tlaxcala y Puebla. Una liga desde el pie
+  // de todas las páginas le dice a Google que son importantes.
+  const ciudades = [
+    { label: "Corte láser en Tlaxcala", path: "/cnc/corte-laser-mdf/tlaxcala" },
+    { label: "Router CNC en Tlaxcala", path: "/cnc/taller-router-cnc-mexico/tlaxcala" },
+    { label: "Router CNC en Puebla", path: "/cnc/taller-router-cnc-mexico/puebla" },
+    { label: "Corte láser en Puebla", path: "/cnc/corte-laser-mdf/puebla" },
+    { label: "Router CNC en CDMX", path: "/cnc/taller-router-cnc-mexico/cdmx" },
+    { label: "Router CNC en Monterrey", path: "/cnc/taller-router-cnc-mexico/monterrey" },
+    { label: "Corte plasma en Monterrey", path: "/cnc/corte-plasma/monterrey" },
+    { label: "Router CNC en Guadalajara", path: "/cnc/taller-router-cnc-mexico/guadalajara" },
+    { label: "Corte láser en Guadalajara", path: "/cnc/corte-laser-mdf/guadalajara" },
+  ]
+
   return (
     <footer
       className="bg-[#0F1826] text-[#C9D2E0] px-4 lg:px-16 pt-12 pb-7 w-full"
@@ -97,6 +112,14 @@ export function Footer() {
           ))}
         </div>
       </div>
+      <nav aria-label="Talleres CNC por ciudad" className="pt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
+        <span className="text-white font-semibold text-[13.5px]"><TS>Talleres CNC por ciudad</TS></span>
+        {ciudades.map(({ label, path }) => (
+          <LocalizedClientLink key={path} href={path} className="text-[#9FACC2] hover:text-white">
+            <TS>{label}</TS>
+          </LocalizedClientLink>
+        ))}
+      </nav>
       {/* Contacto visible en todas las páginas: Google Merchant Center lo pide
           para confiar en la tienda (aviso "Información engañosa"). Datos en empresa.ts */}
       <address
