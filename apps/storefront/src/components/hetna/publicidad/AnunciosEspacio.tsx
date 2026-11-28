@@ -10,7 +10,12 @@ import { calcularMonto, pesos } from "@/lib/publicidad/precios"
 import { ESPACIOS, esEspacio } from "@/lib/publicidad/tipos"
 
 import { EnlacePub, EtiquetaPublicidad, ImagenPieza, TextoPieza } from "./PiezasBase"
+import PromosHetna from "./PromosHetna"
 import PubVista from "./PubVista"
+
+// En la ficha de producto, sin anuncio pagado, va una promo propia de HETNA
+// que se turna (opción C, 27 nov 2026) en vez del banner "Espacio disponible".
+const CON_PROMO: Record<string, number> = { ficha_producto: 0, ficha_lateral: 1 }
 
 export default async function AnunciosEspacio({
   espacio,
@@ -42,7 +47,10 @@ export default async function AnunciosEspacio({
   // una tarjeta punteada casi invisible ("Tu anuncio aquí"). Va en código y no
   // como imagen para que se vea nítido en cualquier pantalla y el precio salga
   // siempre de la tarifa vigente.
-  const invitacion = (
+  const conPromo = espacio in CON_PROMO
+  const invitacion = conPromo ? (
+    <PromosHetna inicio={CON_PROMO[espacio]} espacio={espacio} />
+  ) : (
     <LocalizedClientLink
       href={`/anunciate?espacio=${espacio}#comprar`}
       className="group relative flex min-h-[96px] items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#142033] to-[#1E3250] p-4 text-white shadow-sm transition-shadow hover:shadow-md sm:p-5"
@@ -82,7 +90,7 @@ export default async function AnunciosEspacio({
 
   return (
     <section aria-label={titulo || "Publicidad"} className={className}>
-      {titulo && (
+      {titulo && !(conPromo && !piezas.length) && (
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="text-[12px] font-bold uppercase tracking-wide text-[#6B6A63]"><TS>{titulo}</TS></span>
           {piezas.length > 0 && <span className="text-[11px] text-[#9A978F]"><TS>Patrocinado</TS></span>}
