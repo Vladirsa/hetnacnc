@@ -331,7 +331,7 @@ export function GeneradorLetrero({ cabecera }: { cabecera?: React.ReactNode }) {
             <span className="text-[13px] text-[#6B6A63]"><T>Vista previa</T><Tr>{maquina === "router" && numero(fresa) > 0 ? " · en rojo lo que la fresa no alcanza" : ""}</Tr></span>
             <span className="text-[13px] text-[#6B6A63]" aria-live="polite"><Tr>{calculando || cargando ? "Calculando..." : ""}</Tr></span>
           </div>
-          <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[220px]">
+          <div className="vista-clara bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[220px]">
             {vista ? (
               <div className={`w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[460px] ${calculando ? "opacity-60" : ""}`} dangerouslySetInnerHTML={{ __html: vista }} />
             ) : (

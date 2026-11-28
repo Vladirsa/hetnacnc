@@ -1,6 +1,7 @@
 // Pasa por ImagenSegura: estas direcciones vienen de la base o del
 // navegador, y next/image TRUENA con las que no empiezan en "/" o
 // "https://" (una vista previa "blob:", por ejemplo).
+import { AvisosNovedades } from "@/components/hetna/push/AvisosNovedades"
 import { TS } from "@/i18n/TS"
 import { ImagenSegura as Image } from '@/components/hetna/ImagenSegura'
 import fs from "fs"
@@ -354,6 +355,10 @@ export const HetnaHome = async ({ locale }: { locale: string }) => {
       <HeroFijo />
       <BarraConfianza />
       <FilasProductos locale={locale} />
+      {/* Aviso de productos nuevos en el celular, sin cuenta (28 nov 2026) */}
+      <div className="px-4 pb-2 lg:px-16">
+        <AvisosNovedades compacto />
+      </div>
       <CarruselColeccion locale={locale} handle="de-talleres" titulo="Productos de nuestros talleres" subtitulo="Fabricados y vendidos por talleres y proveedores de México" />
       <CarruselColeccion locale={locale} handle="mejor-calificados" titulo="Los mejor calificados" subtitulo="Lo que más recomiendan nuestros clientes" fondo />
       <ProcesoClienteTaller />

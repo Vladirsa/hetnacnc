@@ -38,6 +38,13 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
   const [valores, setValores] = useState<Record<string, number>>(() => valoresIniciales(modelo))
   const [malla, setMalla] = useState<MallaModelo | null>(null)
   const [error, setError] = useState("")
+  const [cat, setCat] = useState<string>(() => modelo.categoria)
+  const [busca, setBusca] = useState("")
+  const sinAcentos = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+  const lista = useMemo(() => {
+    const q = sinAcentos(busca.trim())
+    return MODELOS.filter((m) => (q ? sinAcentos(`${m.nombre} ${m.texto} ${m.claves || ""}`).includes(q) : cat === "todas" || m.categoria === cat))
+  }, [busca, cat])
   const [aviso, setAviso] = useState("")
 
   // /disenar/modelos-3d?modelo=maceta abre ese modelo (sin useSearchParams: la página es estática).
@@ -59,6 +66,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
     }
     if (!cambia) return
     setModelo(m)
+    setCat(m.categoria)
     setValores(limpiarValores(m, v))
   }, [inicial])
 
@@ -108,6 +116,7 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
 
   const elegir = (m: Modelo3D) => {
     setModelo(m)
+    setCat(m.categoria)
     setValores(valoresIniciales(m))
     setMalla(null)
     setAviso("")
@@ -153,23 +162,40 @@ export function GeneradorModelos3D({ inicial }: { inicial?: string } = {}) {
           <T>Elige un modelo, ajusta sus medidas y descarga el STL listo para imprimir, sin saber CAD. O pide que un taller de HETNA te lo imprima.</T>
         </p>
 
-        {/* Modelos por categoría */}
-        <div className="mt-5 flex flex-col gap-3">
-          {CATEGORIAS.map((c) => (
-            <div key={c.id} className="flex flex-wrap items-center gap-2">
-              <span className="w-[120px] shrink-0 text-[13px] font-semibold text-[#6B675C]"><T>{c.nombre}</T></span>
-              {MODELOS.filter((m) => m.categoria === c.id).map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => elegir(m)}
-                  className={`rounded-full border px-3 py-1.5 text-[13px] ${m.id === modelo.id ? "border-[#0EA5E9] bg-[#0EA5E9] text-white" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#0EA5E9]"}`}
-                >
-                  <T>{m.nombre}</T>
+        {/* Modelos: buscador + categorías (28 nov 2026, Vlado: la lista de botones llenaba el celular).
+            En el celular la fila se desliza de lado; en computadora se acomoda en renglones. */}
+        <div className="mt-5 flex flex-col gap-2.5">
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar modelo: polea, caja, gancho…"
+            aria-label="Buscar modelo"
+            className="min-h-[42px] w-full max-w-[480px] rounded-[10px] border border-[#E7E4DC] bg-white px-3 text-[14px] outline-none focus:border-[#0EA5E9]"
+          />
+          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0" role="tablist" aria-label="Categorías">
+            {[{ id: "todas", nombre: "Todos" }, ...CATEGORIAS].map((c) => {
+              const n = c.id === "todas" ? MODELOS.length : MODELOS.filter((m) => m.categoria === c.id).length
+              return (
+                <button key={c.id} type="button" role="tab" aria-selected={cat === c.id} onClick={() => setCat(c.id)} className={`shrink-0 rounded-[8px] px-3 py-1.5 text-[13px] font-semibold ${cat === c.id ? "bg-[#142033] text-white" : "border border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#0EA5E9]"}`}>
+                  <T>{c.nombre}</T> <span className="opacity-60">{n}</span>
                 </button>
-              ))}
-            </div>
-          ))}
+              )
+            })}
+          </div>
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+            {lista.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => elegir(m)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[13px] ${m.id === modelo.id ? "border-[#0EA5E9] bg-[#0EA5E9] text-white" : "border-[#E7E4DC] bg-white text-[#1B1B18] hover:border-[#0EA5E9]"}`}
+              >
+                <T>{m.nombre}</T>
+              </button>
+            ))}
+            {!lista.length && <span className="text-[13px] text-[#6B675C]"><T>No hay modelos con esa palabra. Prueba con otra o elige «Todos».</T></span>}
+          </div>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">

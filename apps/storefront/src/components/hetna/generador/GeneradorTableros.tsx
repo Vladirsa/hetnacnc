@@ -154,6 +154,11 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
   const [sel, setSel] = useState<number | null>(null) // pieza seleccionada en el 3D (índice de tablerosFinales)
   const [punto, setPunto] = useState<Pt | null>(null) // donde tocó el cliente
   const [explotar, setExplotar] = useState(0)
+  // en el celular los controles empiezan ocultos (tapan el mueble)
+  const [controles, setControles] = useState(true)
+  useEffect(() => {
+    if (window.innerWidth < 768) setControles(false)
+  }, [])
   const [rayosX, setRayosX] = useState(false)
   const [verCotas, setVerCotas] = useState(true)
   const [ajustar, setAjustar] = useState(0)
@@ -1628,7 +1633,16 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
       ) : (
         <div className="grid h-full place-items-center text-[14px] text-[#8A97AB]">{m.errores[0] || "Sube la imagen de un mueble."}</div>
       )}
+      {/* los controles tapaban el mueble en el celular: se pueden ocultar (Vlado, 28 nov 2026) */}
+      {!controles ? (
+        <button type="button" onClick={() => setControles(true)} className="absolute top-2 left-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] font-semibold text-[#C9D2E0] hover:bg-[#1C2431]">
+          ⚙ Mostrar controles
+        </button>
+      ) : (
       <div className="absolute top-2 left-2 right-36 flex flex-wrap items-center gap-2 rounded-[10px] bg-[#0B0F15]/85 px-3 py-2 text-[12px] text-[#C9D2E0] sm:right-auto">
+        <button type="button" onClick={() => setControles(false)} className="rounded-[7px] bg-[#1C2431] px-2 py-1 font-semibold hover:bg-[#243045]" aria-label="Ocultar controles">
+          ✕ Ocultar
+        </button>
         <label className="flex items-center gap-2">
           Explotar
           <input type="range" min={0} max={1} step={0.05} value={explotar} onChange={(e) => setExplotar(Number(e.target.value))} className="w-24 accent-[#C2560A]" aria-label="Separar piezas" />
@@ -1656,6 +1670,7 @@ export function GeneradorTableros({ cabecera, enfoque = "imagen" }: { cabecera?:
         </span>
         {m.sueltos.length > 0 && <span className="text-[#FF9A9A]">En rojo: tableros que no tocan al mueble</span>}
       </div>
+      )}
     </Visor3D>
   )
 

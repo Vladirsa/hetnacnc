@@ -72,6 +72,26 @@ const limitarLiga = (req: any, res: any, next: any) => {
     next();
 };
 
+// Aviso de productos nuevos (/store/hetna-push/novedades): sin sesión, así que
+// pocas altas por IP para que nadie llene la tabla de suscripciones.
+const NOVEDADES_POR_HORA = 10;
+const altasNovedades = new Map<string, number[]>();
+const limitarNovedades = (req: any, res: any, next: any) => {
+    const ip = ipCliente(req);
+    const ahora = Date.now();
+    const lista = (altasNovedades.get(ip) || []).filter((t) => ahora - t < 3_600_000);
+    if (lista.length >= NOVEDADES_POR_HORA) {
+        res.status(429).json({ message: "Demasiados intentos. Intenta más tarde." });
+        return;
+    }
+    lista.push(ahora);
+    altasNovedades.set(ip, lista);
+    if (altasNovedades.size > 5000) {
+        for (const [k, v] of altasNovedades) if (!v.some((t) => ahora - t < 3_600_000)) altasNovedades.delete(k);
+    }
+    next();
+};
+
 export default defineMiddlewares({
     routes: [
         // Bitácora de seguridad: inicios de sesión rechazados y cambios en /admin
@@ -141,6 +161,13 @@ export default defineMiddlewares({
             method: ["POST", "DELETE"],
             matcher: "/store/hetna-push",
             middlewares: [authenticate("customer", ["session", "bearer"])],
+        },
+        {
+            // Aviso de productos nuevos: sin cuenta, limitado por IP (la tienda manda la IP firmada)
+            method: ["POST", "DELETE"],
+            matcher: "/store/hetna-push/novedades",
+            bodyParser: { sizeLimit: "4kb" },
+            middlewares: [limitarNovedades],
         },
         ...vendorCoursesMiddlewares,
         ...storeCreditos3dMiddlewares,

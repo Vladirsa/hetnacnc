@@ -235,8 +235,29 @@ export const ProductDetailsPage = async ({
     ...(procesosProd[0] ? { servicio: PROCESOS[procesosProd[0]].cotizar } : {}),
     descripcion: `fabricar "${prod.title || "este producto"}"${prod.handle ? ` (${baseSitio()}/${locale}/products/${prod.handle})` : ""}`,
   }).toString()
+  // Impresión 3D (28 nov 2026, Vlado): además de los talleres que ya lo
+  // imprimen, "Fabrícalo a tu medida" para pedirlo de otro tamaño o cantidad
+  // medidas y volumen de la pieza del catálogo (no del STL de la vista: ahí pueden ir dos piezas lado a lado)
+  const volumenImpresion = Number((metaProd.impresion as { volumen_cm3?: unknown } | undefined)?.volumen_cm3) || undefined
+  const medidasImpresion = (() => {
+    const m = (metaProd.impresion as { medidas_mm?: unknown } | undefined)?.medidas_mm
+    return Array.isArray(m) && m.length === 3 && m.every((x) => Number(x) > 0) ? `${m.map((x) => Math.round(Number(x))).join(" × ")} mm` : medidasProd
+  })()
   const fabricar = impresion ? (
-    <TalleresImpresion datos={impresion} locale={locale} />
+    <>
+      <TalleresImpresion datos={impresion} locale={locale} />
+      <FabricarDiseno
+        titulo={prod.title || "Producto"}
+        handle={prod.handle}
+        formatos={["STL"]}
+        medidas={medidasImpresion}
+        vistaPrevia={null}
+        volumenCm3={volumenImpresion}
+        cantidadInicial={1}
+        procesoInicial="impresora_3d"
+        encabezado="Fabrícalo a tu medida"
+      />
+    </>
   ) : planoSlug ? (
     <TalleresPlano
       offers={offers as StoreOffer[]}

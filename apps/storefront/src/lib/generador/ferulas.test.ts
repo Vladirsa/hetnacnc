@@ -68,3 +68,35 @@ test("avisa si la pieza no cabe en una cama común", () => {
   const r = hacerFerula(base("antebrazo", { largos: [260, 80] }))
   assert.ok(r.avisos.some((a) => /cama/.test(a)))
 })
+
+test("férula con forma: dos mitades curvas que cierran alrededor del brazo", async () => {
+  const { hacerFerula3D, subdividir, MEDIDAS_INICIALES } = await import("./ferulas")
+  const m = MEDIDAS_INICIALES.antebrazo
+  const r = hacerFerula3D({ tipo: "antebrazo", lado: "derecho", ...m, holgura: 6, grosor: 3, ventilacion: "hexagonos", puente: 4 })
+  assert.deepEqual(r.errores, [])
+  assert.equal(r.malla.partes?.length, 2)
+  // por dentro, cada punto queda a la distancia del radio de su medida (no plana)
+  const R = (m.circunferencias[0] + 6) / (2 * Math.PI)
+  let dentro = 0, total = 0
+  const t = r.malla.tris
+  for (let i = 0; i < t.length; i += 3) {
+    if (t[i + 1] > 5) continue // sólo cerca del codo (y ≈ 0)
+    const d = Math.hypot(t[i], t[i + 2] - r.diametro / 2)
+    total++
+    if (d > R - 0.5 && d < R + 3.5) dentro++
+  }
+  assert.ok(total > 50 && dentro / total > 0.95, `${dentro}/${total} puntos sobre el cilindro`)
+  // las dos mitades: una arriba y otra abajo del eje
+  const zA = t.slice(0, r.malla.partes![0].triangulos * 9).filter((_, i) => i % 3 === 2)
+  const zB = t.slice(r.malla.partes![0].triangulos * 9).filter((_, i) => i % 3 === 2)
+  const minA = zA.reduce((a, b) => Math.min(a, b), Infinity), maxB = zB.reduce((a, b) => Math.max(a, b), -Infinity)
+  assert.ok(minA > r.diametro / 2 - 5 && maxB < r.diametro / 2 + 5, `${minA} ${maxB}`)
+  // las dos mitades con las caras hacia afuera: volumen con signo positivo en cada una
+  const vol = (tt: number[]) => { let v = 0; for (let i = 0; i < tt.length; i += 9) v += (tt[i] * (tt[i + 4] * tt[i + 8] - tt[i + 5] * tt[i + 7]) - tt[i + 1] * (tt[i + 3] * tt[i + 8] - tt[i + 5] * tt[i + 6]) + tt[i + 2] * (tt[i + 3] * tt[i + 7] - tt[i + 4] * tt[i + 6])) / 6; return v }
+  const nA = r.malla.partes![0].triangulos * 9
+  assert.ok(vol(t.slice(0, nA)) > 1000 && vol(t.slice(nA)) > 1000, `volúmenes ${vol(t.slice(0, nA))} y ${vol(t.slice(nA))}`)
+  // subdividir no cambia el área
+  const area = (tt: number[]) => { let a = 0; for (let i = 0; i < tt.length; i += 9) { const u = [tt[i + 3] - tt[i], tt[i + 4] - tt[i + 1], tt[i + 5] - tt[i + 2]], v = [tt[i + 6] - tt[i], tt[i + 7] - tt[i + 1], tt[i + 8] - tt[i + 2]]; a += Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2 } return a }
+  const tri = [0, 0, 0, 10, 0, 0, 0, 10, 0]
+  assert.ok(Math.abs(area(subdividir(tri, 2)) - area(tri)) < 1e-9)
+})

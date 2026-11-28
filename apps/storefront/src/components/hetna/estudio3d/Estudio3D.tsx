@@ -708,7 +708,9 @@ export function Estudio3D({
         )}
 
         {pie && (
-          <div className="sticky bottom-0 z-10 -mx-4 -mb-4 mt-auto flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923] px-4 pb-4 pt-3 shadow-[0_-8px_16px_rgba(0,0,0,0.35)]">
+          // pegado abajo sólo en computadora: en el celular el precio es alto y, con la vista
+          // pegada arriba, tapaba los controles del diseño (Vlado, 28 nov 2026)
+          <div className="lg:sticky lg:bottom-0 z-10 -mx-4 -mb-4 mt-auto flex flex-col gap-2 border-t border-[#1F2937] bg-[#121923] px-4 pb-4 pt-3 lg:shadow-[0_-8px_16px_rgba(0,0,0,0.35)]">
             {pie}
           </div>
         )}

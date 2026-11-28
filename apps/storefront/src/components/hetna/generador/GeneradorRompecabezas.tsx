@@ -157,7 +157,7 @@ export function GeneradorRompecabezas({ cabecera }: { cabecera?: React.ReactNode
               {r.errores.map((e) => <p key={e} className="m-0">{e}</p>)}
             </div>
           )}
-          <div className="bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[260px]">
+          <div className="vista-clara bg-white border border-[#E7E4DC] rounded-[14px] p-4 flex items-center justify-center min-h-[260px]">
             {listo ? (
               <div className="w-full [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[440px]" dangerouslySetInnerHTML={{ __html: vista }} />
             ) : (
